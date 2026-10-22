@@ -57,9 +57,11 @@ src/
     shanghai-day.ts        上海时间的自然日（预算和海报按它算）
     auth/                  Better Auth 服务端配置、客户端、表结构、邮件
     db/url.ts              数据库连接串（DATABASE_URI，预览环境回退到 DATABASE_URL）
+    db/drizzle.ts          getDb()：Payload 实例和它的 Drizzle 连接，模块自己的表用它读写
     i18n/hant.ts           简体 → 台湾繁体
   migrations/              Payload 迁移文件（自动生成，和代码一起提交）
   modules/                 按模块组织的业务代码：daily/、apps/、resources/ …
+    daily/                 信源集合、读取器（readers/）、采集任务（collect/）、raw_items 表（schema.ts）
   payload.config.ts
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko

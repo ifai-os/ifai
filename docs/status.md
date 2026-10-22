@@ -2,13 +2,14 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-22（日报第 1 步）。
+更新于 2026-10-22（日报第 2 步）。
 
 ## 现在到哪了
 
 - **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。首页用的是演示数据，日报、应用、资源三个入口是「即将上线」占位页。详见 [specs/foundation.md](./specs/foundation.md)。
 - **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。
-- **日报第 1 步（基础）已完成**：装好了 Inngest、Vercel AI SDK + OpenRouter、feedsmith（RSS）、cheerio、linkedom + Readability；迁移 `model_receipts_pgvector` 启用 pgvector 并建 `model_receipts` 表；`src/lib/ai` 提供按用途选模型、回执（重试不重复扣费）、每日预算（上海时间，默认 10 美元）、总开关；Inngest 入口 `/api/inngest`，带一个不花钱的 `health-check` 任务（事件 `ifai/health.check`）用来验证连通。还没有任何信源和真实模型调用。
+- **日报第 1 步（基础）已完成**：装好了 Inngest、Vercel AI SDK + OpenRouter、feedsmith（RSS）、cheerio、linkedom + Readability；迁移 `model_receipts_pgvector` 启用 pgvector 并建 `model_receipts` 表；`src/lib/ai` 提供按用途选模型、回执（重试不重复扣费）、每日预算（上海时间，默认 10 美元）、总开关；Inngest 入口 `/api/inngest`，带一个不花钱的 `health-check` 任务（事件 `ifai/health.check`）用来验证连通。真实模型调用已用 `pnpm ai:smoke` 验证过（DeepSeek，一次 0.00004 美元）。
+- **日报第 2 步（信源与采集）已完成**：`sources` 集合（后台「日报 → 信源」，每条有「试抓」按钮，接口 `POST /api/sources/:id/test-fetch`，只预览不入库）；迁移 `daily_sources_raw_items` 建 `sources`、`raw_items`（1536 维向量列 + HNSW 索引，外键随信源级联删除）并导入 16 个信源，其中 Future Tools、The Rundown、Forward Future 三个网页列表信源的选择器是占位值，先停用，站长试抓确认后再启用；三种读取器（RSS / Atom / JSON Feed、网页列表、Hacker News JSON）在 `src/modules/daily/readers/`；Inngest 任务 `daily-collect-due-sources`（每 15 分钟找到期信源，也可发事件 `daily/collect.run` 手动跑）、`daily-fetch-source`（抓一个信源，按判重 / 48 小时 / 首次导入最多 30 条的规则写入 `raw_items`，自动调整间隔，失败原因记在信源上）、`daily-fetch-item-content`（Readability 取原文正文、发布时间和外链）。三个任务都先检查 `COLLECT_ENABLED`。沙盒连不到新闻站点，真实信源还没抓过，要在预览环境验证。
 - **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 以后也可以用。前台页面还没做。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
@@ -20,7 +21,7 @@
 | 期 | 周 | 模块 | 状态 |
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |
-| 第一期 | 3 起 | 日报 | 第 1 步（基础）完成，下一步信源与采集 |
+| 第一期 | 3 起 | 日报 | 第 2 步（信源与采集）完成，下一步判断与写作 |
 | 第一期 | 日报之后 | 应用 | 第 1 步（集合与后台录入）完成，下一步官网取材与资料草稿 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 规格已确认（[resources.md](./specs/resources.md)），待实现 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
@@ -30,8 +31,8 @@
 
 ## 下一步
 
-1. **日报第 2 步：信源与采集**（见 daily.md「实现顺序」）：`sources` 集合、16 个信源、后台试抓、RSS / 网页列表 / JSON 三种读取器、写入 `raw_items`（判重、48 小时规则）。采集任务先检查 `collectEnabled()`。
-2. 日报第 3–6 步：判断与写作 → 审核与发布 → 前台 → 热度与海报。模型调用用 `ai.object` / `ai.text` / `ai.embed`（`src/lib/ai`），两次评分用 `variant: 'a'` / `'b'` 区分；`ModelCallError.retryable` 为 false 时（开关关闭、预算用完、同一调用失败 3 次）任务应停住并在后台告警。`raw_items` 的向量列用 `EMBEDDING_DIMENSIONS`（1536）。
+1. **日报第 3 步：判断与写作**（见 daily.md「实现顺序」）：对 `raw_items` 里 `status = 'fresh'`、`content_status = 'fetched'` 的条目做预筛、两次评分（`variant: 'a'` / `'b'`）、结构化、向量（写回 `raw_items.embedding`）、归成事件、四种语言写作；提示词从 AIHOT 的 `industry/prompts/` 改写。模型调用一律用 `ai.object` / `ai.text` / `ai.embed`（`src/lib/ai`）；`ModelCallError.retryable` 为 false 时（开关关闭、预算用完、同一调用失败 3 次）任务应停住并在后台告警。汇总类信源的条目（`use = 'roundup'`）只用 `raw_items.links` 把它提到的原文挂到事件上，不自己成为新闻；Hacker News 条目的 `url` 已经是原文，`discussion_url` 是讨论串，`signals` 是分数和评论数。
+2. 日报第 4–6 步：审核与发布 → 前台 → 热度与海报。
 3. **应用第 2 步：官网取材与资料草稿**（见 apps.md「实现顺序」），要等日报第 1 步合并（用它的 `src/lib/ai` 和 Inngest）。第 3 步前台不依赖它，可以先做。之后是热度 → 收藏、评价与提交；热度里的日报提及要等日报第 3 步。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
 4. **资源第 1 步：数据与后台**（见 resources.md「实现顺序」），不依赖日报，可以和日报、应用并行；第 2、3 步（导入与检测、说明起草）要等日报第 1 步的 Inngest 和 `src/lib/ai`。收藏复用应用的 `saves` 表，谁先做谁建表。
 
@@ -82,7 +83,8 @@
 - [x] 把 Claude 的 GitHub 应用装到 ifai-os 组织，只授权 `ifai` 这一个仓库（2026-10-22 已完成）。以后要给它加仓库：ifai-os 组织 → Settings → GitHub Apps → Claude → Configure → Repository access。
 - [ ] 删除临时的 `bootstrap` 分支和两个「Temporary bootstrap」草稿 release。
 - [ ] 按 `docs/setup.md` 开账号、配 Vercel。
-- [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，装 Vercel 集成），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。日报第 2 步合并前要能在 Inngest 控制台跑通 `ifai/health.check`。
+- [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，装 Vercel 集成），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。先在 Inngest 控制台跑通 `ifai/health.check`。
+- [ ] 日报第 2 步部署到预览环境后：把预览环境的 `COLLECT_ENABLED` 设为 `true`，在后台「日报 → 信源」逐个点「试抓」，确认抓到的是文章、日期也对；给 Future Tools、The Rundown、Forward Future 填好选择器后启用；试抓 Anthropic、Meta AI 的新闻列表页，能读就新建信源（T1）。然后发事件 `daily/collect.run`，看 `raw_items` 里有没有条目。
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。
 - [ ] 以后再定：商业化方式；排行第一批参赛模型和题库（第三期前）。
 
@@ -90,6 +92,7 @@
 
 - 有的沙盒连不上 npm registry（DNS 失败或代理返回 403）。上次的绕法：在临时分支上用 GitHub Actions 安装依赖，打包成草稿 release 再下载回来，用完要删掉分支和 release。新会话先直接试 `pnpm install`（2026-10-22 的会话可以直接装）。
 - 沙盒里可以用 apt 装 `postgresql-16-pgvector`，再 `service postgresql start`，在本地库上跑迁移和 `pnpm build`。
+- 沙盒的代理不放行新闻站点（techcrunch.com、openai.com、hn.algolia.com 都返回 403），信源抓取只能把 `fetch` 换成假数据在本地库上验证；真实抓取要在预览环境看。
 - 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
 - 两个分支各自生成了迁移时，后合并的那个要先合并 `main`，删掉自己的迁移，再重新 `pnpm payload migrate:create`。否则最新的快照（`.json`）里缺了对方的表，下一次生成迁移会出错。
