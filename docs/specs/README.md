@@ -7,7 +7,7 @@
 | [foundation.md](./foundation.md) — 第 1–2 周地基 | 已实现 |
 | [daily.md](./daily.md) — 日报 | 已确认，待实现 |
 | apps.md — 应用 | 待写 |
-| [resources.md](./resources.md) — 资源（Agent Skills） | 草稿，待确认 |
+| [resources.md](./resources.md) — 资源（Agent Skills） | 已确认，待实现 |
 
 ## 模板
 
