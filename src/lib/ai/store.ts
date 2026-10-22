@@ -1,15 +1,11 @@
-import config from '@payload-config'
-import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { and, eq, gte, lt, or, sql } from '@payloadcms/db-postgres/drizzle'
-import { getPayload } from 'payload'
+
+import { getDb } from '@/lib/db/drizzle'
 
 import type { ReceiptStore } from './receipts'
 import { modelReceipts as t } from './schema'
 
-async function db() {
-  const payload = await getPayload({ config })
-  return (payload.db as unknown as PostgresAdapter).drizzle
-}
+const db = async () => (await getDb()).db
 
 const columns = {
   id: t.id,

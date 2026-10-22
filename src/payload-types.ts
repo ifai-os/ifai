@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     'app-categories': AppCategory;
     apps: App;
+    sources: Source;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     'app-categories': AppCategoriesSelect<false> | AppCategoriesSelect<true>;
     apps: AppsSelect<false> | AppsSelect<true>;
+    sources: SourcesSelect<false> | SourcesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -283,6 +285,49 @@ export interface App {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sources".
+ */
+export interface Source {
+  id: number;
+  name: string;
+  type: 'rss' | 'html_list' | 'json';
+  tier: 'T1' | 'T1_5' | 'T2';
+  use: 'editorial' | 'roundup' | 'hot_signal';
+  /**
+   * The feed, list page or API address that is fetched.
+   */
+  url: string;
+  homepage?: string | null;
+  /**
+   * Web list: {"item", "link", "title", "summary", "date", "dateAttr", "group", "groupDate", "skipHosts"}. JSON: {"kind": "hacker_news", "minPoints": 50}.
+   */
+  config?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Adjusted automatically from the last 7 days of output: 15–60, up to 180 for hot signals.
+   */
+  intervalMinutes: number;
+  notes?: string | null;
+  enabled?: boolean | null;
+  lastFetchedAt?: string | null;
+  lastSuccessAt?: string | null;
+  nextFetchAt?: string | null;
+  firstFetchedAt?: string | null;
+  lastItemCount?: number | null;
+  itemsLast7Days?: number | null;
+  lastError?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -320,6 +365,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'apps';
         value: number | App;
+      } | null)
+    | ({
+        relationTo: 'sources';
+        value: number | Source;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -478,6 +527,31 @@ export interface AppsSelect<T extends boolean = true> {
   logo?: T;
   screenshot?: T;
   alternatives?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sources_select".
+ */
+export interface SourcesSelect<T extends boolean = true> {
+  name?: T;
+  type?: T;
+  tier?: T;
+  use?: T;
+  url?: T;
+  homepage?: T;
+  config?: T;
+  intervalMinutes?: T;
+  notes?: T;
+  enabled?: T;
+  lastFetchedAt?: T;
+  lastSuccessAt?: T;
+  nextFetchAt?: T;
+  firstFetchedAt?: T;
+  lastItemCount?: T;
+  itemsLast7Days?: T;
+  lastError?: T;
   updatedAt?: T;
   createdAt?: T;
 }
