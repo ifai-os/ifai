@@ -277,6 +277,13 @@ export async function listApps({ locale, ...args }: ListArgs & { locale: Locale 
   }
 }
 
+/** Where「打开网站」goes: the published app's id and website; null when there is no such app or no usable website. */
+export async function getVisitTarget(slug: string): Promise<{ appId: number; website: string } | null> {
+  const doc = await findApp(slug)
+  if (!doc?.website || !isHttpUrl(doc.website)) return null
+  return { appId: doc.id, website: doc.website }
+}
+
 /** A published app with everything its page shows; null when there is none by that slug. */
 export const getApp = cache(async (slug: string, locale: Locale): Promise<AppDetail | null> => {
   const doc = await findApp(slug)

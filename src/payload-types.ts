@@ -258,7 +258,7 @@ export interface App {
     | null;
   website: string;
   /**
-   * For the Tranco rank and news-mention matching. Left empty, it is taken from the website (without www.).
+   * For the Tranco rank (looked up by its registered domain: chat.deepseek.com → deepseek.com) and news-mention matching. Left empty, it is taken from the website (without www.).
    */
   domain?: string | null;
   developer?: string | null;
