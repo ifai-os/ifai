@@ -1,11 +1,11 @@
 import Image from 'next/image'
-import { useFormatter, useTranslations } from 'next-intl'
+import { useFormatter, useLocale, useTranslations } from 'next-intl'
 import type { ReactNode } from 'react'
 
 import { buttonClass } from '@/components/button'
 import { Icon } from '@/components/icon'
 import { ShareButton } from '@/components/share-button'
-import { Link } from '@/i18n/navigation'
+import { getPathname, Link } from '@/i18n/navigation'
 
 import type { AppDetail } from '../data'
 import { listHref } from '../list-params'
@@ -115,7 +115,7 @@ export function AppDetailView({ app }: { app: AppDetail }) {
 
             <div className="hidden flex-wrap gap-2 pt-1 md:flex">
               {app.website && (
-                <OpenSiteLink href={app.website} className={buttonClass('primary')}>
+                <OpenSiteLink slug={app.slug} className={buttonClass('primary')}>
                   <Icon name="external" size={15} strokeWidth={2} />
                   {t('openSite')}
                 </OpenSiteLink>
@@ -250,7 +250,7 @@ export function AppDetailView({ app }: { app: AppDetail }) {
           labels={{ share: t('share'), copied: t('copied') }}
         />
         {app.website && (
-          <OpenSiteLink href={app.website} className={`${barButton} flex-1 bg-ink text-white hover:bg-ink-2`}>
+          <OpenSiteLink slug={app.slug} className={`${barButton} flex-1 bg-ink text-white hover:bg-ink-2`}>
             {t('openSite')}
             <Icon name="external" size={16} />
           </OpenSiteLink>
@@ -271,11 +271,16 @@ function Section({ id, title, children }: { id: string; title: string; children:
   )
 }
 
-/** The app's own website, in a new tab. Keeps the referrer, so the site can see visits came from here. */
-function OpenSiteLink({ href, className, children }: { href: string; className: string; children: ReactNode }) {
+/**
+ * The app's own website, in a new tab, through the visit route that counts the click toward its
+ * heat. A plain link rather than Link, so nothing prefetches it; the referrer is kept, so the
+ * site can see visits came from here.
+ */
+function OpenSiteLink({ slug, className, children }: { slug: string; className: string; children: ReactNode }) {
   const t = useTranslations('apps')
+  const locale = useLocale()
   return (
-    <a href={href} target="_blank" rel="noopener" className={className}>
+    <a href={getPathname({ href: `/apps/${slug}/visit`, locale })} target="_blank" rel="nofollow noopener" className={className}>
       {children}
       <span className="sr-only">{t('newTab')}</span>
     </a>

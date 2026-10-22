@@ -1293,6 +1293,461 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.app_clicks": {
+      "name": "app_clicks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "app_id": {
+          "name": "app_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "day": {
+          "name": "day",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visitor_hash": {
+          "name": "visitor_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "app_clicks_app_day_visitor_idx": {
+          "name": "app_clicks_app_day_visitor_idx",
+          "columns": [
+            {
+              "expression": "app_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "day",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "visitor_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "app_clicks_day_idx": {
+          "name": "app_clicks_day_idx",
+          "columns": [
+            {
+              "expression": "day",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.app_mentions": {
+      "name": "app_mentions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "app_id": {
+          "name": "app_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "story_id": {
+          "name": "story_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "basis": {
+          "name": "basis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "matched": {
+          "name": "matched",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "removed_at": {
+          "name": "removed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "app_mentions_app_story_idx": {
+          "name": "app_mentions_app_story_idx",
+          "columns": [
+            {
+              "expression": "app_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "story_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "app_mentions_app_published_idx": {
+          "name": "app_mentions_app_published_idx",
+          "columns": [
+            {
+              "expression": "app_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "published_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "app_mentions_published_idx": {
+          "name": "app_mentions_published_idx",
+          "columns": [
+            {
+              "expression": "published_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.app_metrics_daily": {
+      "name": "app_metrics_daily",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "app_id": {
+          "name": "app_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "day": {
+          "name": "day",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tranco_rank": {
+          "name": "tranco_rank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tranco_domain": {
+          "name": "tranco_domain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tranco_list_id": {
+          "name": "tranco_list_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "clicks": {
+          "name": "clicks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "saves": {
+          "name": "saves",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "mentions": {
+          "name": "mentions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "rank_score": {
+          "name": "rank_score",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "engagement_score": {
+          "name": "engagement_score",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mention_score": {
+          "name": "mention_score",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "heat": {
+          "name": "heat",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "change_7d": {
+          "name": "change_7d",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rank_overall": {
+          "name": "rank_overall",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rank_category": {
+          "name": "rank_category",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rank_rising": {
+          "name": "rank_rising",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "app_metrics_daily_app_day_idx": {
+          "name": "app_metrics_daily_app_day_idx",
+          "columns": [
+            {
+              "expression": "app_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "day",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "app_metrics_daily_day_idx": {
+          "name": "app_metrics_daily_day_idx",
+          "columns": [
+            {
+              "expression": "day",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.app_heat_runs": {
+      "name": "app_heat_runs",
+      "schema": "",
+      "columns": {
+        "day": {
+          "name": "day",
+          "type": "date",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "finished_at": {
+          "name": "finished_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tranco_status": {
+          "name": "tranco_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tranco_list_id": {
+          "name": "tranco_list_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tranco_error": {
+          "name": "tranco_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apps": {
+          "name": "apps",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mentions": {
+          "name": "mentions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.admins_sessions": {
       "name": "admins_sessions",
       "schema": "",
@@ -5823,19 +6278,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "draft_status": {
-          "name": "draft_status",
-          "type": "enum_skill_versions_draft_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "draft_info": {
-          "name": "draft_info",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
         "source_commit": {
           "name": "source_commit",
           "type": "varchar",
@@ -5857,12 +6299,6 @@
         "frontmatter": {
           "name": "frontmatter",
           "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "readme": {
-          "name": "readme",
-          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
@@ -5991,21 +6427,6 @@
           "columns": [
             {
               "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "skill_versions_draft_status_idx": {
-          "name": "skill_versions_draft_status_idx",
-          "columns": [
-            {
-              "expression": "draft_status",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -7991,15 +8412,6 @@
         "withdrawn"
       ]
     },
-    "public.enum_skill_versions_draft_status": {
-      "name": "enum_skill_versions_draft_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "drafted",
-        "failed"
-      ]
-    },
     "public.enum_skill_versions_scan_status": {
       "name": "enum_skill_versions_scan_status",
       "schema": "public",
@@ -8030,6 +8442,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "7b16a337-a348-4a29-a327-3a0849bf73c9",
+  "id": "c4cbe15f-615d-421a-a316-cf3dee96e258",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

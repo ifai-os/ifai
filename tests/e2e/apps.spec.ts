@@ -91,8 +91,13 @@ test.describe('with the sample apps', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Lumen Chat' })).toBeVisible()
     await expect(page.getByRole('link', { name: new RegExp(`^${en.apps.openSite}`) }).first()).toHaveAttribute(
       'href',
-      'https://lumen-chat.example',
+      '/en/apps/lumen-chat/visit',
     )
+    // The visit route counts the click, then sends the reader on to the website.
+    const visit = await page.request.get('/en/apps/lumen-chat/visit', { maxRedirects: 0 })
+    expect(visit.status()).toBe(302)
+    expect(visit.headers()['location']).toBe('https://lumen-chat.example/')
+    expect(visit.headers()['cache-control']).toBe('no-store')
     await expect(page.getByText('There is a free plan and a paid plan.')).toBeVisible()
 
     // No alternatives were picked, so the page shows others from the same category.

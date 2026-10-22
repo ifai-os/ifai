@@ -4,6 +4,7 @@ import { relationship, text } from 'payload/shared'
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
 import { refreshAppsAfterChange, refreshAppsAfterDelete } from '../cache'
+import { heatEndpoints } from '../metrics/endpoints'
 import { domainFromUrl, isHttpUrl, reservedAppSlugs } from '../normalize'
 import { draftEndpoints } from '../profile/endpoints'
 import { adminMessage, appsAdminGroup, isAdmin, slugField } from './shared'
@@ -50,7 +51,7 @@ export const Apps: CollectionConfig = {
     group: appsAdminGroup,
     defaultColumns: ['name', 'primaryCategory', 'pricing', 'status', 'draftStatus', 'updatedAt'],
     listSearchableFields: ['name', 'slug', 'domain'],
-    components: { beforeListTable: ['/modules/apps/admin/import-box#ImportBox'] },
+    components: { beforeListTable: ['/modules/apps/admin/heat-status#HeatStatus', '/modules/apps/admin/import-box#ImportBox'] },
     description: {
       en: 'Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately.',
       zh: '繁体中文由简体自动转换（OpenCC），不用手改；英语、日语、韩语分别填写。',
@@ -66,7 +67,7 @@ export const Apps: CollectionConfig = {
     afterChange: [syncHantFromHans(hantFields), refreshAppsAfterChange],
     afterDelete: [refreshAppsAfterDelete],
   },
-  endpoints: draftEndpoints,
+  endpoints: [...draftEndpoints, ...heatEndpoints],
   fields: [
     {
       name: 'name',
@@ -147,8 +148,8 @@ export const Apps: CollectionConfig = {
               label: { en: 'Domain', zh: '官网域名' },
               admin: {
                 description: {
-                  en: 'For the Tranco rank and news-mention matching. Left empty, it is taken from the website (without www.).',
-                  zh: '用于 Tranco 排名和日报提及匹配。留空时取官网网址的主机名（去掉 www.）。',
+                  en: 'For the Tranco rank (looked up by its registered domain: chat.deepseek.com → deepseek.com) and news-mention matching. Left empty, it is taken from the website (without www.).',
+                  zh: '用于 Tranco 排名（按注册域名查，chat.deepseek.com 查 deepseek.com）和日报提及匹配。留空时取官网网址的主机名（去掉 www.）。',
                 },
               },
               hooks: {
@@ -344,6 +345,20 @@ export const Apps: CollectionConfig = {
                   zh: '可以不填；不填时取同分类热度最高的几个。',
                 },
               },
+            },
+          ],
+        },
+        {
+          label: { en: 'Heat', zh: '热度' },
+          description: {
+            en: 'Computed every day at 06:00 Shanghai time from the Tranco rank, clicks and saves on IFAI, and daily-story mentions.',
+            zh: '每天上海时间 06:00 按 Tranco 排名、站内点击与收藏、日报提及计算。',
+          },
+          fields: [
+            {
+              name: 'heatPanel',
+              type: 'ui',
+              admin: { components: { Field: '/modules/apps/admin/heat-panel#HeatPanel' } },
             },
           ],
         },
