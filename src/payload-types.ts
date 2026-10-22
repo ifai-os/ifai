@@ -411,6 +411,15 @@ export interface Story {
   promptVersion?: string | null;
   publishedAt?: string | null;
   correctedAt?: string | null;
+  /**
+   * Moves the story to the end of the queue.
+   */
+  laterAt?: string | null;
+  mergedInto?: number | null;
+  /**
+   * The editor said it is not the same happening as this published story.
+   */
+  keptApartFrom?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -987,6 +996,9 @@ export interface StoriesSelect<T extends boolean = true> {
   promptVersion?: T;
   publishedAt?: T;
   correctedAt?: T;
+  laterAt?: T;
+  mergedInto?: T;
+  keptApartFrom?: T;
   updatedAt?: T;
   createdAt?: T;
 }

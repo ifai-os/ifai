@@ -52,6 +52,10 @@ export default buildConfig({
     user: Admins.slug,
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: ' · IFAI 后台' },
+    components: {
+      // The daily review queue, next to the collection links.
+      afterNavLinks: ['/modules/daily/admin/review/links#ReviewNavLink'],
+    },
   },
   // Admin UI language (the back office is for the site owner).
   i18n: {

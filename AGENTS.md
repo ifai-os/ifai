@@ -61,7 +61,7 @@ src/
     i18n/hant.ts           简体 → 台湾繁体
   migrations/              Payload 迁移文件（自动生成，和代码一起提交）
   modules/                 按模块组织的业务代码：daily/、apps/、resources/ …
-    daily/                 信源与新闻集合（collections/）、读取器（readers/）、采集任务（collect/）、提示词（prompts/）、判断流水线（judge/）、写作（write/）、Drizzle 表（schema.ts）
+    daily/                 信源与新闻集合（collections/）、读取器（readers/）、采集任务（collect/）、提示词（prompts/）、判断流水线（judge/）、写作（write/）、审核与发布（review/）、后台组件（admin/）、Drizzle 表（schema.ts）
   payload.config.ts
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko
