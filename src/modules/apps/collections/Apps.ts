@@ -1,10 +1,11 @@
-import type { CollectionConfig, TextFieldSingleValidation } from 'payload'
-import { text } from 'payload/shared'
+import type { CollectionConfig, FieldAccess, RelationshipFieldSingleValidation, TextFieldSingleValidation } from 'payload'
+import { relationship, text } from 'payload/shared'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
 import { refreshAppsAfterChange, refreshAppsAfterDelete } from '../cache'
 import { domainFromUrl, isHttpUrl, reservedAppSlugs } from '../normalize'
+import { draftEndpoints } from '../profile/endpoints'
 import { adminMessage, appsAdminGroup, isAdmin, slugField } from './shared'
 
 /** Localized fields whose zh-Hant value is converted from zh-Hans. */
@@ -21,6 +22,19 @@ const validateWebsite: TextFieldSingleValidation = (value, args) => {
       })
 }
 
+/** Drafts may wait for their category (the profile draft suggests one); published apps need it. */
+const validateCategory: RelationshipFieldSingleValidation = async (value, args) => {
+  const valid = await relationship(value, args)
+  if (valid !== true) return valid
+  return value || (args.data as { status?: string } | undefined)?.status !== 'published'
+    ? true
+    : adminMessage(args.req, { en: 'Pick a category before publishing.', zh: '发布前要选主分类。' })
+}
+
+const signedIn: FieldAccess = ({ req: { user } }) => Boolean(user)
+/** Written by the profile-draft job and the back-office endpoints only (the Local API skips access). */
+const jobsOnly: FieldAccess = () => false
+
 /**
  * The apps directory (docs/specs/apps.md). Profiles are written per language from the
  * app's own website; the public only ever sees published apps.
@@ -34,8 +48,9 @@ export const Apps: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     group: appsAdminGroup,
-    defaultColumns: ['name', 'primaryCategory', 'pricing', 'status', 'updatedAt'],
+    defaultColumns: ['name', 'primaryCategory', 'pricing', 'status', 'draftStatus', 'updatedAt'],
     listSearchableFields: ['name', 'slug', 'domain'],
+    components: { beforeListTable: ['/modules/apps/admin/import-box#ImportBox'] },
     description: {
       en: 'Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately.',
       zh: '繁体中文由简体自动转换（OpenCC），不用手改；英语、日语、韩语分别填写。',
@@ -51,6 +66,7 @@ export const Apps: CollectionConfig = {
     afterChange: [syncHantFromHans(hantFields), refreshAppsAfterChange],
     afterDelete: [refreshAppsAfterDelete],
   },
+  endpoints: draftEndpoints,
   fields: [
     {
       name: 'name',
@@ -89,6 +105,27 @@ export const Apps: CollectionConfig = {
         position: 'sidebar',
         description: { en: 'Re-check pricing and platforms every 90 days.', zh: '每 90 天重新核对一次定价和平台。' },
       },
+    },
+    {
+      name: 'draftStatus',
+      type: 'select',
+      index: true,
+      label: { en: 'Profile draft', zh: '资料草稿' },
+      options: [
+        { value: 'pending', label: { en: 'Waiting', zh: '待生成' } },
+        { value: 'drafted', label: { en: 'Drafted', zh: '已生成' } },
+        { value: 'failed', label: { en: 'Not written', zh: '没生成' } },
+      ],
+      access: { read: signedIn, create: jobsOnly, update: jobsOnly },
+      // Shown as the「资料草稿」panel (state, check results, generate button); a plain column in the list.
+      admin: { position: 'sidebar', readOnly: true, components: { Field: '/modules/apps/admin/draft-panel#DraftPanel' } },
+    },
+    {
+      name: 'draftInfo',
+      type: 'json',
+      label: { en: 'Profile draft details', zh: '资料草稿详情' },
+      access: { read: signedIn, create: jobsOnly, update: jobsOnly },
+      admin: { hidden: true },
     },
     {
       type: 'tabs',
@@ -147,9 +184,15 @@ export const Apps: CollectionConfig = {
                   name: 'primaryCategory',
                   type: 'relationship',
                   relationTo: 'app-categories',
-                  required: true,
                   index: true,
                   label: { en: 'Category', zh: '主分类' },
+                  validate: validateCategory,
+                  admin: {
+                    description: {
+                      en: 'Needed to publish. The profile draft suggests one.',
+                      zh: '发布前必填；生成草稿时会按官网建议一个。',
+                    },
+                  },
                 },
                 {
                   name: 'secondaryCategories',

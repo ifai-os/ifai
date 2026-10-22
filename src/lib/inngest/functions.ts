@@ -1,3 +1,4 @@
+import { appsProfileFunctions } from '@/modules/apps/profile/jobs'
 import { dailyCollectFunctions } from '@/modules/daily/collect/jobs'
 import { dailyJudgeFunctions } from '@/modules/daily/judge/jobs'
 import { dailyWriteFunctions } from '@/modules/daily/write/jobs'
@@ -11,5 +12,6 @@ export const functions = [
   ...dailyCollectFunctions,
   ...dailyJudgeFunctions,
   ...dailyWriteFunctions,
+  ...appsProfileFunctions,
   ...resourcesFunctions,
 ]

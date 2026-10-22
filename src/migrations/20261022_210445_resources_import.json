@@ -2365,6 +2365,19 @@
           "primaryKey": false,
           "notNull": false
         },
+        "draft_status": {
+          "name": "draft_status",
+          "type": "enum_apps_draft_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "draft_info": {
+          "name": "draft_info",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "website": {
           "name": "website",
           "type": "varchar",
@@ -2387,7 +2400,7 @@
           "name": "primary_category_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "pricing": {
           "name": "pricing",
@@ -2444,6 +2457,21 @@
           "columns": [
             {
               "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "apps_draft_status_idx": {
+          "name": "apps_draft_status_idx",
+          "columns": [
+            {
+              "expression": "draft_status",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -7747,6 +7775,15 @@
         "delisted"
       ]
     },
+    "public.enum_apps_draft_status": {
+      "name": "enum_apps_draft_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "drafted",
+        "failed"
+      ]
+    },
     "public.enum_apps_pricing": {
       "name": "enum_apps_pricing",
       "schema": "public",
@@ -7950,6 +7987,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "d9bff9f6-a88f-43a4-a1e1-5a4f37f45cba",
+  "id": "5baf22c2-f91e-4b74-be65-54554754f8e6",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
