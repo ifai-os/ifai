@@ -19,7 +19,7 @@
 | 第一期 | 1–2 | 地基 | 完成 |
 | 第一期 | 3 起 | 日报 | 规格已确认，待实现 |
 | 第一期 | 日报之后 | 应用 | 画板已定（热度口径），规格待写 |
-| 第一期 | 日报之后 | 资源（Agent Skills） | 画板已定，规格待写 |
+| 第一期 | 日报之后 | 资源（Agent Skills） | 规格草稿待确认 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
 | 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
 
@@ -30,7 +30,7 @@
 1. **日报第 1 步：基础**（见 daily.md「实现顺序」）。要先装依赖：Inngest、Vercel AI SDK + OpenRouter、RSS 解析、HTML 解析与正文提取。然后启用 pgvector，写 `src/lib/ai`（按用途选模型、回执、每日预算上限、总开关），接上 Inngest 路由。这一步要把 OpenRouter 和 Inngest 的环境变量补进 `.env.example` 和 `docs/setup.md`。
 2. 日报第 2–6 步：信源与采集 → 判断与写作 → 审核与发布 → 前台 → 热度与海报。
 3. 写 `docs/specs/apps.md`（应用），对应画板「IFAI 应用首页（原排行）」「IFAI 应用详情」「手机 · 应用列表」「手机 · 应用详情」。
-4. 写 `docs/specs/resources.md`（资源），对应画板「IFAI 资源 · Skills」「IFAI Skill 详情」「手机 · Skill 详情」。
+4. 确认 `docs/specs/resources.md`（资源）里「待你决定」的 7 个问题，然后按它的「实现顺序」开工（依赖日报第 1 步的 Inngest 和 `src/lib/ai`）。
 
 ## 已做的决定
 
