@@ -60,7 +60,7 @@
 
 ## 待站长处理
 
-- [ ] 在 GitHub 上给 Claude 的 GitHub 应用加上 `ifai-os/ifai` 的访问权限（ifai-os 组织 → Settings → GitHub Apps → Claude → Configure → Repository access）。不加的话，AI 会话读不到也推不了这个仓库。
+- [x] 把 Claude 的 GitHub 应用装到 ifai-os 组织，只授权 `ifai` 这一个仓库（2026-10-22 已完成）。以后要给它加仓库：ifai-os 组织 → Settings → GitHub Apps → Claude → Configure → Repository access。
 - [ ] 删除临时的 `bootstrap` 分支和两个「Temporary bootstrap」草稿 release。
 - [ ] 按 `docs/setup.md` 开账号、配 Vercel。日报第 1 步之前还要开 OpenRouter 和 Inngest。
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。
