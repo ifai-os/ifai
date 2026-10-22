@@ -172,5 +172,14 @@
     "search": "검색·리서치",
     "design": "이미지·디자인",
     "coding": "코딩"
+  },
+  "skillCategories": {
+    "coding": "코딩",
+    "knowledge": "지식 관리",
+    "writing": "글쓰기",
+    "design": "디자인",
+    "data": "데이터 분석",
+    "productivity": "업무 효율",
+    "life": "생활"
   }
 }

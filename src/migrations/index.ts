@@ -3,6 +3,7 @@ import * as migration_20261022_152835_apps from './20261022_152835_apps';
 import * as migration_20261022_160814_model_receipts_pgvector from './20261022_160814_model_receipts_pgvector';
 import * as migration_20261022_161230_daily_sources_raw_items from './20261022_161230_daily_sources_raw_items';
 import * as migration_20261022_161537_daily_judge_stories from './20261022_161537_daily_judge_stories';
+import * as migration_20261022_164805_resources from './20261022_164805_resources';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261022_161537_daily_judge_stories.up,
     down: migration_20261022_161537_daily_judge_stories.down,
-    name: '20261022_161537_daily_judge_stories'
+    name: '20261022_161537_daily_judge_stories',
+  },
+  {
+    up: migration_20261022_164805_resources.up,
+    down: migration_20261022_164805_resources.down,
+    name: '20261022_164805_resources'
   },
 ];

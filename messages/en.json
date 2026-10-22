@@ -172,5 +172,14 @@
     "search": "Search & research",
     "design": "Image & design",
     "coding": "Coding"
+  },
+  "skillCategories": {
+    "coding": "Coding",
+    "knowledge": "Knowledge",
+    "writing": "Writing",
+    "design": "Design",
+    "data": "Data analysis",
+    "productivity": "Productivity",
+    "life": "Everyday life"
   }
 }
