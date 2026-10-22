@@ -9,6 +9,7 @@
 - **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。首页用的是演示数据，日报、应用、资源三个入口是「即将上线」占位页。详见 [specs/foundation.md](./specs/foundation.md)。
 - **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。
 - **日报第 1 步（基础）已完成**：装好了 Inngest、Vercel AI SDK + OpenRouter、feedsmith（RSS）、cheerio、linkedom + Readability；迁移 `model_receipts_pgvector` 启用 pgvector 并建 `model_receipts` 表；`src/lib/ai` 提供按用途选模型、回执（重试不重复扣费）、每日预算（上海时间，默认 10 美元）、总开关；Inngest 入口 `/api/inngest`，带一个不花钱的 `health-check` 任务（事件 `ifai/health.check`）用来验证连通。还没有任何信源和真实模型调用。
+- **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 以后也可以用。前台页面还没做。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 
 ## 分期
@@ -19,7 +20,7 @@
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |
 | 第一期 | 3 起 | 日报 | 第 1 步（基础）完成，下一步信源与采集 |
-| 第一期 | 日报之后 | 应用 | 规格已确认（[apps.md](./specs/apps.md)），待实现 |
+| 第一期 | 日报之后 | 应用 | 第 1 步（集合与后台录入）完成，下一步官网取材与资料草稿 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 画板已定，规格待写 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
 | 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
@@ -30,7 +31,7 @@
 
 1. **日报第 2 步：信源与采集**（见 daily.md「实现顺序」）：`sources` 集合、16 个信源、后台试抓、RSS / 网页列表 / JSON 三种读取器、写入 `raw_items`（判重、48 小时规则）。采集任务先检查 `collectEnabled()`。
 2. 日报第 3–6 步：判断与写作 → 审核与发布 → 前台 → 热度与海报。模型调用用 `ai.object` / `ai.text` / `ai.embed`（`src/lib/ai`），两次评分用 `variant: 'a'` / `'b'` 区分；`ModelCallError.retryable` 为 false 时（开关关闭、预算用完、同一调用失败 3 次）任务应停住并在后台告警。`raw_items` 的向量列用 `EMBEDDING_DIMENSIONS`（1536）。
-3. **应用第 1 步：集合与后台**（见 apps.md「实现顺序」），可以和日报并行。之后是前台 → 热度 → 收藏、评价与提交；热度里的日报提及要等日报第 3 步。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
+3. **应用第 2 步：官网取材与资料草稿**（见 apps.md「实现顺序」），要等日报第 1 步合并（用它的 `src/lib/ai` 和 Inngest）。第 3 步前台不依赖它，可以先做。之后是热度 → 收藏、评价与提交；热度里的日报提及要等日报第 3 步。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
 4. 写 `docs/specs/resources.md`（资源），对应画板「IFAI 资源 · Skills」「IFAI Skill 详情」「手机 · Skill 详情」。
 
 ## 已做的决定
@@ -82,6 +83,9 @@
 - 沙盒里可以用 apt 装 `postgresql-16-pgvector`，再 `service postgresql start`，在本地库上跑迁移和 `pnpm build`。
 - 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
+- 两个分支各自生成了迁移时，后合并的那个要先合并 `main`，删掉自己的迁移，再重新 `pnpm payload migrate:create`。否则最新的快照（`.json`）里缺了对方的表，下一次生成迁移会出错。
+- Payload 生成的 down 迁移会先 `DROP TABLE … CASCADE`，再删已经被连带删掉的外键，执行时报错。生成后把这类 `DROP CONSTRAINT` 改成 `DROP CONSTRAINT IF EXISTS`，并跑一次 `pnpm payload migrate:down` 验证。
+- 沙盒里有 PostgreSQL 16：`service postgresql start`，建库 `ifai`，在 `.env` 里填本地的 `DATABASE_URI`，就能跑迁移和 `pnpm build`。
 - ESLint 10 的 peer 依赖警告是已知情况，见 AGENTS.md。
 
 ## 设计稿
