@@ -4,15 +4,22 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, PayloadReque
 /** Every cached apps query carries this tag, so one change refreshes every apps page. */
 export const appsCacheTag = 'apps'
 
-function refreshAppsPages(req: PayloadRequest) {
+/**
+ * Expire every cached apps page now rather than serve one more stale page: an editor checks
+ * right after saving, and the heat job's new numbers should show at once.
+ */
+export function refreshAppsCache(onError: (error: unknown) => void = (error) => console.warn('Could not refresh the apps pages', error)) {
   try {
-    // Expire now rather than serve one more stale page: an editor checks right after saving.
     revalidateTag(appsCacheTag, { expire: 0 })
   } catch (error) {
     // Scripts and migrations run outside Next.js, where there is no page cache to refresh.
     if (error instanceof Error && error.message.includes('static generation store missing')) return
-    req.payload.logger.warn({ err: error }, 'Could not refresh the apps pages')
+    onError(error)
   }
+}
+
+function refreshAppsPages(req: PayloadRequest) {
+  refreshAppsCache((error) => req.payload.logger.warn({ err: error }, 'Could not refresh the apps pages'))
 }
 
 /**

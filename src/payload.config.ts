@@ -18,6 +18,7 @@ import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
 import { AppCategories } from './modules/apps/collections/AppCategories'
 import { Apps } from './modules/apps/collections/Apps'
+import { appsTables } from './modules/apps/schema'
 import { Sources } from './modules/daily/collections/sources'
 import { Stories } from './modules/daily/collections/stories'
 import { dailyTables } from './modules/daily/schema'
@@ -97,7 +98,7 @@ export default buildConfig({
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
-        tables: { ...schema.tables, ...authTables, ...aiTables, ...dailyTables, ...resourcesTables },
+        tables: { ...schema.tables, ...authTables, ...aiTables, ...dailyTables, ...resourcesTables, ...appsTables },
       }),
     ],
   }),

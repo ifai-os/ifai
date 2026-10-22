@@ -1,4 +1,6 @@
 import { DraftPanel as DraftPanel_5d90df983563fe7b2e57964307e17b7f } from '../../../modules/apps/admin/draft-panel'
+import { HeatPanel as HeatPanel_e2e4e5526093090dcc57b08478fbf79e } from '../../../modules/apps/admin/heat-panel'
+import { HeatStatus as HeatStatus_f910cd358bdcc46e0c7fb035c893c100 } from '../../../modules/apps/admin/heat-status'
 import { ImportBox as ImportBox_240395083c95ae6702fb50945e8d4929 } from '../../../modules/apps/admin/import-box'
 import { TestFetchButton as TestFetchButton_b1dc21837ee664b416d7310fb91f4040 } from '../../../modules/daily/admin/test-fetch-button'
 import { ReviewCell as ReviewCell_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../../../modules/daily/admin/review/links'
@@ -13,6 +15,8 @@ import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc056
 /** @type import('payload').ImportMap */
 export const importMap = {
   "/modules/apps/admin/draft-panel#DraftPanel": DraftPanel_5d90df983563fe7b2e57964307e17b7f,
+  "/modules/apps/admin/heat-panel#HeatPanel": HeatPanel_e2e4e5526093090dcc57b08478fbf79e,
+  "/modules/apps/admin/heat-status#HeatStatus": HeatStatus_f910cd358bdcc46e0c7fb035c893c100,
   "/modules/apps/admin/import-box#ImportBox": ImportBox_240395083c95ae6702fb50945e8d4929,
   "/modules/daily/admin/test-fetch-button#TestFetchButton": TestFetchButton_b1dc21837ee664b416d7310fb91f4040,
   "/modules/daily/admin/review/links#ReviewCell": ReviewCell_2112a3d97e8d3e9907989fea4d7ef9c1,
