@@ -18,8 +18,10 @@ let instance: Ai | undefined
 function openRouter() {
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) throw new MissingApiKeyError()
-  // appName / appUrl label the calls on openrouter.ai/activity.
-  provider ??= createOpenRouter({ apiKey, appName: 'IFAI', appUrl: siteUrl() })
+  // appName / appUrl label the calls on openrouter.ai/activity. OPENROUTER_BASE_URL points the
+  // same client at any OpenAI-compatible server instead (local testing only; it reports no cost).
+  const baseURL = process.env.OPENROUTER_BASE_URL?.trim().replace(/\/+$/, '') || undefined
+  provider ??= createOpenRouter({ apiKey, appName: 'IFAI', appUrl: siteUrl(), baseURL })
   return provider
 }
 
