@@ -15,6 +15,8 @@ import { Media } from './collections/Media'
 import { defaultLocale, localeNames, locales } from './i18n/config'
 import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
+import { AppCategories } from './modules/apps/collections/AppCategories'
+import { Apps } from './modules/apps/collections/Apps'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -46,7 +48,7 @@ export default buildConfig({
     supportedLanguages: { zh, en },
     fallbackLanguage: 'zh',
   },
-  collections: [Admins, Media],
+  collections: [Admins, Media, AppCategories, Apps],
   editor: lexicalEditor(),
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;

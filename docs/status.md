@@ -8,6 +8,7 @@
 
 - **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。首页用的是演示数据，日报、应用、资源三个入口是「即将上线」占位页。详见 [specs/foundation.md](./specs/foundation.md)。
 - **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。日报的代码还没开始写。
+- **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 以后也可以用。前台页面还没做。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 
@@ -19,7 +20,7 @@
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |
 | 第一期 | 3 起 | 日报 | 规格已确认，待实现 |
-| 第一期 | 日报之后 | 应用 | 画板已定（热度口径），规格待写 |
+| 第一期 | 日报之后 | 应用 | 第 1 步（集合与后台录入）完成，下一步官网取材与资料草稿 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 画板已定，规格待写 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
 | 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
@@ -30,7 +31,7 @@
 
 1. **日报第 1 步：基础**（见 daily.md「实现顺序」）。要先装依赖：Inngest、Vercel AI SDK + OpenRouter、RSS 解析、HTML 解析与正文提取。然后启用 pgvector，写 `src/lib/ai`（按用途选模型、回执、每日预算上限、总开关），接上 Inngest 路由。这一步要把 OpenRouter 和 Inngest 的环境变量补进 `.env.example` 和 `docs/setup.md`。
 2. 日报第 2–6 步：信源与采集 → 判断与写作 → 审核与发布 → 前台 → 热度与海报。
-3. 写 `docs/specs/apps.md`（应用），对应画板「IFAI 应用首页（原排行）」「IFAI 应用详情」「手机 · 应用列表」「手机 · 应用详情」。
+3. **应用第 2 步：官网取材与资料草稿**（见 apps.md「实现顺序」），要等日报第 1 步合并（用它的 `src/lib/ai` 和 Inngest）。第 3 步前台不依赖它，可以先做。之后是热度 → 收藏、评价与提交；热度里的日报提及要等日报第 3 步。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
 4. 写 `docs/specs/resources.md`（资源），对应画板「IFAI 资源 · Skills」「IFAI Skill 详情」「手机 · Skill 详情」。
 
 ## 已做的决定
@@ -52,9 +53,17 @@
 - 页面不标注「AI 撰写」。
 - 邮件订阅放在第 6 周：在订阅者当地时间早上 8 点发，内容是过去 24 小时热度前 10 条。
 
-应用与品牌：
+应用（2026-10-22，细节见 apps.md）：
 
-- 应用按热度排序和展示：热度分、网站排名（Tranco）、站内点击、日报提及。详情页保留用户评价。
+- 应用按热度排序和展示：网站排名（Tranco）50%、站内点击与收藏 30%、日报提及 20%。不显示月访问量。
+- 首批 200–300 个应用从 Toolify 挑，只取应用名和官网网址；资料由 AI 按官网分别写四种语言，站长审核后发布。
+- logo 取官网图标，截图先用官网 og 图。
+- 热度每天上海时间 06:00 算一次，页面按读者时区显示更新时间。
+- Tranco 名次上线前看条款，允许就显示，不允许就只用来算分。
+- 详情页有用户评价，直接发布、不审核，读者可举报、站长可隐藏。
+
+品牌：
+
 - Logo 定稿为「简化 3」：横条眼睛，f 的横杠只向右伸出。文件在 `public/brand/`、`src/app/icon.svg`、`favicon.ico`、`apple-icon.png`。
 
 仓库：GitHub `ifai-os/ifai`（私有），默认分支 `main`。
@@ -71,6 +80,9 @@
 
 - 有的沙盒连不上 npm registry（DNS 失败或代理返回 403）。上次的绕法：在临时分支上用 GitHub Actions 安装依赖，打包成草稿 release 再下载回来，用完要删掉分支和 release。新会话先直接试 `pnpm install`。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
+- 两个分支各自生成了迁移时，后合并的那个要先合并 `main`，删掉自己的迁移，再重新 `pnpm payload migrate:create`。否则最新的快照（`.json`）里缺了对方的表，下一次生成迁移会出错。
+- Payload 生成的 down 迁移会先 `DROP TABLE … CASCADE`，再删已经被连带删掉的外键，执行时报错。生成后把这类 `DROP CONSTRAINT` 改成 `DROP CONSTRAINT IF EXISTS`，并跑一次 `pnpm payload migrate:down` 验证。
+- 沙盒里有 PostgreSQL 16：`service postgresql start`，建库 `ifai`，在 `.env` 里填本地的 `DATABASE_URI`，就能跑迁移和 `pnpm build`。
 - ESLint 10 的 peer 依赖警告是已知情况，见 AGENTS.md。
 
 ## 设计稿
