@@ -29,7 +29,7 @@ pnpm dev                 # http://localhost:3000
 
 ## 3. Vercel（部署与预览环境）
 
-1. 在 Vercel 导入 GitHub 仓库 `ifai-rd/ifai`（仓库是私有的，需要允许 Vercel 的 GitHub App 访问它）。
+1. 在 Vercel 导入 GitHub 仓库 `ifai-os/ifai`（仓库是私有的，需要允许 Vercel 的 GitHub App 访问 `ifai-os` 组织下的这个仓库）。
 2. 框架会识别为 Next.js。构建命令已写在 `vercel.json`：`pnpm run ci`，即先执行数据库迁移、再构建。所以每次部署都会自动把迁移应用到对应环境的数据库。
 3. 添加 Neon 集成：Vercel 项目 → Integrations → Neon，连接到上面的 Neon 项目，并打开「为每个预览部署创建数据库分支」。之后每个 PR 的预览环境都有自己的数据库分支，变量名是 `DATABASE_URL`，代码会自动读取。
 4. 环境变量（Settings → Environment Variables）：
