@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "title": "IFAI",
+    "titleTemplate": "%s · IFAI",
+    "description": "今天 AI 有什麼變化、大家在用哪些 AI 應用，以及可以直接安裝的 Agent Skills。"
+  },
+  "nav": {
+    "label": "主導覽",
+    "recommend": "推薦",
+    "circles": "圈子",
+    "daily": "日報",
+    "apps": "應用",
+    "rankings": "排行",
+    "resources": "資源",
+    "wiki": "Wiki"
+  },
+  "header": {
+    "skip": "跳到正文",
+    "home": "IFAI 首頁",
+    "language": "切換語言",
+    "signIn": "登入",
+    "account": "帳號選單",
+    "signOut": "登出"
+  },
+  "home": {
+    "demoBanner": "示範資料 · 接入真實資料前，本頁顯示的都是範例內容",
+    "todayAI": "今天的 AI",
+    "dailyMeta": "日報 · {time} 已發布 · {count} 則",
+    "readDaily": "閱讀完整日報",
+    "pickApp": "本週精選應用",
+    "newSkill": "新上架 Skill",
+    "trendingApps": "熱門應用",
+    "newSkills": "新上架 Skills",
+    "viewAll": "檢視全部",
+    "comingSoon": "即將上線"
+  },
+  "modules": {
+    "recommend": "編輯精選的長文與教學",
+    "circles": "隨手分享 AI 作品與用法",
+    "daily": "每天 10–15 條 AI 變化，核對來源，配白話摘要",
+    "apps": "按熱度排序的 AI 應用目錄，附定價和替代品",
+    "rankings": "匿名盲測投票的模型排行",
+    "resources": "可以直接安裝的 Agent Skills，帶版本和安全檢測",
+    "wiki": "人人可編輯的 AI 百科"
+  },
+  "card": {
+    "heat": "熱度 {value}",
+    "rank": "第 {rank} 名",
+    "install": "安裝",
+    "rating": "評分 {value}",
+    "installs": "{count} 次安裝",
+    "moreSources": "{count, plural, =0 {單一來源} other {另有 # 家報導}}"
+  },
+  "placeholder": {
+    "badge": "即將上線",
+    "body": "這個單元正在建置，第一期上線。",
+    "back": "返回首頁"
+  },
+  "auth": {
+    "title": "登入 IFAI",
+    "subtitle": "登入後可以收藏應用、追蹤話題、訂閱日報。",
+    "google": "使用 Google 繼續",
+    "github": "使用 GitHub 繼續",
+    "or": "或",
+    "emailLabel": "電子郵件",
+    "emailPlaceholder": "you@example.com",
+    "sendLink": "傳送登入連結",
+    "sending": "正在傳送…",
+    "sent": "登入連結已寄到 {email}，10 分鐘內有效。",
+    "invalidEmail": "請輸入有效的電子郵件地址",
+    "failed": "出了點問題，請稍後再試。",
+    "unavailable": "這個環境還沒有設定登入方式。",
+    "signedInAs": "已登入：{email}",
+    "signOut": "登出"
+  },
+  "email": {
+    "subject": "你的 IFAI 登入連結",
+    "heading": "登入 IFAI",
+    "body": "點擊下面的按鈕登入。連結 10 分鐘內有效，只能使用一次。",
+    "button": "登入",
+    "ignore": "如果不是你本人操作，忽略這封郵件即可。"
+  },
+  "footer": {
+    "copyright": "© {year} IFAI"
+  },
+  "notFound": {
+    "title": "頁面不存在",
+    "body": "連結可能有誤，或者頁面已經移走。",
+    "back": "返回首頁"
+  },
+  "categories": {
+    "product": "產品更新",
+    "industry": "產業動態",
+    "open": "開源模型",
+    "assistant": "AI 助理",
+    "search": "搜尋與研究",
+    "design": "影像與設計",
+    "coding": "程式開發"
+  }
+}

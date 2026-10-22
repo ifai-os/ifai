@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks, build and smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    # Throwaway Postgres (with pgvector, like Neon) so migrations and /admin are tested for real.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ifai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # CI-only placeholder values. Real secrets live in Vercel, never in this repo.
+    env:
+      DATABASE_URI: postgres://postgres:postgres@localhost:5432/ifai
+      PAYLOAD_SECRET: ci-only-payload-secret-not-used-anywhere-else
+      BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-used-anywhere-else
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Translations (keys complete, zh-Hant up to date)
+        run: pnpm i18n:check
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Migrations apply to an empty database
+        run: pnpm payload migrate
+
+      - name: Build
+        run: pnpm build
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Smoke tests
+        run: pnpm test:e2e
+        env:
+          E2E_ADMIN: '1'
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

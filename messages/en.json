@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "title": "IFAI",
+    "titleTemplate": "%s · IFAI",
+    "description": "What changed in AI today, the AI apps people are using, and Agent Skills you can install."
+  },
+  "nav": {
+    "label": "Main",
+    "recommend": "For You",
+    "circles": "Circles",
+    "daily": "Daily",
+    "apps": "Apps",
+    "rankings": "Rankings",
+    "resources": "Resources",
+    "wiki": "Wiki"
+  },
+  "header": {
+    "skip": "Skip to content",
+    "home": "IFAI home",
+    "language": "Change language",
+    "signIn": "Sign in",
+    "account": "Account menu",
+    "signOut": "Sign out"
+  },
+  "home": {
+    "demoBanner": "Demo data · this page shows sample content until real data is connected",
+    "todayAI": "AI today",
+    "dailyMeta": "Daily · Published {time} · {count} stories",
+    "readDaily": "Read the full Daily",
+    "pickApp": "App of the week",
+    "newSkill": "New Skill",
+    "trendingApps": "Trending apps",
+    "newSkills": "New Skills",
+    "viewAll": "View all",
+    "comingSoon": "Coming soon"
+  },
+  "modules": {
+    "recommend": "Editor-picked long reads and tutorials",
+    "circles": "Share AI work and tips",
+    "daily": "10–15 AI stories a day, checked against their sources, each with a plain-language summary",
+    "apps": "AI apps ranked by heat, with pricing and alternatives",
+    "rankings": "Model rankings from blind votes",
+    "resources": "Agent Skills you can install, with versions and safety checks",
+    "wiki": "An AI encyclopedia anyone can edit"
+  },
+  "card": {
+    "heat": "Heat {value}",
+    "rank": "Rank {rank}",
+    "install": "Install",
+    "rating": "Rated {value}",
+    "installs": "{count} installs",
+    "moreSources": "{count, plural, =0 {Single source} one {# more outlet reported this} other {# more outlets reported this}}"
+  },
+  "placeholder": {
+    "badge": "Coming soon",
+    "body": "This section is being built and opens in phase one.",
+    "back": "Back to home"
+  },
+  "auth": {
+    "title": "Sign in to IFAI",
+    "subtitle": "Save apps, follow topics and get the Daily by email.",
+    "google": "Continue with Google",
+    "github": "Continue with GitHub",
+    "or": "or",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "sendLink": "Email me a sign-in link",
+    "sending": "Sending…",
+    "sent": "Check {email} for a sign-in link. It expires in 10 minutes.",
+    "invalidEmail": "Enter a valid email address",
+    "failed": "Something went wrong. Try again in a moment.",
+    "unavailable": "Sign-in isn't set up in this environment yet.",
+    "signedInAs": "Signed in as {email}",
+    "signOut": "Sign out"
+  },
+  "email": {
+    "subject": "Your IFAI sign-in link",
+    "heading": "Sign in to IFAI",
+    "body": "Use the button below to sign in. The link expires in 10 minutes and works once.",
+    "button": "Sign in",
+    "ignore": "If you didn't ask for this, you can ignore this email."
+  },
+  "footer": {
+    "copyright": "© {year} IFAI"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The link may be broken, or the page may have moved.",
+    "back": "Back to home"
+  },
+  "categories": {
+    "product": "Product update",
+    "industry": "Industry",
+    "open": "Open models",
+    "assistant": "AI assistant",
+    "search": "Search & research",
+    "design": "Image & design",
+    "coding": "Coding"
+  }
+}

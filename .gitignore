@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env — only .env.example is committed
+.env
+.env*.local
+.env.*
+!.env.example
+
+# payload local uploads (production uses R2)
+/media/
+
+# tests
+/coverage/
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
+# vercel
+.vercel/
+
+# misc
+.DS_Store
+*.log

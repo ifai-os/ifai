@@ -1,0 +1,86 @@
+import type { ReactNode, SVGProps } from 'react'
+
+/** Line icons from the design canvas: 24×24 grid, 1.8 stroke, round caps. */
+const icons = {
+  recommend: (
+    <>
+      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+      <path d="M19 16v4M17 18h4" />
+    </>
+  ),
+  circles: (
+    <>
+      <circle cx="9" cy="10" r="6" />
+      <circle cx="15" cy="14" r="6" />
+    </>
+  ),
+  daily: (
+    <>
+      <path d="M4 19V5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v14a1 1 0 0 0 1 1H5a1 1 0 0 1-1-1z" />
+      <path d="M18 8h2v11a1 1 0 0 1-1 1M8 8h6M8 12h6M8 16h4" />
+    </>
+  ),
+  apps: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
+  rankings: <path d="M6 20V10M12 20V4M18 20v-7" />,
+  resources: (
+    <>
+      <path d="M3 7l9-4 9 4-9 4z" />
+      <path d="M3 12l9 4 9-4M3 17l9 4 9-4" />
+    </>
+  ),
+  wiki: (
+    <>
+      <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" />
+      <path d="M4 21a2 2 0 0 1 2-2h13v2M9 7h6" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+    </>
+  ),
+  user: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="10" r="3" />
+      <path d="M6.5 18.5c1.3-2 3.2-3 5.5-3s4.2 1 5.5 3" />
+    </>
+  ),
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m4 7 8 6 8-6" />
+    </>
+  ),
+  arrowLeft: <path d="M19 12H5M11 6l-6 6 6 6" />,
+} satisfies Record<string, ReactNode>
+
+export type IconName = keyof typeof icons
+
+type IconProps = Omit<SVGProps<SVGSVGElement>, 'children'> & {
+  name: IconName
+  size?: number
+}
+
+export function Icon({ name, size = 20, strokeWidth = 1.8, ...rest }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      className="flex-none"
+      {...rest}
+    >
+      {icons[name]}
+    </svg>
+  )
+}

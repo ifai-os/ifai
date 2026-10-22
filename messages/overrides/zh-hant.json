@@ -1,0 +1,48 @@
+{
+  "nav": {
+    "label": "主導覽"
+  },
+  "header": {
+    "signIn": "登入",
+    "account": "帳號選單",
+    "signOut": "登出"
+  },
+  "home": {
+    "demoBanner": "示範資料 · 接入真實資料前，本頁顯示的都是範例內容",
+    "dailyMeta": "日報 · {time} 已發布 · {count} 則"
+  },
+  "modules": {
+    "recommend": "編輯精選的長文與教學",
+    "circles": "隨手分享 AI 作品與用法"
+  },
+  "card": {
+    "moreSources": "{count, plural, =0 {單一來源} other {另有 # 家報導}}"
+  },
+  "placeholder": {
+    "body": "這個單元正在建置，第一期上線。"
+  },
+  "auth": {
+    "title": "登入 IFAI",
+    "subtitle": "登入後可以收藏應用、追蹤話題、訂閱日報。",
+    "emailLabel": "電子郵件",
+    "sendLink": "傳送登入連結",
+    "sending": "正在傳送…",
+    "sent": "登入連結已寄到 {email}，10 分鐘內有效。",
+    "invalidEmail": "請輸入有效的電子郵件地址",
+    "unavailable": "這個環境還沒有設定登入方式。",
+    "signedInAs": "已登入：{email}",
+    "signOut": "登出"
+  },
+  "email": {
+    "subject": "你的 IFAI 登入連結",
+    "heading": "登入 IFAI",
+    "body": "點擊下面的按鈕登入。連結 10 分鐘內有效，只能使用一次。",
+    "button": "登入"
+  },
+  "categories": {
+    "industry": "產業動態",
+    "assistant": "AI 助理",
+    "search": "搜尋與研究",
+    "coding": "程式開發"
+  }
+}

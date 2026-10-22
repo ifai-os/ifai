@@ -1,0 +1,50 @@
+name: Preview smoke tests
+
+# Vercel reports each deployment back to GitHub. When a preview finishes,
+# run the same Playwright smoke tests against its URL.
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      startsWith(github.event.deployment.environment, 'Preview')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASE_URL: ${{ github.event.deployment_status.environment_url }}
+      # Needed only if Vercel Deployment Protection is on for previews (Settings → Deployment Protection →
+      # Protection Bypass for Automation). Add the value as a repository secret with this name.
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      E2E_ADMIN: '1'
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.deployment.sha }}
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: Smoke tests against ${{ env.BASE_URL }}
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-playwright-report
+          path: playwright-report
+          retention-days: 7

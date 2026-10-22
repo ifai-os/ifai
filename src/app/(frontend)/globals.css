@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/*
+ * IFAI design tokens — from the「设计令牌」board on the design canvas.
+ * Components use these tokens only. Tailwind's default palette, type scale,
+ * radii and shadows are cleared, so classes like text-gray-500 or rounded-lg
+ * do not exist here. Need a new value? Add a token below and update the board.
+ */
+@theme {
+  /* ── Colors ─────────────────────────────────────────── */
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-bg: #ffffff;
+  --color-accent: #da282a; /* logo tile, date badge, top-3 ranks, follow buttons */
+  --color-accent-soft: #fbe3e3;
+
+  --color-ink: #000000; /* titles, body, current nav item — 21:1 */
+  --color-ink-2: #48494c; /* secondary text, icons — 9.0:1 */
+  --color-ink-3: #606266; /* summaries, descriptions — 6.1:1 */
+  --color-ink-4: #6f7174; /* author, time, counts; lightest text color — 4.9:1 */
+  --color-mute: #acaeb3; /* decorative icons only, never text */
+  --color-disabled: #cdcdce; /* disabled borders, placeholders, never text */
+
+  --color-surface: #f7f7f9; /* card fill, inputs, grey blocks */
+  --color-surface-2: #f0f0f3; /* light buttons, card borders */
+  --color-line: #e4e4e5; /* dividers, outlined buttons, table frames */
+  --color-hairline: rgb(0 0 0 / 0.05); /* between list items */
+  --color-scrim: rgb(125 127 130 / 0.8); /* dialog backdrop */
+
+  --color-link: #0355e3; /* links, verification — 6.2:1 */
+  --color-up: #2e7d4f; /* rising, passed */
+  --color-down: #b42318; /* falling, risk, errors */
+  --color-warn: #fff4e6; /* demo banner, notices */
+  --color-warn-ink: #7a4a12;
+  --color-success-soft: #e3eee5; /* "security check passed" badge */
+  --color-success-ink: #2e4a37;
+  --color-info-soft: #e2ebf5; /* "IFAI verified" badge */
+
+  /* Initial tiles — assigned by id modulo 7 (see components/cards/initial-tile.tsx) */
+  --color-tile-1: #2a2d3a;
+  --color-tile-1-ink: #ffffff;
+  --color-tile-2: #e2ebf5;
+  --color-tile-2-ink: #2f3e52;
+  --color-tile-3: #f2e6d8;
+  --color-tile-3-ink: #4a3b2c;
+  --color-tile-4: #e3eee5;
+  --color-tile-4-ink: #2e4a37;
+  --color-tile-5: #e9e5f5;
+  --color-tile-5-ink: #3b3550;
+  --color-tile-6: #fff4e6;
+  --color-tile-6-ink: #7a4a12;
+  --color-tile-7: #fbe3e3;
+  --color-tile-7-ink: #8a1f20;
+
+  /* ── Type scale: size / line-height / weight ───────────── */
+  --text-*: initial;
+  --text-display: 40px;
+  --text-display--line-height: 1.25;
+  --text-display--font-weight: 600;
+  --text-h1-article: 38px;
+  --text-h1-article--line-height: 1.4;
+  --text-h1-article--font-weight: 600;
+  --text-h1: 32px;
+  --text-h1--line-height: 1.3;
+  --text-h1--font-weight: 600;
+  --text-h2: 24px;
+  --text-h2--line-height: 1.4;
+  --text-h2--font-weight: 600;
+  --text-h3: 20px;
+  --text-h3--line-height: 1.7;
+  --text-h3--font-weight: 500;
+  --text-title: 17px;
+  --text-title--line-height: 1.6;
+  --text-title--font-weight: 500;
+  --text-body-article: 17px;
+  --text-body-article--line-height: 1.8;
+  --text-body: 15px;
+  --text-body--line-height: 1.75;
+  --text-ui: 14px;
+  --text-ui--line-height: 1.5;
+  --text-meta: 13px;
+  --text-meta--line-height: 1.5;
+  --text-small: 12px;
+  --text-small--line-height: 1.5;
+  --text-micro: 11px; /* weekday badges and axis ticks, never body text */
+  --text-micro--line-height: 1.5;
+
+  /* No CJK web fonts: system stacks only, switched by lang (see @layer base). */
+  --font-sans: -apple-system, system-ui, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", Menlo, Consolas, monospace;
+
+  /* ── Radii ──────────────────────────────────────────── */
+  --radius-*: initial;
+  --radius-tag: 4px; /* tags, small badges */
+  --radius-btn: 6px; /* buttons */
+  --radius-thumb: 8px; /* thumbnails, inputs, code blocks */
+  --radius-tile: 12px; /* icon tiles, menus */
+  --radius-card: 16px; /* cards, table frames */
+  --radius-dialog: 20px; /* dialogs, circle cards */
+  --radius-hero: 24px; /* hero blocks, side panels */
+  --radius-pill: 9999px;
+
+  /* ── Shadows ────────────────────────────────────────── */
+  --shadow-*: initial;
+  --shadow-float: 0 4px 4px rgb(0 0 0 / 0.03), 0 8px 32px rgb(0 0 0 / 0.14);
+  --shadow-divider: 0 1px 0 0 var(--color-line);
+
+  /* ── Layout widths ─────────────────────────────────── */
+  --container-nav: 1232px;
+  --container-content: 1180px;
+  --container-read: 680px;
+  --container-side: 300px;
+}
+
+@layer base {
+  /* Font stack per language. Applies to <html lang> and to any element with its own lang (user content). */
+  :lang(en) {
+    --font-sans: -apple-system, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  :lang(zh-Hant) {
+    --font-sans: -apple-system, system-ui, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  }
+  :lang(ja) {
+    --font-sans: -apple-system, system-ui, "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    line-break: strict;
+  }
+  :lang(ko) {
+    --font-sans: -apple-system, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    word-break: keep-all;
+  }
+  [lang] {
+    font-family: var(--font-sans);
+  }
+
+  html {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-size: var(--text-ui);
+    line-height: var(--text-ui--line-height);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 2px;
+  }
+}

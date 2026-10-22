@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "title": "IFAI",
+    "titleTemplate": "%s · IFAI",
+    "description": "今日のAIの変化、話題のAIアプリ、すぐにインストールできるAgent Skillsをまとめてお届けします。"
+  },
+  "nav": {
+    "label": "メインメニュー",
+    "recommend": "おすすめ",
+    "circles": "サークル",
+    "daily": "デイリー",
+    "apps": "アプリ",
+    "rankings": "ランキング",
+    "resources": "リソース",
+    "wiki": "Wiki"
+  },
+  "header": {
+    "skip": "本文へスキップ",
+    "home": "IFAI ホーム",
+    "language": "言語を切り替える",
+    "signIn": "ログイン",
+    "account": "アカウントメニュー",
+    "signOut": "ログアウト"
+  },
+  "home": {
+    "demoBanner": "デモデータ · 実データにつなぐまで、このページはサンプルを表示しています",
+    "todayAI": "今日のAI",
+    "dailyMeta": "デイリー · {time} 公開 · {count}件",
+    "readDaily": "デイリーをすべて読む",
+    "pickApp": "今週のおすすめアプリ",
+    "newSkill": "新着スキル",
+    "trendingApps": "注目のアプリ",
+    "newSkills": "新着スキル",
+    "viewAll": "すべて見る",
+    "comingSoon": "近日公開"
+  },
+  "modules": {
+    "recommend": "編集部が選ぶ長文記事とチュートリアル",
+    "circles": "AI作品や使い方を気軽にシェア",
+    "daily": "出典を確認したAIニュースを毎日10〜15件、わかりやすい要約つきで",
+    "apps": "注目度順のAIアプリ一覧。料金と代替アプリも掲載",
+    "rankings": "匿名ブラインド投票によるモデルランキング",
+    "resources": "バージョン管理と安全チェック済みのAgent Skills",
+    "wiki": "誰でも編集できるAI百科事典"
+  },
+  "card": {
+    "heat": "注目度 {value}",
+    "rank": "{rank}位",
+    "install": "インストール",
+    "rating": "評価 {value}",
+    "installs": "{count}回インストール",
+    "moreSources": "{count, plural, =0 {単独の情報源} other {ほか#社が報道}}"
+  },
+  "placeholder": {
+    "badge": "近日公開",
+    "body": "このセクションは準備中です。第1期で公開します。",
+    "back": "ホームに戻る"
+  },
+  "auth": {
+    "title": "IFAIにログイン",
+    "subtitle": "アプリの保存、トピックのフォロー、デイリーのメール配信が使えます。",
+    "google": "Googleで続ける",
+    "github": "GitHubで続ける",
+    "or": "または",
+    "emailLabel": "メールアドレス",
+    "emailPlaceholder": "you@example.com",
+    "sendLink": "ログインリンクを送信",
+    "sending": "送信中…",
+    "sent": "{email} にログインリンクを送りました。有効期限は10分です。",
+    "invalidEmail": "有効なメールアドレスを入力してください",
+    "failed": "問題が発生しました。しばらくしてからもう一度お試しください。",
+    "unavailable": "この環境ではまだログイン方法が設定されていません。",
+    "signedInAs": "{email} でログイン中",
+    "signOut": "ログアウト"
+  },
+  "email": {
+    "subject": "IFAIのログインリンク",
+    "heading": "IFAIにログイン",
+    "body": "下のボタンからログインしてください。リンクの有効期限は10分で、使えるのは1回だけです。",
+    "button": "ログイン",
+    "ignore": "心当たりがない場合は、このメールを無視してください。"
+  },
+  "footer": {
+    "copyright": "© {year} IFAI"
+  },
+  "notFound": {
+    "title": "ページが見つかりません",
+    "body": "リンクが切れているか、ページが移動した可能性があります。",
+    "back": "ホームに戻る"
+  },
+  "categories": {
+    "product": "製品アップデート",
+    "industry": "業界動向",
+    "open": "オープンモデル",
+    "assistant": "AIアシスタント",
+    "search": "検索・リサーチ",
+    "design": "画像・デザイン",
+    "coding": "コーディング"
+  }
+}
