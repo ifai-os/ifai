@@ -56,3 +56,19 @@ describe('submission numbers', () => {
     expect(submissionCode(new Date('2026-01-05T20:00:00Z'), 12)).toBe('S-0106-12')
   })
 })
+
+describe('compareVersions / nextVersion', async () => {
+  const { compareVersions, nextVersion } = await import('@/modules/resources/normalize')
+
+  it('orders numerically, pre-releases first', () => {
+    expect(['1.2.10', '1.2.9', '1.10.0', '1.2.10-beta.1', 'v0.9'].sort(compareVersions)).toEqual(['v0.9', '1.2.9', '1.2.10-beta.1', '1.2.10', '1.10.0'])
+    expect(compareVersions('1.0', '1.0.0')).toBe(0)
+  })
+
+  it('bumps the last number of the latest version, starting from 1.0.0', () => {
+    expect(nextVersion([])).toBe('1.0.0')
+    expect(nextVersion(['1.0.0', '1.2.3', 'v1.2.9'])).toBe('1.2.10')
+    expect(nextVersion(['2026.10.18', '2026.10.19'])).toBe('2026.10.20')
+    expect(nextVersion(['1.0.0-beta.1'])).toBe('1.0.1')
+  })
+})

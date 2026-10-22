@@ -38,3 +38,37 @@ export function submissionCode(date: Date, sequence: number): string {
   const [, month, day] = shanghaiDay(date).split('-')
   return `S-${month}${day}-${String(sequence).padStart(2, '0')}`
 }
+
+/** Numeric comparison of 1.2.10 vs 1.2.9; a pre-release tag sorts before the plain version. */
+export function compareVersions(a: string, b: string): number {
+  const split = (value: string) => {
+    const [core, tag] = normalizeVersion(value).split(/[-+]/, 2)
+    return { parts: core.split('.').map(Number), tag: tag ?? '' }
+  }
+  const left = split(a)
+  const right = split(b)
+  const length = Math.max(left.parts.length, right.parts.length)
+  for (let i = 0; i < length; i++) {
+    const diff = (left.parts[i] ?? 0) - (right.parts[i] ?? 0)
+    if (diff !== 0) return diff
+  }
+  if (left.tag === right.tag) return 0
+  if (!left.tag) return 1
+  if (!right.tag) return -1
+  return left.tag < right.tag ? -1 : 1
+}
+
+/** The number for an imported version when neither the request nor SKILL.md names one. */
+export function nextVersion(existing: string[]): string {
+  const valid = existing.map(normalizeVersion).filter(isValidVersion)
+  if (!valid.length) return '1.0.0'
+  const latest = valid.sort(compareVersions).at(-1)!
+  const parts = latest.split(/[-+]/, 1)[0].split('.').map(Number)
+  parts[parts.length - 1] += 1
+  let candidate = parts.join('.')
+  while (valid.includes(candidate)) {
+    parts[parts.length - 1] += 1
+    candidate = parts.join('.')
+  }
+  return candidate
+}
