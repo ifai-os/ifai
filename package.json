@@ -18,6 +18,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "inngest": "npx --yes inngest-cli@1.46.0 dev -u http://localhost:3000/api/inngest --no-discovery",
+    "ai:smoke": "node --env-file-if-exists=.env --import tsx scripts/ai-smoke.ts",
     "i18n:hant": "tsx scripts/i18n-hant.ts",
     "i18n:check": "tsx scripts/i18n-check.ts && tsx scripts/i18n-hant.ts --check",
     "payload": "payload",
@@ -25,6 +27,8 @@
     "generate:importmap": "payload generate:importmap"
   },
   "dependencies": {
+    "@mozilla/readability": "0.6.0",
+    "@openrouter/ai-sdk-provider": "3.1.0",
     "@payloadcms/db-postgres": "3.91.0",
     "@payloadcms/email-resend": "3.91.0",
     "@payloadcms/next": "3.91.0",
@@ -32,8 +36,13 @@
     "@payloadcms/storage-s3": "3.91.0",
     "@payloadcms/translations": "3.91.0",
     "@payloadcms/ui": "3.91.0",
+    "ai": "7.0.132",
     "better-auth": "1.7.12",
+    "cheerio": "1.2.0",
+    "feedsmith": "3.0.1",
     "graphql": "16.14.2",
+    "inngest": "4.22.0",
+    "linkedom": "0.18.13",
     "next": "16.4.2",
     "next-intl": "4.14.9",
     "opencc-js": "1.4.2",
@@ -41,7 +50,8 @@
     "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "sharp": "0.34.5"
+    "sharp": "0.34.5",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
@@ -65,7 +75,8 @@
     ],
     "ignoredBuiltDependencies": [
       "@parcel/watcher",
-      "@swc/core"
+      "@swc/core",
+      "protobufjs"
     ]
   }
 }

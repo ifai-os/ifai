@@ -6,7 +6,7 @@
 
 ## 技术栈
 
-Next.js 16 · Payload CMS 3 · Postgres（Neon）· Better Auth · next-intl + OpenCC · Tailwind CSS 4 · Cloudflare R2 · Vercel · Vitest + Playwright
+Next.js 16 · Payload CMS 3 · Postgres（Neon + pgvector）· Better Auth · next-intl + OpenCC · Tailwind CSS 4 · Cloudflare R2 · Inngest · Vercel AI SDK + OpenRouter · Vercel · Vitest + Playwright
 
 选型理由和整体规划见[技术方案文档](https://claude.ai/artifact/7zipcpFS92xvs5GXsdTZnR)（私有）；给 AI 编程助手的项目规则见 [AGENTS.md](./AGENTS.md)，当前进度见 [docs/status.md](./docs/status.md)。
 
@@ -24,6 +24,8 @@ pnpm dev                  # http://localhost:3000 ，后台在 /admin
 
 邮箱登录在本地不需要配置发信：登录链接会打印在终端里。
 
+后台任务另开一个终端运行 `pnpm inngest`，控制台在 http://localhost:8288 。本地默认不调用模型，要试真实调用见 [docs/setup.md](./docs/setup.md) 第 8 步。
+
 ## 常用命令
 
 | 命令 | 作用 |
@@ -35,11 +37,13 @@ pnpm dev                  # http://localhost:3000 ，后台在 /admin
 | `pnpm i18n:check` | 检查五种语言的文案是否齐全 |
 | `pnpm payload migrate:create <名字>` | 改了数据结构后生成迁移 |
 | `pnpm payload migrate` | 执行迁移 |
+| `pnpm inngest` | Inngest 本地服务（后台任务） |
+| `pnpm ai:smoke` | 用真实模型做三次小调用，验证 OpenRouter 配置 |
 
 ## 文档
 
 - [AGENTS.md](./AGENTS.md)：目录结构、命令和开发规则
-- [docs/setup.md](./docs/setup.md)：Neon、Vercel、R2、Google / GitHub 登录、Resend 的配置步骤
+- [docs/setup.md](./docs/setup.md)：Neon、Vercel、R2、Google / GitHub 登录、Resend、OpenRouter、Inngest 的配置步骤
 - [docs/specs/](./docs/specs/)：各模块规格
 - 设计稿：画布（私有）https://claude.ai/artifact/A5Kyi4ghxTUcsFMouH677D
 
