@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     admins: Admin;
     media: Media;
+    'app-categories': AppCategory;
+    apps: App;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +80,8 @@ export interface Config {
   collectionsSelect: {
     admins: AdminsSelect<false> | AdminsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'app-categories': AppCategoriesSelect<false> | AppCategoriesSelect<true>;
+    apps: AppsSelect<false> | AppsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -187,6 +191,97 @@ export interface Media {
   };
 }
 /**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Fill in the other languages by hand.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "app-categories".
+ */
+export interface AppCategory {
+  id: number;
+  name: string;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  /**
+   * Smaller comes first.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "apps".
+ */
+export interface App {
+  id: number;
+  /**
+   * As the app writes it.
+   */
+  name: string;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  status: 'draft' | 'published' | 'delisted';
+  listedAt?: string | null;
+  /**
+   * Re-check pricing and platforms every 90 days.
+   */
+  checkedAt?: string | null;
+  website: string;
+  /**
+   * For the Tranco rank and news-mention matching. Left empty, it is taken from the website (without www.).
+   */
+  domain?: string | null;
+  developer?: string | null;
+  /**
+   * Other names people use. Matched against news mentions and search.
+   */
+  aliases?: string[] | null;
+  primaryCategory: number | AppCategory;
+  secondaryCategories?: (number | AppCategory)[] | null;
+  /**
+   * Leave empty if the website does not say.
+   */
+  pricing?: ('free' | 'freemium' | 'paid' | 'open-source') | null;
+  platforms?: ('web' | 'desktop' | 'mobile' | 'browser-extension' | 'api')[] | null;
+  tagline?: string | null;
+  description?: string | null;
+  features?:
+    | {
+        title: string;
+        detail?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  tags?: string[] | null;
+  /**
+   * The website's own icon. Empty → the initial-letter tile.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * The website's share image (og:image) for now; replace it by hand if needed.
+   */
+  screenshot?: (number | null) | Media;
+  /**
+   * Optional. Empty → the top apps of the same category by heat.
+   */
+  alternatives?: (number | App)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -217,6 +312,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'app-categories';
+        value: number | AppCategory;
+      } | null)
+    | ({
+        relationTo: 'apps';
+        value: number | App;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -325,6 +428,58 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "app-categories_select".
+ */
+export interface AppCategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "apps_select".
+ */
+export interface AppsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  status?: T;
+  listedAt?: T;
+  checkedAt?: T;
+  website?: T;
+  domain?: T;
+  developer?: T;
+  aliases?: T;
+  primaryCategory?: T;
+  secondaryCategories?: T;
+  pricing?: T;
+  platforms?: T;
+  tagline?: T;
+  description?: T;
+  features?:
+    | T
+    | {
+        title?: T;
+        detail?: T;
+        id?: T;
+      };
+  faqs?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  tags?: T;
+  logo?: T;
+  screenshot?: T;
+  alternatives?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
