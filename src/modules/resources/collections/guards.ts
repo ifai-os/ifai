@@ -4,6 +4,9 @@ import { keepingRequest } from '@/lib/i18n/hant-sync'
 
 import { adminMessage } from './shared'
 
+/** Once a version is out, its content never changes (rule 2); only these statuses remain. */
+export const FROZEN_STATUSES: ReadonlySet<string> = new Set(['published', 'deprecated', 'withdrawn'])
+
 /** Writes made by the app itself (import log, zh-Hant copies, promotions) skip the owner-facing rules. */
 export function isSystemWrite(req: PayloadRequest): boolean {
   const context = req.context as Record<string, unknown> | undefined

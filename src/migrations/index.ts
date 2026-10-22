@@ -7,6 +7,7 @@ import * as migration_20261022_164805_resources from './20261022_164805_resource
 import * as migration_20261022_203732_daily_review from './20261022_203732_daily_review';
 import * as migration_20261022_205617_apps_profile_drafts from './20261022_205617_apps_profile_drafts';
 import * as migration_20261022_210445_resources_import from './20261022_210445_resources_import';
+import * as migration_20261022_214158_resources_describe from './20261022_214158_resources_describe';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20261022_210445_resources_import.up,
     down: migration_20261022_210445_resources_import.down,
-    name: '20261022_210445_resources_import'
+    name: '20261022_210445_resources_import',
+  },
+  {
+    up: migration_20261022_214158_resources_describe.up,
+    down: migration_20261022_214158_resources_describe.down,
+    name: '20261022_214158_resources_describe'
   },
 ];

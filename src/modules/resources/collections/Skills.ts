@@ -328,8 +328,8 @@ export const Skills: CollectionConfig = {
         {
           label: { en: 'Description', zh: '说明' },
           description: {
-            en: 'Drafted per language from SKILL.md and the README, then reviewed by you. Only what the files actually say.',
-            zh: '由 SKILL.md 和 README 按语言起草，你审核后发布。只写文件里确实有的内容。',
+            en: 'Drafted per language from SKILL.md and the README by「Draft the description」on a version, then reviewed by you. Only what the files actually say.',
+            zh: '在版本页点「生成说明草稿」，由 SKILL.md 和 README 按语言起草，你审核后发布。只写文件里确实有的内容。',
           },
           fields: [
             {

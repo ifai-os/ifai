@@ -1,4 +1,4 @@
-import type { TextFieldSingleValidation } from 'payload'
+import type { FieldAccess, TextFieldSingleValidation } from 'payload'
 import { text } from 'payload/shared'
 
 import { adminMessage } from '@/modules/apps/collections/shared'
@@ -26,3 +26,7 @@ export function urlValidation(required: boolean): TextFieldSingleValidation {
         })
   }
 }
+
+export const signedIn: FieldAccess = ({ req: { user } }) => Boolean(user)
+/** Written by background jobs and the back-office endpoints only (the Local API skips access). */
+export const jobsOnly: FieldAccess = () => false

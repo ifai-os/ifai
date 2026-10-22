@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto'
 
 import { scanPackage, type Check, type Finding, type LicenseContext, type ScanStatus } from '../scan/scan'
 import type { Frontmatter } from './frontmatter'
-import type { PackageFile } from './types'
+import { readmePattern } from './select'
+import { utf8, type PackageFile } from './types'
 import { readZip } from './zip'
 
 /** What the import job knows about the repository and passes to the version's upload hook. */
@@ -11,7 +12,12 @@ export type ImportContext = {
   /** Links found in the repository directory; they are left out of the Zip but must still block. */
   importSymlinks?: string[]
   importOthers?: string[]
+  /** The repository's root README, for a Skill directory that has none of its own. */
+  importReadme?: string
 }
+
+/** How much README is kept for the description draft (characters). */
+export const README_MAX_CHARS = 16_000
 
 /** The version fields that come from the Zip itself. */
 export type Inspection = {
@@ -19,6 +25,8 @@ export type Inspection = {
   files: { path: string; size: number; sha256: string }[]
   skillMd: string | null
   frontmatter: Frontmatter | null
+  /** The package's own README, else the repository's; context for the description draft. */
+  readme: string | null
   declaredDomains: string[]
   observedDomains: string[]
   scanStatus: ScanStatus
@@ -51,11 +59,14 @@ export function inspectPackage(zip: Uint8Array, license: LicenseContext, context
       declaredDomains: [],
     }
   }
+  const ownReadme = files.find((file) => !file.path.includes('/') && readmePattern.test(file.path))
+  const readme = (ownReadme ? utf8(ownReadme.data) : context.importReadme ?? '').trim().slice(0, README_MAX_CHARS)
   return {
     sha256: sha256(zip),
     files: files.map((file) => ({ path: file.path, size: file.data.length, sha256: sha256(file.data) })),
     skillMd: scan.skillMd?.raw ?? null,
     frontmatter: scan.skillMd?.frontmatter ?? null,
+    readme: readme || null,
     declaredDomains: scan.declaredDomains,
     observedDomains: scan.domains,
     scanStatus: scan.status,

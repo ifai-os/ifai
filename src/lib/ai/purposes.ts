@@ -24,6 +24,8 @@ export const textPurposes = {
   assist: CHEAP,
   /** App profiles from the app's website (apps.profile): facts, then the profile per language. */
   profile: CHEAP,
+  /** Skill descriptions from SKILL.md and the README (skill.describe): declarations, then the text per language. */
+  describe: CHEAP,
 } as const
 
 export const embeddingPurposes = {

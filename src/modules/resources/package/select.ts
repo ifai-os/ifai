@@ -14,6 +14,8 @@ export type Selection = {
   others: string[]
   /** A LICENSE / COPYING file at the repository root, if any. */
   repoLicenseFile?: string
+  /** The repository's own README at its root, if any; context for the description draft. */
+  repoReadme?: PackageFile
 }
 
 export type SelectionError = {
@@ -23,6 +25,7 @@ export type SelectionError = {
 }
 
 const licensePattern = /^(LICENSE|LICENCE|COPYING)(\.[A-Za-z0-9]+)?$/i
+export const readmePattern = /^README(\.(md|markdown|mdx|txt|rst))?$/i
 
 /** The folder `git archive --prefix` put everything under, e.g. "skills-main/". */
 function topFolder(archive: TarArchive): string {
@@ -76,6 +79,11 @@ export function selectSkillDir(archive: TarArchive, subdir?: string): Selection 
     return !rel.includes('/') && licensePattern.test(rel)
   })
   if (rootLicense) selection.repoLicenseFile = relative(rootLicense.path)
+  const rootReadme = files.find((entry) => {
+    const rel = relative(entry.path)
+    return !rel.includes('/') && readmePattern.test(rel)
+  })
+  if (rootReadme) selection.repoReadme = { path: relative(rootReadme.path), data: rootReadme.data }
   return selection
 }
 

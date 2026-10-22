@@ -1,8 +1,9 @@
 import type { Payload } from 'payload'
 
+import { requestDescribe } from '../describe/state'
 import { isValidVersion, nextVersion, normalizeVersion } from '../normalize'
 import { frontmatterVersion, parseSkillMd } from '../package/frontmatter'
-import type { ImportContext } from '../package/inspect'
+import { README_MAX_CHARS, type ImportContext } from '../package/inspect'
 import { isSelectionError, selectSkillDir } from '../package/select'
 import { readTarGz, TarError } from '../package/tar'
 import { PACKAGE_LIMITS, SKILL_FILE, utf8 } from '../package/types'
@@ -27,7 +28,7 @@ export type ImportRequest = {
 export type ImportDeps = GithubDeps & { payload: Payload; now?: () => Date }
 
 export type ImportResult =
-  | { outcome: 'created'; versionId: number; version: string; commit: string; scanStatus: string }
+  | { outcome: 'created'; versionId: number; version: string; commit: string; scanStatus: string; draftRequested: boolean }
   | { outcome: 'exists'; versionId: number; version: string; commit: string }
   | { outcome: 'failed'; message: string }
 
@@ -57,7 +58,7 @@ export async function runImport(request: ImportRequest, deps: ImportDeps): Promi
     const result = await importSkillVersion(request, deps)
     const message =
       result.outcome === 'created'
-        ? `Created v${result.version} from commit ${result.commit.slice(0, 7)}; scan: ${result.scanStatus}`
+        ? `Created v${result.version} from commit ${result.commit.slice(0, 7)}; scan: ${result.scanStatus}${result.draftRequested ? '; description draft queued' : ''}`
         : `Commit ${result.commit.slice(0, 7)} was already imported as v${result.version}`
     await writeLastImport(deps.payload, request.skillId, { status: 'done', ref: request.ref ?? null, commit: result.commit, message, at: now() })
     return result
@@ -129,6 +130,7 @@ export async function importSkillVersion(
     importLicense: { spdx: info?.license ?? null, repoLicenseFile: selection.repoLicenseFile ?? null },
     importSymlinks: selection.symlinks,
     importOthers: selection.others,
+    importReadme: selection.repoReadme ? utf8(selection.repoReadme.data).slice(0, README_MAX_CHARS) : undefined,
   }
   const created = await payload.create({
     collection: 'skill-versions',
@@ -145,5 +147,10 @@ export async function importSkillVersion(
     await payload.update({ collection: 'skills', id: skill.id, data: { license: spdx }, depth: 0, context: { system: true } })
   }
 
-  return { outcome: 'created', versionId: created.id, version, commit, scanStatus: created.scanStatus }
+  // A Skill with no description yet gets one drafted from this version (docs/specs/resources.md「后台」1);
+  // later versions leave the reviewed text alone, the owner re-drafts from the version page.
+  const draftRequested = !skill.tagline?.trim() && !skill.capabilities?.length
+  if (draftRequested) await requestDescribe(payload, created.id, { mode: 'fill', now: deps.now?.() })
+
+  return { outcome: 'created', versionId: created.id, version, commit, scanStatus: created.scanStatus, draftRequested }
 }

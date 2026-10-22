@@ -561,6 +561,16 @@ export interface SkillVersion {
    * Needed to publish a version the scan flagged: what you looked at and why it is fine.
    */
   reviewNote?: string | null;
+  draftStatus?: ('pending' | 'drafted' | 'failed') | null;
+  draftInfo?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * The repository commit this version was built from.
    */
@@ -596,6 +606,7 @@ export interface SkillVersion {
     | number
     | boolean
     | null;
+  readme?: string | null;
   declarations?: {
     domains?: string[] | null;
     /**
@@ -1113,6 +1124,8 @@ export interface SkillVersionsSelect<T extends boolean = true> {
   publishedAt?: T;
   withdrawReason?: T;
   reviewNote?: T;
+  draftStatus?: T;
+  draftInfo?: T;
   sourceCommit?: T;
   sha256?: T;
   files?:
@@ -1125,6 +1138,7 @@ export interface SkillVersionsSelect<T extends boolean = true> {
       };
   skillMd?: T;
   frontmatter?: T;
+  readme?: T;
   declarations?:
     | T
     | {
