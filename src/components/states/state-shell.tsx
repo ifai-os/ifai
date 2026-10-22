@@ -22,7 +22,7 @@ export function StateShell({ icon, title, body, role, children }: StateShellProp
       <span aria-hidden="true" className="flex size-18 items-center justify-center rounded-pill bg-bg text-mute">
         <Icon name={icon} size={32} strokeWidth={1.6} />
       </span>
-      <div className="flex max-w-70 flex-col gap-1.5">
+      <div className="flex max-w-70 flex-col gap-1.5 wrap-anywhere">
         <p className="text-title font-semibold">{title}</p>
         {body && <p className="text-meta text-ink-4">{body}</p>}
       </div>
