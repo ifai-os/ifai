@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 
 import { SiteFooter } from '@/components/site-footer'
 import { SiteHeader } from '@/components/site-header'
+import { NetworkNotice } from '@/components/states/network-notice'
 import { ogLocales } from '@/i18n/config'
 import { routing } from '@/i18n/routing'
 import { siteUrl } from '@/lib/site-url'
@@ -66,6 +67,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <SiteHeader />
           <div className="flex flex-1 flex-col">{children}</div>
           <SiteFooter />
+          <NetworkNotice />
         </NextIntlClientProvider>
       </body>
     </html>

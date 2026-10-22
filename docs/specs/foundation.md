@@ -10,6 +10,7 @@
 - 导航栏：各页面画板顶部的导航（logo、7 个模块、语言切换、登录）
 - 卡片：「IFAI 首页」画板上的日报条目、热门应用、新上架 Skills、即将上线
 - 图标：「IFAI 图标（已定稿）」画板的简化 3 → `src/app/icon.svg`、`favicon.ico`、`apple-icon.png`、`public/brand/`
+- 状态：「空状态与加载状态」画板的通用部分 → `src/components/states/`（骨架、空状态、加载失败、断网提示）、`error.tsx`、`not-found.tsx`
 
 ## 已实现
 
@@ -19,6 +20,7 @@
 | Better Auth：Google、GitHub、邮箱魔法链接 | `src/lib/auth/`、`src/app/api/auth/[...all]/`、`/[locale]/sign-in` |
 | next-intl 五语言路由；简 → 繁转换脚本 | `src/i18n/`、`src/proxy.ts`、`scripts/i18n-hant.ts` |
 | 设计令牌写成 Tailwind 主题；导航栏和卡片组件 | `globals.css`、`src/components/` |
+| 空状态与加载状态：列表 / 卡片骨架（300 ms 后显示，10 s 后改为重试）、空状态、加载失败、断网提示（恢复后自动刷新）、全站错误页、404 | `src/components/states/`、`src/components/button.tsx`、`[locale]/error.tsx`、`[locale]/not-found.tsx` |
 | AGENTS.md、GitHub Actions、Vercel 预览环境 | `AGENTS.md`、`.github/workflows/`、`vercel.json`、`docs/setup.md` |
 
 首页目前用 `src/modules/home/demo-data.ts` 里的示例数据，页面顶部有「演示数据」提示；日报、应用、资源三个入口是「即将上线」占位页。
