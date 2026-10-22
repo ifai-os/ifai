@@ -28,6 +28,7 @@
   --color-line: #e4e4e5; /* dividers, outlined buttons, table frames */
   --color-hairline: rgb(0 0 0 / 0.05); /* between list items */
   --color-scrim: rgb(125 127 130 / 0.8); /* dialog backdrop */
+  --color-toast: #2a2d3a; /* floating notices (offline, reconnecting); white text — 13.7:1 */
 
   --color-link: #0355e3; /* links, verification — 6.2:1 */
   --color-up: #2e7d4f; /* rising, passed */
@@ -148,5 +149,27 @@
   :focus-visible {
     outline: 2px solid var(--color-link);
     outline-offset: 2px;
+  }
+}
+
+/* Skeleton blocks (components/states/skeleton.tsx): a slow shimmer between the two surface greys. */
+@keyframes shimmer {
+  from {
+    background-position: -240px 0;
+  }
+  to {
+    background-position: 240px 0;
+  }
+}
+
+@utility skeleton {
+  display: block;
+  border-radius: var(--radius-btn);
+  background: linear-gradient(90deg, var(--color-surface-2) 0%, var(--color-surface) 45%, var(--color-surface-2) 90%);
+  background-size: 480px 100%;
+  animation: shimmer 1.4s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 }

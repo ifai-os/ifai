@@ -86,7 +86,24 @@
   "notFound": {
     "title": "頁面不存在",
     "body": "連結可能有誤，或者頁面已經移走。",
-    "back": "返回首頁"
+    "back": "返回首頁",
+    "daily": "看今天的日報"
+  },
+  "states": {
+    "loadingList": "正在載入列表",
+    "loadingCards": "正在載入卡片",
+    "failedTitle": "載入失敗",
+    "retry": "點此重試",
+    "errorTitle": "頁面出錯了",
+    "errorBody": "請稍後重試；如果一直這樣，先回首頁看看。",
+    "home": "返回首頁",
+    "emptyTitle": "這裡還沒有內容",
+    "offline": "網路連線中斷",
+    "reconnecting": "正在重新連線…",
+    "restored": "已恢復，內容已更新",
+    "reconnect": "重試",
+    "cancel": "取消",
+    "dismiss": "關閉"
   },
   "categories": {
     "product": "產品更新",
