@@ -1,21 +1,27 @@
 /**
  * What each model call is for. Business code names a purpose, never a model; the model
  * for each purpose can be swapped on its own with an AI_MODEL_<PURPOSE> environment
- * variable (e.g. AI_MODEL_WRITE=anthropic/claude-sonnet-4.5). IDs are OpenRouter model IDs.
+ * variable. IDs are OpenRouter model IDs.
+ *
+ * Test-phase defaults: one cheap model for every text purpose (the owner asked to start
+ * with DeepSeek-class models). Point a purpose at a stronger model with its env var, e.g.
+ * AI_MODEL_WRITE=anthropic/claude-sonnet-4.5, once the pipeline runs end to end.
  */
+const CHEAP = 'deepseek/deepseek-v3.2'
+
 export const textPurposes = {
   /** Is this item about AI at all? Cheap and permissive. */
-  prefilter: 'google/gemini-2.5-flash-lite',
+  prefilter: CHEAP,
   /** Newsworthiness score (0–100), run twice independently. */
-  score: 'google/gemini-2.5-flash',
+  score: CHEAP,
   /** Category, companies, products, facts, item kind. */
-  structure: 'google/gemini-2.5-flash',
+  structure: CHEAP,
   /** Relationship between two reports: same happening, follow-up, unrelated, roundup. */
-  group: 'google/gemini-2.5-flash',
+  group: CHEAP,
   /** Titles, summaries and "try it" in zh-Hans, en, ja, ko. */
-  write: 'anthropic/claude-sonnet-4.5',
+  write: CHEAP,
   /** Review helpers: shorten a summary, suggest another title. */
-  assist: 'anthropic/claude-sonnet-4.5',
+  assist: CHEAP,
 } as const
 
 export const embeddingPurposes = {

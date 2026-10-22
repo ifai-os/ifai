@@ -57,9 +57,9 @@ const call = { purpose: 'assist' as const, instructions: 'Shorten it.', prompt: 
 
 describe('model purposes', () => {
   it('uses the default model unless AI_MODEL_<PURPOSE> is set', () => {
-    expect(modelFor('write', {})).toBe('anthropic/claude-sonnet-4.5')
+    expect(modelFor('write', {})).toBe('deepseek/deepseek-v3.2')
     expect(modelFor('write', { AI_MODEL_WRITE: ' openai/gpt-5 ' })).toBe('openai/gpt-5')
-    expect(modelFor('score', { AI_MODEL_WRITE: 'openai/gpt-5' })).toBe('google/gemini-2.5-flash')
+    expect(modelFor('score', { AI_MODEL_WRITE: 'openai/gpt-5' })).toBe('deepseek/deepseek-v3.2')
   })
 })
 
@@ -82,7 +82,7 @@ describe('ai client', () => {
     const { ai, calls, store } = setup()
     const first = await ai.text(call)
     const second = await ai.text(call)
-    expect(first).toMatchObject({ output: 'ok', reused: false, model: 'anthropic/claude-sonnet-4.5' })
+    expect(first).toMatchObject({ output: 'ok', reused: false, model: 'deepseek/deepseek-v3.2' })
     expect(second).toMatchObject({ output: 'ok', reused: true, receiptId: first.receiptId })
     expect(calls).toHaveLength(1)
     expect(store.rows[0]).toMatchObject({ status: 'succeeded', inputTokens: 100, outputTokens: 20, costUsd: 0.01 })
@@ -140,7 +140,7 @@ describe('ai client', () => {
     // Same input → same hash as the pending receipt.
     store.rows[0].inputHash = hashInput({
       purpose: 'assist',
-      model: 'anthropic/claude-sonnet-4.5',
+      model: 'deepseek/deepseek-v3.2',
       input: { kind: 'text', instructions: call.instructions, prompt: call.prompt },
     })
     await expect(ai.text(call)).rejects.toBeInstanceOf(ReceiptInFlightError)
