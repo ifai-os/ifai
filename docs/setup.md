@@ -105,6 +105,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 4. 默认模型写在 `src/lib/ai/purposes.ts`。想给某个用途换模型，不用改代码：在 Vercel 加 `AI_MODEL_<用途>`，例如 `AI_MODEL_WRITE=openai/gpt-5`，模型 ID 从 openrouter.ai/models 复制。换向量模型（`AI_MODEL_EMBED`）前先找开发确认，因为向量维度写在迁移里。
 5. 验证：本地 `.env` 里填好 `OPENROUTER_API_KEY`，把 `MODEL_CALLS_ENABLED` 设为 `true`，运行 `pnpm ai:smoke`。它会做三次很小的调用（文本、结构化输出、向量），打印每次的模型、用量和费用，并确认第二次相同调用直接复用回执、不再付费。不需要数据库。
 6. 每次调用的费用记在数据库 `model_receipts` 表里；OpenRouter 的 Activity 页也能看到每一笔（应用名显示为 IFAI）。
+7. 本机测试可以不走 OpenRouter：在 `.env` 里填 `OPENROUTER_BASE_URL`（任何兼容 OpenAI 接口的地址，填到 `/v1` 为止）和那个服务的 key（仍填在 `OPENROUTER_API_KEY`），再用 `AI_MODEL_<用途>` 指定它的模型名，例如 `AI_MODEL_PREFILTER=antigravity/gemini-3.8-flash`。这类服务不报费用，预算统计会显示 0；`embed` 用途需要向量模型，本机测试时可以继续指向 OpenRouter 或跳过归组。只在本机用，不要填到 Vercel。
 
 ## 9. Inngest（后台任务）
 
@@ -115,6 +116,8 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 3. 部署后在 Inngest 控制台 → Apps 能看到 `ifai`。验证连通：控制台 → Events → Send event，事件名填 `ifai/health.check`，数据填 `{}`。在 Runs 里能看到 `health-check` 运行成功，输出里有两个开关的状态和今天的模型用量。
 4. 预览环境在 Inngest 里是独立的分支环境（Branch environments），不会触发生产的任务。
 5. 采集：`COLLECT_ENABLED` 为 `true` 时，`daily-collect-due-sources` 每 15 分钟找一遍到期的信源，逐个抓取并取原文。要立刻跑一次，发事件 `daily/collect.run`，数据 `{}`。单个信源可以在后台「日报 → 信源」里点「试抓」预览（不入库），失败原因显示在右栏。
+6. 判断：`MODEL_CALLS_ENABLED` 为 `true` 时，每条取完正文的新条目自动进入 `daily-judge-item`（预筛、两次评分、结构化、向量、归组），结果在数据库 `item_analyses` 表的 `outcome` 列。`daily-judge-sweep` 每 30 分钟把漏掉的条目补上，也可以发事件 `daily/judge.sweep` 立刻跑。单条重跑：发 `daily/item.judge`，数据 `{"itemId": 123}`；已经做过的步骤会复用回执，不再付费。
+7. 写作：判断结果为进队列（`queued`）的报道自动进入 `daily-write-story`，写出四种语言加转换的繁体，结果在后台「日报 → 新闻」里，状态「待审」，右栏「原文核对」列出在原文里找不到的名字和数字。`daily-write-sweep` 每 30 分钟（整点 15 分、45 分）补写漏掉的，也可以发事件 `daily/write.sweep` 立刻跑。单条重写：先在后台删掉那条新闻，再发 `daily/story.write`，数据 `{"itemId": 123}`。
 
 ## 10. 第一次上线检查
 

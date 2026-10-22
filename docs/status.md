@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-22（日报第 2 步）。
+更新于 2026-10-22（日报第 3 步·判断与写作）。
 
 ## 现在到哪了
 
@@ -10,6 +10,10 @@
 - **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。
 - **日报第 1 步（基础）已完成**：装好了 Inngest、Vercel AI SDK + OpenRouter、feedsmith（RSS）、cheerio、linkedom + Readability；迁移 `model_receipts_pgvector` 启用 pgvector 并建 `model_receipts` 表；`src/lib/ai` 提供按用途选模型、回执（重试不重复扣费）、每日预算（上海时间，默认 10 美元）、总开关；Inngest 入口 `/api/inngest`，带一个不花钱的 `health-check` 任务（事件 `ifai/health.check`）用来验证连通。真实模型调用已用 `pnpm ai:smoke` 验证过（DeepSeek，一次 0.00004 美元）。
 - **日报第 2 步（信源与采集）已完成**：`sources` 集合（后台「日报 → 信源」，每条有「试抓」按钮，接口 `POST /api/sources/:id/test-fetch`，只预览不入库）；迁移 `daily_sources_raw_items` 建 `sources`、`raw_items`（1536 维向量列 + HNSW 索引，外键随信源级联删除）并导入 16 个信源，其中 Future Tools、The Rundown、Forward Future 三个网页列表信源的选择器是占位值，先停用，站长试抓确认后再启用；三种读取器（RSS / Atom / JSON Feed、网页列表、Hacker News JSON）在 `src/modules/daily/readers/`；Inngest 任务 `daily-collect-due-sources`（每 15 分钟找到期信源，也可发事件 `daily/collect.run` 手动跑）、`daily-fetch-source`（抓一个信源，按判重 / 48 小时 / 首次导入最多 30 条的规则写入 `raw_items`，自动调整间隔，失败原因记在信源上）、`daily-fetch-item-content`（Readability 取原文正文、发布时间和外链）。三个任务都先检查 `COLLECT_ENABLED`。沙盒连不到新闻站点，真实信源还没抓过，要在预览环境验证。
+- **日报第 3 步（判断与写作）已完成**：提示词在 `src/modules/daily/prompts/`（预筛、评分、结构化、归组、写作，版本 = 名字 + 指令内容的哈希，每条分析和每条新闻记下用过的版本）；迁移 `daily_judge_stories` 建 `item_analyses`、`events`、`event_items` 和 Payload 集合 `stories`（后台「日报 → 新闻」）。
+  - 判断：Inngest 任务 `daily-judge-item`（取完正文后自动触发）按五个步骤走：预筛 → 两次评分（`variant` a / b，门槛 T1 60、T1_5 65、T2 76，可用 `DAILY_SCORE_THRESHOLD_<分级>` 调）→ 结构化（分类、公司、产品、事实、是新闻 / 汇总稿 / 材料不足，疑似推广和教程类打标）→ 向量（写回 `raw_items.embedding`）→ 归组（pgvector 在近 14 天里找相似度 > 0.75 的报道，模型判断同一次发生 / 后续 / 无关；同一次发生的并入事件、不进队列，后续和新事件进队列）。结果在 `item_analyses.outcome`：`queued` 待写作，`merged` 已并入，`irrelevant` / `low_score` / `insufficient` / `roundup` 不进队列，`blocked` 要人看。汇总稿按正文外链挂到事件上。`daily-judge-sweep` 每 30 分钟补漏。开关关闭或预算用完时任务不改状态，等补漏重跑；同一调用失败 3 次才标 `blocked`。
+  - 写作：进队列的报道自动触发 `daily-write-story`（用途 `write`，一次调用写出简体、英语、日语、韩语的标题、先给答案的摘要、可选的「试一试」和英文 slug；繁体由共用的 `syncHantFromHans` 钩子从简体转换，站长改简体时繁体跟着更新）。同一事件里「同一次发生」的其他报道作为补充材料，官方信源排在前面；「后续」单独成条，事件里更早的报道只作背景。写完做原文核对（标题、摘要、试一试里的名字和数字逐个回原文找，找不到的记在 `stories.verification` 里给审核看）。结果是一条状态「待审」的 `stories`，来源列表原文在前、报道在后、Hacker News 讨论最后；slug 重复时加数字后缀。`daily-write-sweep` 每 30 分钟（整点 15 分、45 分）补写漏掉的。未发布的新闻只有登录后台才能读到。
+  - 本地库上用假模型跑通了同一事件三家报道、后续、无关、无关主题、低分、材料不足、汇总稿，以及写作、重复写作跳过、slug 冲突、原文核对找出编造的名字和数字这些情况。`OPENROUTER_BASE_URL` 可把模型调用指向本机的兼容接口（只用于本地测试）。
 - **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 以后也可以用。前台页面还没做。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
@@ -21,7 +25,7 @@
 | 期 | 周 | 模块 | 状态 |
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |
-| 第一期 | 3 起 | 日报 | 第 2 步（信源与采集）完成，下一步判断与写作 |
+| 第一期 | 3 起 | 日报 | 第 3 步完成，下一步审核与发布 |
 | 第一期 | 日报之后 | 应用 | 第 1 步（集合与后台录入）完成，下一步官网取材与资料草稿 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）完成，下一步导入与检测 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
@@ -31,8 +35,8 @@
 
 ## 下一步
 
-1. **日报第 3 步：判断与写作**（见 daily.md「实现顺序」）：对 `raw_items` 里 `status = 'fresh'`、`content_status = 'fetched'` 的条目做预筛、两次评分（`variant: 'a'` / `'b'`）、结构化、向量（写回 `raw_items.embedding`）、归成事件、四种语言写作；提示词从 AIHOT 的 `industry/prompts/` 改写。模型调用一律用 `ai.object` / `ai.text` / `ai.embed`（`src/lib/ai`）；`ModelCallError.retryable` 为 false 时（开关关闭、预算用完、同一调用失败 3 次）任务应停住并在后台告警。汇总类信源的条目（`use = 'roundup'`）只用 `raw_items.links` 把它提到的原文挂到事件上，不自己成为新闻；Hacker News 条目的 `url` 已经是原文，`discussion_url` 是讨论串，`signals` 是分数和评论数。
-2. 日报第 4–6 步：审核与发布 → 前台 → 热度与海报。
+1. **日报第 4 步（审核与发布）**，对应画板「IFAI 日报审核后台」：审核队列（按分数、标记、原文核对结果筛选，疑似推广 / 教程类 / 两次评分差距大 / 原文核对没过的要标出来）；通过即发布（设 `publishedAt`），拒绝、并入另一条、稍后再看；发布后的更正记录（`correctedAt`）。`stories` 已挂上 `syncHantFromHans` 钩子，审核时改简体，繁体会自动跟着变。
+2. 日报第 5–6 步：前台（列表、详情、RSS）→ 热度与海报。
 3. **应用第 2 步：官网取材与资料草稿**（见 apps.md「实现顺序」），要等日报第 1 步合并（用它的 `src/lib/ai` 和 Inngest）。第 3 步前台不依赖它，可以先做。之后是热度 → 收藏、评价与提交；热度里的日报提及要等日报第 3 步。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
 4. **资源第 2 步：导入与检测**（见 resources.md「实现顺序」）。日报第 1 步已合并，可以直接用它的 Inngest 开工；第 3 步说明起草用它的 `src/lib/ai`。后台现在可以手动录入 Skill 和上传 Zip 版本（sha256 自动算出）；6 个宿主已建好，Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
 
@@ -92,7 +96,8 @@
 
 - 有的沙盒连不上 npm registry（DNS 失败或代理返回 403）。上次的绕法：在临时分支上用 GitHub Actions 安装依赖，打包成草稿 release 再下载回来，用完要删掉分支和 release。新会话先直接试 `pnpm install`（2026-10-22 的会话可以直接装）。
 - 沙盒里可以用 apt 装 `postgresql-16-pgvector`，再 `service postgresql start`，在本地库上跑迁移和 `pnpm build`。
-- 沙盒的代理不放行新闻站点（techcrunch.com、openai.com、hn.algolia.com 都返回 403），信源抓取只能把 `fetch` 换成假数据在本地库上验证；真实抓取要在预览环境看。
+- 沙盒的代理不放行新闻站点（techcrunch.com、openai.com、hn.algolia.com 都返回 403），信源抓取只能把 `fetch` 换成假数据在本地库上验证；真实抓取要在预览环境看。模型流水线同理，本地只能用 `ai/test` 的假模型跑；真实跑一遍要在站长的电脑上（`OPENROUTER_BASE_URL` 指向局域网接口）或预览环境。
+- 两个并行 PR 各自带 Payload 迁移时，后合并的要先合并 main、删掉自己的迁移再重新 `pnpm payload migrate:create`，因为迁移快照会缺对方的表（应用 PR #6 和日报的迁移就是这种情况）。
 - 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
 - 两个分支各自生成了迁移时，后合并的那个要先合并 `main`，删掉自己的迁移，再重新 `pnpm payload migrate:create`。否则最新的快照（`.json`）里缺了对方的表，下一次生成迁移会出错。

@@ -19,6 +19,7 @@ import { databaseUrl } from './lib/db/url'
 import { AppCategories } from './modules/apps/collections/AppCategories'
 import { Apps } from './modules/apps/collections/Apps'
 import { Sources } from './modules/daily/collections/sources'
+import { Stories } from './modules/daily/collections/stories'
 import { dailyTables } from './modules/daily/schema'
 import { AgentHosts } from './modules/resources/collections/AgentHosts'
 import { Skills } from './modules/resources/collections/Skills'
@@ -57,7 +58,7 @@ export default buildConfig({
     supportedLanguages: { zh, en },
     fallbackLanguage: 'zh',
   },
-  collections: [Admins, Media, AppCategories, Apps, Sources, Skills, SkillVersions, AgentHosts, SkillTags, SkillSubmissions],
+  collections: [Admins, Media, AppCategories, Apps, Sources, Stories, Skills, SkillVersions, AgentHosts, SkillTags, SkillSubmissions],
   editor: lexicalEditor(),
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;
