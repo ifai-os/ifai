@@ -13,6 +13,7 @@ import sharp from 'sharp'
 import { Admins } from './collections/Admins'
 import { Media } from './collections/Media'
 import { defaultLocale, localeNames, locales } from './i18n/config'
+import { aiTables } from './lib/ai/schema'
 import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
 import { AppCategories } from './modules/apps/collections/AppCategories'
@@ -84,12 +85,12 @@ export default buildConfig({
     // Schema changes only through migrations (src/migrations), never by auto-push.
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
-    // Our own Drizzle tables (Better Auth, skill install events) join Payload's schema so
+    // Our own Drizzle tables (Better Auth, model receipts, skill install events) join Payload's schema so
     // migrations create and track them.
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
-        tables: { ...schema.tables, ...authTables, ...resourcesTables },
+        tables: { ...schema.tables, ...authTables, ...aiTables, ...resourcesTables },
       }),
     ],
   }),

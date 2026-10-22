@@ -86,7 +86,24 @@
   "notFound": {
     "title": "页面不存在",
     "body": "链接可能有误，或者页面已经移走。",
-    "back": "返回首页"
+    "back": "返回首页",
+    "daily": "看今天的日报"
+  },
+  "states": {
+    "loadingList": "正在加载列表",
+    "loadingCards": "正在加载卡片",
+    "failedTitle": "加载失败",
+    "retry": "点此重试",
+    "errorTitle": "页面出错了",
+    "errorBody": "请稍后重试；如果一直这样，先回首页看看。",
+    "home": "返回首页",
+    "emptyTitle": "这里还没有内容",
+    "offline": "网络连接中断",
+    "reconnecting": "正在重新连接…",
+    "restored": "已恢复，内容已更新",
+    "reconnect": "重试",
+    "cancel": "取消",
+    "dismiss": "关闭"
   },
   "categories": {
     "product": "产品更新",

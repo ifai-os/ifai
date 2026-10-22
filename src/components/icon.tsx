@@ -55,6 +55,19 @@ const icons = {
     </>
   ),
   arrowLeft: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  inbox: (
+    <>
+      <path d="M4 13l2.5-7h11L20 13v6H4z" />
+      <path d="M4 13h5l1.5 2.5h3L15 13h5" />
+    </>
+  ),
+  alert: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v5M12 16h.01" />
+    </>
+  ),
+  offline: <path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01M3 3l18 18" />,
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof icons

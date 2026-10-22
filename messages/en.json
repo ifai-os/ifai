@@ -86,7 +86,24 @@
   "notFound": {
     "title": "Page not found",
     "body": "The link may be broken, or the page may have moved.",
-    "back": "Back to home"
+    "back": "Back to home",
+    "daily": "See today's Daily"
+  },
+  "states": {
+    "loadingList": "Loading list",
+    "loadingCards": "Loading cards",
+    "failedTitle": "Couldn't load this",
+    "retry": "Try again",
+    "errorTitle": "Something went wrong",
+    "errorBody": "Try again in a moment. If it keeps happening, head back home.",
+    "home": "Back to home",
+    "emptyTitle": "Nothing here yet",
+    "offline": "You're offline",
+    "reconnecting": "Reconnecting…",
+    "restored": "Back online, content updated",
+    "reconnect": "Retry",
+    "cancel": "Cancel",
+    "dismiss": "Dismiss"
   },
   "categories": {
     "product": "Product update",

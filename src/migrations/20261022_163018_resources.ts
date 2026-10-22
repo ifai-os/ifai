@@ -330,7 +330,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_locked_documents_rels_agent_hosts_id_idx" ON "payload_locked_documents_rels" USING btree ("agent_hosts_id");
   CREATE INDEX "payload_locked_documents_rels_skill_tags_id_idx" ON "payload_locked_documents_rels" USING btree ("skill_tags_id");
   CREATE INDEX "payload_locked_documents_rels_skill_submissions_id_idx" ON "payload_locked_documents_rels" USING btree ("skill_submissions_id");`)
-
   for (const [index, host] of hosts.entries()) {
     await db.execute(sql`
       INSERT INTO "agent_hosts" ("name", "slug", "enabled", "order", "website", "global_dir", "project_dir")

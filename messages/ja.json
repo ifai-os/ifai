@@ -86,7 +86,24 @@
   "notFound": {
     "title": "ページが見つかりません",
     "body": "リンクが切れているか、ページが移動した可能性があります。",
-    "back": "ホームに戻る"
+    "back": "ホームに戻る",
+    "daily": "今日のデイリーを見る"
+  },
+  "states": {
+    "loadingList": "リストを読み込み中",
+    "loadingCards": "カードを読み込み中",
+    "failedTitle": "読み込めませんでした",
+    "retry": "もう一度試す",
+    "errorTitle": "問題が発生しました",
+    "errorBody": "しばらくしてからもう一度お試しください。続く場合はホームに戻ってください。",
+    "home": "ホームに戻る",
+    "emptyTitle": "まだ何もありません",
+    "offline": "オフラインです",
+    "reconnecting": "再接続しています…",
+    "restored": "接続が回復し、内容を更新しました",
+    "reconnect": "再試行",
+    "cancel": "キャンセル",
+    "dismiss": "閉じる"
   },
   "categories": {
     "product": "製品アップデート",

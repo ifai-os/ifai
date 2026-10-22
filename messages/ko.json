@@ -86,7 +86,24 @@
   "notFound": {
     "title": "페이지를 찾을 수 없어요",
     "body": "링크가 잘못되었거나 페이지가 이동했을 수 있어요.",
-    "back": "홈으로 돌아가기"
+    "back": "홈으로 돌아가기",
+    "daily": "오늘의 데일리 보기"
+  },
+  "states": {
+    "loadingList": "목록을 불러오는 중",
+    "loadingCards": "카드를 불러오는 중",
+    "failedTitle": "불러오지 못했어요",
+    "retry": "다시 시도",
+    "errorTitle": "문제가 발생했어요",
+    "errorBody": "잠시 후 다시 시도해 주세요. 계속 그러면 홈으로 돌아가 주세요.",
+    "home": "홈으로 돌아가기",
+    "emptyTitle": "아직 아무것도 없어요",
+    "offline": "오프라인 상태예요",
+    "reconnecting": "다시 연결하는 중…",
+    "restored": "연결이 복구되어 내용을 업데이트했어요",
+    "reconnect": "다시 시도",
+    "cancel": "취소",
+    "dismiss": "닫기"
   },
   "categories": {
     "product": "제품 업데이트",

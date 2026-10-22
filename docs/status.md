@@ -2,13 +2,15 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-22。
+更新于 2026-10-22（日报第 1 步）。
 
 ## 现在到哪了
 
 - **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。首页用的是演示数据，日报、应用、资源三个入口是「即将上线」占位页。详见 [specs/foundation.md](./specs/foundation.md)。
-- **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。日报的代码还没开始写。
+- **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。
+- **日报第 1 步（基础）已完成**：装好了 Inngest、Vercel AI SDK + OpenRouter、feedsmith（RSS）、cheerio、linkedom + Readability；迁移 `model_receipts_pgvector` 启用 pgvector 并建 `model_receipts` 表；`src/lib/ai` 提供按用途选模型、回执（重试不重复扣费）、每日预算（上海时间，默认 10 美元）、总开关；Inngest 入口 `/api/inngest`，带一个不花钱的 `health-check` 任务（事件 `ifai/health.check`）用来验证连通。还没有任何信源和真实模型调用。
 - **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 以后也可以用。前台页面还没做。
+- **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 
 ## 分期
@@ -18,7 +20,7 @@
 | 期 | 周 | 模块 | 状态 |
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |
-| 第一期 | 3 起 | 日报 | 规格已确认，待实现 |
+| 第一期 | 3 起 | 日报 | 第 1 步（基础）完成，下一步信源与采集 |
 | 第一期 | 日报之后 | 应用 | 第 1 步（集合与后台录入）完成，下一步官网取材与资料草稿 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）完成，下一步导入与检测 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
@@ -28,10 +30,10 @@
 
 ## 下一步
 
-1. **日报第 1 步：基础**（见 daily.md「实现顺序」）。要先装依赖：Inngest、Vercel AI SDK + OpenRouter、RSS 解析、HTML 解析与正文提取。然后启用 pgvector，写 `src/lib/ai`（按用途选模型、回执、每日预算上限、总开关），接上 Inngest 路由。这一步要把 OpenRouter 和 Inngest 的环境变量补进 `.env.example` 和 `docs/setup.md`。
-2. 日报第 2–6 步：信源与采集 → 判断与写作 → 审核与发布 → 前台 → 热度与海报。
+1. **日报第 2 步：信源与采集**（见 daily.md「实现顺序」）：`sources` 集合、16 个信源、后台试抓、RSS / 网页列表 / JSON 三种读取器、写入 `raw_items`（判重、48 小时规则）。采集任务先检查 `collectEnabled()`。
+2. 日报第 3–6 步：判断与写作 → 审核与发布 → 前台 → 热度与海报。模型调用用 `ai.object` / `ai.text` / `ai.embed`（`src/lib/ai`），两次评分用 `variant: 'a'` / `'b'` 区分；`ModelCallError.retryable` 为 false 时（开关关闭、预算用完、同一调用失败 3 次）任务应停住并在后台告警。`raw_items` 的向量列用 `EMBEDDING_DIMENSIONS`（1536）。
 3. **应用第 2 步：官网取材与资料草稿**（见 apps.md「实现顺序」），要等日报第 1 步合并（用它的 `src/lib/ai` 和 Inngest）。第 3 步前台不依赖它，可以先做。之后是热度 → 收藏、评价与提交；热度里的日报提及要等日报第 3 步。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
-4. **资源第 2 步：导入与检测**（见 resources.md「实现顺序」），要等日报第 1 步合并（用它的 Inngest）；第 3 步说明起草还要用它的 `src/lib/ai`。后台现在可以手动录入 Skill 和上传 Zip 版本（sha256 自动算出）；6 个宿主已建好，Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
+4. **资源第 2 步：导入与检测**（见 resources.md「实现顺序」）。日报第 1 步已合并，可以直接用它的 Inngest 开工；第 3 步说明起草用它的 `src/lib/ai`。后台现在可以手动录入 Skill 和上传 Zip 版本（sha256 自动算出）；6 个宿主已建好，Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
 
 ## 已做的决定
 
@@ -79,13 +81,16 @@
 
 - [x] 把 Claude 的 GitHub 应用装到 ifai-os 组织，只授权 `ifai` 这一个仓库（2026-10-22 已完成）。以后要给它加仓库：ifai-os 组织 → Settings → GitHub Apps → Claude → Configure → Repository access。
 - [ ] 删除临时的 `bootstrap` 分支和两个「Temporary bootstrap」草稿 release。
-- [ ] 按 `docs/setup.md` 开账号、配 Vercel。日报第 1 步之前还要开 OpenRouter 和 Inngest。
+- [ ] 按 `docs/setup.md` 开账号、配 Vercel。
+- [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，装 Vercel 集成），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。日报第 2 步合并前要能在 Inngest 控制台跑通 `ifai/health.check`。
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。
 - [ ] 以后再定：商业化方式；排行第一批参赛模型和题库（第三期前）。
 
 ## 已知问题
 
-- 有的沙盒连不上 npm registry（DNS 失败或代理返回 403）。上次的绕法：在临时分支上用 GitHub Actions 安装依赖，打包成草稿 release 再下载回来，用完要删掉分支和 release。新会话先直接试 `pnpm install`。
+- 有的沙盒连不上 npm registry（DNS 失败或代理返回 403）。上次的绕法：在临时分支上用 GitHub Actions 安装依赖，打包成草稿 release 再下载回来，用完要删掉分支和 release。新会话先直接试 `pnpm install`（2026-10-22 的会话可以直接装）。
+- 沙盒里可以用 apt 装 `postgresql-16-pgvector`，再 `service postgresql start`，在本地库上跑迁移和 `pnpm build`。
+- 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
 - 两个分支各自生成了迁移时，后合并的那个要先合并 `main`，删掉自己的迁移，再重新 `pnpm payload migrate:create`。否则最新的快照（`.json`）里缺了对方的表，下一次生成迁移会出错。
 - Payload 生成的 down 迁移会先 `DROP TABLE … CASCADE`，再删已经被连带删掉的外键，执行时报错。生成后把这类 `DROP CONSTRAINT` 改成 `DROP CONSTRAINT IF EXISTS`，并跑一次 `pnpm payload migrate:down` 验证。
