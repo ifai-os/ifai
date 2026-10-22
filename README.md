@@ -8,7 +8,7 @@
 
 Next.js 16 · Payload CMS 3 · Postgres（Neon）· Better Auth · next-intl + OpenCC · Tailwind CSS 4 · Cloudflare R2 · Vercel · Vitest + Playwright
 
-选型理由和整体规划见技术方案文档；给 AI 编程助手的项目规则见 [AGENTS.md](./AGENTS.md)。
+选型理由和整体规划见[技术方案文档](https://claude.ai/artifact/7zipcpFS92xvs5GXsdTZnR)（私有）；给 AI 编程助手的项目规则见 [AGENTS.md](./AGENTS.md)，当前进度见 [docs/status.md](./docs/status.md)。
 
 ## 本地运行
 
