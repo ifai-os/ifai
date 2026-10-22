@@ -1,0 +1,499 @@
+/* The review screen (「IFAI 日报审核后台」). Colours come from Payload's theme so dark mode works. */
+.daily-review {
+  --dr-gap: calc(var(--base) * 0.6);
+  --dr-border: var(--theme-elevation-150);
+  --dr-muted: var(--theme-elevation-600);
+  --dr-ok: var(--theme-success-500);
+  --dr-warn: var(--theme-warning-500);
+  --dr-bad: var(--theme-error-500);
+  --dr-info: var(--theme-elevation-800);
+  padding-bottom: calc(var(--base) * 2);
+}
+.daily-review__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--dr-gap);
+  margin-top: var(--base);
+}
+.daily-review__header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+.daily-review__sub {
+  margin-left: calc(var(--base) / 2);
+  color: var(--dr-muted);
+}
+.daily-review__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--base) / 4);
+}
+.daily-review__header-actions .btn {
+  margin: 0;
+}
+.daily-review__meta {
+  margin: calc(var(--base) / 2) 0 0;
+  color: var(--dr-muted);
+}
+.daily-review__note {
+  margin: calc(var(--base) / 2) 0 0;
+  min-height: 1.4em;
+  font-weight: 500;
+}
+.daily-review__note--ok {
+  color: var(--dr-ok);
+}
+.daily-review__note--warn {
+  color: var(--dr-warn);
+}
+.daily-review__note--bad {
+  color: var(--dr-bad);
+}
+.daily-review__note--muted {
+  color: var(--dr-muted);
+}
+
+.daily-review__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--dr-gap);
+  margin-top: var(--base);
+}
+.daily-review__card {
+  border: 1px solid var(--dr-border);
+  border-radius: var(--style-radius-m);
+  padding: calc(var(--base) * 0.7);
+  background: var(--theme-elevation-0);
+}
+.daily-review__card--bad {
+  border-color: var(--dr-bad);
+}
+.daily-review__card-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  color: var(--dr-muted);
+  font-size: 0.9rem;
+}
+.daily-review__dot {
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 50%;
+  background: var(--dr-ok);
+}
+.daily-review__dot--busy {
+  background: var(--dr-info);
+}
+.daily-review__dot--bad {
+  background: var(--dr-bad);
+}
+.daily-review__card-value {
+  margin: 0.2em 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.daily-review__card-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--dr-muted);
+  font-size: 0.9rem;
+}
+.daily-review__card-sub .btn {
+  margin: 0;
+}
+
+.daily-review__columns {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  gap: var(--base);
+  margin-top: var(--base);
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .daily-review__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.daily-review__queue,
+.daily-review__editor {
+  border: 1px solid var(--dr-border);
+  border-radius: var(--style-radius-m);
+  background: var(--theme-elevation-0);
+  padding: calc(var(--base) * 0.8);
+}
+.daily-review__queue-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--dr-gap);
+}
+.daily-review__queue-head h2,
+.daily-review__editor-head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.daily-review__count {
+  margin-left: 0.4em;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.daily-review__small {
+  color: var(--dr-muted);
+  font-size: 0.85rem;
+}
+.daily-review__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+  margin: calc(var(--base) / 2) 0;
+}
+.daily-review__chip {
+  border: 1px solid var(--dr-border);
+  border-radius: 999px;
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  padding: 0.15em 0.7em;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.daily-review__chip[aria-pressed='true'] {
+  background: var(--theme-elevation-1000);
+  border-color: var(--theme-elevation-1000);
+  color: var(--theme-elevation-0);
+}
+.daily-review__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--base) / 2);
+}
+.daily-review__item {
+  border: 1px solid var(--dr-border);
+  border-radius: var(--style-radius-s);
+  padding: calc(var(--base) * 0.6);
+  cursor: pointer;
+}
+.daily-review__item[aria-current='true'] {
+  border-color: var(--theme-elevation-400);
+  box-shadow: inset 3px 0 0 0 var(--theme-elevation-1000);
+}
+.daily-review__item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  font-size: 0.85rem;
+  color: var(--dr-muted);
+}
+.daily-review__item-title {
+  margin: 0.35em 0;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.daily-review__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  margin: 0.3em 0;
+}
+.daily-review__item-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  margin-top: 0.4em;
+}
+.daily-review__item-bottom .btn {
+  margin: 0;
+}
+.daily-review__score {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.85rem;
+  color: var(--dr-muted);
+}
+.daily-review__bar {
+  width: 70px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--theme-elevation-100);
+  overflow: hidden;
+}
+.daily-review__bar i {
+  display: block;
+  height: 100%;
+  background: var(--theme-elevation-500);
+}
+.daily-review__bar--high i {
+  background: var(--dr-ok);
+}
+.daily-review__empty {
+  margin: var(--base) 0;
+  color: var(--dr-muted);
+  text-align: center;
+}
+.daily-review__published {
+  margin-top: var(--base);
+  border-top: 1px solid var(--dr-border);
+  padding-top: calc(var(--base) / 2);
+}
+.daily-review__published summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.daily-review__published ul {
+  list-style: none;
+  margin: calc(var(--base) / 2) 0 0;
+  padding: 0;
+}
+.daily-review__published li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5em;
+  padding: 0.3em 0;
+  border-bottom: 1px solid var(--theme-elevation-50);
+}
+.daily-review__published button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--theme-text);
+  text-align: left;
+  cursor: pointer;
+}
+.daily-review__published button:hover {
+  text-decoration: underline;
+}
+
+.daily-review__editor-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6em;
+}
+.daily-review__editor-head a {
+  font-size: 0.9rem;
+}
+.daily-review__editor-meta {
+  margin: 0.5em 0 0;
+  color: var(--dr-muted);
+  font-size: 0.9rem;
+}
+.daily-review__check {
+  margin-top: calc(var(--base) / 2);
+  border-radius: var(--style-radius-s);
+  padding: 0.6em 0.8em;
+  background: var(--theme-elevation-50);
+  font-size: 0.9rem;
+}
+.daily-review__check--warn {
+  background: var(--theme-warning-50);
+  color: var(--theme-warning-700);
+}
+.daily-review__dup {
+  margin-top: calc(var(--base) / 2);
+  border: 1px solid var(--theme-warning-300);
+  border-radius: var(--style-radius-s);
+  padding: 0.7em 0.9em;
+  background: var(--theme-warning-50);
+}
+.daily-review__dup p {
+  margin: 0 0 0.5em;
+}
+.daily-review__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--base) / 4);
+}
+.daily-review__row .btn {
+  margin: 0;
+}
+.daily-review__actions {
+  margin-top: calc(var(--base) / 2);
+  padding: calc(var(--base) / 2) 0;
+  border-top: 1px solid var(--dr-border);
+  border-bottom: 1px solid var(--dr-border);
+}
+.daily-review__hint {
+  margin: 0 0 0.6em;
+  font-size: 0.9rem;
+  color: var(--dr-muted);
+}
+.daily-review__hint--warn {
+  color: var(--dr-warn);
+}
+.daily-review__hint--bad {
+  color: var(--dr-bad);
+}
+.daily-review__hint--info {
+  color: var(--dr-info);
+}
+.daily-review__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: calc(var(--base) / 4);
+}
+.daily-review__buttons .btn {
+  margin: 0;
+}
+.daily-review__spacer {
+  flex: 1;
+}
+.daily-review__field {
+  margin-top: calc(var(--base) * 0.7);
+}
+.daily-review__label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5em;
+  margin-bottom: 0.3em;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.daily-review__label small {
+  font-weight: 400;
+  color: var(--dr-muted);
+}
+.daily-review__label .is-over {
+  color: var(--dr-bad);
+}
+.daily-review__input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--dr-border);
+  border-radius: var(--style-radius-s);
+  background: var(--theme-input-bg);
+  color: var(--theme-text);
+  padding: 0.5em 0.7em;
+  font: inherit;
+  line-height: 1.5;
+}
+.daily-review__input:focus {
+  outline: 2px solid var(--theme-elevation-400);
+  outline-offset: 1px;
+}
+textarea.daily-review__input {
+  min-height: 4.5em;
+  resize: vertical;
+}
+.daily-review__sources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+.daily-review__source {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 110px minmax(160px, 2fr) auto;
+  gap: 0.4em;
+  align-items: center;
+}
+@media (max-width: 700px) {
+  .daily-review__source {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.daily-review__source .btn {
+  margin: 0;
+}
+.daily-review__section {
+  margin-top: var(--base);
+  border-top: 1px solid var(--dr-border);
+  padding-top: calc(var(--base) / 2);
+}
+.daily-review__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+}
+.daily-review__section-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.daily-review__section-head .btn {
+  margin: 0;
+}
+.daily-review__suggestion {
+  margin-top: 0.6em;
+  border: 1px solid var(--dr-border);
+  border-radius: var(--style-radius-s);
+  padding: 0.7em 0.9em;
+  background: var(--theme-elevation-50);
+}
+.daily-review__suggestion p {
+  margin: 0 0 0.5em;
+}
+.daily-review__langs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+.daily-review__lang {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) auto;
+  gap: 0.6em;
+  align-items: center;
+  border: 1px solid var(--dr-border);
+  border-radius: var(--style-radius-s);
+  padding: 0.5em 0.8em;
+}
+.daily-review__lang--failed {
+  border-color: var(--theme-error-300);
+  background: var(--theme-error-50);
+}
+.daily-review__lang .btn {
+  margin: 0;
+}
+.daily-review__lang-name {
+  font-weight: 600;
+}
+.daily-review__lang-status {
+  font-size: 0.9rem;
+}
+.daily-review__lang-status--ok {
+  color: var(--dr-ok);
+}
+.daily-review__lang-status--info {
+  color: var(--dr-info);
+}
+.daily-review__lang-status--warn {
+  color: var(--dr-warn);
+}
+.daily-review__lang-status--bad {
+  color: var(--dr-bad);
+}
+.daily-review__lang-status--muted {
+  color: var(--dr-muted);
+}
+.daily-review__preview {
+  display: block;
+  margin-top: 0.2em;
+  color: var(--dr-muted);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.daily-review__placeholder {
+  padding: calc(var(--base) * 2) var(--base);
+  text-align: center;
+  color: var(--dr-muted);
+}

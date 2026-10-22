@@ -118,6 +118,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 5. 采集：`COLLECT_ENABLED` 为 `true` 时，`daily-collect-due-sources` 每 15 分钟找一遍到期的信源，逐个抓取并取原文。要立刻跑一次，发事件 `daily/collect.run`，数据 `{}`。单个信源可以在后台「日报 → 信源」里点「试抓」预览（不入库），失败原因显示在右栏。
 6. 判断：`MODEL_CALLS_ENABLED` 为 `true` 时，每条取完正文的新条目自动进入 `daily-judge-item`（预筛、两次评分、结构化、向量、归组），结果在数据库 `item_analyses` 表的 `outcome` 列。`daily-judge-sweep` 每 30 分钟把漏掉的条目补上，也可以发事件 `daily/judge.sweep` 立刻跑。单条重跑：发 `daily/item.judge`，数据 `{"itemId": 123}`；已经做过的步骤会复用回执，不再付费。
 7. 写作：判断结果为进队列（`queued`）的报道自动进入 `daily-write-story`，写出四种语言加转换的繁体，结果在后台「日报 → 新闻」里，状态「待审」，右栏「原文核对」列出在原文里找不到的名字和数字。`daily-write-sweep` 每 30 分钟（整点 15 分、45 分）补写漏掉的，也可以发事件 `daily/write.sweep` 立刻跑。单条重写：先在后台删掉那条新闻，再发 `daily/story.write`，数据 `{"itemId": 123}`。
+8. 审核：后台左侧「审核队列」（`/admin/collections/stories/review`）。队列按热度排序，点「审核」在中间改简体、分类、来源，然后「通过并发布」；改过简体的，发布前会按新的简体重写英、日、韩（用途 `write`，不另开任务，点一下等几秒），繁体自动转换；「缩短摘要」「换个标题」用途 `assist`。这两样都要 `MODEL_CALLS_ENABLED=true`，否则会提示失败。已发布的新闻在同一页「今天已发布」里点开可以更正或撤回；更早的从「日报 → 新闻」列表的「审核」列进。顶部「信源」卡片里失败的信源可以「立即重试」（发事件 `daily/source.fetch`）。发布、更正、撤回后前台和 RSS 1 分钟内更新（第 5 步做前台后生效）。
 
 ## 10. 第一次上线检查
 
