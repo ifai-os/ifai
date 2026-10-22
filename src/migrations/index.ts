@@ -4,7 +4,8 @@ import * as migration_20261022_160814_model_receipts_pgvector from './20261022_1
 import * as migration_20261022_161230_daily_sources_raw_items from './20261022_161230_daily_sources_raw_items';
 import * as migration_20261022_161537_daily_judge_stories from './20261022_161537_daily_judge_stories';
 import * as migration_20261022_164805_resources from './20261022_164805_resources';
-import * as migration_20261022_203720_apps_profile_drafts from './20261022_203720_apps_profile_drafts';
+import * as migration_20261022_203732_daily_review from './20261022_203732_daily_review';
+import * as migration_20261022_205617_apps_profile_drafts from './20261022_205617_apps_profile_drafts';
 
 export const migrations = [
   {
@@ -38,8 +39,13 @@ export const migrations = [
     name: '20261022_164805_resources',
   },
   {
-    up: migration_20261022_203720_apps_profile_drafts.up,
-    down: migration_20261022_203720_apps_profile_drafts.down,
-    name: '20261022_203720_apps_profile_drafts'
+    up: migration_20261022_203732_daily_review.up,
+    down: migration_20261022_203732_daily_review.down,
+    name: '20261022_203732_daily_review',
+  },
+  {
+    up: migration_20261022_205617_apps_profile_drafts.up,
+    down: migration_20261022_205617_apps_profile_drafts.down,
+    name: '20261022_205617_apps_profile_drafts'
   },
 ];

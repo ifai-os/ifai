@@ -2365,19 +2365,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "draft_status": {
-          "name": "draft_status",
-          "type": "enum_apps_draft_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "draft_info": {
-          "name": "draft_info",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
         "website": {
           "name": "website",
           "type": "varchar",
@@ -2400,7 +2387,7 @@
           "name": "primary_category_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "pricing": {
           "name": "pricing",
@@ -2457,21 +2444,6 @@
           "columns": [
             {
               "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "apps_draft_status_idx": {
-          "name": "apps_draft_status_idx",
-          "columns": [
-            {
-              "expression": "draft_status",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3351,6 +3323,24 @@
         "corrected_at": {
           "name": "corrected_at",
           "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "later_at": {
+          "name": "later_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "merged_into": {
+          "name": "merged_into",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kept_apart_from": {
+          "name": "kept_apart_from",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false
         },
@@ -6770,15 +6760,6 @@
         "delisted"
       ]
     },
-    "public.enum_apps_draft_status": {
-      "name": "enum_apps_draft_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "drafted",
-        "failed"
-      ]
-    },
     "public.enum_apps_pricing": {
       "name": "enum_apps_pricing",
       "schema": "public",
@@ -6939,6 +6920,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "6fb31c2b-4219-4e6e-b9dd-4e597f5a29e3",
+  "id": "0449fbff-1782-451d-89c6-a8e03197b381",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
