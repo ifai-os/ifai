@@ -109,7 +109,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 
 ## 9. Inngest（后台任务）
 
-日报的定时采集、评分、写作都是 Inngest 任务，入口是 `/api/inngest`。
+日报的定时采集、评分、写作和应用的资料草稿都是 Inngest 任务，入口是 `/api/inngest`。
 
 1. 在 inngest.com 注册，先用免费档；用量在控制台的 Billing 页能看到。
 2. Vercel 项目 → Integrations → 搜 Inngest → 安装并连接这个项目。集成会自动给生产和预览环境注入 `INNGEST_EVENT_KEY`、`INNGEST_SIGNING_KEY`，并在每次部署后自动同步任务列表，不用手动填。
@@ -118,6 +118,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 5. 采集：`COLLECT_ENABLED` 为 `true` 时，`daily-collect-due-sources` 每 15 分钟找一遍到期的信源，逐个抓取并取原文。要立刻跑一次，发事件 `daily/collect.run`，数据 `{}`。单个信源可以在后台「日报 → 信源」里点「试抓」预览（不入库），失败原因显示在右栏。
 6. 判断：`MODEL_CALLS_ENABLED` 为 `true` 时，每条取完正文的新条目自动进入 `daily-judge-item`（预筛、两次评分、结构化、向量、归组），结果在数据库 `item_analyses` 表的 `outcome` 列。`daily-judge-sweep` 每 30 分钟把漏掉的条目补上，也可以发事件 `daily/judge.sweep` 立刻跑。单条重跑：发 `daily/item.judge`，数据 `{"itemId": 123}`；已经做过的步骤会复用回执，不再付费。
 7. 写作：判断结果为进队列（`queued`）的报道自动进入 `daily-write-story`，写出四种语言加转换的繁体，结果在后台「日报 → 新闻」里，状态「待审」，右栏「原文核对」列出在原文里找不到的名字和数字。`daily-write-sweep` 每 30 分钟（整点 15 分、45 分）补写漏掉的，也可以发事件 `daily/write.sweep` 立刻跑。单条重写：先在后台删掉那条新闻，再发 `daily/story.write`，数据 `{"itemId": 123}`。
+8. 应用资料草稿：后台「应用」里打开一个应用，右栏「资料草稿」点「生成草稿」；或在应用列表页上方「批量添加应用」里每行贴一个「名称, 官网网址」（只贴网址也行）。任务 `apps-draft-profile` 抓官网、写四种语言的草稿、取 logo 和 og 图，一般一两分钟，右栏会显示原文核对结果。也要 `MODEL_CALLS_ENABLED` 为 `true`；关着或当天预算用完时停在「待生成」，`apps-draft-sweep` 每 20 分钟把等着的重新排队，也可以发事件 `apps/draft.sweep` 立刻跑。单个应用也可以发 `apps/profile.draft`，数据 `{"appId": 12}`，但它只处理状态是「待生成」的应用，平时用后台按钮。
 
 ## 10. 第一次上线检查
 

@@ -246,6 +246,16 @@ export interface App {
    * Re-check pricing and platforms every 90 days.
    */
   checkedAt?: string | null;
+  draftStatus?: ('pending' | 'drafted' | 'failed') | null;
+  draftInfo?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   website: string;
   /**
    * For the Tranco rank and news-mention matching. Left empty, it is taken from the website (without www.).
@@ -256,7 +266,10 @@ export interface App {
    * Other names people use. Matched against news mentions and search.
    */
   aliases?: string[] | null;
-  primaryCategory: number | AppCategory;
+  /**
+   * Needed to publish. The profile draft suggests one.
+   */
+  primaryCategory?: (number | null) | AppCategory;
   secondaryCategories?: (number | AppCategory)[] | null;
   /**
    * Leave empty if the website does not say.
@@ -901,6 +914,8 @@ export interface AppsSelect<T extends boolean = true> {
   status?: T;
   listedAt?: T;
   checkedAt?: T;
+  draftStatus?: T;
+  draftInfo?: T;
   website?: T;
   domain?: T;
   developer?: T;

@@ -22,6 +22,8 @@ export const textPurposes = {
   write: CHEAP,
   /** Review helpers: shorten a summary, suggest another title. */
   assist: CHEAP,
+  /** App profiles from the app's website (apps.profile): facts, then the profile per language. */
+  profile: CHEAP,
 } as const
 
 export const embeddingPurposes = {
