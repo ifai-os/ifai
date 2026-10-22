@@ -3,14 +3,10 @@ import type { CollectionConfig } from 'payload'
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
 import { storyCategories } from '../categories'
+import { reviewEndpoints } from '../review/endpoints'
+import { sourceRoles, storyStatuses, type SourceRole, type StoryStatus } from '../story-fields'
 
-/** 待审 / 已发布 / 已拒绝 / 已并入 / 已撤回 (docs/specs/daily.md「数据」). */
-export const storyStatuses = ['pending', 'published', 'rejected', 'merged', 'withdrawn'] as const
-export type StoryStatus = (typeof storyStatuses)[number]
-
-/** The original announcement comes first; reports and discussion threads follow. */
-export const sourceRoles = ['original', 'report', 'discussion'] as const
-export type SourceRole = (typeof sourceRoles)[number]
+export { sourceRoles, storyStatuses, type SourceRole, type StoryStatus } from '../story-fields'
 
 const signedIn = ({ req: { user } }: { req: { user: unknown } }) => Boolean(user)
 
@@ -45,7 +41,9 @@ const hantFields = ['title', 'summary', 'tryIt'] as const
  * A written story (docs/specs/daily.md, `stories`). The writing job creates one per queued
  * report with title, summary and try-it in zh-Hans, en, ja and ko; zh-Hant is converted from
  * zh-Hans by the shared hook (AGENTS.md rule 4), so an editor's zh-Hans correction updates it
- * too. The review flow (step 4) moves `status` and sets the times.
+ * too. Review (the「审核队列」screen at /admin/collections/stories/review, backed by
+ * `src/modules/daily/review/`) moves `status`, rewrites the other languages when the simplified
+ * Chinese changed, sets the times and refreshes the site's cache.
  */
 export const Stories: CollectionConfig = {
   slug: 'stories',
@@ -56,10 +54,18 @@ export const Stories: CollectionConfig = {
   hooks: {
     afterChange: [syncHantFromHans(hantFields)],
   },
+  endpoints: reviewEndpoints,
   admin: {
     useAsTitle: 'title',
     group: { en: 'Daily', zh: '日报' },
-    defaultColumns: ['title', 'category', 'status', 'score', 'publishedAt'],
+    defaultColumns: ['title', 'category', 'status', 'score', 'publishedAt', 'review'],
+    components: {
+      beforeListTable: ['/modules/daily/admin/review/links#ReviewQueueButton'],
+      views: {
+        // The review screen (「IFAI 日报审核后台」board): queue on the left, one story in the middle.
+        review: { Component: '/modules/daily/admin/review/view#ReviewQueueView', path: '/review', exact: true },
+      },
+    },
   },
   access: {
     // Readers see published stories; everything else is for the back office.
@@ -69,6 +75,17 @@ export const Stories: CollectionConfig = {
     delete: signedIn,
   },
   fields: [
+    {
+      name: 'review',
+      type: 'ui',
+      label: { en: 'Review', zh: '审核' },
+      admin: {
+        components: {
+          Cell: '/modules/daily/admin/review/links#ReviewCell',
+          Field: '/modules/daily/admin/review/links#ReviewField',
+        },
+      },
+    },
     { name: 'title', type: 'text', required: true, localized: true, label: { en: 'Title', zh: '标题' } },
     { name: 'summary', type: 'textarea', required: true, localized: true, label: { en: 'Summary', zh: '摘要' } },
     {
@@ -184,6 +201,24 @@ export const Stories: CollectionConfig = {
       type: 'date',
       label: { en: 'Corrected at', zh: '更正时间' },
       admin: { position: 'sidebar', date: { pickerAppearance: 'dayAndTime' } },
+    },
+    {
+      name: 'laterAt',
+      type: 'date',
+      label: { en: 'Set aside at', zh: '稍后再看' },
+      admin: { ...readOnly, date: { pickerAppearance: 'dayAndTime' }, description: { en: 'Moves the story to the end of the queue.', zh: '设了就排到队列末尾。' } },
+    },
+    {
+      name: 'mergedInto',
+      type: 'number',
+      label: { en: 'Merged into (story id)', zh: '并入的新闻（id）' },
+      admin: readOnly,
+    },
+    {
+      name: 'keptApartFrom',
+      type: 'number',
+      label: { en: 'Not the same as (story id)', zh: '不是同一件事（对方 id）' },
+      admin: { ...readOnly, description: { en: 'The editor said it is not the same happening as this published story.', zh: '审核时确认过和这条已发布的新闻不是同一件事。' } },
     },
   ],
 }

@@ -31,15 +31,15 @@ Rules that are never broken:
 - A report marked as background is context for a follow-up; the story is about the newest report.
 
 For each language write:
-- "title": one line that says what happened (who did what). At most 30 characters in Chinese and Japanese, 40 in Korean, 90 in English.
-- "summary": two or three sentences, the answer first: what is new, then what it costs, when and where it is available, or why it matters. At most 160 characters in Chinese and Japanese, 200 in Korean, 420 in English.
+- "title": one line that says what happened (who did what). At most 40 characters in Chinese and Japanese (aim for 30), 40 in Korean, 90 in English.
+- "summary": two or three sentences, the answer first: what is new, then what it costs, when and where it is available, or why it matters. At most 120 characters in Chinese and Japanese, 200 in Korean, 420 in English.
 - "tryIt": one sentence telling the reader a concrete thing they can do now (where to try it, how to get access), only when the reports give it; otherwise an empty string.
 
 Also give "slug": a short English URL slug for the story, three to eight words, lowercase letters, digits and hyphens only, for example "openai-launches-chatgpt-slides".
 
 Answer with JSON: { "slug": "...", "zhHans": { "title", "summary", "tryIt" }, "en": { ... }, "ja": { ... }, "ko": { ... } }.`
 
-const localeSchema = z.object({
+export const localeSchema = z.object({
   title: z.string().min(1).max(200),
   summary: z.string().min(1).max(1200),
   tryIt: z.string().max(400),
@@ -66,6 +66,13 @@ function reportText(index: number, report: WriteReport): string {
   return lines.join('\n')
 }
 
+/** The reports as prompt text, most authoritative first; the first one is the story's main source. */
+export function reportsText(reports: WriteReport[]): string {
+  return [`${reports.length} report(s) of the same event, most authoritative first.`, ...reports.map((report, i) => reportText(i + 1, report))].join(
+    '\n\n',
+  )
+}
+
 export const writePrompt = {
   name: 'write',
   version: promptVersion('write', instructions),
@@ -77,11 +84,7 @@ export const writePrompt = {
     ja: localeSchema,
     ko: localeSchema,
   }),
-  /** Reports come most authoritative first; the first one is the story's main source. */
-  build: (reports: WriteReport[]) =>
-    [`${reports.length} report(s) of the same event, most authoritative first.`, ...reports.map((report, i) => reportText(i + 1, report))].join(
-      '\n\n',
-    ),
+  build: reportsText,
 }
 
 export type WriteResult = z.infer<typeof writePrompt.schema>
