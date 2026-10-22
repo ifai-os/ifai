@@ -17,6 +17,12 @@ import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
 import { AppCategories } from './modules/apps/collections/AppCategories'
 import { Apps } from './modules/apps/collections/Apps'
+import { AgentHosts } from './modules/resources/collections/AgentHosts'
+import { Skills } from './modules/resources/collections/Skills'
+import { SkillSubmissions } from './modules/resources/collections/SkillSubmissions'
+import { SkillTags } from './modules/resources/collections/SkillTags'
+import { SkillVersions } from './modules/resources/collections/SkillVersions'
+import { resourcesTables } from './modules/resources/db/schema'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -48,7 +54,7 @@ export default buildConfig({
     supportedLanguages: { zh, en },
     fallbackLanguage: 'zh',
   },
-  collections: [Admins, Media, AppCategories, Apps],
+  collections: [Admins, Media, AppCategories, Apps, Skills, SkillVersions, AgentHosts, SkillTags, SkillSubmissions],
   editor: lexicalEditor(),
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;
@@ -78,11 +84,12 @@ export default buildConfig({
     // Schema changes only through migrations (src/migrations), never by auto-push.
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
-    // Better Auth tables join Payload's schema so migrations create and track them.
+    // Our own Drizzle tables (Better Auth, skill install events) join Payload's schema so
+    // migrations create and track them.
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
-        tables: { ...schema.tables, ...authTables },
+        tables: { ...schema.tables, ...authTables, ...resourcesTables },
       }),
     ],
   }),
@@ -92,7 +99,7 @@ export default buildConfig({
   plugins: [
     s3Storage({
       enabled: r2Enabled,
-      collections: { media: { prefix: 'media' } },
+      collections: { media: { prefix: 'media' }, 'skill-versions': { prefix: 'skills' } },
       bucket: process.env.R2_BUCKET || '',
       config: {
         endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,

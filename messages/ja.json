@@ -96,5 +96,14 @@
     "search": "検索・リサーチ",
     "design": "画像・デザイン",
     "coding": "コーディング"
+  },
+  "skillCategories": {
+    "coding": "コーディング",
+    "knowledge": "知識管理",
+    "writing": "ライティング",
+    "design": "デザイン",
+    "data": "データ分析",
+    "productivity": "仕事効率化",
+    "life": "暮らし"
   }
 }

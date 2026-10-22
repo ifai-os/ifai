@@ -96,5 +96,14 @@
     "search": "搜尋與研究",
     "design": "影像與設計",
     "coding": "程式開發"
+  },
+  "skillCategories": {
+    "coding": "開發程式設計",
+    "knowledge": "知識管理",
+    "writing": "寫作創作",
+    "design": "設計",
+    "data": "資料分析",
+    "productivity": "辦公效率",
+    "life": "生活服務"
   }
 }

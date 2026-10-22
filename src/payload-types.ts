@@ -71,6 +71,11 @@ export interface Config {
     media: Media;
     'app-categories': AppCategory;
     apps: App;
+    skills: Skill;
+    'skill-versions': SkillVersion;
+    'agent-hosts': AgentHost;
+    'skill-tags': SkillTag;
+    'skill-submissions': SkillSubmission;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +87,11 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     'app-categories': AppCategoriesSelect<false> | AppCategoriesSelect<true>;
     apps: AppsSelect<false> | AppsSelect<true>;
+    skills: SkillsSelect<false> | SkillsSelect<true>;
+    'skill-versions': SkillVersionsSelect<false> | SkillVersionsSelect<true>;
+    'agent-hosts': AgentHostsSelect<false> | AgentHostsSelect<true>;
+    'skill-tags': SkillTagsSelect<false> | SkillTagsSelect<true>;
+    'skill-submissions': SkillSubmissionsSelect<false> | SkillSubmissionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -282,6 +292,296 @@ export interface App {
   createdAt: string;
 }
 /**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Files and fingerprints are on the versions.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skills".
+ */
+export interface Skill {
+  id: number;
+  /**
+   * Per language. The slug and SKILL.md stay in the original.
+   */
+  name: string;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  status: 'draft' | 'in_review' | 'published' | 'delisted';
+  /**
+   * Shown on the Skill page in place of the install panel.
+   */
+  delistReason?: string | null;
+  /**
+   * The version the Skill page shows and installs.
+   */
+  currentVersion?: (number | null) | SkillVersion;
+  /**
+   * Only after you installed it in at least one host and ran the task SKILL.md describes (rule 5).
+   */
+  certified?: boolean | null;
+  /**
+   * Shown at the top of the list and on the home page.
+   */
+  featured?: boolean | null;
+  category: 'coding' | 'knowledge' | 'writing' | 'design' | 'data' | 'productivity' | 'life';
+  tags?: (number | SkillTag)[] | null;
+  author: {
+    name: string;
+    url?: string | null;
+    official?: boolean | null;
+  };
+  /**
+   * GitHub address, optionally with a sub-directory. Versions are imported from here.
+   */
+  repository?: string | null;
+  /**
+   * SPDX id, e.g. MIT, Apache-2.0. No license → only with the author’s written consent (rule 13).
+   */
+  license?: string | null;
+  needsApiKey?: boolean | null;
+  /**
+   * e.g. Python 3.10+, Node 22, ffmpeg.
+   */
+  runtime?: string[] | null;
+  tagline?: string | null;
+  capabilities?:
+    | {
+        title: string;
+        detail?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * What to say to the assistant once the Skill is installed.
+   */
+  example?: string | null;
+  workflow?:
+    | {
+        title: string;
+        detail?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Files it writes, commands it runs, what it asks before acting.
+   */
+  notes?: string | null;
+  /**
+   * Your own notes from trying it. Every certified Skill has them (rule 10).
+   */
+  ownerNotes?: string | null;
+  /**
+   * Rolled up hourly from skill_events. Not edited by hand.
+   */
+  stats?: {
+    installs?: number | null;
+    installs7d?: number | null;
+    saves?: number | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Upload the Zip of the Skill directory (SKILL.md at the top). The sha256 is computed from it. Release notes: Traditional Chinese is converted from Simplified automatically.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skill-versions".
+ */
+export interface SkillVersion {
+  id: number;
+  skill: number | Skill;
+  version: string;
+  status: 'scanning' | 'in_review' | 'published' | 'deprecated' | 'withdrawn';
+  publishedAt?: string | null;
+  /**
+   * Shown on the fixed-version page. No risk details.
+   */
+  withdrawReason?: string | null;
+  /**
+   * The repository commit this version was built from.
+   */
+  sourceCommit?: string | null;
+  /**
+   * Computed from the uploaded Zip.
+   */
+  sha256?: string | null;
+  /**
+   * Written by the import job (step 2).
+   */
+  files?:
+    | {
+        path: string;
+        size?: number | null;
+        sha256?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Shown as text in the author’s language. Treated as data, never as instructions (rule 4).
+   */
+  skillMd?: string | null;
+  /**
+   * name, description and the rest of the SKILL.md header.
+   */
+  frontmatter?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  declarations?: {
+    domains?: string[] | null;
+    /**
+     * e.g. the project directory only.
+     */
+    fileScope?: string | null;
+    tools?: string[] | null;
+    /**
+     * Names of the keys the user must provide, never values.
+     */
+    apiKeys?: string[] | null;
+  };
+  scanStatus: 'pending' | 'passed' | 'warnings' | 'blocked';
+  scannedAt?: string | null;
+  /**
+   * Shown on the Skill page: only the names and results.
+   */
+  checks?:
+    | {
+        key: string;
+        result: 'pass' | 'warn' | 'block';
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Back office only; the public sees "not installable" at most.
+   */
+  findings?:
+    | {
+        severity: 'high' | 'medium';
+        file?: string | null;
+        line?: number | null;
+        message: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * "Verified" only when you installed and ran it there yourself; otherwise the author’s claim or untested (rule 11).
+   */
+  compatibility?:
+    | {
+        host: number | AgentHost;
+        status: 'verified' | 'claimed' | 'untested' | 'failed' | 'needs_recheck';
+        checkedAt?: string | null;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  changelog?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Install notes: Traditional Chinese is converted from Simplified automatically (OpenCC); write English, Japanese and Korean separately.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-hosts".
+ */
+export interface AgentHost {
+  id: number;
+  /**
+   * As the product writes it, in every language.
+   */
+  name: string;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  enabled?: boolean | null;
+  /**
+   * Smaller comes first.
+   */
+  order?: number | null;
+  website?: string | null;
+  /**
+   * The official, licensed logo only. Empty → the initial-letter tile.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * e.g. ~/.claude/skills/
+   */
+  globalDir?: string | null;
+  /**
+   * e.g. .claude/skills/
+   */
+  projectDir?: string | null;
+  /**
+   * How to enable a Skill in this host after the files are in place. Shown in the install guide and install.md.
+   */
+  instructions?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Fill in the other languages by hand.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skill-tags".
+ */
+export interface SkillTag {
+  id: number;
+  name: string;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skill-submissions".
+ */
+export interface SkillSubmission {
+  id: number;
+  /**
+   * Set automatically.
+   */
+  code?: string | null;
+  status: 'pending' | 'accepted' | 'rejected';
+  /**
+   * The Skill created from this submission.
+   */
+  skill?: (number | null) | Skill;
+  repository: string;
+  note?: string | null;
+  email: string;
+  /**
+   * Site account id (Better Auth).
+   */
+  submitterId?: string | null;
+  /**
+   * Internal. Not shown to the submitter.
+   */
+  adminNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -320,6 +620,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'apps';
         value: number | App;
+      } | null)
+    | ({
+        relationTo: 'skills';
+        value: number | Skill;
+      } | null)
+    | ({
+        relationTo: 'skill-versions';
+        value: number | SkillVersion;
+      } | null)
+    | ({
+        relationTo: 'agent-hosts';
+        value: number | AgentHost;
+      } | null)
+    | ({
+        relationTo: 'skill-tags';
+        value: number | SkillTag;
+      } | null)
+    | ({
+        relationTo: 'skill-submissions';
+        value: number | SkillSubmission;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -478,6 +798,173 @@ export interface AppsSelect<T extends boolean = true> {
   logo?: T;
   screenshot?: T;
   alternatives?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skills_select".
+ */
+export interface SkillsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  status?: T;
+  delistReason?: T;
+  currentVersion?: T;
+  certified?: T;
+  featured?: T;
+  category?: T;
+  tags?: T;
+  author?:
+    | T
+    | {
+        name?: T;
+        url?: T;
+        official?: T;
+      };
+  repository?: T;
+  license?: T;
+  needsApiKey?: T;
+  runtime?: T;
+  tagline?: T;
+  capabilities?:
+    | T
+    | {
+        title?: T;
+        detail?: T;
+        id?: T;
+      };
+  example?: T;
+  workflow?:
+    | T
+    | {
+        title?: T;
+        detail?: T;
+        id?: T;
+      };
+  notes?: T;
+  ownerNotes?: T;
+  stats?:
+    | T
+    | {
+        installs?: T;
+        installs7d?: T;
+        saves?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skill-versions_select".
+ */
+export interface SkillVersionsSelect<T extends boolean = true> {
+  skill?: T;
+  version?: T;
+  status?: T;
+  publishedAt?: T;
+  withdrawReason?: T;
+  sourceCommit?: T;
+  sha256?: T;
+  files?:
+    | T
+    | {
+        path?: T;
+        size?: T;
+        sha256?: T;
+        id?: T;
+      };
+  skillMd?: T;
+  frontmatter?: T;
+  declarations?:
+    | T
+    | {
+        domains?: T;
+        fileScope?: T;
+        tools?: T;
+        apiKeys?: T;
+      };
+  scanStatus?: T;
+  scannedAt?: T;
+  checks?:
+    | T
+    | {
+        key?: T;
+        result?: T;
+        note?: T;
+        id?: T;
+      };
+  findings?:
+    | T
+    | {
+        severity?: T;
+        file?: T;
+        line?: T;
+        message?: T;
+        id?: T;
+      };
+  compatibility?:
+    | T
+    | {
+        host?: T;
+        status?: T;
+        checkedAt?: T;
+        note?: T;
+        id?: T;
+      };
+  changelog?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-hosts_select".
+ */
+export interface AgentHostsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  enabled?: T;
+  order?: T;
+  website?: T;
+  logo?: T;
+  globalDir?: T;
+  projectDir?: T;
+  instructions?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skill-tags_select".
+ */
+export interface SkillTagsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skill-submissions_select".
+ */
+export interface SkillSubmissionsSelect<T extends boolean = true> {
+  code?: T;
+  status?: T;
+  skill?: T;
+  repository?: T;
+  note?: T;
+  email?: T;
+  submitterId?: T;
+  adminNote?: T;
   updatedAt?: T;
   createdAt?: T;
 }
