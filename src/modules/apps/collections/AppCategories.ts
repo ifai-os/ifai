@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
+import { refreshAppsAfterChange, refreshAppsAfterDelete } from '../cache'
 import { appsAdminGroup, isAdmin, slugField } from './shared'
 
 /** The eight categories of the apps directory (seeded by the apps migration). */
@@ -28,7 +29,8 @@ export const AppCategories: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    afterChange: [syncHantFromHans(['name'])],
+    afterChange: [syncHantFromHans(['name']), refreshAppsAfterChange],
+    afterDelete: [refreshAppsAfterDelete],
   },
   fields: [
     {

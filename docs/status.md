@@ -21,7 +21,8 @@
   - 动作：通过并发布（`publishedAt` = 通过时间）、拒绝（归档）、稍后再看（排到队列末尾）、撤回发布（状态「已撤回」，回到队列，可以再发布）、保存更正（`correctedAt`）。发布、更正、并入、撤回都会调用 `revalidateTag('daily', 'max')`（`src/modules/daily/review/cache.ts`）；第 5 步的页面和 RSS 读已发布新闻时要加 `cacheTag('daily')`，才能在 1 分钟内更新。
   - 接口都挂在 `stories` 集合上，要登录后台：`GET /api/stories/review-queue`、`GET /api/stories/:id/review`、`POST /api/stories/:id/review/<edit|publish|correct|reject|later|withdraw|merge|keep-separate|rewrite|assist>`。
   - 本地库上用假模型跑通了：队列排序与稍后再看、改简体后标记过期、标题超长拒绝发布、发布时重写三种语言、同事件和向量相似两种重复提示、不是同一件事、重写失败记原因并阻止发布、单独重试、并入（来源列表和事件成员都更新）、更正、撤回后再发布、拒绝、AI 建议。界面还没在浏览器里点过，要在预览环境看。
-- **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 以后也可以用。前台页面还没做。
+- **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 也在用。
+- **应用第 3 步（列表页和详情页）已完成**：`/[locale]/apps`（全部应用，按名称 A–Z，每页 50 条）、`/[locale]/apps/category/[slug]`（分类，数量含次分类）、`?q=` 搜索（名称、别名、一句话介绍、标签，五种语言都查，搜索页不进索引）、`/[locale]/apps/[slug]`（简介、资料、标签、它是什么、核心功能、常见问题、替代品、打开网站、分享）。代码在 `src/modules/apps/`（`data.ts` 读数据，`components/` 是页面组件），页面文件只做组装。缺读者语言的内容回退英文并标 `lang`。数据缓存挂标签 `apps`，后台保存应用或分类后立即刷新。还没有热度，所以榜单、热度前三、走势、首页「热门应用」都留到第 4 步；收藏、评价、提交应用、「信息有误？」留到第 5 步。和规格不同的地方写在 apps.md「页面与路由」末尾。本机示例数据：`pnpm payload run scripts/seed-apps.ts`（只认本机数据库），CI 冒烟测试用它。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 
@@ -33,8 +34,8 @@
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |
 | 第一期 | 3 起 | 日报 | 第 4 步完成，下一步前台 |
-| 第一期 | 日报之后 | 应用 | 第 1 步（集合与后台录入）完成，下一步官网取材与资料草稿 |
-| 第一期 | 日报之后 | 资源（Agent Skills） | 规格已确认（[resources.md](./specs/resources.md)），待实现 |
+| 第一期 | 日报之后 | 应用 | 第 1 步（集合与后台录入）、第 3 步（列表页和详情页）完成，下一步官网取材与资料草稿 |
+| 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）完成，下一步导入与检测 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
 | 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
 
@@ -44,8 +45,8 @@
 
 1. **日报第 5 步（前台）**，对应画板「IFAI 日报（新版）」「手机 · 日报」「IFAI 资讯详情页 · v1」：`/[locale]/daily` 列表（最新在前、按读者本地日期分组、分类筛选）、`/[locale]/daily/[slug]` 详情（来源列表原文在前、同一事件的其他进展、更正时间）、每种语言的 RSS、首页「今天的 AI」改读真实数据、本地时间组件。只读 `status = published` 的 `stories`，缓存读取加 `cacheTag('daily')`（审核后台发布时会刷新这个标签）。「另有 N 家报道」用 `sources` 里 `role = report` 的条数。
 2. 日报第 6 步（热度与海报）：事件热度、热门标记、每日海报（审核后台右栏「今日海报」也在这一步做）；归组时后来并入事件的「同一次发生」报道要同步加进已发布新闻的来源列表。
-3. **应用第 2 步：官网取材与资料草稿**（见 apps.md「实现顺序」），要等日报第 1 步合并（用它的 `src/lib/ai` 和 Inngest）。第 3 步前台不依赖它，可以先做。之后是热度 → 收藏、评价与提交；热度里的日报提及要等日报第 3 步。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
-4. **资源第 1 步：数据与后台**（见 resources.md「实现顺序」），不依赖日报，可以和日报、应用并行；第 2、3 步（导入与检测、说明起草）要等日报第 1 步的 Inngest 和 `src/lib/ai`。收藏复用应用的 `saves` 表，谁先做谁建表。
+3. **应用第 2 步：官网取材与资料草稿**（见 apps.md「实现顺序」），日报第 1 步已合并，可以开工；新迁移在 main 最新的迁移之上生成。之后是第 4 步热度（榜单、走势、首页「热门应用」，日报提及接日报第 3 步的结果）→ 第 5 步收藏、评价与提交。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
+4. **资源第 2 步：导入与检测**（见 resources.md「实现顺序」）。日报第 1 步已合并，可以直接用它的 Inngest 开工；第 3 步说明起草用它的 `src/lib/ai`。后台现在可以手动录入 Skill 和上传 Zip 版本（sha256 自动算出）；6 个宿主已建好，Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
 
 ## 已做的决定
 
@@ -108,6 +109,8 @@
 - 两个并行 PR 各自带 Payload 迁移时，后合并的要先合并 main、删掉自己的迁移再重新 `pnpm payload migrate:create`，因为迁移快照会缺对方的表（应用 PR #6 和日报的迁移就是这种情况）。
 - 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
+- 在 Payload 钩子里调用 Local API 并传入 `req`（为了留在同一个事务里）时，Payload 会就地改写这个 `req` 的语言、回退语言、`depth` 和 `context`，保存后面的步骤会拿到被改过的请求。`syncHantFromHans` 已经在调用后还原（见 `hant-sync.ts` 的 `keepingRequest`），别的钩子这样调用时照着做。
+- `revalidateTag` 只能在 Next.js 里调用。`pnpm payload run` 的脚本和迁移在 Next.js 之外，应用页面的缓存刷新钩子在那里什么也不做；用脚本改了应用数据，页面最晚一小时后更新。
 - 两个分支各自生成了迁移时，后合并的那个要先合并 `main`，删掉自己的迁移，再重新 `pnpm payload migrate:create`。否则最新的快照（`.json`）里缺了对方的表，下一次生成迁移会出错。
 - Payload 生成的 down 迁移会先 `DROP TABLE … CASCADE`，再删已经被连带删掉的外键，执行时报错。生成后把这类 `DROP CONSTRAINT` 改成 `DROP CONSTRAINT IF EXISTS`，并跑一次 `pnpm payload migrate:down` 验证。
 - 沙盒里有 PostgreSQL 16：`service postgresql start`，建库 `ifai`，在 `.env` 里填本地的 `DATABASE_URI`，就能跑迁移和 `pnpm build`。

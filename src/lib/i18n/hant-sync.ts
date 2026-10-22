@@ -1,4 +1,4 @@
-import type { CollectionAfterChangeHook, CollectionSlug } from 'payload'
+import type { CollectionAfterChangeHook, CollectionSlug, PayloadRequest } from 'payload'
 
 import { toHant } from './hant'
 
@@ -23,6 +23,24 @@ export function toHantDeep(value: unknown): unknown {
 const skipContextKey = 'skipHantSync'
 
 /**
+ * Local API calls that share `req` (to stay in its transaction) overwrite its locale, fallback
+ * locale, depth and context. Put them back, so the rest of the save — later hooks, the response,
+ * a script that reuses `req` for the next document — still sees the request it started with.
+ */
+async function keepingRequest<T>(req: PayloadRequest, run: () => Promise<T>): Promise<T> {
+  const { context, fallbackLocale, locale } = req
+  const depth = req.query?.depth
+  try {
+    return await run()
+  } finally {
+    req.context = context
+    req.fallbackLocale = fallbackLocale
+    req.locale = locale
+    if (req.query) req.query.depth = depth
+  }
+}
+
+/**
  * Payload hook: zh-Hant content is never written by hand or by a model (AGENTS.md rule 4).
  * After a save in zh-Hans, the listed localized fields are converted with OpenCC and saved
  * to zh-Hant. A field that is empty in zh-Hans is cleared in zh-Hant too, so both fall back
@@ -33,25 +51,28 @@ export function syncHantFromHans(fields: readonly string[]): CollectionAfterChan
     if (req.locale !== 'zh-Hans' || context[skipContextKey]) return doc
 
     const slug = collection.slug as CollectionSlug
-    // Read zh-Hans without fallback: an English fallback must not be copied into zh-Hant.
-    const hans = (await req.payload.findByID({
-      collection: slug,
-      id: doc.id,
-      locale: 'zh-Hans',
-      fallbackLocale: false,
-      depth: 0,
-      req,
-    })) as unknown as Record<string, unknown>
+    await keepingRequest(req, async () => {
+      // Read zh-Hans without fallback: an English fallback must not be copied into zh-Hant.
+      const hans = (await req.payload.findByID({
+        collection: slug,
+        id: doc.id,
+        locale: 'zh-Hans',
+        fallbackLocale: false,
+        depth: 0,
+        req,
+      })) as unknown as Record<string, unknown>
 
-    const data = Object.fromEntries(fields.map((name) => [name, toHantDeep(hans[name] ?? null)]))
+      const data = Object.fromEntries(fields.map((name) => [name, toHantDeep(hans[name] ?? null)]))
 
-    await req.payload.update({
-      collection: slug,
-      id: doc.id,
-      locale: 'zh-Hant',
-      data,
-      context: { [skipContextKey]: true },
-      req,
+      await req.payload.update({
+        collection: slug,
+        id: doc.id,
+        locale: 'zh-Hant',
+        data,
+        depth: 0,
+        context: { [skipContextKey]: true },
+        req,
+      })
     })
     return doc
   }

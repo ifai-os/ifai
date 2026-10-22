@@ -105,6 +105,65 @@
     "cancel": "キャンセル",
     "dismiss": "閉じる"
   },
+  "apps": {
+    "title": "AIアプリ",
+    "description": "カテゴリからAIアプリを探せます。できること、料金、代わりになるアプリまで。",
+    "listed": "{count, plural, other {#件のアプリを掲載}}",
+    "count": "{count, plural, other {#件のアプリ}}",
+    "searchLabel": "アプリを検索",
+    "searchPlaceholder": "アプリ名や用途で検索",
+    "searchSubmit": "検索",
+    "clearSearch": "検索をクリア",
+    "filterLabel": "カテゴリで絞り込む",
+    "allCategories": "すべて",
+    "found": "{count, plural, other {「{q}」に一致するアプリが#件あります}}",
+    "noMatchTitle": "「{q}」に一致するアプリはありません",
+    "noMatchBody": "短いキーワードや英語で試してください。",
+    "searchEverywhere": "すべてのカテゴリで検索",
+    "emptyCategoryTitle": "このカテゴリにはまだアプリがありません",
+    "emptyCategoryBody": "ほかのカテゴリを見るか、数日後にまた確認してください。",
+    "allApps": "すべてのアプリを見る",
+    "emptyTitle": "まだアプリが掲載されていません",
+    "emptyBody": "最初のアプリを準備しています。まもなくここに表示されます。",
+    "pages": "ページ",
+    "previous": "前へ",
+    "next": "次へ",
+    "pageOf": "{page} / {pages} ページ",
+    "categoryTitle": "{category} · AIアプリ",
+    "searchTitle": "「{q}」· AIアプリ",
+    "pageTitle": "{title} · {page}ページ目",
+    "breadcrumb": "パンくずリスト",
+    "openSite": "公式サイトを開く",
+    "newTab": "（新しいタブで開きます）",
+    "share": "共有",
+    "copied": "リンクをコピーしました",
+    "detailTitle": "{name}：{tagline}",
+    "screenshotAlt": "{name} 公式サイトの画像",
+    "tags": "タグ",
+    "about": "どんなアプリか",
+    "features": "主な機能",
+    "faqs": "よくある質問",
+    "alternatives": "代わりのアプリ",
+    "facts": {
+      "developer": "開発元",
+      "pricing": "料金",
+      "platforms": "対応環境",
+      "listedAt": "掲載日"
+    },
+    "pricing": {
+      "free": "無料",
+      "freemium": "無料 + 有料",
+      "paid": "有料",
+      "open-source": "オープンソース"
+    },
+    "platforms": {
+      "web": "Web",
+      "desktop": "デスクトップ",
+      "mobile": "モバイル",
+      "browser-extension": "ブラウザ拡張機能",
+      "api": "API"
+    }
+  },
   "categories": {
     "product": "製品アップデート",
     "industry": "業界動向",
@@ -113,5 +172,14 @@
     "search": "検索・リサーチ",
     "design": "画像・デザイン",
     "coding": "コーディング"
+  },
+  "skillCategories": {
+    "coding": "コーディング",
+    "knowledge": "知識管理",
+    "writing": "ライティング",
+    "design": "デザイン",
+    "data": "データ分析",
+    "productivity": "仕事効率化",
+    "life": "暮らし"
   }
 }

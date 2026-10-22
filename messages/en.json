@@ -105,6 +105,65 @@
     "cancel": "Cancel",
     "dismiss": "Dismiss"
   },
+  "apps": {
+    "title": "AI Apps",
+    "description": "Find AI apps by category: what each one does, what it costs and what to use instead.",
+    "listed": "{count, plural, one {# app listed} other {# apps listed}}",
+    "count": "{count, plural, one {# app} other {# apps}}",
+    "searchLabel": "Search apps",
+    "searchPlaceholder": "Search apps by name or use",
+    "searchSubmit": "Search",
+    "clearSearch": "Clear search",
+    "filterLabel": "Filter by category",
+    "allCategories": "All",
+    "found": "{count, plural, one {# app matches “{q}”} other {# apps match “{q}”}}",
+    "noMatchTitle": "No apps match “{q}”",
+    "noMatchBody": "Try a shorter or different keyword.",
+    "searchEverywhere": "Search all categories",
+    "emptyCategoryTitle": "No apps in this category yet",
+    "emptyCategoryBody": "Try another category, or check back in a few days.",
+    "allApps": "See all apps",
+    "emptyTitle": "No apps listed yet",
+    "emptyBody": "The first apps are being added and will show up here soon.",
+    "pages": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "categoryTitle": "{category} · AI Apps",
+    "searchTitle": "“{q}” · AI Apps",
+    "pageTitle": "{title} · Page {page}",
+    "breadcrumb": "Breadcrumb",
+    "openSite": "Visit website",
+    "newTab": "(opens in a new tab)",
+    "share": "Share",
+    "copied": "Link copied",
+    "detailTitle": "{name}: {tagline}",
+    "screenshotAlt": "Image from the {name} website",
+    "tags": "Tags",
+    "about": "What it is",
+    "features": "Key features",
+    "faqs": "FAQ",
+    "alternatives": "Alternatives",
+    "facts": {
+      "developer": "Developer",
+      "pricing": "Pricing",
+      "platforms": "Platforms",
+      "listedAt": "Listed"
+    },
+    "pricing": {
+      "free": "Free",
+      "freemium": "Free + paid",
+      "paid": "Paid",
+      "open-source": "Open source"
+    },
+    "platforms": {
+      "web": "Web",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "browser-extension": "Browser extension",
+      "api": "API"
+    }
+  },
   "categories": {
     "product": "Product update",
     "industry": "Industry",
@@ -113,5 +172,14 @@
     "search": "Search & research",
     "design": "Image & design",
     "coding": "Coding"
+  },
+  "skillCategories": {
+    "coding": "Coding",
+    "knowledge": "Knowledge",
+    "writing": "Writing",
+    "design": "Design",
+    "data": "Data analysis",
+    "productivity": "Productivity",
+    "life": "Everyday life"
   }
 }

@@ -105,6 +105,65 @@
     "cancel": "取消",
     "dismiss": "關閉"
   },
+  "apps": {
+    "title": "AI 應用",
+    "description": "按分類找 AI 應用：它能做什麼、怎麼收費、有哪些替代品。",
+    "listed": "{count, plural, other {收錄 # 個應用}}",
+    "count": "{count, plural, other {# 個應用}}",
+    "searchLabel": "搜尋應用",
+    "searchPlaceholder": "搜尋應用名稱或用途",
+    "searchSubmit": "搜尋",
+    "clearSearch": "清除搜尋",
+    "filterLabel": "依分類篩選",
+    "allCategories": "全部",
+    "found": "{count, plural, other {找到 # 個與「{q}」相關的應用}}",
+    "noMatchTitle": "找不到與「{q}」相關的應用",
+    "noMatchBody": "試試更短的關鍵字，或者換成英文。",
+    "searchEverywhere": "在全部分類裡搜尋",
+    "emptyCategoryTitle": "這個分類下暫時沒有應用",
+    "emptyCategoryBody": "看看其他分類，或者過幾天再來。",
+    "allApps": "檢視全部應用",
+    "emptyTitle": "還沒有收錄應用",
+    "emptyBody": "第一批應用正在整理，很快會出現在這裡。",
+    "pages": "翻頁",
+    "previous": "上一頁",
+    "next": "下一頁",
+    "pageOf": "第 {page} / {pages} 頁",
+    "categoryTitle": "{category} · AI 應用",
+    "searchTitle": "「{q}」· AI 應用",
+    "pageTitle": "{title} · 第 {page} 頁",
+    "breadcrumb": "目前位置",
+    "openSite": "開啟網站",
+    "newTab": "（在新分頁開啟）",
+    "share": "分享",
+    "copied": "連結已複製",
+    "detailTitle": "{name}：{tagline}",
+    "screenshotAlt": "{name} 官網圖片",
+    "tags": "標籤",
+    "about": "它是什麼",
+    "features": "核心功能",
+    "faqs": "常見問題",
+    "alternatives": "替代品",
+    "facts": {
+      "developer": "開發者",
+      "pricing": "定價",
+      "platforms": "平台",
+      "listedAt": "收錄時間"
+    },
+    "pricing": {
+      "free": "免費",
+      "freemium": "免費 + 付費",
+      "paid": "付費",
+      "open-source": "開源"
+    },
+    "platforms": {
+      "web": "網頁",
+      "desktop": "桌面端",
+      "mobile": "手機",
+      "browser-extension": "瀏覽器擴充功能",
+      "api": "API"
+    }
+  },
   "categories": {
     "product": "產品更新",
     "industry": "產業動態",
@@ -113,5 +172,14 @@
     "search": "搜尋與研究",
     "design": "影像與設計",
     "coding": "程式開發"
+  },
+  "skillCategories": {
+    "coding": "開發程式設計",
+    "knowledge": "知識管理",
+    "writing": "寫作創作",
+    "design": "設計",
+    "data": "資料分析",
+    "productivity": "辦公效率",
+    "life": "生活服務"
   }
 }
