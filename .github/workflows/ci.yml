@@ -15,7 +15,7 @@ permissions:
 jobs:
   checks:
     name: Checks, build and smoke tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
 
     # Throwaway Postgres (with pgvector, like Neon) so migrations and /admin are tested for real.
