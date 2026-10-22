@@ -113,5 +113,14 @@
     "search": "搜索与研究",
     "design": "图像与设计",
     "coding": "代码编程"
+  },
+  "skillCategories": {
+    "coding": "开发编程",
+    "knowledge": "知识管理",
+    "writing": "写作创作",
+    "design": "设计",
+    "data": "数据分析",
+    "productivity": "办公效率",
+    "life": "生活服务"
   }
 }
