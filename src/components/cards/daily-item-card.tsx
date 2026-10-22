@@ -8,6 +8,8 @@ export type DailyItemCardProps = {
   no: number
   category: string
   title: string
+  /** Language of the title when it is not the page's, so screen readers switch voice. */
+  lang?: string
   /** Two or three sentences. Omit for the compact headline row. */
   summary?: string
   /** Other outlets that reported the same event (after de-duplication). */
@@ -15,7 +17,7 @@ export type DailyItemCardProps = {
 }
 
 /** One story in the Daily. Compact = headline row (home page); with a summary = full card (Daily page). */
-export function DailyItemCard({ href, no, category, title, summary, moreSources }: DailyItemCardProps) {
+export function DailyItemCard({ href, no, category, title, lang, summary, moreSources }: DailyItemCardProps) {
   const t = useTranslations('card')
   const number = String(no).padStart(2, '0')
 
@@ -24,10 +26,14 @@ export function DailyItemCard({ href, no, category, title, summary, moreSources 
       <span className="pt-0.5 text-body font-semibold text-accent">{number}</span>
       <div className="flex flex-col gap-1">
         <span className="text-small text-ink-4">{category}</span>
-        <Link href={href} className="text-title text-ink hover:text-accent">
+        <Link href={href} lang={lang} className="text-title text-ink hover:text-accent">
           {title}
         </Link>
-        {summary && <p className="text-body text-ink-3">{summary}</p>}
+        {summary && (
+          <p lang={lang} className="text-body text-ink-3">
+            {summary}
+          </p>
+        )}
         {moreSources !== undefined && (
           <span className="text-small text-ink-4">{t('moreSources', { count: moreSources })}</span>
         )}

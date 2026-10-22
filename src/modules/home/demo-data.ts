@@ -1,53 +1,14 @@
 import type { Locale } from '@/i18n/config'
 
 /**
- * Sample content for the home page until the Daily, Apps and Resources modules
- * read from Payload. The page shows a "demo data" banner while this is in use.
+ * Sample content for the home page until the Apps and Resources modules read from
+ * Payload (「今天的 AI」already reads the published stories). The page shows a "demo data" banner while this is in use.
  * Heat scores are illustrative, not measurements.
  */
 
 type Localized = Record<Locale, string>
 
 export type DemoCategory = 'product' | 'industry' | 'open' | 'assistant' | 'search' | 'design' | 'coding'
-
-export const demoIssue = {
-  date: new Date('2026-10-21T00:00:00Z'),
-  publishedAt: '08:00',
-  count: 10,
-}
-
-export const demoHeadlines: Array<{ category: DemoCategory; title: Localized }> = [
-  {
-    category: 'product',
-    title: {
-      en: 'A writing assistant adds real-time team collaboration',
-      'zh-Hans': '一款写作助手上线团队实时协作',
-      'zh-Hant': '一款寫作助理推出團隊即時協作',
-      ja: 'ある文章作成アシスタントがチームでのリアルタイム共同編集に対応',
-      ko: '한 글쓰기 도우미, 팀 실시간 협업 기능 추가',
-    },
-  },
-  {
-    category: 'industry',
-    title: {
-      en: "Dates and highlights of this week's three AI launch events",
-      'zh-Hans': '本周三场 AI 发布会的时间与看点',
-      'zh-Hant': '本週三場 AI 發表會的時間與看點',
-      ja: '今週開かれる3つのAI発表会の日程と見どころ',
-      ko: '이번 주 AI 발표 행사 세 건의 일정과 관전 포인트',
-    },
-  },
-  {
-    category: 'open',
-    title: {
-      en: 'An open-source speech model lets you set the emotion of a voice-over',
-      'zh-Hans': '一个开源语音模型支持按情绪调整配音',
-      'zh-Hant': '一個開源語音模型支援依情緒調整配音',
-      ja: '感情に合わせてナレーションを調整できるオープンソース音声モデル',
-      ko: '감정에 맞춰 더빙을 조절하는 오픈소스 음성 모델',
-    },
-  },
-]
 
 export type DemoApp = {
   slug: string
