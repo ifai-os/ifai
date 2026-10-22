@@ -4,11 +4,12 @@ import { siteUrl } from '@/lib/site-url'
 
 import { createAi, type Ai } from './client'
 import { MissingApiKeyError } from './errors'
+import type { ReceiptStore } from './receipts'
 import { postgresReceiptStore } from './store'
 
 export * from './errors'
 export { DEFAULT_DAILY_BUDGET_USD, type AiResult, type UsageToday } from './client'
-export { EMBEDDING_DIMENSIONS, purposes, type Purpose } from './purposes'
+export { EMBEDDING_DIMENSIONS, modelFor, purposes, type Purpose } from './purposes'
 export { untrusted } from './untrusted'
 
 let provider: ReturnType<typeof createOpenRouter> | undefined
@@ -33,12 +34,20 @@ export const ai: Ai = {
   usageToday: () => client().usageToday(),
 }
 
-function client(): Ai {
-  instance ??= createAi({
-    store: postgresReceiptStore,
+/**
+ * A client on the real OpenRouter provider. The app uses the Postgres receipt store;
+ * scripts/ai-smoke.ts passes an in-memory one so it needs no database.
+ */
+export function createOpenRouterAi(store: ReceiptStore = postgresReceiptStore): Ai {
+  return createAi({
+    store,
     // `usage.include` makes OpenRouter report the cost of each call, which feeds the budget.
     languageModel: (model) => openRouter().chat(model, { usage: { include: true } }),
     embeddingModel: (model) => openRouter().textEmbeddingModel(model),
   })
+}
+
+function client(): Ai {
+  instance ??= createOpenRouterAi()
   return instance
 }

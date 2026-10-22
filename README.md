@@ -38,6 +38,7 @@ pnpm dev                  # http://localhost:3000 ，后台在 /admin
 | `pnpm payload migrate:create <名字>` | 改了数据结构后生成迁移 |
 | `pnpm payload migrate` | 执行迁移 |
 | `pnpm inngest` | Inngest 本地服务（后台任务） |
+| `pnpm ai:smoke` | 用真实模型做三次小调用，验证 OpenRouter 配置 |
 
 ## 文档
 

@@ -103,7 +103,8 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 2. Keys → Create Key，建两个：`ifai-production`、`ifai-preview`。每个 key 都可以设额度上限（Credit limit），建议生产 50 美元、预览 5 美元，作为代码里每日预算之外的第二道保险。
 3. 把 key 填到 Vercel 对应环境的 `OPENROUTER_API_KEY`；本地要试真实调用时填进 `.env`。
 4. 默认模型写在 `src/lib/ai/purposes.ts`。想给某个用途换模型，不用改代码：在 Vercel 加 `AI_MODEL_<用途>`，例如 `AI_MODEL_WRITE=openai/gpt-5`，模型 ID 从 openrouter.ai/models 复制。换向量模型（`AI_MODEL_EMBED`）前先找开发确认，因为向量维度写在迁移里。
-5. 每次调用的费用记在数据库 `model_receipts` 表里；OpenRouter 的 Activity 页也能看到每一笔（应用名显示为 IFAI）。
+5. 验证：本地 `.env` 里填好 `OPENROUTER_API_KEY`，把 `MODEL_CALLS_ENABLED` 设为 `true`，运行 `pnpm ai:smoke`。它会做三次很小的调用（文本、结构化输出、向量），打印每次的模型、用量和费用，并确认第二次相同调用直接复用回执、不再付费。不需要数据库。
+6. 每次调用的费用记在数据库 `model_receipts` 表里；OpenRouter 的 Activity 页也能看到每一笔（应用名显示为 IFAI）。
 
 ## 9. Inngest（后台任务）
 
