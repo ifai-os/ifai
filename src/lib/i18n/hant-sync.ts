@@ -27,7 +27,7 @@ const skipContextKey = 'skipHantSync'
  * locale, depth and context. Put them back, so the rest of the save — later hooks, the response,
  * a script that reuses `req` for the next document — still sees the request it started with.
  */
-async function keepingRequest<T>(req: PayloadRequest, run: () => Promise<T>): Promise<T> {
+export async function keepingRequest<T>(req: PayloadRequest, run: () => Promise<T>): Promise<T> {
   const { context, fallbackLocale, locale } = req
   const depth = req.query?.depth
   try {
