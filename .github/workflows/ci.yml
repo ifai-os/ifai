@@ -70,6 +70,9 @@ jobs:
       - name: Migrations apply to an empty database
         run: pnpm payload migrate
 
+      - name: Sample apps for the smoke tests
+        run: pnpm payload run scripts/seed-apps.ts
+
       - name: Build
         run: pnpm build
 
@@ -80,6 +83,7 @@ jobs:
         run: pnpm test:e2e
         env:
           E2E_ADMIN: '1'
+          E2E_SAMPLE_APPS: '1'
 
       - name: Upload Playwright report
         if: failure()

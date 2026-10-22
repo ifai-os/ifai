@@ -3,6 +3,7 @@ import { text } from 'payload/shared'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
+import { refreshAppsAfterChange, refreshAppsAfterDelete } from '../cache'
 import { domainFromUrl, isHttpUrl, reservedAppSlugs } from '../normalize'
 import { adminMessage, appsAdminGroup, isAdmin, slugField } from './shared'
 
@@ -47,7 +48,8 @@ export const Apps: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    afterChange: [syncHantFromHans(hantFields)],
+    afterChange: [syncHantFromHans(hantFields), refreshAppsAfterChange],
+    afterDelete: [refreshAppsAfterDelete],
   },
   fields: [
     {

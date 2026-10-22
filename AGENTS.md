@@ -90,6 +90,7 @@ pnpm i18n:hant                     # 由 zh-hans.json 生成 zh-hant.json
 pnpm i18n:check                    # 五种语言 key 是否一致、zh-hant 是否最新
 pnpm payload migrate:create <名字>  # 改了集合或表结构之后
 pnpm payload migrate               # 执行未执行的迁移
+pnpm payload run scripts/seed-apps.ts  # 本机数据库加示例应用；冒烟测试配合 E2E_SAMPLE_APPS=1
 pnpm generate:types                # 改了集合之后，重新生成 src/payload-types.ts
 pnpm generate:importmap            # 加了后台自定义组件之后
 ```

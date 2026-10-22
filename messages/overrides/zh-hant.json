@@ -39,6 +39,19 @@
     "body": "點擊下面的按鈕登入。連結 10 分鐘內有效，只能使用一次。",
     "button": "登入"
   },
+  "apps": {
+    "filterLabel": "依分類篩選",
+    "noMatchTitle": "找不到與「{q}」相關的應用",
+    "noMatchBody": "試試更短的關鍵字，或者換成英文。",
+    "breadcrumb": "目前位置",
+    "newTab": "（在新分頁開啟）",
+    "facts": {
+      "platforms": "平台"
+    },
+    "platforms": {
+      "browser-extension": "瀏覽器擴充功能"
+    }
+  },
   "categories": {
     "industry": "產業動態",
     "assistant": "AI 助理",

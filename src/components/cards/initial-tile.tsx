@@ -9,14 +9,16 @@ const tones = [
   'bg-tile-7 text-tile-7-ink',
 ] as const
 
-const sizes = {
+/** Box, corner and letter size per tile size; app logos use the same boxes. */
+export const tileSizes = {
   sm: 'size-7 rounded-thumb text-small',
   md: 'size-10 rounded-tile text-body',
   lg: 'size-11 rounded-tile text-body',
   xl: 'size-13 rounded-tile text-h3',
+  '2xl': 'size-16 rounded-card text-h2 md:size-18 md:rounded-dialog md:text-h1',
 } as const
 
-export type TileSize = keyof typeof sizes
+export type TileSize = keyof typeof tileSizes
 
 /** Stable tone for an id or slug, so the same app always gets the same color. */
 export function toneFor(id: string): number {
@@ -38,7 +40,7 @@ export function InitialTile({ label, tone, size = 'md' }: InitialTileProps) {
   return (
     <span
       aria-hidden="true"
-      className={`flex flex-none items-center justify-center font-bold ${sizes[size]} ${tones[index]}`}
+      className={`flex flex-none items-center justify-center font-bold ${tileSizes[size]} ${tones[index]}`}
     >
       {label}
     </span>
