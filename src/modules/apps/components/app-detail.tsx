@@ -4,12 +4,12 @@ import type { ReactNode } from 'react'
 
 import { buttonClass } from '@/components/button'
 import { Icon } from '@/components/icon'
+import { ShareButton } from '@/components/share-button'
 import { Link } from '@/i18n/navigation'
 
 import type { AppDetail } from '../data'
 import { listHref } from '../list-params'
 import { AppTile } from './app-tile'
-import { ShareButton } from './share-button'
 
 type FactKey = 'developer' | 'pricing' | 'platforms' | 'listedAt'
 
@@ -120,7 +120,7 @@ export function AppDetailView({ app }: { app: AppDetail }) {
                   {t('openSite')}
                 </OpenSiteLink>
               )}
-              <ShareButton title={app.name} className={buttonClass('secondary')} />
+              <ShareButton title={app.name} className={buttonClass('secondary')} labels={{ share: t('share'), copied: t('copied') }} />
             </div>
           </div>
 
@@ -244,7 +244,11 @@ export function AppDetailView({ app }: { app: AppDetail }) {
 
       {/* Phones: the two actions stay in reach while reading. */}
       <div className="sticky bottom-0 z-10 flex gap-2.5 border-t border-line bg-bg px-4 pt-2.5 pb-3.5 md:hidden">
-        <ShareButton title={app.name} className={`${barButton} border border-line bg-bg text-ink hover:border-ink-4`} />
+        <ShareButton
+          title={app.name}
+          className={`${barButton} border border-line bg-bg text-ink hover:border-ink-4`}
+          labels={{ share: t('share'), copied: t('copied') }}
+        />
         {app.website && (
           <OpenSiteLink href={app.website} className={`${barButton} flex-1 bg-ink text-white hover:bg-ink-2`}>
             {t('openSite')}

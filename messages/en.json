@@ -25,7 +25,9 @@
   "home": {
     "demoBanner": "Demo data · this page shows sample content until real data is connected",
     "todayAI": "AI today",
-    "dailyMeta": "Daily · Published {time} · {count} stories",
+    "dailyMeta": "{count, plural, one {# story} other {# stories}} published today · updated {time}",
+    "dailyMetaPast": "Latest stories from {date} · {count, plural, one {# story} other {# stories}}",
+    "dailyEmpty": "The first stories are being checked and will appear here soon.",
     "readDaily": "Read the full Daily",
     "pickApp": "App of the week",
     "newSkill": "New Skill",
@@ -81,7 +83,8 @@
     "ignore": "If you didn't ask for this, you can ignore this email."
   },
   "footer": {
-    "copyright": "© {year} IFAI"
+    "copyright": "© {year} IFAI",
+    "rss": "RSS"
   },
   "notFound": {
     "title": "Page not found",
@@ -164,6 +167,46 @@
       "api": "API"
     }
   },
+  "daily": {
+    "title": "Daily",
+    "description": "Today's AI news, checked against the sources, with a plain-language summary of each story.",
+    "intro": "AI reads the sources, picks the stories and removes duplicates; an editor checks each one before it goes up. Times are shown in your time zone.",
+    "sourceCount": "{count, plural, one {# source} other {# sources}}",
+    "updatedStat": "Updated {time}",
+    "categoryTitle": "{category} · Daily",
+    "pageTitle": "{title} · Page {page}",
+    "pages": "Pages",
+    "filterLabel": "Filter by category",
+    "allCategories": "All",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "groupCount": "{count, plural, one {# story} other {# stories}}",
+    "loadEarlier": "Load earlier stories",
+    "loadNewer": "Newer stories",
+    "emptyTitle": "No stories published yet",
+    "emptyBody": "The first stories are being checked and will appear here soon.",
+    "emptyCategoryTitle": "No stories in this category yet",
+    "emptyCategoryBody": "Try another category, or check back later.",
+    "allStories": "See all stories",
+    "breadcrumb": "Breadcrumb",
+    "publishedAt": "Published",
+    "correctedAt": "Updated",
+    "corrected": "Corrected",
+    "tryIt": "Try it",
+    "sources": "Sources",
+    "roles": {
+      "original": "Original",
+      "report": "Report",
+      "discussion": "Discussion"
+    },
+    "developments": "More on this story",
+    "share": "Share",
+    "copied": "Link copied",
+    "newTab": "(opens in a new tab)",
+    "rss": "RSS feed",
+    "feedTitle": "IFAI Daily",
+    "feedDescription": "AI news, checked against the sources, with a plain-language summary of each story."
+  },
   "categories": {
     "product": "Product update",
     "industry": "Industry",
@@ -171,7 +214,8 @@
     "assistant": "AI assistant",
     "search": "Search & research",
     "design": "Image & design",
-    "coding": "Coding"
+    "coding": "Coding",
+    "research": "Research"
   },
   "skillCategories": {
     "coding": "Coding",

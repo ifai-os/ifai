@@ -25,7 +25,9 @@
   "home": {
     "demoBanner": "デモデータ · 実データにつなぐまで、このページはサンプルを表示しています",
     "todayAI": "今日のAI",
-    "dailyMeta": "デイリー · {time} 公開 · {count}件",
+    "dailyMeta": "今日は{count}件公開 · 最終更新 {time}",
+    "dailyMetaPast": "最新のニュースは{date} · {count}件",
+    "dailyEmpty": "最初のニュースを確認中です。まもなくここに表示されます。",
     "readDaily": "デイリーをすべて読む",
     "pickApp": "今週のおすすめアプリ",
     "newSkill": "新着スキル",
@@ -81,7 +83,8 @@
     "ignore": "心当たりがない場合は、このメールを無視してください。"
   },
   "footer": {
-    "copyright": "© {year} IFAI"
+    "copyright": "© {year} IFAI",
+    "rss": "RSS"
   },
   "notFound": {
     "title": "ページが見つかりません",
@@ -164,6 +167,46 @@
       "api": "API"
     }
   },
+  "daily": {
+    "title": "デイリー",
+    "description": "今日のAIの変化。すべて情報源を確認し、わかりやすい要約を添えています。",
+    "intro": "AIが各情報源からニュースを選んで重複を除き、編集者が確認したうえですぐに公開します。時刻はお住まいのタイムゾーンで表示します。",
+    "sourceCount": "情報源 {count}件",
+    "updatedStat": "最終更新 {time}",
+    "categoryTitle": "{category} · デイリー",
+    "pageTitle": "{title} · {page}ページ目",
+    "pages": "ページ送り",
+    "filterLabel": "カテゴリで絞り込む",
+    "allCategories": "すべて",
+    "today": "今日",
+    "yesterday": "昨日",
+    "groupCount": "{count}件",
+    "loadEarlier": "さらに前のニュースを読み込む",
+    "loadNewer": "新しいニュースを見る",
+    "emptyTitle": "まだニュースはありません",
+    "emptyBody": "最初のニュースを確認中です。まもなくここに表示されます。",
+    "emptyCategoryTitle": "このカテゴリにはまだニュースがありません",
+    "emptyCategoryBody": "他のカテゴリを見るか、しばらくしてからご覧ください。",
+    "allStories": "すべてのニュースを見る",
+    "breadcrumb": "パンくずリスト",
+    "publishedAt": "公開",
+    "correctedAt": "最終更新",
+    "corrected": "訂正",
+    "tryIt": "試してみる",
+    "sources": "情報源",
+    "roles": {
+      "original": "原文",
+      "report": "報道",
+      "discussion": "議論"
+    },
+    "developments": "この出来事の続報",
+    "share": "共有",
+    "copied": "リンクをコピーしました",
+    "newTab": "（新しいタブで開きます）",
+    "rss": "RSSフィード",
+    "feedTitle": "IFAI デイリー",
+    "feedDescription": "情報源を確認したAIニュースを、わかりやすい要約つきでお届けします。"
+  },
   "categories": {
     "product": "製品アップデート",
     "industry": "業界動向",
@@ -171,7 +214,8 @@
     "assistant": "AIアシスタント",
     "search": "検索・リサーチ",
     "design": "画像・デザイン",
-    "coding": "コーディング"
+    "coding": "コーディング",
+    "research": "研究"
   },
   "skillCategories": {
     "coding": "コーディング",

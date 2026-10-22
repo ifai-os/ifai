@@ -9,7 +9,9 @@
   },
   "home": {
     "demoBanner": "示範資料 · 接入真實資料前，本頁顯示的都是範例內容",
-    "dailyMeta": "日報 · {time} 已發布 · {count} 則"
+    "dailyMeta": "今天已發布 {count, plural, other {# 則}} · 最近更新 {time}",
+    "dailyMetaPast": "最近一期 {date} · {count, plural, other {# 則}}",
+    "dailyEmpty": "第一批新聞正在審核，很快會出現在這裡。"
   },
   "modules": {
     "recommend": "編輯精選的長文與教學",
@@ -57,5 +59,18 @@
     "assistant": "AI 助理",
     "search": "搜尋與研究",
     "coding": "程式開發"
+  },
+  "daily": {
+    "groupCount": "{count, plural, other {# 則}}",
+    "breadcrumb": "目前位置",
+    "filterLabel": "依分類篩選",
+    "newTab": "（在新分頁開啟）",
+    "intro": "AI 從各個信源裡篩選、去重，編輯審核後立即發布。時間按你所在的時區顯示。",
+    "emptyTitle": "還沒有發布新聞",
+    "emptyBody": "第一批新聞正在審核，很快會出現在這裡。",
+    "publishedAt": "首次發布",
+    "roles": {
+      "report": "報導"
+    }
   }
 }

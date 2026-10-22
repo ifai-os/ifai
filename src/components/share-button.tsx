@@ -1,17 +1,17 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 
 type ShareButtonProps = {
   /** Shown in the share sheet next to the link. */
   title: string
   className: string
+  /** The button's text, and what it says for two seconds after copying the link. */
+  labels: { share: string; copied: string }
 }
 
 /** Opens the system share sheet where there is one; elsewhere copies the page's address. */
-export function ShareButton({ title, className }: ShareButtonProps) {
-  const t = useTranslations('apps')
+export function ShareButton({ title, className, labels }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -38,10 +38,10 @@ export function ShareButton({ title, className }: ShareButtonProps) {
   return (
     <>
       <button type="button" onClick={share} className={className}>
-        {copied ? t('copied') : t('share')}
+        {copied ? labels.copied : labels.share}
       </button>
       <span role="status" className="sr-only">
-        {copied ? t('copied') : ''}
+        {copied ? labels.copied : ''}
       </span>
     </>
   )

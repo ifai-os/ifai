@@ -25,7 +25,9 @@
   "home": {
     "demoBanner": "演示数据 · 接入真实数据前，本页显示的都是示例内容",
     "todayAI": "今天的 AI",
-    "dailyMeta": "日报 · {time} 已发布 · {count} 条",
+    "dailyMeta": "今天已发布 {count, plural, other {# 条}} · 最近更新 {time}",
+    "dailyMetaPast": "最近一期 {date} · {count, plural, other {# 条}}",
+    "dailyEmpty": "第一批新闻正在审核，很快会出现在这里。",
     "readDaily": "阅读完整日报",
     "pickApp": "本周精选应用",
     "newSkill": "新上架 Skill",
@@ -81,7 +83,8 @@
     "ignore": "如果不是你本人操作，忽略这封邮件即可。"
   },
   "footer": {
-    "copyright": "© {year} IFAI"
+    "copyright": "© {year} IFAI",
+    "rss": "RSS"
   },
   "notFound": {
     "title": "页面不存在",
@@ -164,6 +167,46 @@
       "api": "API"
     }
   },
+  "daily": {
+    "title": "日报",
+    "description": "今天 AI 有什么变化：每条都核对过来源，配白话摘要。",
+    "intro": "AI 从各个信源里筛选、去重，编辑审核后立即发布。时间按你所在的时区显示。",
+    "sourceCount": "{count, plural, other {# 个信源}}",
+    "updatedStat": "最近更新 {time}",
+    "categoryTitle": "{category} · 日报",
+    "pageTitle": "{title} · 第 {page} 页",
+    "pages": "翻页",
+    "filterLabel": "按分类筛选",
+    "allCategories": "全部",
+    "today": "今天",
+    "yesterday": "昨天",
+    "groupCount": "{count, plural, other {# 条}}",
+    "loadEarlier": "加载更早的新闻",
+    "loadNewer": "查看更新的新闻",
+    "emptyTitle": "还没有发布新闻",
+    "emptyBody": "第一批新闻正在审核，很快会出现在这里。",
+    "emptyCategoryTitle": "这个分类还没有新闻",
+    "emptyCategoryBody": "看看其他分类，或者过一会儿再来。",
+    "allStories": "查看全部新闻",
+    "breadcrumb": "当前位置",
+    "publishedAt": "首次发布",
+    "correctedAt": "最后更新",
+    "corrected": "更正于",
+    "tryIt": "试一试",
+    "sources": "来源",
+    "roles": {
+      "original": "原文",
+      "report": "报道",
+      "discussion": "讨论"
+    },
+    "developments": "同一事件的其他进展",
+    "share": "分享",
+    "copied": "链接已复制",
+    "newTab": "（在新标签页打开）",
+    "rss": "RSS 订阅",
+    "feedTitle": "IFAI 日报",
+    "feedDescription": "每条都核对过来源的 AI 新闻，配白话摘要。"
+  },
   "categories": {
     "product": "产品更新",
     "industry": "行业动态",
@@ -171,7 +214,8 @@
     "assistant": "AI 助手",
     "search": "搜索与研究",
     "design": "图像与设计",
-    "coding": "代码编程"
+    "coding": "代码编程",
+    "research": "研究进展"
   },
   "skillCategories": {
     "coding": "开发编程",
