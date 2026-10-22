@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-22（应用第 2 步·官网取材与资料草稿；资源第 2 步·导入与检测）。
+更新于 2026-10-22（日报第 5 步·前台；资源第 2 步·导入与检测）。
 
 ## 现在到哪了
 
@@ -21,6 +21,7 @@
   - 动作：通过并发布（`publishedAt` = 通过时间）、拒绝（归档）、稍后再看（排到队列末尾）、撤回发布（状态「已撤回」，回到队列，可以再发布）、保存更正（`correctedAt`）。发布、更正、并入、撤回都会调用 `revalidateTag('daily', 'max')`（`src/modules/daily/review/cache.ts`）；第 5 步的页面和 RSS 读已发布新闻时要加 `cacheTag('daily')`，才能在 1 分钟内更新。
   - 接口都挂在 `stories` 集合上，要登录后台：`GET /api/stories/review-queue`、`GET /api/stories/:id/review`、`POST /api/stories/:id/review/<edit|publish|correct|reject|later|withdraw|merge|keep-separate|rewrite|assist>`。
   - 本地库上用假模型跑通了：队列排序与稍后再看、改简体后标记过期、标题超长拒绝发布、发布时重写三种语言、同事件和向量相似两种重复提示、不是同一件事、重写失败记原因并阻止发布、单独重试、并入（来源列表和事件成员都更新）、更正、撤回后再发布、拒绝、AI 建议。界面还没在浏览器里点过，要在预览环境看。
+- **日报第 5 步（前台）已完成**：`/[locale]/daily`（最新在前，按读者本地日期分组成「今天 / 昨天 / 日期」，每页 30 条，「加载更早的新闻」翻页）、`/[locale]/daily/category/<分类>`（五个分类筛选）、`/[locale]/daily/[slug]`（标题、首次发布和最后更新时间、摘要、试一试、来源列表原文在前并标出原文 / 报道 / 讨论、更正提示、分享、右栏「同一事件的其他进展」）、`/[locale]/daily/rss.xml`（每种语言一份，feedsmith 生成，页脚有 RSS 链接）；首页「今天的 AI」改读已发布的新闻，列出读者本地「今天」的前 5 条，今天还没有时显示最近一天的。代码在 `src/modules/daily/public/`（`data.ts` 读数据，`story-item.ts` 选语言，`rss.ts` 生成 feed，`components/` 是页面组件），页面文件只做组装。时间一律由服务器先按 UTC 输出带 `datetime` 的 `<time>`，浏览器水合后按自己的时区重新渲染和分组（`src/lib/local-time.ts`、`src/components/local-time.tsx`，用 `useSyncExternalStore`，不会水合不一致）。只读 `status = published`（`overrideAccess: false`），缓存标签 `daily`，审核后台发布、更正、并入、撤回时立即失效（`revalidateTag('daily', { expire: 0 })`）。缺读者语言的内容回退英文并标 `lang`。本机示例数据：`pnpm payload run scripts/seed-stories.ts`（只认本机数据库），CI 冒烟测试用它（`tests/e2e/daily.spec.ts`，含东京和洛杉矶时区的本地时间检查）。分享按钮搬到了 `src/components/share-button.tsx`，应用详情页也用它。和规格不同的地方写在 daily.md「页面与路由」末尾。页面还没在浏览器里看过，要在预览环境点一遍。
 - **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 也在用。
 - **应用第 3 步（列表页和详情页）已完成**：`/[locale]/apps`（全部应用，按名称 A–Z，每页 50 条）、`/[locale]/apps/category/[slug]`（分类，数量含次分类）、`?q=` 搜索（名称、别名、一句话介绍、标签，五种语言都查，搜索页不进索引）、`/[locale]/apps/[slug]`（简介、资料、标签、它是什么、核心功能、常见问题、替代品、打开网站、分享）。代码在 `src/modules/apps/`（`data.ts` 读数据，`components/` 是页面组件），页面文件只做组装。缺读者语言的内容回退英文并标 `lang`。数据缓存挂标签 `apps`，后台保存应用或分类后立即刷新。还没有热度，所以榜单、热度前三、走势、首页「热门应用」都留到第 4 步；收藏、评价、提交应用、「信息有误？」留到第 5 步。和规格不同的地方写在 apps.md「页面与路由」末尾。本机示例数据：`pnpm payload run scripts/seed-apps.ts`（只认本机数据库），CI 冒烟测试用它。
 - **应用第 2 步（官网取材与资料草稿）已完成**：后台打开应用，右栏「资料草稿」点「生成草稿」；或在应用列表页上方「批量添加应用」每行贴「名称, 官网网址」（只贴网址也行，最多 300 行，按域名跳过已收录的，去掉推广参数）。Inngest 任务 `apps-draft-profile` 抓官网首页和定价页（只访问公网地址），用途 `profile` 一次读事实、四种语言各写一次（繁体转换），定价和平台要带官网原文，找不到就留空；名字和数字做原文核对，结果和留空的建议显示在右栏。logo 取官网图标，截图取 og 图，存媒体库。分类、定价、平台、开发者、图片只在空着时填；重新生成只重写介绍、功能、常见问题和标签。开关关着或预算用完时停在「待生成」，`apps-draft-sweep` 每 20 分钟补漏。迁移 `apps_profile_drafts` 加 `draft_status`、`draft_info`，主分类改成发布前必填（草稿可以空着）。代码在 `src/modules/apps/profile/`、`prompts/profile.ts`、`admin/`。沙盒里用假模型和假网页在本机库上跑通了导入、改名、四种语言、繁体、核对、留空、图片和失败的情况；真实网站和真实模型要在预览环境试。Toolify 在这里打不开，没法先看它的条款，所以首批名单先人工挑，贴进批量添加。
@@ -36,7 +37,7 @@
 | 期 | 周 | 模块 | 状态 |
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |
-| 第一期 | 3 起 | 日报 | 第 4 步完成，下一步前台 |
+| 第一期 | 3 起 | 日报 | 第 5 步完成，下一步热度与海报 |
 | 第一期 | 日报之后 | 应用 | 第 1–3 步（集合与后台录入、官网取材与资料草稿、列表页和详情页）完成，下一步热度 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）、第 2 步（导入与检测）完成，下一步说明起草 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
@@ -46,10 +47,9 @@
 
 ## 下一步
 
-1. **日报第 5 步（前台）**，对应画板「IFAI 日报（新版）」「手机 · 日报」「IFAI 资讯详情页 · v1」：`/[locale]/daily` 列表（最新在前、按读者本地日期分组、分类筛选）、`/[locale]/daily/[slug]` 详情（来源列表原文在前、同一事件的其他进展、更正时间）、每种语言的 RSS、首页「今天的 AI」改读真实数据、本地时间组件。只读 `status = published` 的 `stories`，缓存读取加 `cacheTag('daily')`（审核后台发布时会刷新这个标签）。「另有 N 家报道」用 `sources` 里 `role = report` 的条数。
-2. 日报第 6 步（热度与海报）：事件热度、热门标记、每日海报（审核后台右栏「今日海报」也在这一步做）；归组时后来并入事件的「同一次发生」报道要同步加进已发布新闻的来源列表。
-3. **应用首批导入**：站长从 Toolify 挑 200–300 个应用的名称和官网网址，贴进后台「批量添加应用」，在预览环境先试几个，确认草稿质量后再批量。然后是**应用第 4 步热度**（Tranco、点击、日报提及，榜单、走势、首页「热门应用」）→ 第 5 步收藏、评价与提交。这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，第 4 步的 Tranco 下载要在预览环境验证，或者在项目设置里加白名单。
-4. **资源第 3 步：说明起草**（见 resources.md「实现顺序」和「定时任务与 AI」）：新用途 `skill.describe` 加在 `src/lib/ai/purposes.ts`，输入 SKILL.md、README 和文件清单（全部用 `untrusted()` 包起来），输出简体、英语、日语、韩语的显示名、一句话介绍、「它能做什么」、使用示例、注意事项，以及提取出的外联域名、读写范围、工具和 API Key，填进版本的「声明」和 Skill 的说明字段作草稿；模型失败时字段留空，不阻塞导入。导入任务 `skill-import` 现在只做到检测，起草接在它后面（`src/modules/resources/import/jobs.ts`）。繁体由 `syncHantFromHans` 自动生成，已挂好。然后是第 4 步前台（列表、详情、固定版本页、`install.md` 和下载接口、安装事件）。6 个宿主里 Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
+1. **日报第 6 步（热度与海报）**，对应画板「IFAI 日报（新版）」的「今日最热」「每日 AI 大事」卡片和「日报审核后台」右栏「今日海报」：事件热度、热门标记、每日海报（上海日期）和分享图，`/[locale]/daily/poster/[YYYY-MM-DD]`；归组时后来并入事件的「同一次发生」报道要同步加进已发布新闻的来源列表。列表页右栏的「今天提到的应用」「48 小时热门」也留在这一步。
+2. **应用首批导入**：站长从 Toolify 挑 200–300 个应用的名称和官网网址，贴进后台「批量添加应用」，在预览环境先试几个，确认草稿质量后再批量。然后是**应用第 4 步热度**（Tranco、点击、日报提及，榜单、走势、首页「热门应用」）→ 第 5 步收藏、评价与提交。这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，第 4 步的 Tranco 下载要在预览环境验证，或者在项目设置里加白名单。
+3. **资源第 3 步：说明起草**（见 resources.md「实现顺序」和「定时任务与 AI」）：新用途 `skill.describe` 加在 `src/lib/ai/purposes.ts`，输入 SKILL.md、README 和文件清单（全部用 `untrusted()` 包起来），输出简体、英语、日语、韩语的显示名、一句话介绍、「它能做什么」、使用示例、注意事项，以及提取出的外联域名、读写范围、工具和 API Key，填进版本的「声明」和 Skill 的说明字段作草稿；模型失败时字段留空，不阻塞导入。导入任务 `skill-import` 现在只做到检测，起草接在它后面（`src/modules/resources/import/jobs.ts`）。繁体由 `syncHantFromHans` 自动生成，已挂好。然后是第 4 步前台（列表、详情、固定版本页、`install.md` 和下载接口、安装事件）。6 个宿主里 Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
 
 ## 已做的决定
 
@@ -99,6 +99,7 @@
 - [ ] 删除临时的 `bootstrap` 分支和两个「Temporary bootstrap」草稿 release。
 - [ ] 按 `docs/setup.md` 开账号、配 Vercel。
 - [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，装 Vercel 集成），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。先在 Inngest 控制台跑通 `ifai/health.check`。
+- [ ] 日报第 5 步部署到预览环境后：在后台发布一条新闻，1 分钟内看 `/en/daily`、`/zh-hans/daily`、详情页、`/en/daily/rss.xml` 和首页「今天的 AI」有没有出现；保存更正和撤回也同样看一遍。把浏览器时区换到别的地区（或用手机）看时间和「今天 / 昨天」分组是否跟着变；手机宽度下点一遍列表和详情。
 - [ ] 日报第 4 步部署到预览环境后：后台左侧点「审核队列」，走一遍通过并发布、改简体再发布（看英日韩是否重写、繁体是否跟着变）、拒绝、稍后再看、撤回、保存更正；重写和 AI 辅助要 `MODEL_CALLS_ENABLED=true`。前台页面要等第 5 步才能看到发布结果。
 - [ ] 日报第 2 步部署到预览环境后：把预览环境的 `COLLECT_ENABLED` 设为 `true`，在后台「日报 → 信源」逐个点「试抓」，确认抓到的是文章、日期也对；给 Future Tools、The Rundown、Forward Future 填好选择器后启用；试抓 Anthropic、Meta AI 的新闻列表页，能读就新建信源（T1）。然后发事件 `daily/collect.run`，看 `raw_items` 里有没有条目。
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。

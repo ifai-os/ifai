@@ -4,22 +4,19 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { AppCard } from '@/components/cards/app-card'
 import { ComingSoonCard } from '@/components/cards/coming-soon-card'
-import { DailyItemCard } from '@/components/cards/daily-item-card'
-import { DateBadge } from '@/components/cards/date-badge'
 import { InitialTile } from '@/components/cards/initial-tile'
 import { SkillCard } from '@/components/cards/skill-card'
 import { upcomingNavItems } from '@/config/site'
 import { isLocale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
+import { dayKey, serverTimeZone } from '@/lib/local-time'
 import { alternatesFor } from '@/lib/seo'
-import {
-  demoApps,
-  demoFeaturedSkill,
-  demoHeadlines,
-  demoIssue,
-  demoPickApp,
-  demoSkills,
-} from '@/modules/home/demo-data'
+import { TodayHeadlines } from '@/modules/daily/public/components/today-headlines'
+import { latestStories } from '@/modules/daily/public/data'
+import { demoApps, demoFeaturedSkill, demoPickApp, demoSkills } from '@/modules/home/demo-data'
+
+/** Newest stories read for「今天的 AI」; the reader's own today is picked out of them in the browser. */
+const storiesRead = 20
 
 type Props = { params: Promise<{ locale: string }> }
 
@@ -35,6 +32,7 @@ export default async function HomePage({ params }: Props) {
   setRequestLocale(locale)
   const t = await getTranslations()
   const upcoming = upcomingNavItems()
+  const stories = await latestStories(locale, storiesRead)
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-10 px-4 pt-6 pb-16">
@@ -44,29 +42,7 @@ export default async function HomePage({ params }: Props) {
 
       <section className="flex flex-wrap gap-4">
         <div className="flex min-w-0 flex-[2_1_560px] flex-col gap-5 rounded-hero border border-surface-2 bg-surface px-6 py-7 sm:px-8">
-          <div className="flex items-center gap-5">
-            <DateBadge date={demoIssue.date} />
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <h1 className="text-display">{t('home.todayAI')}</h1>
-              <span className="text-meta text-ink-4">
-                {t('home.dailyMeta', { time: demoIssue.publishedAt, count: demoIssue.count })}
-              </span>
-            </div>
-          </div>
-          <ol className="flex flex-col">
-            {demoHeadlines.map((headline, index) => (
-              <DailyItemCard
-                key={headline.title.en}
-                href="/daily"
-                no={index + 1}
-                category={t(`categories.${headline.category}`)}
-                title={headline.title[locale]}
-              />
-            ))}
-          </ol>
-          <Link href="/daily" className="flex min-h-8 items-center self-start text-ui font-medium text-link">
-            {t('home.readDaily')} ›
-          </Link>
+          <TodayHeadlines stories={stories} serverToday={dayKey(new Date(), serverTimeZone)} />
         </div>
 
         <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-4">

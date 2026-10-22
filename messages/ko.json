@@ -25,7 +25,9 @@
   "home": {
     "demoBanner": "데모 데이터 · 실제 데이터를 연결하기 전까지 이 페이지에는 예시가 표시됩니다",
     "todayAI": "오늘의 AI",
-    "dailyMeta": "데일리 · {time} 발행 · 소식 {count}개",
+    "dailyMeta": "오늘 소식 {count}개 게시 · 최근 업데이트 {time}",
+    "dailyMetaPast": "최신 소식 {date} · {count}개",
+    "dailyEmpty": "첫 소식을 확인하고 있어요. 곧 여기에 표시돼요.",
     "readDaily": "데일리 전체 보기",
     "pickApp": "이번 주 추천 앱",
     "newSkill": "새로운 스킬",
@@ -81,7 +83,8 @@
     "ignore": "직접 요청하지 않았다면 이 메일은 무시하셔도 됩니다."
   },
   "footer": {
-    "copyright": "© {year} IFAI"
+    "copyright": "© {year} IFAI",
+    "rss": "RSS"
   },
   "notFound": {
     "title": "페이지를 찾을 수 없어요",
@@ -164,6 +167,46 @@
       "api": "API"
     }
   },
+  "daily": {
+    "title": "데일리",
+    "description": "오늘 AI에서 달라진 것. 모든 소식은 출처를 확인했고, 쉬운 요약을 함께 제공해요.",
+    "intro": "AI가 여러 출처에서 소식을 고르고 중복을 걸러내면, 편집자가 확인한 뒤 바로 게시해요. 시간은 현재 계신 시간대로 표시돼요.",
+    "sourceCount": "출처 {count}곳",
+    "updatedStat": "최근 업데이트 {time}",
+    "categoryTitle": "{category} · 데일리",
+    "pageTitle": "{title} · {page}페이지",
+    "pages": "페이지 이동",
+    "filterLabel": "카테고리로 필터",
+    "allCategories": "전체",
+    "today": "오늘",
+    "yesterday": "어제",
+    "groupCount": "소식 {count}개",
+    "loadEarlier": "이전 소식 더 보기",
+    "loadNewer": "최신 소식 보기",
+    "emptyTitle": "아직 게시된 소식이 없어요",
+    "emptyBody": "첫 소식을 확인하고 있어요. 곧 여기에 표시돼요.",
+    "emptyCategoryTitle": "이 카테고리에는 아직 소식이 없어요",
+    "emptyCategoryBody": "다른 카테고리를 보거나 잠시 후 다시 확인해 주세요.",
+    "allStories": "전체 소식 보기",
+    "breadcrumb": "현재 위치",
+    "publishedAt": "게시",
+    "correctedAt": "최근 업데이트",
+    "corrected": "정정",
+    "tryIt": "직접 해 보기",
+    "sources": "출처",
+    "roles": {
+      "original": "원문",
+      "report": "보도",
+      "discussion": "토론"
+    },
+    "developments": "이 사건의 다른 소식",
+    "share": "공유",
+    "copied": "링크를 복사했어요",
+    "newTab": "(새 탭에서 열림)",
+    "rss": "RSS 피드",
+    "feedTitle": "IFAI 데일리",
+    "feedDescription": "출처를 확인한 AI 소식을 쉬운 요약과 함께 전해요."
+  },
   "categories": {
     "product": "제품 업데이트",
     "industry": "업계 동향",
@@ -171,7 +214,8 @@
     "assistant": "AI 어시스턴트",
     "search": "검색·리서치",
     "design": "이미지·디자인",
-    "coding": "코딩"
+    "coding": "코딩",
+    "research": "연구"
   },
   "skillCategories": {
     "coding": "코딩",
