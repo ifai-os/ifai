@@ -1,8 +1,12 @@
-import type { CollectionConfig, SelectFieldSingleValidation } from 'payload'
+import type { CollectionBeforeChangeHook, CollectionConfig, SelectFieldSingleValidation } from 'payload'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
+import { inngest } from '@/lib/inngest/client'
 
 import { skillCategories, skillCategoryLabels } from '../categories'
+import { isValidRef, parseRepositoryUrl } from '../import/github'
+import { isValidVersion, normalizeVersion } from '../normalize'
+import { isSystemWrite, peek, reject, relationId } from './guards'
 import { adminMessage, isAdmin, resourcesAdminGroup, slugField, urlValidation } from './shared'
 
 /** Localized fields whose zh-Hant value is converted from zh-Hans. */
@@ -16,6 +20,34 @@ const validateStatus: SelectFieldSingleValidation = (value, { req, siblingData }
         zh: '发布前先选当前版本。',
       })
     : true
+
+/**
+ * A published Skill shows a published version; a delisted one says why. Writes made by the app
+ * itself (import log, zh-Hant copies, promotion by a version) are exempt.
+ */
+const guardSkill: CollectionBeforeChangeHook = async ({ data, originalDoc, req }) => {
+  if (isSystemWrite(req)) return data
+  const merged = { ...(originalDoc ?? {}), ...data } as Record<string, unknown>
+  if (merged.status === 'delisted' && !String(merged.delistReason ?? '').trim()) {
+    reject(req, 'skills', 'delistReason', {
+      en: 'Give the reason for delisting; it is shown on the Skill page.',
+      zh: '填写下架原因，它会显示在 Skill 主页上。',
+    })
+  }
+  if (merged.status === 'published') {
+    const current = await peek(req, 'skill-versions', relationId(merged.currentVersion))
+    if (!current) {
+      reject(req, 'skills', 'currentVersion', { en: 'Pick the current version before publishing.', zh: '发布前先选当前版本。' })
+    }
+    if (current.status !== 'published') {
+      reject(req, 'skills', 'currentVersion', {
+        en: 'The current version is not published yet; publish it first, or pick a published one.',
+        zh: '当前版本还没发布：先发布它，或者换一个已发布的版本。',
+      })
+    }
+  }
+  return data
+}
 
 /**
  * One Agent Skill: the stable identity behind /resources/skills/<slug> (docs/specs/resources.md,
@@ -45,8 +77,54 @@ export const Skills: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
+    beforeChange: [guardSkill],
     afterChange: [syncHantFromHans(hantFields)],
   },
+  // Every save is kept, so changes to the display fields have a record (docs/specs/resources.md, «数据»).
+  versions: { maxPerDoc: 100 },
+  endpoints: [
+    {
+      // POST /api/skills/:id/import {ref?, version?} — queue `skill/import` for this Skill (the「导入版本」panel).
+      path: '/:id/import',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+        const id = Number(req.routeParams?.id)
+        if (!Number.isInteger(id)) return Response.json({ error: 'Bad id' }, { status: 400 })
+        let body: { ref?: unknown; version?: unknown } = {}
+        try {
+          body = ((await req.json?.()) ?? {}) as typeof body
+        } catch {
+          // No JSON body: import the default ref with an automatic version number.
+        }
+        const ref = typeof body.ref === 'string' && body.ref.trim() ? body.ref.trim() : undefined
+        const version = typeof body.version === 'string' && body.version.trim() ? normalizeVersion(body.version) : undefined
+        if (ref && !isValidRef(ref)) return Response.json({ error: `Not a valid branch, tag or commit: ${ref}` }, { status: 400 })
+        if (version && !isValidVersion(version)) return Response.json({ error: `Not a valid version number: ${version}` }, { status: 400 })
+        const skill = await req.payload.findByID({ collection: 'skills', id, depth: 0, req })
+        if (!parseRepositoryUrl(skill.repository ?? '')) {
+          return Response.json(
+            { error: 'Enter the GitHub repository address first: https://github.com/owner/repo, optionally /tree/<ref>/<directory>.' },
+            { status: 400 },
+          )
+        }
+        try {
+          await inngest.send({ name: 'skill/import', data: { skillId: id, ref, version } })
+        } catch (error) {
+          return Response.json({ error: `Could not queue the job (is Inngest running?): ${(error as Error).message}` }, { status: 502 })
+        }
+        await req.payload.update({
+          collection: 'skills',
+          id,
+          data: { lastImport: { status: 'queued', ref: ref ?? null, commit: null, message: null, at: new Date().toISOString() } },
+          depth: 0,
+          req,
+          context: { system: true },
+        })
+        return Response.json({ ok: true })
+      },
+    },
+  ],
   fields: [
     {
       name: 'name',
@@ -93,6 +171,35 @@ export const Skills: CollectionConfig = {
         position: 'sidebar',
         description: { en: 'The version the Skill page shows and installs.', zh: 'Skill 主页显示和安装的版本。' },
       },
+    },
+    {
+      name: 'importVersion',
+      type: 'ui',
+      admin: { position: 'sidebar', components: { Field: '/modules/resources/admin/import-button#ImportButton' } },
+    },
+    {
+      name: 'lastImport',
+      type: 'group',
+      label: { en: 'Last import', zh: '最近导入' },
+      admin: { position: 'sidebar', description: { en: 'Written by the import job.', zh: '由导入任务写入。' } },
+      fields: [
+        {
+          name: 'status',
+          type: 'select',
+          label: { en: 'Status', zh: '状态' },
+          options: [
+            { value: 'queued', label: { en: 'Queued', zh: '排队中' } },
+            { value: 'running', label: { en: 'Running', zh: '进行中' } },
+            { value: 'done', label: { en: 'Done', zh: '完成' } },
+            { value: 'failed', label: { en: 'Failed', zh: '失败' } },
+          ],
+          admin: { readOnly: true },
+        },
+        { name: 'ref', type: 'text', label: { en: 'Ref', zh: '分支 / tag / commit' }, admin: { readOnly: true } },
+        { name: 'commit', type: 'text', label: { en: 'Commit', zh: 'Commit' }, admin: { readOnly: true } },
+        { name: 'message', type: 'textarea', label: { en: 'Result', zh: '结果' }, admin: { readOnly: true } },
+        { name: 'at', type: 'date', label: { en: 'At', zh: '时间' }, admin: { readOnly: true, date: { pickerAppearance: 'dayAndTime' } } },
+      ],
     },
     {
       name: 'certified',
@@ -185,6 +292,18 @@ export const Skills: CollectionConfig = {
                     description: {
                       en: 'SPDX id, e.g. MIT, Apache-2.0. No license → only with the author’s written consent (rule 13).',
                       zh: 'SPDX 标识，例如 MIT、Apache-2.0。没有许可的要作者书面同意（规则 13）。',
+                    },
+                  },
+                },
+                {
+                  name: 'licenseConsent',
+                  type: 'checkbox',
+                  defaultValue: false,
+                  label: { en: 'Author’s written consent', zh: '作者书面同意' },
+                  admin: {
+                    description: {
+                      en: 'Tick when the author agreed in writing to the listing; needed when there is no license (rule 13).',
+                      zh: '作者书面同意收录时勾上；没有许可时需要（规则 13）。',
                     },
                   },
                 },

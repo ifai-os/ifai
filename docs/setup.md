@@ -52,6 +52,7 @@ pnpm dev                 # http://localhost:3000
 | `MODEL_CALLS_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不调用模型 |
 | `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源 |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |
+| `GITHUB_TOKEN` | 可选 | 可选 | Skill 导入用的只读 GitHub 令牌（Fine-grained，Contents: Read）；不填只能导入公开仓库，且受匿名限额 |
 
 5. 预览环境默认开着 Vercel 的访问保护。要让 GitHub Actions 对预览环境跑冒烟测试：Settings → Deployment Protection → Protection Bypass for Automation 生成一个密钥，把它加到 GitHub 仓库的 Settings → Secrets → Actions，名字叫 `VERCEL_AUTOMATION_BYPASS_SECRET`。
 

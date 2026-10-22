@@ -440,6 +440,16 @@ export interface Skill {
    */
   currentVersion?: (number | null) | SkillVersion;
   /**
+   * Written by the import job.
+   */
+  lastImport?: {
+    status?: ('queued' | 'running' | 'done' | 'failed') | null;
+    ref?: string | null;
+    commit?: string | null;
+    message?: string | null;
+    at?: string | null;
+  };
+  /**
    * Only after you installed it in at least one host and ran the task SKILL.md describes (rule 5).
    */
   certified?: boolean | null;
@@ -462,6 +472,10 @@ export interface Skill {
    * SPDX id, e.g. MIT, Apache-2.0. No license → only with the author’s written consent (rule 13).
    */
   license?: string | null;
+  /**
+   * Tick when the author agreed in writing to the listing; needed when there is no license (rule 13).
+   */
+  licenseConsent?: boolean | null;
   needsApiKey?: boolean | null;
   /**
    * e.g. Python 3.10+, Node 22, ffmpeg.
@@ -506,7 +520,7 @@ export interface Skill {
   createdAt: string;
 }
 /**
- * Upload the Zip of the Skill directory (SKILL.md at the top). The sha256 is computed from it. Release notes: Traditional Chinese is converted from Simplified automatically.
+ * Import from the Skill’s repository, or upload the Zip of the Skill directory (SKILL.md at the top). The sha256, file list and static scan are computed from the Zip. Release notes: Traditional Chinese is converted from Simplified automatically.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "skill-versions".
@@ -522,6 +536,10 @@ export interface SkillVersion {
    */
   withdrawReason?: string | null;
   /**
+   * Needed to publish a version the scan flagged: what you looked at and why it is fine.
+   */
+  reviewNote?: string | null;
+  /**
    * The repository commit this version was built from.
    */
   sourceCommit?: string | null;
@@ -530,7 +548,7 @@ export interface SkillVersion {
    */
   sha256?: string | null;
   /**
-   * Written by the import job (step 2).
+   * Computed from the uploaded Zip.
    */
   files?:
     | {
@@ -570,6 +588,10 @@ export interface SkillVersion {
   };
   scanStatus: 'pending' | 'passed' | 'warnings' | 'blocked';
   scannedAt?: string | null;
+  /**
+   * Every host the package talks to; the ones SKILL.md does not mention are findings.
+   */
+  observedDomains?: string[] | null;
   /**
    * Shown on the Skill page: only the names and results.
    */
@@ -1000,6 +1022,15 @@ export interface SkillsSelect<T extends boolean = true> {
   status?: T;
   delistReason?: T;
   currentVersion?: T;
+  lastImport?:
+    | T
+    | {
+        status?: T;
+        ref?: T;
+        commit?: T;
+        message?: T;
+        at?: T;
+      };
   certified?: T;
   featured?: T;
   category?: T;
@@ -1013,6 +1044,7 @@ export interface SkillsSelect<T extends boolean = true> {
       };
   repository?: T;
   license?: T;
+  licenseConsent?: T;
   needsApiKey?: T;
   runtime?: T;
   tagline?: T;
@@ -1053,6 +1085,7 @@ export interface SkillVersionsSelect<T extends boolean = true> {
   status?: T;
   publishedAt?: T;
   withdrawReason?: T;
+  reviewNote?: T;
   sourceCommit?: T;
   sha256?: T;
   files?:
@@ -1075,6 +1108,7 @@ export interface SkillVersionsSelect<T extends boolean = true> {
       };
   scanStatus?: T;
   scannedAt?: T;
+  observedDomains?: T;
   checks?:
     | T
     | {

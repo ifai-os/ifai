@@ -1,6 +1,6 @@
-import { createHash } from 'node:crypto'
-
 import type {
+  CollectionAfterChangeHook,
+  CollectionBeforeChangeHook,
   CollectionBeforeValidateHook,
   CollectionConfig,
   SelectFieldSingleValidation,
@@ -9,20 +9,174 @@ import type {
 import { text } from 'payload/shared'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
+import type { Skill, SkillVersion } from '@/payload-types'
 
-import { isSha256, isValidVersion, normalizeSha256, normalizeVersion } from '../normalize'
+import { compareVersions, isSha256, isValidVersion, normalizeSha256, normalizeVersion } from '../normalize'
+import { inspectPackage, type ImportContext } from '../package/inspect'
+import { isSystemWrite, peek, reject, relationId, systemUpdate } from './guards'
 import { adminMessage, isAdmin, resourcesAdminGroup } from './shared'
 
-/** The package fingerprint comes from the uploaded Zip itself, never from what was typed. */
-const fingerprintUpload: CollectionBeforeValidateHook = ({ data, req }) => {
+/**
+ * Everything that comes from the Zip is computed from it, never typed: the sha256, the file list,
+ * SKILL.md and its header, the domains SKILL.md mentions, and the static scan. The import job
+ * adds what it knows about the repository through req.context (ImportContext). A hand-uploaded
+ * Zip and an imported one therefore go through exactly the same checks.
+ */
+const inspectUpload: CollectionBeforeValidateHook = async ({ data, originalDoc, req }) => {
   const file = req.file
-  return file?.data ? { ...data, sha256: createHash('sha256').update(file.data).digest('hex') } : data
+  if (!file?.data) return data
+  const skill = await peek(req, 'skills', relationId(data?.skill ?? originalDoc?.skill))
+  const context = req.context as ImportContext
+  const { declaredDomains, ...fields } = inspectPackage(
+    file.data,
+    { ...context.importLicense, skillLicense: skill?.license ?? null, consent: Boolean(skill?.licenseConsent) },
+    context,
+  )
+  return { ...data, ...fields, declarations: { ...(data?.declarations ?? {}), domains: declaredDomains } }
 }
 
-function relationId(value: unknown): number | string | undefined {
-  if (typeof value === 'number' || typeof value === 'string') return value
-  if (value && typeof value === 'object' && 'id' in value) return (value as { id: number | string }).id
-  return undefined
+/** Once a version is out, its content never changes (rule 2); only these statuses remain. */
+const FROZEN = new Set(['published', 'deprecated', 'withdrawn'])
+
+type Row = Record<string, unknown>
+
+const sortKeys = (value: unknown): unknown =>
+  Array.isArray(value)
+    ? value.map(sortKeys)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(
+          Object.keys(value as Row)
+            .sort()
+            .map((key) => [key, sortKeys((value as Row)[key])]),
+        )
+      : value
+const canon = (value: unknown) => JSON.stringify(sortKeys(value ?? null))
+const rows = (value: unknown, pick: (row: Row) => unknown[]) =>
+  canon(Array.isArray(value) ? value.map((row) => pick(row as Row)) : [])
+
+/** The fields a published version keeps forever, in a form that ignores row ids and key order. */
+function frozenSnapshot(doc: Row): Record<string, string> {
+  const declarations = (doc.declarations ?? {}) as Row
+  return {
+    version: canon(doc.version),
+    sourceCommit: canon(doc.sourceCommit || null),
+    sha256: canon(doc.sha256 || null),
+    files: rows(doc.files, (row) => [row.path, row.size ?? null, row.sha256 ?? null]),
+    skillMd: canon(doc.skillMd || null),
+    frontmatter: canon(doc.frontmatter ?? null),
+    declarations: canon({
+      domains: declarations.domains ?? [],
+      fileScope: declarations.fileScope || null,
+      tools: declarations.tools ?? [],
+      apiKeys: declarations.apiKeys ?? [],
+    }),
+    scanStatus: canon(doc.scanStatus),
+    checks: rows(doc.checks, (row) => [row.key, row.result, row.note ?? null]),
+    findings: rows(doc.findings, (row) => [row.severity, row.file ?? null, row.line ?? null, row.message]),
+    observedDomains: canon(doc.observedDomains ?? []),
+  }
+}
+
+/**
+ * Publishing gates (docs/specs/resources.md, «后台» 2) and immutability (rule 2): a blocked scan
+ * never publishes, findings need a note, no license needs the author's consent, a withdrawal
+ * needs its reason, and a published version's content cannot change.
+ */
+const guardVersion: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+  if (isSystemWrite(req)) return data
+  const merged = { ...(originalDoc ?? {}), ...data } as Row
+  const status = merged.status as string | undefined
+  const collection = 'skill-versions'
+
+  if (operation === 'update' && originalDoc && FROZEN.has(originalDoc.status)) {
+    if (req.file) {
+      reject(req, collection, 'file', {
+        en: 'A published version keeps its Zip. Import or upload a new version instead.',
+        zh: '已发布的版本不能换 Zip，要改就发新版本。',
+      })
+    }
+    if (!status || !FROZEN.has(status)) {
+      reject(req, collection, 'status', {
+        en: 'A published version cannot go back to review; deprecate or withdraw it instead.',
+        zh: '已发布的版本不能退回待审，可以标为已弃用或撤回。',
+      })
+    }
+    const before = frozenSnapshot(originalDoc as Row)
+    const after = frozenSnapshot(merged)
+    const changed = Object.keys(before).filter((key) => before[key] !== after[key])
+    if (changed.length) {
+      reject(req, collection, changed[0], {
+        en: `Published versions are immutable (rule 2): ${changed.join(', ')} cannot change. Publish a new version instead.`,
+        zh: `已发布的版本不可改（规则 2）：${changed.join('、')} 不能变。要改就发新版本。`,
+      })
+    }
+  }
+
+  if (status === 'withdrawn' && !String(merged.withdrawReason ?? '').trim()) {
+    reject(req, collection, 'withdrawReason', {
+      en: 'Give the reason for withdrawing; it is shown on the version page.',
+      zh: '填写撤回原因，它会显示在固定版本页上。',
+    })
+  }
+
+  if (status === 'published' && originalDoc?.status !== 'published') {
+    if (!(merged.filename && merged.sha256)) {
+      reject(req, collection, 'status', {
+        en: 'Upload the Zip before publishing; the fingerprint is computed from it.',
+        zh: '发布前先上传 Zip，指纹由它算出。',
+      })
+    }
+    if (merged.scanStatus === 'blocked') {
+      reject(req, collection, 'status', {
+        en: 'The scan blocked this version; it cannot be published. Fix the findings and import a new version.',
+        zh: '检测拦截了这个版本，不能发布。修好发现项后导入新版本。',
+      })
+    }
+    if (merged.scanStatus === 'pending') {
+      reject(req, collection, 'status', {
+        en: 'This version has not been scanned; upload its Zip again to scan it.',
+        zh: '这个版本还没检测，重新上传 Zip 会自动检测。',
+      })
+    }
+    if (merged.scanStatus === 'warnings' && !String(merged.reviewNote ?? '').trim()) {
+      reject(req, collection, 'reviewNote', {
+        en: 'The scan has findings to look at; write down what you checked before publishing.',
+        zh: '检测有提示项；看过发现项后写一句备注再发布。',
+      })
+    }
+    const skill = await peek(req, 'skills', relationId(merged.skill))
+    if (!skill?.license?.trim() && !skill?.licenseConsent) {
+      reject(req, collection, 'status', {
+        en: 'No license: enter the Skill’s license (SPDX) or tick the author’s written consent before publishing (rule 13).',
+        zh: '没有许可：先在 Skill 上填许可（SPDX）或勾上作者书面同意，再发布（规则 13）。',
+      })
+    }
+    if (!merged.publishedAt) return { ...data, publishedAt: new Date().toISOString() }
+  }
+  return data
+}
+
+/**
+ * A newly published version becomes the Skill's current version when it is newer than the one
+ * shown (or none is), and takes a draft Skill live (docs/specs/resources.md, «后台» 2).
+ */
+const promoteSkill: CollectionAfterChangeHook<SkillVersion> = async ({ doc, previousDoc, req }) => {
+  if (doc.status !== 'published' || previousDoc?.status === 'published') return doc
+  const skillId = relationId(doc.skill)
+  if (skillId === undefined) return doc
+  const skill = await peek(req, 'skills', skillId)
+  if (!skill) return doc
+  const currentId = relationId(skill.currentVersion)
+  let makeCurrent = currentId === undefined || currentId === doc.id
+  if (!makeCurrent) {
+    const current = await peek(req, 'skill-versions', currentId)
+    makeCurrent = !current || current.status !== 'published' || compareVersions(doc.version, current.version) > 0
+  }
+  const update: Partial<Pick<Skill, 'currentVersion' | 'status'>> = {}
+  if (makeCurrent) update.currentVersion = doc.id
+  if (skill.status === 'draft' || skill.status === 'in_review') update.status = 'published'
+  if (Object.keys(update).length) await systemUpdate(req, 'skills', skillId, update)
+  return doc
 }
 
 /** 2.4.0 style, and unique within the Skill. */
@@ -86,8 +240,8 @@ export const SkillVersions: CollectionConfig = {
     group: resourcesAdminGroup,
     defaultColumns: ['skill', 'version', 'status', 'scanStatus', 'updatedAt'],
     description: {
-      en: 'Upload the Zip of the Skill directory (SKILL.md at the top). The sha256 is computed from it. Release notes: Traditional Chinese is converted from Simplified automatically.',
-      zh: '上传 Skill 目录的 Zip（SKILL.md 在最外层），sha256 自动算出。更新说明的繁体由简体自动转换。',
+      en: 'Import from the Skill’s repository, or upload the Zip of the Skill directory (SKILL.md at the top). The sha256, file list and static scan are computed from the Zip. Release notes: Traditional Chinese is converted from Simplified automatically.',
+      zh: '从 Skill 的仓库导入，或上传 Skill 目录的 Zip（SKILL.md 在最外层）。sha256、文件清单和静态检测都由 Zip 算出。更新说明的繁体由简体自动转换。',
     },
   },
   upload: {
@@ -101,8 +255,9 @@ export const SkillVersions: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    beforeValidate: [fingerprintUpload],
-    afterChange: [syncHantFromHans(['changelog'])],
+    beforeValidate: [inspectUpload],
+    beforeChange: [guardVersion],
+    afterChange: [promoteSkill, syncHantFromHans(['changelog'])],
   },
   fields: [
     {
@@ -158,6 +313,19 @@ export const SkillVersions: CollectionConfig = {
       },
     },
     {
+      name: 'reviewNote',
+      type: 'textarea',
+      label: { en: 'Review note', zh: '复核备注' },
+      admin: {
+        position: 'sidebar',
+        condition: (data) => data?.scanStatus === 'warnings',
+        description: {
+          en: 'Needed to publish a version the scan flagged: what you looked at and why it is fine.',
+          zh: '检测有提示的版本要写一句才能发布：看了什么，为什么没问题。',
+        },
+      },
+    },
+    {
       type: 'tabs',
       tabs: [
         {
@@ -193,7 +361,7 @@ export const SkillVersions: CollectionConfig = {
                 singular: { en: 'File', zh: '文件' },
                 plural: { en: 'Files', zh: '文件' },
               },
-              admin: { description: { en: 'Written by the import job (step 2).', zh: '由导入任务生成（第 2 步）。' } },
+              admin: { description: { en: 'Computed from the uploaded Zip.', zh: '由上传的 Zip 自动算出。' } },
               fields: [
                 {
                   type: 'row',
@@ -298,6 +466,19 @@ export const SkillVersions: CollectionConfig = {
                   admin: { date: { pickerAppearance: 'dayAndTime' } },
                 },
               ],
+            },
+            {
+              name: 'observedDomains',
+              type: 'text',
+              hasMany: true,
+              label: { en: 'Domains found in the files', zh: '文件里出现的域名' },
+              admin: {
+                readOnly: true,
+                description: {
+                  en: 'Every host the package talks to; the ones SKILL.md does not mention are findings.',
+                  zh: '包里出现的所有域名；SKILL.md 没提到的会列为发现项。',
+                },
+              },
             },
             {
               name: 'checks',

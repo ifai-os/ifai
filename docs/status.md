@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-22（应用第 3 步·列表页和详情页）。
+更新于 2026-10-22（资源第 2 步·导入与检测）。
 
 ## 现在到哪了
 
@@ -16,6 +16,8 @@
   - 本地库上用假模型跑通了同一事件三家报道、后续、无关、无关主题、低分、材料不足、汇总稿，以及写作、重复写作跳过、slug 冲突、原文核对找出编造的名字和数字这些情况。`OPENROUTER_BASE_URL` 可把模型调用指向本机的兼容接口（只用于本地测试）。
 - **应用第 1 步（集合与后台录入）已完成**：`src/modules/apps/collections/` 里的 `app-categories`、`apps` 两个集合，迁移 `apps` 建表并写入首批 8 个分类（五种语言）。后台「应用」分组可以手动录入；公开接口只返回已发布的应用。繁体由简体自动转换：通用钩子 `syncHantFromHans`（`src/lib/i18n/hant-sync.ts`），日报的 `stories` 也在用。
 - **应用第 3 步（列表页和详情页）已完成**：`/[locale]/apps`（全部应用，按名称 A–Z，每页 50 条）、`/[locale]/apps/category/[slug]`（分类，数量含次分类）、`?q=` 搜索（名称、别名、一句话介绍、标签，五种语言都查，搜索页不进索引）、`/[locale]/apps/[slug]`（简介、资料、标签、它是什么、核心功能、常见问题、替代品、打开网站、分享）。代码在 `src/modules/apps/`（`data.ts` 读数据，`components/` 是页面组件），页面文件只做组装。缺读者语言的内容回退英文并标 `lang`。数据缓存挂标签 `apps`，后台保存应用或分类后立即刷新。还没有热度，所以榜单、热度前三、走势、首页「热门应用」都留到第 4 步；收藏、评价、提交应用、「信息有误？」留到第 5 步。和规格不同的地方写在 apps.md「页面与路由」末尾。本机示例数据：`pnpm payload run scripts/seed-apps.ts`（只认本机数据库），CI 冒烟测试用它。
+- **资源第 1 步（集合与后台录入）已完成**：`src/modules/resources/collections/` 里的 `skills`、`skill-versions`（上传集合，Zip 存 R2 的 `skills/` 前缀）、`agent-hosts`、`skill-tags`、`skill-submissions`，Drizzle 表 `skill_events`（`db/schema.ts`），迁移 `resources` 建表并写入 6 个宿主；分类固定 7 个在 `categories.ts`，名称在 `messages/`。
+- **资源第 2 步（导入与检测）已完成**：后台 Skill 页侧栏有「导入版本」（接口 `POST /api/skills/:id/import`，可填分支 / tag / commit 和版本号），发事件 `skill/import` 给 Inngest 任务 `skill-import`（`src/modules/resources/import/`）：从 codeload 拉仓库的 tar.gz 快照（commit 取自归档头，公开仓库不用令牌；可选 `GITHUB_TOKEN` 提限额），按仓库地址里的子目录或唯一的 `SKILL.md` 找到 Skill 目录，去掉 `.git`、`.DS_Store` 之类，打成确定性的 Zip（同样的文件得到同样的 sha256），以「待审」状态创建版本；版本号取请求的 → `SKILL.md` 头部的 → 最新版本号加一；同一 commit 只导入一次；结果写在 Skill 侧栏「最近导入」里。sha256、文件清单、SKILL.md 原文与 frontmatter、声明的域名和静态检测全部在 `skill-versions` 的上传钩子里由 Zip 算出（`package/inspect.ts`），所以手动上传的 Zip 和导入的走同一套检查。静态检测（`scan/`）按规格 7 项：包结构、密钥、敏感位置为「拦截」，危险命令、外联、提示注入为「有提示」，许可缺失则不能发布（仓库 SPDX → `SKILL.md` 的 `license` → 包内或仓库根 LICENSE → Skill 上填的许可 → 「作者书面同意」勾选）。发布校验：拦截不能发，待检测不能发，有提示要填「复核备注」，没有许可要有许可或作者同意；发布时自动填 `publishedAt`，把 Skill 的当前版本换成更新的版本并让草稿 Skill 上线。已发布 / 已弃用 / 已撤回的版本不能换 Zip、不能退回待审，版本号、commit、sha256、文件清单、SKILL.md、frontmatter、声明、检测结果都不能改（规则 2）；更新说明和兼容记录仍可改。撤回要填原因，Skill 下架要填原因，已发布的 Skill 必须指向已发布的版本。`skills` 开了 Payload 版本历史（显示字段的修改记录）。本地库上用假的 GitHub 响应跑通了导入、重复导入、导入失败记录、拦截不能发布、有提示需备注、发布后 Skill 上线、不可改、撤回、下架。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 
@@ -28,7 +30,7 @@
 | 第一期 | 1–2 | 地基 | 完成 |
 | 第一期 | 3 起 | 日报 | 第 3 步完成，下一步审核与发布 |
 | 第一期 | 日报之后 | 应用 | 第 1 步（集合与后台录入）、第 3 步（列表页和详情页）完成，下一步官网取材与资料草稿 |
-| 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）完成，下一步导入与检测 |
+| 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）、第 2 步（导入与检测）完成，下一步说明起草 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
 | 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
 
@@ -39,7 +41,7 @@
 1. **日报第 4 步（审核与发布）**，对应画板「IFAI 日报审核后台」：审核队列（按分数、标记、原文核对结果筛选，疑似推广 / 教程类 / 两次评分差距大 / 原文核对没过的要标出来）；通过即发布（设 `publishedAt`），拒绝、并入另一条、稍后再看；发布后的更正记录（`correctedAt`）。`stories` 已挂上 `syncHantFromHans` 钩子，审核时改简体，繁体会自动跟着变。
 2. 日报第 5–6 步：前台（列表、详情、RSS）→ 热度与海报。
 3. **应用第 2 步：官网取材与资料草稿**（见 apps.md「实现顺序」），日报第 1 步已合并，可以开工；新迁移在 main 最新的迁移之上生成。之后是第 4 步热度（榜单、走势、首页「热门应用」，日报提及接日报第 3 步的结果）→ 第 5 步收藏、评价与提交。首批应用从 Toolify 挑网址，这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，到时要在项目设置里加白名单，或者在你自己的电脑上跑。
-4. **资源第 2 步：导入与检测**（见 resources.md「实现顺序」）。日报第 1 步已合并，可以直接用它的 Inngest 开工；第 3 步说明起草用它的 `src/lib/ai`。后台现在可以手动录入 Skill 和上传 Zip 版本（sha256 自动算出）；6 个宿主已建好，Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
+4. **资源第 3 步：说明起草**（见 resources.md「实现顺序」和「定时任务与 AI」）：新用途 `skill.describe` 加在 `src/lib/ai/purposes.ts`，输入 SKILL.md、README 和文件清单（全部用 `untrusted()` 包起来），输出简体、英语、日语、韩语的显示名、一句话介绍、「它能做什么」、使用示例、注意事项，以及提取出的外联域名、读写范围、工具和 API Key，填进版本的「声明」和 Skill 的说明字段作草稿；模型失败时字段留空，不阻塞导入。导入任务 `skill-import` 现在只做到检测，起草接在它后面（`src/modules/resources/import/jobs.ts`）。繁体由 `syncHantFromHans` 自动生成，已挂好。然后是第 4 步前台（列表、详情、固定版本页、`install.md` 和下载接口、安装事件）。6 个宿主里 Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
 
 ## 已做的决定
 
@@ -97,11 +99,12 @@
 
 - 有的沙盒连不上 npm registry（DNS 失败或代理返回 403）。上次的绕法：在临时分支上用 GitHub Actions 安装依赖，打包成草稿 release 再下载回来，用完要删掉分支和 release。新会话先直接试 `pnpm install`（2026-10-22 的会话可以直接装）。
 - 沙盒里可以用 apt 装 `postgresql-16-pgvector`，再 `service postgresql start`，在本地库上跑迁移和 `pnpm build`。
+- 沙盒的代理也不放行 codeload.github.com 和 api.github.com，Skill 导入只能把 `fetch` 换成假响应、用 `tests/unit/resources/fixtures/skill-repo.tar.gz` 在本地库上验证；真实导入要在预览环境里点「导入版本」试（需要 Inngest 集成）。
 - 沙盒的代理不放行新闻站点（techcrunch.com、openai.com、hn.algolia.com 都返回 403），信源抓取只能把 `fetch` 换成假数据在本地库上验证；真实抓取要在预览环境看。模型流水线同理，本地只能用 `ai/test` 的假模型跑；真实跑一遍要在站长的电脑上（`OPENROUTER_BASE_URL` 指向局域网接口）或预览环境。
 - 两个并行 PR 各自带 Payload 迁移时，后合并的要先合并 main、删掉自己的迁移再重新 `pnpm payload migrate:create`，因为迁移快照会缺对方的表（应用 PR #6 和日报的迁移就是这种情况）。
 - 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
-- 在 Payload 钩子里调用 Local API 并传入 `req`（为了留在同一个事务里）时，Payload 会就地改写这个 `req` 的语言、回退语言、`depth` 和 `context`，保存后面的步骤会拿到被改过的请求。`syncHantFromHans` 已经在调用后还原（见 `hant-sync.ts` 的 `keepingRequest`），别的钩子这样调用时照着做。
+- 在 Payload 钩子里调用 Local API 并传入 `req`（为了留在同一个事务里）时，Payload 会就地改写这个 `req` 的语言、回退语言、`depth` 和 `context`，保存后面的步骤会拿到被改过的请求。`syncHantFromHans` 已经在调用后还原（见 `hant-sync.ts` 的 `keepingRequest`），别的钩子这样调用时照着做；资源模块的钩子用 `src/modules/resources/collections/guards.ts` 里的 `peek` / `systemUpdate`，它们已经包了一层。
 - `revalidateTag` 只能在 Next.js 里调用。`pnpm payload run` 的脚本和迁移在 Next.js 之外，应用页面的缓存刷新钩子在那里什么也不做；用脚本改了应用数据，页面最晚一小时后更新。
 - 两个分支各自生成了迁移时，后合并的那个要先合并 `main`，删掉自己的迁移，再重新 `pnpm payload migrate:create`。否则最新的快照（`.json`）里缺了对方的表，下一次生成迁移会出错。
 - Payload 生成的 down 迁移会先 `DROP TABLE … CASCADE`，再删已经被连带删掉的外键，执行时报错。生成后把这类 `DROP CONSTRAINT` 改成 `DROP CONSTRAINT IF EXISTS`，并跑一次 `pnpm payload migrate:down` 验证。

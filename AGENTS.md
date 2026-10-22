@@ -62,6 +62,7 @@ src/
   migrations/              Payload 迁移文件（自动生成，和代码一起提交）
   modules/                 按模块组织的业务代码：daily/、apps/、resources/ …
     daily/                 信源与新闻集合（collections/）、读取器（readers/）、采集任务（collect/）、提示词（prompts/）、判断流水线（judge/）、写作（write/）、Drizzle 表（schema.ts）
+    resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
   payload.config.ts
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko
