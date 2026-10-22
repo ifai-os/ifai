@@ -72,6 +72,7 @@ export interface Config {
     'app-categories': AppCategory;
     apps: App;
     sources: Source;
+    stories: Story;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -84,6 +85,7 @@ export interface Config {
     'app-categories': AppCategoriesSelect<false> | AppCategoriesSelect<true>;
     apps: AppsSelect<false> | AppsSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
+    stories: StoriesSelect<false> | StoriesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -328,6 +330,82 @@ export interface Source {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stories".
+ */
+export interface Story {
+  id: number;
+  title: string;
+  summary: string;
+  /**
+   * Optional; shown at the end of the item.
+   */
+  tryIt?: string | null;
+  /**
+   * English, shared by all languages.
+   */
+  slug: string;
+  category: 'product' | 'industry' | 'open' | 'design' | 'research';
+  status: 'pending' | 'published' | 'rejected' | 'merged' | 'withdrawn';
+  /**
+   * The original first.
+   */
+  sources?:
+    | {
+        name: string;
+        role: 'original' | 'report' | 'discussion';
+        url: string;
+        publishedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  eventId: number;
+  representativeItemId: number;
+  score?: number | null;
+  heat?: number | null;
+  /**
+   * promotional, tutorial, score_gap
+   */
+  flags?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Names and numbers in the text that were not found in the reports.
+   */
+  verification?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Which languages were written, and when.
+   */
+  localeStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  promptVersion?: string | null;
+  publishedAt?: string | null;
+  correctedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -369,6 +447,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'sources';
         value: number | Source;
+      } | null)
+    | ({
+        relationTo: 'stories';
+        value: number | Story;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -552,6 +634,39 @@ export interface SourcesSelect<T extends boolean = true> {
   lastItemCount?: T;
   itemsLast7Days?: T;
   lastError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stories_select".
+ */
+export interface StoriesSelect<T extends boolean = true> {
+  title?: T;
+  summary?: T;
+  tryIt?: T;
+  slug?: T;
+  category?: T;
+  status?: T;
+  sources?:
+    | T
+    | {
+        name?: T;
+        role?: T;
+        url?: T;
+        publishedAt?: T;
+        id?: T;
+      };
+  eventId?: T;
+  representativeItemId?: T;
+  score?: T;
+  heat?: T;
+  flags?: T;
+  verification?: T;
+  localeStatus?: T;
+  promptVersion?: T;
+  publishedAt?: T;
+  correctedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

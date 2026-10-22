@@ -60,7 +60,7 @@ export const fetchSource = inngest.createFunction(
   },
 )
 
-/** One item: fetch the original page and keep its readable text. */
+/** One item: fetch the original page and keep its readable text, then hand it to judging. */
 export const fetchItemContent = inngest.createFunction(
   {
     id: 'daily-fetch-item-content',
@@ -70,7 +70,13 @@ export const fetchItemContent = inngest.createFunction(
   },
   async ({ event, step }) => {
     if (!collectEnabled()) return { skipped: 'COLLECT_ENABLED is not "true"' }
-    return step.run('fetch-content', () => fetchContent(Number(event.data.itemId)))
+    const itemId = Number(event.data.itemId)
+    const result = await step.run('fetch-content', () => fetchContent(itemId))
+    // Judging also runs without a body (title and summary only); archived items are left alone.
+    if (result.contentStatus !== 'missing' && !result.archived) {
+      await step.sendEvent('judge', { name: 'daily/item.judge', data: { itemId } })
+    }
+    return result
   },
 )
 

@@ -19,6 +19,7 @@ import { databaseUrl } from './lib/db/url'
 import { AppCategories } from './modules/apps/collections/AppCategories'
 import { Apps } from './modules/apps/collections/Apps'
 import { Sources } from './modules/daily/collections/sources'
+import { Stories } from './modules/daily/collections/stories'
 import { dailyTables } from './modules/daily/schema'
 
 const filename = fileURLToPath(import.meta.url)
@@ -51,7 +52,7 @@ export default buildConfig({
     supportedLanguages: { zh, en },
     fallbackLanguage: 'zh',
   },
-  collections: [Admins, Media, AppCategories, Apps, Sources],
+  collections: [Admins, Media, AppCategories, Apps, Sources, Stories],
   editor: lexicalEditor(),
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;
