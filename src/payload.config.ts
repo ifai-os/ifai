@@ -18,6 +18,8 @@ import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
 import { AppCategories } from './modules/apps/collections/AppCategories'
 import { Apps } from './modules/apps/collections/Apps'
+import { Sources } from './modules/daily/collections/sources'
+import { dailyTables } from './modules/daily/schema'
 import { AgentHosts } from './modules/resources/collections/AgentHosts'
 import { Skills } from './modules/resources/collections/Skills'
 import { SkillSubmissions } from './modules/resources/collections/SkillSubmissions'
@@ -55,7 +57,7 @@ export default buildConfig({
     supportedLanguages: { zh, en },
     fallbackLanguage: 'zh',
   },
-  collections: [Admins, Media, AppCategories, Apps, Skills, SkillVersions, AgentHosts, SkillTags, SkillSubmissions],
+  collections: [Admins, Media, AppCategories, Apps, Sources, Skills, SkillVersions, AgentHosts, SkillTags, SkillSubmissions],
   editor: lexicalEditor(),
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;
@@ -85,12 +87,12 @@ export default buildConfig({
     // Schema changes only through migrations (src/migrations), never by auto-push.
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
-    // Our own Drizzle tables (Better Auth, model receipts, skill install events) join Payload's schema so
-    // migrations create and track them.
+    // Our own Drizzle tables (Better Auth, model receipts, the daily module's raw_items, skill install events)
+    // join Payload's schema so migrations create and track them.
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
-        tables: { ...schema.tables, ...authTables, ...aiTables, ...resourcesTables },
+        tables: { ...schema.tables, ...authTables, ...aiTables, ...dailyTables, ...resourcesTables },
       }),
     ],
   }),

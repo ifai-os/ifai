@@ -114,6 +114,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 2. Vercel 项目 → Integrations → 搜 Inngest → 安装并连接这个项目。集成会自动给生产和预览环境注入 `INNGEST_EVENT_KEY`、`INNGEST_SIGNING_KEY`，并在每次部署后自动同步任务列表，不用手动填。
 3. 部署后在 Inngest 控制台 → Apps 能看到 `ifai`。验证连通：控制台 → Events → Send event，事件名填 `ifai/health.check`，数据填 `{}`。在 Runs 里能看到 `health-check` 运行成功，输出里有两个开关的状态和今天的模型用量。
 4. 预览环境在 Inngest 里是独立的分支环境（Branch environments），不会触发生产的任务。
+5. 采集：`COLLECT_ENABLED` 为 `true` 时，`daily-collect-due-sources` 每 15 分钟找一遍到期的信源，逐个抓取并取原文。要立刻跑一次，发事件 `daily/collect.run`，数据 `{}`。单个信源可以在后台「日报 → 信源」里点「试抓」预览（不入库），失败原因显示在右栏。
 
 ## 10. 第一次上线检查
 
