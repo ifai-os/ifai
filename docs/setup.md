@@ -2,7 +2,7 @@
 
 这份文档写给站长本人。下面的账号和密钥都由你创建和保管：只填进本地 `.env` 和 Vercel 的环境变量，不要提交到仓库，也不要发给任何人（包括 AI 助手）。
 
-需要的账号：Neon、Vercel、Cloudflare（R2）、Google Cloud、GitHub OAuth App、Resend。文中 `<域名>` 指正式站点域名，例如 `ifai.example`。
+需要的账号：Neon、Vercel、Cloudflare（R2）、Google Cloud、GitHub OAuth App、Resend；日报还要 OpenRouter 和 Inngest。文中 `<域名>` 指正式站点域名，例如 `ifai.example`。
 
 ## 1. 本地开发
 
@@ -17,6 +17,8 @@ pnpm dev                 # http://localhost:3000
 - 第一次打开 http://localhost:3000/admin 会让你创建后台管理员账号。
 - 本地没配 Resend 时，邮箱登录链接会打印在运行 `pnpm dev` 的终端里。
 - 两个密钥都用随机字符串，两者不要相同：`openssl rand -base64 32`
+- 后台任务（日报采集、写作）：另开一个终端运行 `pnpm inngest`，打开 http://localhost:8288 就是 Inngest 的本地控制台；`.env` 里保留 `INNGEST_DEV=1`。
+- 本地默认不调用模型（`MODEL_CALLS_ENABLED=false`）。要试真实调用，填 `OPENROUTER_API_KEY` 并把开关改成 `true`。
 
 ## 2. Neon（数据库）
 
@@ -25,7 +27,7 @@ pnpm dev                 # http://localhost:3000
 3. 在 Connect 面板选分支，复制**带连接池**的连接串（主机名里有 `-pooler`）：
    - `dev` 分支 → 本地 `.env` 的 `DATABASE_URI`
    - `main` 分支 → Vercel Production 环境的 `DATABASE_URI`
-4. pgvector 现在不用开，日报做去重时会通过迁移启用。
+4. pgvector 不用手动开：迁移 `model_receipts_pgvector` 会执行 `CREATE EXTENSION IF NOT EXISTS vector`（Neon 支持）。
 
 ## 3. Vercel（部署与预览环境）
 
@@ -45,6 +47,11 @@ pnpm dev                 # http://localhost:3000
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | 见第 6 步 | 不填 | 同上 |
 | `RESEND_API_KEY` / `EMAIL_FROM` | 见第 7 步 | 同生产 | 预览环境用邮箱魔法链接登录 |
 | `R2_*` | 见第 4 步 | 建议用单独的存储桶 | |
+| `OPENROUTER_API_KEY` | 见第 8 步 | 另一个 key | 预览用单独的 key，额度设小一点 |
+| `AI_DAILY_BUDGET_USD` | `10` | `1` | 每天（上海时间）的模型费用上限，美元 |
+| `MODEL_CALLS_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不调用模型 |
+| `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源 |
+| `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |
 
 5. 预览环境默认开着 Vercel 的访问保护。要让 GitHub Actions 对预览环境跑冒烟测试：Settings → Deployment Protection → Protection Bypass for Automation 生成一个密钥，把它加到 GitHub 仓库的 Settings → Secrets → Actions，名字叫 `VERCEL_AUTOMATION_BYPASS_SECRET`。
 
@@ -88,14 +95,33 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 
 同一套配置也用于后台管理员的找回密码邮件；没配 Resend 时，这类邮件只打印在服务器日志里。
 
-## 8. 第一次上线检查
+## 8. OpenRouter（模型）
+
+所有模型调用都经过 OpenRouter，代码里只写用途（`src/lib/ai/purposes.ts`），不写模型名。
+
+1. 在 openrouter.ai 注册，Credits 页充值（先充 20 美元就够试运行）。
+2. Keys → Create Key，建两个：`ifai-production`、`ifai-preview`。每个 key 都可以设额度上限（Credit limit），建议生产 50 美元、预览 5 美元，作为代码里每日预算之外的第二道保险。
+3. 把 key 填到 Vercel 对应环境的 `OPENROUTER_API_KEY`；本地要试真实调用时填进 `.env`。
+4. 默认模型写在 `src/lib/ai/purposes.ts`。想给某个用途换模型，不用改代码：在 Vercel 加 `AI_MODEL_<用途>`，例如 `AI_MODEL_WRITE=openai/gpt-5`，模型 ID 从 openrouter.ai/models 复制。换向量模型（`AI_MODEL_EMBED`）前先找开发确认，因为向量维度写在迁移里。
+5. 每次调用的费用记在数据库 `model_receipts` 表里；OpenRouter 的 Activity 页也能看到每一笔（应用名显示为 IFAI）。
+
+## 9. Inngest（后台任务）
+
+日报的定时采集、评分、写作都是 Inngest 任务，入口是 `/api/inngest`。
+
+1. 在 inngest.com 注册，先用免费档；用量在控制台的 Billing 页能看到。
+2. Vercel 项目 → Integrations → 搜 Inngest → 安装并连接这个项目。集成会自动给生产和预览环境注入 `INNGEST_EVENT_KEY`、`INNGEST_SIGNING_KEY`，并在每次部署后自动同步任务列表，不用手动填。
+3. 部署后在 Inngest 控制台 → Apps 能看到 `ifai`。验证连通：控制台 → Events → Send event，事件名填 `ifai/health.check`，数据填 `{}`。在 Runs 里能看到 `health-check` 运行成功，输出里有两个开关的状态和今天的模型用量。
+4. 预览环境在 Inngest 里是独立的分支环境（Branch environments），不会触发生产的任务。
+
+## 10. 第一次上线检查
 
 1. 推送到 `main` → Vercel 构建（日志里能看到迁移执行）。
 2. 打开 `https://<域名>/admin` 创建管理员。只给自己建账号，用强密码。
 3. 依次打开 `/en`、`/zh-hans`、`/zh-hant`、`/ja`、`/ko`，确认导航和语言切换正常。
 4. 用 Google、GitHub、邮箱各登录一次。
 
-## 9. 以后要做的
+## 11. 以后要做的
 
 - 后台双重验证：Payload 没有内置，开放更多管理员之前接入。
 - 预览环境的第三方登录：需要时接 Better Auth 的 `oAuthProxy` 插件。

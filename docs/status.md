@@ -2,12 +2,13 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-22。
+更新于 2026-10-22（日报第 1 步）。
 
 ## 现在到哪了
 
 - **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。首页用的是演示数据，日报、应用、资源三个入口是「即将上线」占位页。详见 [specs/foundation.md](./specs/foundation.md)。
-- **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。日报的代码还没开始写。
+- **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。
+- **日报第 1 步（基础）已完成**：装好了 Inngest、Vercel AI SDK + OpenRouter、feedsmith（RSS）、cheerio、linkedom + Readability；迁移 `model_receipts_pgvector` 启用 pgvector 并建 `model_receipts` 表；`src/lib/ai` 提供按用途选模型、回执（重试不重复扣费）、每日预算（上海时间，默认 10 美元）、总开关；Inngest 入口 `/api/inngest`，带一个不花钱的 `health-check` 任务（事件 `ifai/health.check`）用来验证连通。还没有任何信源和真实模型调用。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 
 ## 分期
@@ -17,7 +18,7 @@
 | 期 | 周 | 模块 | 状态 |
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |
-| 第一期 | 3 起 | 日报 | 规格已确认，待实现 |
+| 第一期 | 3 起 | 日报 | 第 1 步（基础）完成，下一步信源与采集 |
 | 第一期 | 日报之后 | 应用 | 画板已定（热度口径），规格待写 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 画板已定，规格待写 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
@@ -27,8 +28,8 @@
 
 ## 下一步
 
-1. **日报第 1 步：基础**（见 daily.md「实现顺序」）。要先装依赖：Inngest、Vercel AI SDK + OpenRouter、RSS 解析、HTML 解析与正文提取。然后启用 pgvector，写 `src/lib/ai`（按用途选模型、回执、每日预算上限、总开关），接上 Inngest 路由。这一步要把 OpenRouter 和 Inngest 的环境变量补进 `.env.example` 和 `docs/setup.md`。
-2. 日报第 2–6 步：信源与采集 → 判断与写作 → 审核与发布 → 前台 → 热度与海报。
+1. **日报第 2 步：信源与采集**（见 daily.md「实现顺序」）：`sources` 集合、16 个信源、后台试抓、RSS / 网页列表 / JSON 三种读取器、写入 `raw_items`（判重、48 小时规则）。采集任务先检查 `collectEnabled()`。
+2. 日报第 3–6 步：判断与写作 → 审核与发布 → 前台 → 热度与海报。模型调用用 `ai.object` / `ai.text` / `ai.embed`（`src/lib/ai`），两次评分用 `variant: 'a'` / `'b'` 区分；`ModelCallError.retryable` 为 false 时（开关关闭、预算用完、同一调用失败 3 次）任务应停住并在后台告警。`raw_items` 的向量列用 `EMBEDDING_DIMENSIONS`（1536）。
 3. 写 `docs/specs/apps.md`（应用），对应画板「IFAI 应用首页（原排行）」「IFAI 应用详情」「手机 · 应用列表」「手机 · 应用详情」。
 4. 写 `docs/specs/resources.md`（资源），对应画板「IFAI 资源 · Skills」「IFAI Skill 详情」「手机 · Skill 详情」。
 
@@ -62,13 +63,16 @@
 
 - [x] 把 Claude 的 GitHub 应用装到 ifai-os 组织，只授权 `ifai` 这一个仓库（2026-10-22 已完成）。以后要给它加仓库：ifai-os 组织 → Settings → GitHub Apps → Claude → Configure → Repository access。
 - [ ] 删除临时的 `bootstrap` 分支和两个「Temporary bootstrap」草稿 release。
-- [ ] 按 `docs/setup.md` 开账号、配 Vercel。日报第 1 步之前还要开 OpenRouter 和 Inngest。
+- [ ] 按 `docs/setup.md` 开账号、配 Vercel。
+- [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，装 Vercel 集成），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。日报第 2 步合并前要能在 Inngest 控制台跑通 `ifai/health.check`。
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。
 - [ ] 以后再定：商业化方式；排行第一批参赛模型和题库（第三期前）。
 
 ## 已知问题
 
-- 有的沙盒连不上 npm registry（DNS 失败或代理返回 403）。上次的绕法：在临时分支上用 GitHub Actions 安装依赖，打包成草稿 release 再下载回来，用完要删掉分支和 release。新会话先直接试 `pnpm install`。
+- 有的沙盒连不上 npm registry（DNS 失败或代理返回 403）。上次的绕法：在临时分支上用 GitHub Actions 安装依赖，打包成草稿 release 再下载回来，用完要删掉分支和 release。新会话先直接试 `pnpm install`（2026-10-22 的会话可以直接装）。
+- 沙盒里可以用 apt 装 `postgresql-16-pgvector`，再 `service postgresql start`，在本地库上跑迁移和 `pnpm build`。
+- 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
 - ESLint 10 的 peer 依赖警告是已知情况，见 AGENTS.md。
 
