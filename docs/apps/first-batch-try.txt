@@ -1,0 +1,13 @@
+# 先试这 10 个：八个分类各一个，另加一个中文、一个韩文的应用。
+# 贴进后台「批量添加应用」，等草稿生成后看介绍、功能、常见问题和四种语言；抓不到官网的会在右栏显示失败原因。
+# 没问题再整份贴 first-batch-all.txt，这 10 个会按域名跳过。
+Claude, https://claude.ai
+Perplexity, https://www.perplexity.ai
+Cursor, https://cursor.com
+Ideogram, https://ideogram.ai
+Runway, https://runwayml.com
+Suno, https://suno.com
+DeepL, https://www.deepl.com
+Notion, https://www.notion.com
+Kimi, https://www.kimi.com
+Wrtn, https://wrtn.ai
