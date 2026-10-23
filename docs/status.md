@@ -55,7 +55,7 @@
 - **隐私政策和用户协议已完成**（[specs/legal.md](./specs/legal.md)）：`/[locale]/privacy`、`/[locale]/terms`，五种语言，进站点地图；条文放在 `messages/*.json` 的 `legal`，生效日期、各节顺序和联系邮箱 `hello@ifai.io` 在 `src/modules/legal/documents.ts`。页脚加了两个链接，登录页和登录对话框表单下面写「继续即表示你同意《用户协议》和《隐私政策》」（新标签页打开）。条文按现有代码核对过收集了什么、交给谁、留多久；以后新增收集或接入统计、报错工具，先改这两页再上线。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块；其中「提交成功」资源投稿做成了共用的 `src/components/states/submitted.tsx`，应用的提交表单直接用。`LoadingState` 可以传 `skeleton` 换成按页面形状画的骨架，一行字的占位用 `SkeletonLine`。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
-- **部署改由 GitHub Actions 做**（`.github/workflows/deploy.yml`）：Vercel Hobby 不能导入私有组织仓库，所以 Vercel 项目 `ifai1/ifai` 不连 Git，`main` 用 Vercel CLI 部署生产；每个 PR 先由 `neondatabase/create-branch-action` 建 Neon 分支 `preview/pr-<编号>`，连接串作为 `DATABASE_URI` 传给构建（迁移）和预览运行时，部署完对预览地址跑冒烟测试（原来挂在 `deployment_status` 上的 `preview-smoke.yml` 删掉了），PR 关闭时删分支。Vercel 的 Neon 集成不再用。缺 secret 时 Deploy 跳过、不报错。
+- **部署改由 GitHub Actions 做**（`.github/workflows/deploy.yml`）：Vercel Hobby 不能导入私有组织仓库，所以 Vercel 项目 `ifai1/ifai` 不连 Git，`main` 用 Vercel CLI 部署生产；每个 PR 先由 `neondatabase/create-branch-action` 建 Neon 分支 `preview/pr-<编号>`，连接串作为 `DATABASE_URI` 传给构建（迁移）和预览运行时，部署完对预览地址跑冒烟测试（原来挂在 `deployment_status` 上的 `preview-smoke.yml` 删掉了），PR 关闭时删分支。Vercel 的 Neon 集成不再用。缺 secret 时 Deploy 跳过、不报错。生产部署先关着（站长说暂不用生产），仓库变量 `PRODUCTION_DEPLOY=true` 后才部署。
 
 ## 分期
 
