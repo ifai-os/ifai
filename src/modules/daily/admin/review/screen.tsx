@@ -22,7 +22,9 @@ import {
   type RewrittenLocale,
 } from '../../review/rules'
 import type { AssistKind, Edits, QueueItem, ReviewDetail, ReviewQueue } from '../../review/types'
+import type { PosterDesk } from '../../poster/types'
 import { ApiError, reviewApi } from './api'
+import { PosterColumn } from './poster-column'
 import { localeNames, reviewText, type ReviewText } from './text'
 import './review.css'
 
@@ -159,6 +161,8 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
             return t.errors.rewrite_failed(langs)
           case 'bad_request':
             return `${t.errors.bad_request}${Array.isArray(detail.issues) ? ` (${detail.issues.join('; ')})` : ''}`
+          case 'render_failed':
+            return `${t.errors.render_failed}${detail.message ? `: ${detail.message}` : ''}`
           case 'not_found':
           case 'not_publishable':
           case 'not_published':
@@ -166,6 +170,8 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
           case 'duplicate_open':
           case 'no_reports':
           case 'bad_target':
+          case 'poster_invalid':
+          case 'poster_empty':
             return t.errors[error.code]
           default:
             return `${t.errors.failed}${detail.message ? `: ${detail.message}` : ''}`
@@ -335,6 +341,7 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
     const list = (fresh ?? queue).items.filter((item) => category === 'all' || item.category === category)
     const next = nextAfter(list, fromId) ?? nextAfter((fresh ?? queue).items, fromId)
     setSelectedId(next?.id ?? null)
+    return fresh
   }
 
   const primary = () =>
@@ -348,8 +355,9 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
         await refreshQueue()
       } else {
         await api.publish(detail.id, dirty ? edits : undefined)
-        setNote({ text: t.notes.published(title), tone: 'ok' })
-        await moveOn(detail.id)
+        const fresh = await moveOn(detail.id)
+        const joined = Boolean(fresh?.poster.items.some((item) => item.id === detail.id))
+        setNote({ text: t.notes.published(title, joined), tone: 'ok' })
       }
     })
 
@@ -422,6 +430,11 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
       .catch((error) => toast.error(errorText(error)))
 
   const setField = <K extends keyof Edits>(key: K, value: Edits[K]) => setEdits((current) => ({ ...current, [key]: value }))
+
+  const showPoster = (poster: PosterDesk, generated: boolean) => {
+    setQueue((current) => ({ ...current, poster }))
+    if (generated) setNote({ text: t.poster.done, tone: 'ok' })
+  }
 
   // --- summary cards ----------------------------------------------------------------------
   const { summary } = queue
@@ -580,24 +593,6 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
                 )
               })}
             </ul>
-          )}
-          {queue.published.length > 0 && (
-            <details className="daily-review__published">
-              <summary>{t.queue.publishedToday(queue.published.length)}</summary>
-              <ul>
-                {queue.published.map((item) => (
-                  <li key={item.id}>
-                    <button onClick={() => select(item.id)} type="button">
-                      {item.title}
-                    </button>
-                    <span className="daily-review__small">
-                      {time(item.publishedAt)}
-                      {item.correctedAt ? ` · ${t.queue.corrected}` : ''}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </details>
           )}
         </aside>
 
@@ -876,6 +871,18 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
             </>
           )}
         </main>
+
+        <PosterColumn
+          api={api}
+          desk={queue.poster}
+          errorText={errorText}
+          onDesk={showPoster}
+          onSelect={select}
+          selectedId={selectedId}
+          sitePrefix={sitePrefix}
+          t={t}
+          time={time}
+        />
       </div>
     </div>
   )

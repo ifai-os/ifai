@@ -478,6 +478,24 @@
     "feedTitle": "IFAI 데일리",
     "feedDescription": "출처를 확인한 AI 소식을 쉬운 요약과 함께 전해요."
   },
+  "poster": {
+    "title": "AI 데일리 하이라이트",
+    "brand": "IFAI · AI 하이라이트",
+    "dateLine": "{date} · 상하이 시간",
+    "count": "{count, plural, other {#개 소식}}",
+    "view": "포스터 보기",
+    "head": "톱뉴스",
+    "imageLine": "{year} · {weekday} · 상하이 시간 · {count, plural, other {#개 소식}}",
+    "imageFooter": "모든 소식은 출처를 확인했어요 · {site}",
+    "pageTitle": "AI 데일리 하이라이트 · {date}",
+    "pageDescription": "{date}(상하이 시간)의 AI 소식 {count, plural, other {#개}}. 톱뉴스: {head}",
+    "imageAlt": "{date} AI 하이라이트 포스터, {count, plural, other {#개 소식}}",
+    "downloads": "5개 언어 포스터",
+    "download": "{language} 버전 다운로드",
+    "stories": "포스터에 실린 소식",
+    "earlier": "이전 호",
+    "later": "다음 호"
+  },
   "categories": {
     "product": "제품 업데이트",
     "industry": "업계 동향",

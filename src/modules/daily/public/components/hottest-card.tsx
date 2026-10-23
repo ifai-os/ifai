@@ -13,7 +13,7 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
   return (
     <section
       aria-labelledby="hottest-title"
-      className="relative flex min-w-0 flex-col justify-end gap-3.5 overflow-hidden rounded-hero bg-night p-6 text-white md:min-h-80 md:flex-1 md:p-8"
+      className="relative flex min-w-0 flex-col justify-end gap-3.5 overflow-hidden rounded-hero bg-night p-6 text-white md:min-h-80 md:grow-2 md:basis-100 md:p-8"
     >
       <p className="self-start rounded-pill bg-white/14 px-2.5 py-1 text-small">
         {t('hottest')} · {category} · {card('moreSources', { count: story.moreReports })}

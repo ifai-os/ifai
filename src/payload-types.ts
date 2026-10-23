@@ -73,6 +73,7 @@ export interface Config {
     apps: App;
     sources: Source;
     stories: Story;
+    posters: Poster;
     skills: Skill;
     'skill-versions': SkillVersion;
     'agent-hosts': AgentHost;
@@ -91,6 +92,7 @@ export interface Config {
     apps: AppsSelect<false> | AppsSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     stories: StoriesSelect<false> | StoriesSelect<true>;
+    posters: PostersSelect<false> | PostersSelect<true>;
     skills: SkillsSelect<false> | SkillsSelect<true>;
     'skill-versions': SkillVersionsSelect<false> | SkillVersionsSelect<true>;
     'agent-hosts': AgentHostsSelect<false> | AgentHostsSelect<true>;
@@ -449,6 +451,34 @@ export interface Story {
    * The editor said it is not the same happening as this published story.
    */
   keptApartFrom?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One per day (Shanghai time). Arrange and generate it in the review queue, right column.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posters".
+ */
+export interface Poster {
+  id: number;
+  date: string;
+  items?: (number | Story)[] | null;
+  /**
+   * After the first change or generation the list is no longer picked automatically; stories published later join while there is room.
+   */
+  arranged?: boolean | null;
+  status: 'draft' | 'generated';
+  generatedAt?: string | null;
+  snapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -824,6 +854,10 @@ export interface PayloadLockedDocument {
         value: number | Story;
       } | null)
     | ({
+        relationTo: 'posters';
+        value: number | Poster;
+      } | null)
+    | ({
         relationTo: 'skills';
         value: number | Skill;
       } | null)
@@ -1065,6 +1099,20 @@ export interface StoriesSelect<T extends boolean = true> {
   laterAt?: T;
   mergedInto?: T;
   keptApartFrom?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posters_select".
+ */
+export interface PostersSelect<T extends boolean = true> {
+  date?: T;
+  items?: T;
+  arranged?: T;
+  status?: T;
+  generatedAt?: T;
+  snapshot?: T;
   updatedAt?: T;
   createdAt?: T;
 }

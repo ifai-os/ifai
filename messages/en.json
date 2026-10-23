@@ -478,6 +478,24 @@
     "feedTitle": "IFAI Daily",
     "feedDescription": "AI news, checked against the sources, with a plain-language summary of each story."
   },
+  "poster": {
+    "title": "Daily AI highlights",
+    "brand": "IFAI · AI highlights",
+    "dateLine": "{date} · Shanghai time",
+    "count": "{count, plural, one {# story} other {# stories}}",
+    "view": "View poster",
+    "head": "Top story",
+    "imageLine": "{weekday}, {year} · Shanghai time · {count, plural, one {# story} other {# stories}}",
+    "imageFooter": "Every story checked against its sources · {site}",
+    "pageTitle": "Daily AI highlights · {date}",
+    "pageDescription": "{count, plural, one {# AI story} other {# AI stories}} of {date} (Shanghai time). Top story: {head}",
+    "imageAlt": "Poster of the AI highlights of {date}, {count, plural, one {# story} other {# stories}}",
+    "downloads": "The poster in five languages",
+    "download": "Download {language}",
+    "stories": "On this poster",
+    "earlier": "Previous poster",
+    "later": "Next poster"
+  },
   "categories": {
     "product": "Product update",
     "industry": "Industry",

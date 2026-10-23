@@ -19,38 +19,13 @@ import {
   withdrawStory,
 } from './actions'
 import { loadReviewDetail } from './detail'
+import { handle } from './handler'
 import { loadReviewQueue } from './queue'
-
-type Body = Record<string, unknown>
-
-async function bodyOf(req: PayloadRequest): Promise<Body> {
-  try {
-    const data = await req.json?.()
-    return data && typeof data === 'object' ? (data as Body) : {}
-  } catch {
-    return {}
-  }
-}
 
 function idOf(req: PayloadRequest): number {
   const id = Number(req.routeParams?.id)
   if (!Number.isInteger(id)) throw new ReviewError('bad_request', 400, { issues: ['id'] })
   return id
-}
-
-function handle(run: (req: PayloadRequest, body: Body) => Promise<unknown>): Endpoint['handler'] {
-  return async (req) => {
-    if (!req.user) return Response.json({ error: 'unauthorized' }, { status: 401 })
-    try {
-      const body = req.method?.toUpperCase() === 'POST' ? await bodyOf(req) : {}
-      const result = await run(req, body)
-      return result === null ? Response.json({ error: 'not_found' }, { status: 404 }) : Response.json(result)
-    } catch (error) {
-      if (error instanceof ReviewError) return Response.json({ error: error.code, detail: error.detail }, { status: error.status })
-      console.error('review endpoint failed:', error)
-      return Response.json({ error: 'failed', message: error instanceof Error ? error.message : String(error) }, { status: 500 })
-    }
-  }
 }
 
 const reviewActions = ['edit', 'publish', 'correct', 'reject', 'later', 'withdraw', 'merge', 'keep-separate', 'rewrite', 'assist'] as const
@@ -72,7 +47,7 @@ async function announce(storyId: number, change: StoryChange): Promise<void> {
 
 /**
  * The review screen's API on the stories collection (all need a signed-in admin):
- *   GET  /api/stories/review-queue                 the queue, today's published and the summary cards
+ *   GET  /api/stories/review-queue                 the queue, today's poster (../poster/desk.ts) and the summary cards
  *   POST /api/stories/review-queue/retry-source     { sourceId } fetch a failing source now
  *   GET  /api/stories/:id/review                    one story in every language
  *   POST /api/stories/:id/review/<action>           edit | publish | correct | reject | later | withdraw |
