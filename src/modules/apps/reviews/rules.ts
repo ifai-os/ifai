@@ -15,10 +15,22 @@ export const reviewRules = {
   averageFrom: 5,
   /** Reviews per request, newest first. */
   pageSize: 10,
+  /** Paid machine translations of one review per Shanghai day; editing it again after that waits a day. */
+  dailyTranslations: 5,
 } as const
 
 export const reviewStatuses = ['shown', 'hidden'] as const
 export type ReviewStatus = (typeof reviewStatuses)[number]
+
+/** The languages the model translates reviews into (docs/specs/apps.md 5c); zh-Hant is converted from zh-Hans. */
+export const modelLocales = ['en', 'zh-Hans', 'ja', 'ko'] as const satisfies readonly Locale[]
+export type ModelLocale = (typeof modelLocales)[number]
+
+/** A review's machine translations as stored: never in the review's own language. */
+export type TranslatedTexts = Partial<Record<ModelLocale, string>>
+
+export const translationStatuses = ['done', 'failed'] as const
+export type TranslationStatus = (typeof translationStatuses)[number]
 
 export const reportReasons = ['spam', 'abuse', 'offTopic', 'other'] as const
 export type ReportReason = (typeof reportReasons)[number]
@@ -107,6 +119,8 @@ export type ReviewView = {
   author: { name: string; tone: number }
   createdAt: string
   editedAt: string | null
+  /** A machine translation into the page's language can be read: GET /api/reviews/translation. */
+  translatable: boolean
 }
 
 /** The member's own review, which they see even when the site owner has hidden it. */
@@ -123,4 +137,15 @@ export type ReviewsPage = {
   next: number | null
 }
 
-export type ReviewsError = ReviewInputError | 'cross-site' | 'sign-in' | 'not-found' | 'daily-limit' | 'own-review' | 'invalid-request'
+/** GET /api/reviews/translation?review=345&locale=ja: the review in the page's language, by machine. */
+export type ReviewTranslation = { review: number; locale: Locale; text: string }
+
+export type ReviewsError =
+  | ReviewInputError
+  | 'cross-site'
+  | 'sign-in'
+  | 'not-found'
+  | 'not-translated'
+  | 'daily-limit'
+  | 'own-review'
+  | 'invalid-request'

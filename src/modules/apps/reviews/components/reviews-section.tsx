@@ -1,6 +1,6 @@
 'use client'
 
-import { useFormatter, useTranslations } from 'next-intl'
+import { useFormatter, useLocale, useTranslations } from 'next-intl'
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 
 import { Button, buttonClass } from '@/components/button'
@@ -191,9 +191,10 @@ function ReviewTime({ iso }: { iso: string }) {
   return <time dateTime={iso}>{format.relativeTime(date, Math.max(loadedAt, date.getTime()))}</time>
 }
 
-/** Name, stars, when, then the review in its own language. */
-function ReviewBody({ review }: { review: ReviewView }) {
+/** Name, stars, when, then the review in its own language, or its machine translation when the reader asked for it. */
+function ReviewBody({ review, translation = null }: { review: ReviewView; translation?: string | null }) {
   const t = useTranslations('reviews')
+  const locale = useLocale()
   const name = review.author.name || t('anonymous')
   return (
     <>
@@ -206,9 +207,20 @@ function ReviewBody({ review }: { review: ReviewView }) {
           <ReviewTime iso={review.createdAt} />
           {review.editedAt && ` · ${t('edited')}`}
         </span>
+        {translation !== null && (
+          <span className="inline-flex h-5.5 items-center gap-1 rounded-tag bg-surface-2 px-2 text-small text-ink-2">
+            <Icon name="translate" size={12} strokeWidth={2} />
+            {t('machineTranslated')}
+          </span>
+        )}
       </div>
-      <p lang={review.lang} className="text-body whitespace-pre-line wrap-anywhere">
-        {review.body}
+      {/* Announced when the reader switches between the review and its translation. */}
+      <p
+        lang={translation === null ? review.lang : locale}
+        aria-live={review.translatable ? 'polite' : undefined}
+        className="text-body whitespace-pre-line wrap-anywhere"
+      >
+        {translation ?? review.body}
       </p>
     </>
   )
@@ -226,7 +238,31 @@ function ReviewItem({
   onReport: () => void
 }) {
   const t = useTranslations('reviews')
+  const { translate } = useReviews()
   const name = review.author.name || t('anonymous')
+  const [translation, setTranslation] = useState<string | null>(null)
+  const [showing, setShowing] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [failed, setFailed] = useState(false)
+
+  // 「翻译」reads the translation once; after that the button switches between it and the original.
+  async function toggle() {
+    if (showing || translation !== null) {
+      setShowing(!showing)
+      return
+    }
+    setLoading(true)
+    setFailed(false)
+    const text = await translate(review.id)
+    setLoading(false)
+    if (text === null) {
+      setFailed(true)
+      return
+    }
+    setTranslation(text)
+    setShowing(true)
+  }
+
   return (
     <li
       className={`grid grid-cols-[36px_minmax(0,1fr)] gap-3.5 border-b border-surface-2 px-4 py-4 last:border-b-0 md:px-6 md:py-5 ${
@@ -235,8 +271,19 @@ function ReviewItem({
     >
       <Avatar name={name} tone={review.author.tone} />
       <div className="flex min-w-0 flex-col gap-1.5">
-        <ReviewBody review={review} />
-        <div>
+        <ReviewBody review={review} translation={showing ? translation : null} />
+        <div className="flex flex-wrap items-center gap-x-4">
+          {review.translatable && (
+            <button
+              type="button"
+              onClick={toggle}
+              disabled={loading}
+              aria-label={showing ? t('originalName', { name }) : t('translateName', { name })}
+              className="-my-1.5 h-8 text-small font-medium text-link hover:underline disabled:opacity-60"
+            >
+              {showing ? t('showOriginal') : loading ? t('translating') : t('translate')}
+            </button>
+          )}
           <button
             type="button"
             onClick={onReport}
@@ -246,6 +293,11 @@ function ReviewItem({
           >
             {reported ? t('reported') : t('report')}
           </button>
+          {failed && (
+            <span role="alert" className="text-small text-down">
+              {t('translateFailed')}
+            </span>
+          )}
         </div>
       </div>
     </li>

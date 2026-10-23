@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import type { AdminReview } from '../reviews/admin'
 import type { AdminReviewsResponse } from '../reviews/endpoints'
-import type { ReportReason } from '../reviews/rules'
+import { modelLocales, type ModelLocale, type ReportReason } from '../reviews/rules'
 
 // The back office is for the site owner; its text follows Payload's own admin language (zh / en).
 const text = {
@@ -26,6 +26,16 @@ const text = {
     shown: '已恢复显示。',
     kept: '已保留，举报标为已处理。',
     failedRequest: '操作失败',
+    separator: '、',
+    colon: '：',
+    translated: (languages: string) => `已翻译：${languages}`,
+    waiting: '等待翻译：写好或改过约一分钟后翻；模型调用关着或当天预算用完时，每 30 分钟再试。',
+    translateFailed: (error: string) => `翻译失败：${error}`,
+    languages: { en: '英语', 'zh-Hans': '简体中文', ja: '日语', ko: '韩语' } satisfies Record<ModelLocale, string>,
+    original: (language: string) => `原文是${language}`,
+    showTranslations: '查看译文',
+    translateAgain: '重新翻译',
+    translateQueued: '已排队，约一分钟后刷新这一页查看。',
   },
   en: {
     saveFirst: 'Once saved and published, readers can review it on its page.',
@@ -44,6 +54,16 @@ const text = {
     shown: 'Shown again.',
     kept: 'Kept; its reports are marked as dealt with.',
     failedRequest: 'Failed',
+    separator: ', ',
+    colon: ': ',
+    translated: (languages: string) => `Translated: ${languages}`,
+    waiting: 'Waiting for its translation: about a minute after it is written or changed; while model calls are off or the day’s budget is used up, tried again every 30 minutes.',
+    translateFailed: (error: string) => `Translation failed: ${error}`,
+    languages: { en: 'English', 'zh-Hans': 'Simplified Chinese', ja: 'Japanese', ko: 'Korean' } satisfies Record<ModelLocale, string>,
+    original: (language: string) => `written in ${language}`,
+    showTranslations: 'Show the translations',
+    translateAgain: 'Translate again',
+    translateQueued: 'Queued. Reload this page in a minute or so.',
   },
 }
 
@@ -62,7 +82,7 @@ const row = {
 
 const flagged = { color: 'var(--theme-error-500)' } as const
 
-type Change = { status: 'hidden' | 'shown' } | { keep: true }
+type Change = { status: 'hidden' | 'shown' } | { keep: true } | { translate: true }
 
 /** The「评价」tab of an app: every review, newest first, with its reports; hide, show again, or keep a reported one. */
 export function ReviewsPanel() {
@@ -94,7 +114,7 @@ export function ReviewsPanel() {
       })
       const data = (await response.json()) as { ok?: boolean; error?: string }
       if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
-      toast.success('keep' in change ? t.kept : change.status === 'hidden' ? t.hidden : t.shown)
+      toast.success('translate' in change ? t.translateQueued : 'keep' in change ? t.kept : change.status === 'hidden' ? t.hidden : t.shown)
       const next = await load()
       if (next) setReviews(next)
     } catch (error) {
@@ -109,6 +129,13 @@ export function ReviewsPanel() {
 
   const hiddenCount = reviews.filter((review) => review.status === 'hidden').length
   const when = (iso: string) => new Date(iso).toLocaleString(i18n.language)
+  const languageName = (tag: string) => {
+    try {
+      return new Intl.DisplayNames([i18n.language], { type: 'language' }).of(tag) ?? tag
+    } catch {
+      return tag
+    }
+  }
 
   return (
     <div style={box}>
@@ -127,12 +154,14 @@ export function ReviewsPanel() {
           <p lang={review.lang} style={{ margin: '0.25em 0', whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
             {review.body}
           </p>
+          <Translation review={review} t={t} languageName={languageName} />
           {review.reports.total > 0 && (
             <p style={{ margin: '0 0 0.25em', ...(review.reports.open > 0 ? flagged : {}) }}>
-              {t.reported(review.reports.open, review.reports.total)}：
+              {t.reported(review.reports.open, review.reports.total)}
+              {t.colon}
               {Object.entries(review.reports.reasons)
                 .map(([reason, times]) => `${t.reasons[reason as ReportReason]} × ${times}`)
-                .join('、')}
+                .join(t.separator)}
             </p>
           )}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5em' }}>
@@ -150,9 +179,71 @@ export function ReviewsPanel() {
                 {t.keep}
               </Button>
             )}
+            {review.status === 'shown' && (
+              <Button buttonStyle="secondary" size="small" margin={false} disabled={busy !== null} onClick={() => moderate(review, { translate: true })}>
+                {t.translateAgain}
+              </Button>
+            )}
           </div>
         </div>
       ))}
     </div>
+  )
+}
+
+/** How far its translation is, and the translations themselves, folded: enough to read a review in another language. */
+function Translation({
+  review,
+  t,
+  languageName,
+}: {
+  review: AdminReview
+  t: (typeof text)['zh'] | (typeof text)['en']
+  languageName: (tag: string) => string
+}) {
+  const translation = review.translation
+  if (translation.state === 'waiting') {
+    // A hidden review is not translated until it is shown again.
+    if (review.status === 'hidden') return null
+    return (
+      <p style={{ margin: '0 0 0.25em' }}>
+        <small>{t.waiting}</small>
+      </p>
+    )
+  }
+  if (translation.state === 'failed') return <p style={{ margin: '0 0 0.25em', ...flagged }}>{t.translateFailed(translation.error ?? '')}</p>
+  // In the site's language order, whatever order they were stored in.
+  const entries = modelLocales.flatMap((locale) => {
+    const translated = translation.texts[locale]
+    return translated ? [[locale, translated] as const] : []
+  })
+  // The model found nothing to translate into (every language asked for was the review's own): a dash.
+  const done = t.translated(entries.map(([locale]) => t.languages[locale]).join(t.separator) || '—')
+  const original = translation.language ? ` · ${t.original(languageName(translation.language))}` : ''
+  if (entries.length === 0) {
+    return (
+      <p style={{ margin: '0 0 0.25em' }}>
+        <small>{`${done}${original}`}</small>
+      </p>
+    )
+  }
+  return (
+    <details style={{ margin: '0 0 0.25em' }}>
+      <summary style={{ cursor: 'pointer' }}>
+        <small>
+          {done}
+          {original} · {t.showTranslations}
+        </small>
+      </summary>
+      {entries.map(([locale, translated]) => (
+        <p key={locale} lang={locale} style={{ margin: '0.25em 0 0.25em 1em', whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+          <small>
+            {t.languages[locale]}
+            {t.colon}
+          </small>
+          {translated}
+        </p>
+      ))}
+    </details>
   )
 }

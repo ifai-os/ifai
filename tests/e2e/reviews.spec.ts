@@ -6,8 +6,9 @@ import type enMessages from '../../messages/en.json'
 
 import { createMember } from './member'
 
-const en = JSON.parse(readFileSync(new URL('../../messages/en.json', import.meta.url), 'utf8')) as typeof enMessages
-const r = en.reviews
+const read = (name: string) => JSON.parse(readFileSync(new URL(`../../messages/${name}.json`, import.meta.url), 'utf8')) as typeof enMessages
+const r = read('en').reviews
+const hant = read('zh-hant').reviews
 
 /** Presses the star itself, as a reader would; the radio inside it is visually hidden. */
 async function pickRating(form: Locator, rating: number) {
@@ -22,6 +23,15 @@ test('the reviews API answers visitors, and only members can write', async ({ re
   const missing = await request.get('/api/reviews?app=2000000000')
   expect(missing.status()).toBe(404)
   expect(missing.headers()['cache-control']).toBe('private, no-store')
+  expect((await request.get('/api/reviews?app=1&locale=fr')).status()).toBe(400)
+
+  // Translations: read on demand, never cached, never indexed.
+  expect((await request.get('/api/reviews/translation?review=abc&locale=en')).status()).toBe(400)
+  expect((await request.get('/api/reviews/translation?review=1&locale=fr')).status()).toBe(400)
+  const untranslated = await request.get('/api/reviews/translation?review=2000000000&locale=en')
+  expect(untranslated.status()).toBe(404)
+  expect(untranslated.headers()['cache-control']).toBe('private, no-store')
+  expect(untranslated.headers()['x-robots-tag']).toBe('noindex, nofollow')
 
   const review = { app: 1, rating: 5, body: 'Great', locale: 'en' }
   expect((await request.post('/api/reviews', { data: review })).status()).toBe(401)
@@ -42,7 +52,7 @@ test.describe('with the sample apps', () => {
   test.skip(!process.env.E2E_SAMPLE_APPS, 'Run `pnpm payload run scripts/seed-apps.ts` and set E2E_SAMPLE_APPS=1.')
 
   test('a visitor reads the reviews and is asked to sign in to write one', async ({ page }) => {
-    const loaded = page.waitForResponse((response) => /\/api\/reviews\?app=\d+$/.test(response.url()))
+    const loaded = page.waitForResponse((response) => /\/api\/reviews\?app=\d+&locale=en$/.test(response.url()))
     await page.goto('/en/apps/kitecode')
     const response = await loaded
     expect(response.status()).toBe(200)
@@ -131,6 +141,50 @@ test.describe('with the sample apps', () => {
     } finally {
       await member.remove()
       await other.remove()
+    }
+  })
+
+  test('a reader reads a review in their language, marked as machine translated', async ({ page, baseURL }) => {
+    test.skip(!process.env.DATABASE_URI, 'Writes reviews through the database: needs DATABASE_URI, as in CI.')
+    const kenji = await createMember(baseURL ?? 'http://localhost:3000', 'Kenji Reviewer')
+    const lin = await createMember(baseURL ?? 'http://localhost:3000', 'Lin Reviewer')
+    try {
+      const appId = await kenji.appId('lumen-chat')
+      const japanese = await kenji.addReview(appId, 'メモの要約がとても速い。', 5, 'ja')
+      await kenji.addTranslations(japanese, { en: 'It summarises notes very fast.', 'zh-Hans': '笔记总结得非常快。', ko: '메모 요약이 아주 빨라요.' })
+      await lin.addReview(appId, '这个软件很好用', 4, 'zh-Hans')
+
+      await page.goto('/en/apps/lumen-chat')
+      const reviews = page.getByRole('region', { name: r.title })
+      await expect(reviews.getByText('メモの要約がとても速い。')).toHaveAttribute('lang', 'ja')
+      // The Chinese one has no English yet, so there is nothing to translate it with.
+      await expect(reviews.getByText('这个软件很好用')).toBeVisible()
+      await expect(reviews.getByRole('button', { name: r.translateName.replace('{name}', 'Lin Reviewer') })).toHaveCount(0)
+
+      const loaded = page.waitForResponse((response) => response.url().includes('/api/reviews/translation?'))
+      await reviews.getByRole('button', { name: r.translateName.replace('{name}', 'Kenji Reviewer') }).click()
+      const response = await loaded
+      expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow')
+      await expect(reviews.getByText('It summarises notes very fast.')).toHaveAttribute('lang', 'en')
+      await expect(reviews.getByText(r.machineTranslated)).toBeVisible()
+      await expect(reviews.getByText('メモの要約がとても速い。')).toHaveCount(0)
+
+      // Back to the original, for this review only.
+      await reviews.getByRole('button', { name: r.originalName.replace('{name}', 'Kenji Reviewer') }).click()
+      await expect(reviews.getByText('メモの要約がとても速い。')).toBeVisible()
+      await expect(reviews.getByText(r.machineTranslated)).toHaveCount(0)
+
+      // On the Traditional Chinese page, OpenCC converts: the Simplified review itself, and the stored Simplified translation.
+      await page.goto('/zh-hant/apps/lumen-chat')
+      const hantReviews = page.getByRole('region', { name: hant.title })
+      await hantReviews.getByRole('button', { name: hant.translateName.replace('{name}', 'Lin Reviewer') }).click()
+      await expect(hantReviews.getByText('這個軟體很好用')).toHaveAttribute('lang', 'zh-Hant')
+      await hantReviews.getByRole('button', { name: hant.translateName.replace('{name}', 'Kenji Reviewer') }).click()
+      await expect(hantReviews.getByText('筆記總結得非常快。')).toBeVisible()
+      await expect(hantReviews.getByText(hant.machineTranslated)).toHaveCount(2)
+    } finally {
+      await kenji.remove()
+      await lin.remove()
     }
   })
 })
