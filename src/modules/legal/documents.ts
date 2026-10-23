@@ -17,7 +17,7 @@ export const legalUpdatedAt: Record<LegalDocument, string> = {
   terms: '2026-10-23',
 }
 
-/** Account deletion, data requests and copyright complaints all go here (rule 4). */
+/** Data requests, account deletion for readers who cannot sign in, and copyright complaints go here (rule 4). */
 export const legalContactEmail = 'hello@ifai.io'
 
 export const legalSections = {
