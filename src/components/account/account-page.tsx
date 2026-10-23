@@ -7,6 +7,7 @@ import { localizePath, type Locale } from '@/i18n/config'
 import type { AuthProviders } from '@/lib/auth/providers'
 
 import { DeleteAccount } from './delete-account'
+import { ExportData } from './export-data'
 
 type AccountPageProps = {
   /** The signed-in member's email; null for a visitor, who gets the sign-in form. */
@@ -16,7 +17,10 @@ type AccountPageProps = {
   signIn: AuthProviders
 }
 
-/** 「账号」(docs/specs/foundation.md「账号页与删除账号」): the sign-in email and deleting the account. */
+/**
+ * 「账号」(docs/specs/foundation.md「账号页与删除账号」「导出我的数据」): the sign-in email,
+ * downloading the member's data and deleting the account.
+ */
 export function AccountPage({ email, deleted, signIn }: AccountPageProps) {
   const t = useTranslations('account')
   const locale = useLocale() as Locale
@@ -49,6 +53,14 @@ export function AccountPage({ email, deleted, signIn }: AccountPageProps) {
             <dt className="text-meta text-ink-4">{t('email')}</dt>
             <dd className="text-body font-medium break-all">{email}</dd>
           </dl>
+
+          <section aria-labelledby="export-data" className="flex flex-col items-start gap-3 border-b border-surface-2 pb-8">
+            <h2 id="export-data" className="text-title font-semibold">
+              {t('exportTitle')}
+            </h2>
+            <p className="text-ui text-ink-3">{t('exportBody')}</p>
+            <ExportData />
+          </section>
 
           <section aria-labelledby="delete-account" className="flex flex-col items-start gap-3">
             <h2 id="delete-account" className="text-title font-semibold">
