@@ -34,7 +34,7 @@ pnpm dev                 # http://localhost:3000
 
 部署不走 Vercel 的 Git 集成：Vercel Hobby 不能导入私有组织下的仓库，所以由 GitHub Actions（`.github/workflows/deploy.yml`）用 Vercel CLI 构建并部署。
 
-- 推送到 `main` → 部署生产环境。
+- 推送到 `main` → 部署生产环境（打开 `PRODUCTION_DEPLOY` 之后，见第 3 条）。
 - 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
 - PR 关闭或合并 → 删掉它的 Neon 分支。
 
@@ -50,6 +50,8 @@ pnpm dev                 # http://localhost:3000
 | `VERCEL_AUTOMATION_BYPASS_SECRET` | 见第 5 条，预览开着访问保护时才需要。 |
 
    Vercel 的团队 ID 和项目 ID 已经写在 workflow 里（不是密钥）；换项目时在同一页的 **Variables** 里加 `VERCEL_ORG_ID`、`VERCEL_PROJECT_ID` 覆盖。没填 `VERCEL_TOKEN`（PR 还要两个 Neon 的）之前，Deploy 会提示缺哪个 secret 并跳过，不会报错。
+
+   生产部署默认关着：在同一页的 **Variables** 里加 `PRODUCTION_DEPLOY` = `true` 之后，推送到 `main` 才会部署生产（之前先配好 Vercel 生产环境的变量，见下面第 4 条）。
 
 4. 环境变量（Vercel 项目 → Settings → Environment Variables）：
 
