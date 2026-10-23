@@ -205,7 +205,8 @@ for (const story of sampleStories) {
   }
 }
 
-// 「今天提到的应用」on the daily list: the apps job's matches, when scripts/seed-apps.ts ran first.
+// 「今天提到的应用」on the daily list: the apps job's matches. Written here when scripts/seed-apps.ts ran
+// first; run after these stories, seed-apps.ts matches them itself.
 const sampleMentions = [
   { app: 'lumen-chat', story: 'sample-lumen-chat-adds-shared-workspaces', matched: 'lumen-chat.example' },
   { app: 'kitecode', story: 'sample-kitecode-opens-its-model-weights', matched: 'kitecode.example' },
@@ -239,5 +240,5 @@ for (const mention of sampleMentions) {
 }
 
 console.log(`Sample stories ready: ${sampleStories.map((story) => `${story.slug} (${story.status})`).join(', ')}`)
-console.log(mentions ? `Sample app mentions ready: ${mentions}` : 'No sample apps: run scripts/seed-apps.ts first for「今天提到的应用」.')
+console.log(mentions ? `Sample app mentions ready: ${mentions}` : 'No sample apps yet: scripts/seed-apps.ts adds them and matches these stories for「今天提到的应用」.')
 process.exit(0)

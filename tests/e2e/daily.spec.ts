@@ -77,7 +77,7 @@ test.describe('with the sample stories', () => {
   })
 
   test("the apps in today's stories link to their pages", async ({ page }) => {
-    test.skip(!process.env.E2E_SAMPLE_APPS, 'Also needs the sample apps: run scripts/seed-apps.ts before scripts/seed-stories.ts.')
+    test.skip(!process.env.E2E_SAMPLE_APPS, 'Also needs the sample apps from scripts/seed-apps.ts (run before or after the sample stories).')
     await page.goto('/en/daily')
     const apps = page.getByRole('region', { name: en.daily.appsToday })
     await apps.getByRole('link', { name: 'Lumen Chat' }).click()
