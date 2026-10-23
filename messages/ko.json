@@ -21,6 +21,7 @@
     "signIn": "로그인",
     "account": "계정 메뉴",
     "saves": "저장한 항목",
+    "accountPage": "계정",
     "signOut": "로그아웃"
   },
   "home": {
@@ -570,6 +571,26 @@
     "remove": "저장 취소",
     "removeName": "{name} 저장 취소",
     "failed": "취소하지 못했어요. 다시 시도해 주세요."
+  },
+  "account": {
+    "title": "계정",
+    "description": "IFAI 계정과 계정 삭제.",
+    "signInBody": "로그인하면 계정을 확인하거나 삭제할 수 있어요.",
+    "email": "로그인한 이메일",
+    "deleteTitle": "계정 삭제",
+    "deleteBody": "계정을 삭제하면 저장한 항목, 작성한 앱 리뷰, 제출한 앱과 Skill도 함께 삭제되며 되돌릴 수 없어요. IFAI에 이미 등록된 앱과 Skill은 그대로 남아요.",
+    "deleteKeeps": "데일리 이메일은 계정과 별개라서 계정을 삭제해도 구독이 해지되지 않아요. 그만 받으려면 이메일 하단의 구독 해지 링크를 눌러 주세요.",
+    "deleteButton": "계정 삭제",
+    "confirmTitle": "계정을 영구적으로 삭제할까요?",
+    "confirmBody": "삭제하면 되돌릴 수 없어요. 나중에 같은 이메일로 로그인하면 새로운 빈 계정이 만들어져요.",
+    "confirm": "영구 삭제",
+    "cancel": "취소",
+    "deleting": "삭제하는 중…",
+    "failed": "계정을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "signInAgain": "로그인한 지 하루가 넘었어요. 본인 확인을 위해 로그아웃한 뒤 다시 로그인하고 삭제해 주세요.",
+    "signInAgainButton": "로그아웃하고 다시 로그인",
+    "deleted": "계정이 삭제되었어요. IFAI를 이용해 주셔서 감사합니다.",
+    "home": "홈으로 돌아가기"
   },
   "reviews": {
     "title": "리뷰",

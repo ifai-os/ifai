@@ -21,6 +21,7 @@
     "signIn": "登录",
     "account": "账号菜单",
     "saves": "我的收藏",
+    "accountPage": "账号",
     "signOut": "退出登录"
   },
   "home": {
@@ -570,6 +571,26 @@
     "remove": "取消收藏",
     "removeName": "取消收藏 {name}",
     "failed": "没能取消收藏，请再试一次。"
+  },
+  "account": {
+    "title": "账号",
+    "description": "你的 IFAI 账号，以及删除账号。",
+    "signInBody": "登录后可以查看或删除你的账号。",
+    "email": "登录邮箱",
+    "deleteTitle": "删除账号",
+    "deleteBody": "删除账号会一起删掉你的收藏、写过的应用评价，以及提交过的应用和 Skill 投稿，不能恢复。已经收录到 IFAI 的应用和 Skill 不受影响。",
+    "deleteKeeps": "日报邮件和账号是分开的，删除账号不会退订。不想再收，请点任意一封日报邮件底部的退订链接。",
+    "deleteButton": "删除账号",
+    "confirmTitle": "永久删除你的账号？",
+    "confirmBody": "删除后不能恢复。以后用同一个邮箱登录，会是一个新的空账号。",
+    "confirm": "永久删除",
+    "cancel": "取消",
+    "deleting": "正在删除…",
+    "failed": "没能删除账号，请稍后再试。",
+    "signInAgain": "你登录已经超过一天。为了确认是你本人，请退出后重新登录，再来删除账号。",
+    "signInAgainButton": "退出并重新登录",
+    "deleted": "账号已删除。谢谢你用过 IFAI。",
+    "home": "回到首页"
   },
   "reviews": {
     "title": "评价",
