@@ -2,16 +2,20 @@
 
 import { useEffect, useState } from 'react'
 
+import { Icon } from '@/components/icon'
+
 type ShareButtonProps = {
   /** Shown in the share sheet next to the link. */
   title: string
   className: string
   /** The button's text, and what it says for two seconds after copying the link. */
   labels: { share: string; copied: string }
+  /** Show an icon (a tick once copied) instead of the text, which stays for screen readers. */
+  iconOnly?: boolean
 }
 
 /** Opens the system share sheet where there is one; elsewhere copies the page's address. */
-export function ShareButton({ title, className, labels }: ShareButtonProps) {
+export function ShareButton({ title, className, labels, iconOnly = false }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -38,7 +42,16 @@ export function ShareButton({ title, className, labels }: ShareButtonProps) {
   return (
     <>
       <button type="button" onClick={share} className={className}>
-        {copied ? labels.copied : labels.share}
+        {iconOnly ? (
+          <>
+            <Icon name={copied ? 'check' : 'share'} size={20} />
+            <span className="sr-only">{labels.share}</span>
+          </>
+        ) : copied ? (
+          labels.copied
+        ) : (
+          labels.share
+        )}
       </button>
       <span role="status" className="sr-only">
         {copied ? labels.copied : ''}

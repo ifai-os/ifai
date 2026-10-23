@@ -240,25 +240,23 @@ async function findCandidates({ categoryId, q }: Filter): Promise<Candidate[]> {
 const findCandidatesCached = unstable_cache(findCandidates, ['apps-candidates'], cacheOptions)
 
 /** The published apps with these ids, in this order; unpublished ones are simply missing. */
-const findAppsByIds = unstable_cache(
-  async (ids: number[]) => {
-    if (ids.length === 0) return []
-    const { docs } = await (await payload()).find({
-      collection: 'apps',
-      where: { and: [published, { id: { in: ids } }] },
-      limit: ids.length,
-      locale: 'all',
-      depth: 1,
-      select: listSelect,
-      populate,
-      overrideAccess: false,
-    })
-    const byId = new Map((docs as unknown as RawApp[]).map((doc) => [doc.id, doc]))
-    return ids.map((id) => byId.get(id)).filter((doc) => doc !== undefined)
-  },
-  ['apps-by-id'],
-  cacheOptions,
-)
+async function findAppsInOrder(ids: number[]): Promise<RawApp[]> {
+  if (ids.length === 0) return []
+  const { docs } = await (await payload()).find({
+    collection: 'apps',
+    where: { and: [published, { id: { in: ids } }] },
+    limit: ids.length,
+    locale: 'all',
+    depth: 1,
+    select: listSelect,
+    populate,
+    overrideAccess: false,
+  })
+  const byId = new Map((docs as unknown as RawApp[]).map((doc) => [doc.id, doc]))
+  return ids.map((id) => byId.get(id)).filter((doc) => doc !== undefined)
+}
+
+const findAppsByIds = unstable_cache(findAppsInOrder, ['apps-by-id'], cacheOptions)
 
 const findApp = unstable_cache(
   async (slug: string) => {
@@ -411,6 +409,15 @@ export async function getHomeApps(locale: Locale, count: number): Promise<{ tren
     trending: ids.map((id) => items.get(id)).filter((item) => item !== undefined),
     pick: (pickId && items.get(pickId)) || null,
   }
+}
+
+/**
+ * A member's saved apps, in the order given (newest save first); apps no longer published are
+ * left out. Read fresh, not from the shared cache, since every member's list is different.
+ */
+export async function getSavedApps(ids: number[], locale: Locale): Promise<HeatedApp[]> {
+  const [docs, latest, categories] = await Promise.all([findAppsInOrder(ids), loadLatestHeat(), categoryMap(locale)])
+  return docs.map((doc) => withHeat(doc, locale, categories, latest))
 }
 
 /** Where「打开网站」goes: the published app's id and website; null when there is no such app or no usable website. */

@@ -47,7 +47,7 @@ src/
     (payload)/             Payload 生成的后台和 REST 路由，不要手改
     api/auth/[...all]/     Better Auth 接口
   collections/             Payload 集合（Admins、Media；模块的集合放到各自模块里）
-  components/              共用组件：site-header、language-switcher、cards/ …
+  components/              共用组件：site-header、language-switcher、cards/、auth/（登录表单和登录对话框）…
   config/site.ts           导航与分期
   i18n/                    语言配置、路由、导航、next-intl 请求配置
   lib/
@@ -64,6 +64,7 @@ src/
   modules/                 按模块组织的业务代码：daily/、apps/、resources/ …
     daily/                 信源与新闻集合（collections/）、读取器（readers/）、采集任务（collect/）、提示词（prompts/）、判断流水线（judge/）、写作（write/）、审核与发布（review/）、热度（heat/）、前台数据与组件（public/）、后台组件（admin/）、Drizzle 表（schema.ts）
     apps/                  集合（collections/）、页面数据与组件（data.ts，热度读取 heat-reads.ts，榜单与排序 boards.ts，页面开关 settings.ts，components/）、资料草稿（profile/：取材、核对、任务、批量添加）、热度（heat.ts 打分，metrics/：点击、日报提及、Tranco、热度任务、后台接口）、Drizzle 表（schema.ts）、提示词（prompts/）、后台组件（admin/）
+    saves/                 通用收藏：Drizzle 表（schema.ts）、类型与校验（target.ts）、读写（data.ts）、收藏按钮和「我的收藏」（components/）；接口在 src/app/api/saves
     resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
   payload.config.ts
   proxy.ts

@@ -20,6 +20,7 @@
     "language": "言語を切り替える",
     "signIn": "ログイン",
     "account": "アカウントメニュー",
+    "saves": "保存したもの",
     "signOut": "ログアウト"
   },
   "home": {
@@ -61,14 +62,19 @@
   "auth": {
     "title": "IFAIにログイン",
     "subtitle": "アプリの保存、トピックのフォロー、デイリーのメール配信が使えます。",
+    "dialogSubtitle": "メールアドレスでログイン。パスワードは不要です",
     "google": "Googleで続ける",
+    "googleShort": "Google",
     "github": "GitHubで続ける",
+    "githubShort": "GitHub",
     "or": "または",
     "emailLabel": "メールアドレス",
     "emailPlaceholder": "you@example.com",
     "sendLink": "ログインリンクを送信",
     "sending": "送信中…",
-    "sent": "{email} にログインリンクを送りました。有効期限は10分です。",
+    "sentTitle": "ログインリンクを送りました",
+    "sentBody": "{email} を確認してください。リンクの有効期限は10分です。",
+    "resend": "届かない場合は、別のアドレスで送るか、もう一度送信",
     "invalidEmail": "有効なメールアドレスを入力してください",
     "failed": "問題が発生しました。しばらくしてからもう一度お試しください。",
     "unavailable": "この環境ではまだログイン方法が設定されていません。",
@@ -204,7 +210,7 @@
       "rank": "Tranco {rank, number}位",
       "rankHidden": "公式サイトのTranco順位から算出",
       "unranked": "Trancoの上位100万サイトに入っていないか、公式サイトが大きなサイト内の1ページです",
-      "engagement": "直近7日間にIFAIから公式サイトが開かれた回数：{count}回（同じ訪問者は1日1回）",
+      "engagement": "直近7日間にIFAIから公式サイトが開かれた回数：{clicks}回（同じ訪問者は1日1回）、新しい保存：{saves}件",
       "mentions": "直近30日間のデイリーでの言及：{count}件"
     },
     "partsSum": "3つのスコアの合計が注目度です。注目度は関心の高さを示すもので、実際のユーザー数ではありません。",
@@ -236,6 +242,23 @@
       "browser-extension": "ブラウザ拡張機能",
       "api": "API"
     }
+  },
+  "saves": {
+    "save": "保存",
+    "saved": "保存済み",
+    "count": "{count, plural, other {#人が保存}}",
+    "signInTitle": "ログインすると保存できます",
+    "afterSignIn": "ログインすると、自動で保存されます。",
+    "title": "保存したもの",
+    "description": "保存したAIアプリ。",
+    "signInBody": "ログインすると、保存したアプリが表示されます。",
+    "emptyTitle": "まだ保存したものはありません",
+    "emptyBody": "気に入ったアプリで「保存」を押すと、ここに表示されます",
+    "browseApps": "AIアプリを見る",
+    "apps": "アプリ",
+    "remove": "保存を解除",
+    "removeName": "{name}の保存を解除",
+    "failed": "解除できませんでした。もう一度お試しください。"
   },
   "daily": {
     "title": "デイリー",

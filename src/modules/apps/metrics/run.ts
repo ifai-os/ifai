@@ -2,6 +2,7 @@ import { and, count, desc, eq, gte, inArray, lt, lte } from '@payloadcms/db-post
 
 import { getDb } from '@/lib/db/drizzle'
 import { errorMessage } from '@/modules/daily/collect/fetch'
+import { newSaveCounts } from '@/modules/saves/data'
 
 import { refreshAppsCache } from '../cache'
 import { changeDays, engagementDays, mentionDays, scoreApps, type HeatInput } from '../heat'
@@ -82,12 +83,13 @@ export async function computeHeat(day: string, tranco: TrancoOutcome) {
   }
   const ids = apps.map((app) => app.id)
 
-  const [clickRows, mentions, before, kept] = await Promise.all([
+  const [clickRows, saves, mentions, before, kept] = await Promise.all([
     db
       .select({ appId: appClicks.appId, count: count() })
       .from(appClicks)
       .where(and(inArray(appClicks.appId, ids), gte(appClicks.day, addDays(day, -engagementDays)), lt(appClicks.day, day)))
       .groupBy(appClicks.appId),
+    newSaveCounts('app', shanghaiMidnight(addDays(day, -engagementDays)), shanghaiMidnight(day)),
     mentionCounts(db, shanghaiMidnight(addDays(day, -mentionDays)), shanghaiMidnight(day)),
     db
       .select({ appId: appMetricsDaily.appId, heat: appMetricsDaily.heat })
@@ -112,8 +114,7 @@ export async function computeHeat(day: string, tranco: TrancoOutcome) {
     categoryId: app.categoryId,
     trancoRank: ranks.get(app.id)?.rank ?? null,
     clicks: clicks.get(app.id) ?? 0,
-    // Saves arrive with step 5 (docs/specs/apps.md「实现顺序」); until then only clicks count.
-    saves: 0,
+    saves: saves.get(app.id) ?? 0,
     mentions: mentions.get(app.id) ?? 0,
     heatBefore: heatBefore.get(app.id) ?? null,
   }))

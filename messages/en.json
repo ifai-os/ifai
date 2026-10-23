@@ -20,6 +20,7 @@
     "language": "Change language",
     "signIn": "Sign in",
     "account": "Account menu",
+    "saves": "Saved",
     "signOut": "Sign out"
   },
   "home": {
@@ -61,14 +62,19 @@
   "auth": {
     "title": "Sign in to IFAI",
     "subtitle": "Save apps, follow topics and get the Daily by email.",
+    "dialogSubtitle": "Use your email. No password needed",
     "google": "Continue with Google",
+    "googleShort": "Google",
     "github": "Continue with GitHub",
+    "githubShort": "GitHub",
     "or": "or",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
     "sendLink": "Email me a sign-in link",
     "sending": "Sending…",
-    "sent": "Check {email} for a sign-in link. It expires in 10 minutes.",
+    "sentTitle": "Sign-in link sent",
+    "sentBody": "Check {email} for the link. It expires in 10 minutes.",
+    "resend": "Didn't get it? Try another email or send it again",
     "invalidEmail": "Enter a valid email address",
     "failed": "Something went wrong. Try again in a moment.",
     "unavailable": "Sign-in isn't set up in this environment yet.",
@@ -204,7 +210,7 @@
       "rank": "Tranco #{rank, number}",
       "rankHidden": "From the website's Tranco rank",
       "unranked": "Not in the Tranco top million, or the website is a page on a larger site",
-      "engagement": "{count, plural, =0 {No visits} one {# visit} other {# visits}} to the website from IFAI in the last 7 days (once per visitor a day)",
+      "engagement": "{clicks, plural, =0 {No visits} one {# visit} other {# visits}} to the website from IFAI (once per visitor a day) and {saves, plural, =0 {no new saves} one {# new save} other {# new saves}} in the last 7 days",
       "mentions": "{count, plural, =0 {No stories} one {# story} other {# stories}} in the Daily in the last 30 days"
     },
     "partsSum": "The three scores add up to the Heat. Heat shows attention, not how many people use an app.",
@@ -236,6 +242,23 @@
       "browser-extension": "Browser extension",
       "api": "API"
     }
+  },
+  "saves": {
+    "save": "Save",
+    "saved": "Saved",
+    "count": "{count, plural, one {# save} other {# saves}}",
+    "signInTitle": "Sign in to save",
+    "afterSignIn": "Once you're signed in, it's saved for you.",
+    "title": "Saved",
+    "description": "The AI apps you saved.",
+    "signInBody": "Sign in to see the apps you saved.",
+    "emptyTitle": "Nothing saved yet",
+    "emptyBody": "Press Save on an app you like and it will show up here",
+    "browseApps": "Browse AI apps",
+    "apps": "Apps",
+    "remove": "Remove",
+    "removeName": "Remove {name}",
+    "failed": "Couldn't remove it. Try again."
   },
   "daily": {
     "title": "Daily",

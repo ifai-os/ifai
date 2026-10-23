@@ -17,7 +17,8 @@ const text = {
     mentions: '日报提及',
     trancoRank: (rank: number, domain: string) => `Tranco 第 ${rank.toLocaleString()} 名（${domain}）`,
     notRanked: '不在 Tranco 前 100 万名里；官网是 GitHub、Hugging Face 这类网站上的页面或子域名时也不算排名。',
-    clicks: (count: number) => `近 7 天 ${count} 位访客点了「打开网站」（同一访客每天只算一次）`,
+    clicks: (clicks: number, saves: number) =>
+      `近 7 天 ${clicks} 位访客点了「打开网站」（同一访客每天只算一次），新增收藏 ${saves} 个`,
     mentionCount: (count: number) => `近 30 天 ${count} 条日报（同一事件只算一次）`,
     change: (change: number | null) =>
       change === null ? '7 天前还没有热度。' : `7 天变化 ${change > 0 ? '+' : ''}${change}。`,
@@ -44,7 +45,8 @@ const text = {
     mentions: 'Daily mentions',
     trancoRank: (rank: number, domain: string) => `Tranco #${rank.toLocaleString()} (${domain})`,
     notRanked: 'Not in the Tranco top million. A page or subdomain on a site like GitHub or Hugging Face gets no rank either.',
-    clicks: (count: number) => `${count} visitors opened the website from here in the last 7 days (once per visitor a day)`,
+    clicks: (clicks: number, saves: number) =>
+      `${clicks} visitors opened the website from here (once per visitor a day) and ${saves} new saves in the last 7 days`,
     mentionCount: (count: number) => `${count} daily stories in the last 30 days (one per event)`,
     change: (change: number | null) =>
       change === null ? 'No heat from 7 days ago.' : `7-day change ${change > 0 ? '+' : ''}${change}.`,
@@ -137,7 +139,7 @@ export function HeatPanel() {
               {latest.trancoRank !== null && latest.trancoDomain ? t.trancoRank(latest.trancoRank, latest.trancoDomain) : t.notRanked}
             </li>
             <li>
-              {t.engagement}：{t.clicks(latest.clicks)}
+              {t.engagement}：{t.clicks(latest.clicks, latest.saves)}
             </li>
             <li>
               {t.mentions}：{t.mentionCount(latest.mentions)}
