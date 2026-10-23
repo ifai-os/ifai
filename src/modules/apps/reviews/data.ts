@@ -3,10 +3,11 @@ import { and, count, desc, eq, gte, lt, ne, sum } from '@payloadcms/db-postgres/
 import type { Payload } from 'payload'
 
 import { toneFor } from '@/components/cards/initial-tile'
+import type { Locale } from '@/i18n/config'
 import { authUsers } from '@/lib/auth/schema'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
 
-import { appReviewReports, appReviews } from '../schema'
+import { appReviewReports, appReviews, appReviewTranslations } from '../schema'
 import {
   cleanName,
   reviewRules,
@@ -17,7 +18,10 @@ import {
   type ReviewStatus,
   type ReviewSummary,
   type ReviewView,
+  type TranslatedTexts,
+  type TranslationStatus,
 } from './rules'
+import { canTranslate, currentTexts } from './translations'
 
 /**
  * Reading and writing reviews for the pages (src/app/api/reviews). Works on the Payload instance
@@ -42,6 +46,9 @@ const columns = {
   createdAt: appReviews.createdAt,
   editedAt: appReviews.editedAt,
   name: authUsers.name,
+  translatedFrom: appReviewTranslations.source,
+  translation: appReviewTranslations.status,
+  texts: appReviewTranslations.texts,
 }
 
 type Row = {
@@ -54,9 +61,15 @@ type Row = {
   createdAt: Date
   editedAt: Date | null
   name: string
+  translatedFrom: string | null
+  translation: TranslationStatus | null
+  texts: TranslatedTexts | null
 }
 
-function toView(row: Row): ReviewView {
+/** A review for a page in `locale` (null: no translations asked for). */
+function toView(row: Row, locale: Locale | null): ReviewView {
+  const stored =
+    row.translatedFrom !== null && row.translation !== null ? { source: row.translatedFrom, status: row.translation, texts: row.texts ?? {} } : null
   return {
     id: row.id,
     rating: row.rating,
@@ -65,6 +78,7 @@ function toView(row: Row): ReviewView {
     author: { name: cleanName(row.name), tone: toneFor(row.userId) },
     createdAt: row.createdAt.toISOString(),
     editedAt: row.editedAt?.toISOString() ?? null,
+    translatable: locale !== null && canTranslate(row, locale, currentTexts(row.body, stored)),
   }
 }
 
@@ -77,34 +91,38 @@ export async function reviewSummary(payload: Payload, appId: number): Promise<Re
   return summarize(Number(row?.count ?? 0), Number(row?.stars ?? 0))
 }
 
-async function ownReview(payload: Payload, appId: number, userId: string): Promise<OwnReview | null> {
+async function ownReview(payload: Payload, appId: number, userId: string, locale: Locale | null): Promise<OwnReview | null> {
   const [row] = await drizzleOf(payload)
     .select(columns)
     .from(appReviews)
     .innerJoin(authUsers, eq(authUsers.id, appReviews.userId))
+    .leftJoin(appReviewTranslations, eq(appReviewTranslations.reviewId, appReviews.id))
     .where(and(eq(appReviews.appId, appId), eq(appReviews.userId, userId)))
     .limit(1)
-  return row ? { ...toView(row), hidden: row.status === 'hidden' } : null
+  return row ? { ...toView(row, locale), hidden: row.status === 'hidden' } : null
 }
 
 /**
  * One page of an app's reviews for `userId` (null for a visitor): the summary, their own review
- * apart, and everyone else's shown reviews, newest first, older than `before` when given.
+ * apart, and everyone else's shown reviews, newest first, older than `before` when given. With
+ * the page's `locale`, each says whether it can be translated into it.
  */
 export async function reviewsPage(
   payload: Payload,
   appId: number,
   userId: string | null,
   before: number | null,
+  locale: Locale | null = null,
 ): Promise<Omit<ReviewsPage, 'signedIn'>> {
   const db = drizzleOf(payload)
   const [summary, mine, rows] = await Promise.all([
     reviewSummary(payload, appId),
-    userId ? ownReview(payload, appId, userId) : Promise.resolve(null),
+    userId ? ownReview(payload, appId, userId, locale) : Promise.resolve(null),
     db
       .select(columns)
       .from(appReviews)
       .innerJoin(authUsers, eq(authUsers.id, appReviews.userId))
+      .leftJoin(appReviewTranslations, eq(appReviewTranslations.reviewId, appReviews.id))
       .where(
         and(
           eq(appReviews.appId, appId),
@@ -120,16 +138,20 @@ export async function reviewsPage(
   return {
     summary,
     mine,
-    reviews: page.map(toView),
+    reviews: page.map((row) => toView(row, locale)),
     next: rows.length > reviewRules.pageSize ? page[page.length - 1].id : null,
   }
 }
 
-export type SaveReviewResult = 'created' | 'updated' | 'unchanged' | 'daily-limit'
+export type SaveReviewResult =
+  | { status: 'created' | 'updated'; reviewId: number; textChanged: boolean }
+  | { status: 'unchanged' }
+  | { status: 'daily-limit' }
 
 /**
  * Writes the member's review of the app, or changes the one they have. A new review counts toward
  * the daily limit (Shanghai day); changing one does not, and a hidden review stays hidden.
+ * `textChanged` says whether it needs translating (again).
  */
 export async function saveReview(
   payload: Payload,
@@ -144,17 +166,22 @@ export async function saveReview(
     .where(and(eq(appReviews.appId, appId), eq(appReviews.userId, userId)))
     .limit(1)
   if (existing) {
-    if (existing.rating === rating && existing.body === body) return 'unchanged'
+    if (existing.rating === rating && existing.body === body) return { status: 'unchanged' }
     await db.update(appReviews).set({ rating, body, lang, editedAt: now }).where(eq(appReviews.id, existing.id))
-    return 'updated'
+    return { status: 'updated', reviewId: existing.id, textChanged: existing.body !== body }
   }
   const [today] = await db
     .select({ count: count() })
     .from(appReviews)
     .where(and(eq(appReviews.userId, userId), gte(appReviews.createdAt, shanghaiDayStart(now))))
-  if (Number(today?.count ?? 0) >= reviewRules.dailyLimit) return 'daily-limit'
-  await db.insert(appReviews).values({ appId, userId, rating, body, lang }).onConflictDoNothing()
-  return 'created'
+  if (Number(today?.count ?? 0) >= reviewRules.dailyLimit) return { status: 'daily-limit' }
+  const [created] = await db
+    .insert(appReviews)
+    .values({ appId, userId, rating, body, lang })
+    .onConflictDoNothing()
+    .returning({ id: appReviews.id })
+  // Nothing returned: the same member's other request wrote it a moment ago.
+  return created ? { status: 'created', reviewId: created.id, textChanged: true } : { status: 'unchanged' }
 }
 
 /** Deletes the member's review of the app, with the reports about it. */

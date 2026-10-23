@@ -26,6 +26,8 @@ export const textPurposes = {
   profile: CHEAP,
   /** Skill descriptions from SKILL.md and the README (skill.describe): declarations, then the text per language. */
   describe: CHEAP,
+  /** Readers' app reviews into the other site languages (apps.review-translate), one call per review. */
+  translate: CHEAP,
 } as const
 
 export const embeddingPurposes = {

@@ -1,11 +1,13 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { after, NextResponse, type NextRequest } from 'next/server'
 
+import { isLocale, type Locale } from '@/i18n/config'
 import { auth } from '@/lib/auth/auth'
 import { getDb } from '@/lib/db/drizzle'
 import { detectLanguage } from '@/lib/i18n/detect'
 import { isCrossSite } from '@/lib/same-origin'
 import { deleteReview, isReviewable, reviewsPage, saveReview } from '@/modules/apps/reviews/data'
 import { parseId, parseReviewInput, type ReviewsError } from '@/modules/apps/reviews/rules'
+import { queueTranslation } from '@/modules/apps/reviews/translations'
 
 // Per member and always current: never rendered ahead or kept by the browser or a CDN.
 export const dynamic = 'force-dynamic'
@@ -18,23 +20,31 @@ function reply(body: object, status = 200) {
 
 const fail = (error: ReviewsError, status: number) => reply({ error }, status)
 
-/** GET /api/reviews?app=12[&before=345] → ReviewsPage: the summary, the reader's own review and the others, newest first. */
+/** ?locale=ja, the page's language: then each review says whether it can be translated into it. Undefined when it is not a locale. */
+function localeOf(params: URLSearchParams): Locale | null | undefined {
+  const value = params.get('locale')
+  if (value === null) return null
+  return isLocale(value) ? value : undefined
+}
+
+/** GET /api/reviews?app=12[&before=345][&locale=ja] → ReviewsPage: the summary, the reader's own review and the others, newest first. */
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams
   const appId = parseId(params.get('app'))
   const before = params.has('before') ? parseId(params.get('before')) : null
-  if (!appId || (params.has('before') && !before)) return fail('invalid-request', 400)
+  const locale = localeOf(params)
+  if (!appId || (params.has('before') && !before) || locale === undefined) return fail('invalid-request', 400)
   const { payload } = await getDb()
   if (!(await isReviewable(payload, appId))) return fail('not-found', 404)
   const session = await auth.api.getSession({ headers: request.headers })
-  const page = await reviewsPage(payload, appId, session?.user.id ?? null, before)
+  const page = await reviewsPage(payload, appId, session?.user.id ?? null, before, locale)
   return reply({ signedIn: Boolean(session), ...page })
 }
 
 /**
  * POST /api/reviews { app, rating, body, locale } → the first page again, with the member's review.
  * Writes their review of the app or changes it. Members only, from IFAI's own pages; at most
- * five new reviews a day (429).
+ * five new reviews a day (429). A new text goes to the translation job.
  */
 export async function POST(request: NextRequest) {
   if (isCrossSite(request)) return fail('cross-site', 403)
@@ -47,18 +57,25 @@ export async function POST(request: NextRequest) {
   if (!(await isReviewable(payload, app))) return fail('not-found', 404)
   const userId = session.user.id
   const result = await saveReview(payload, { appId: app, userId, rating, body, lang: detectLanguage(body, locale) })
-  if (result === 'daily-limit') return fail('daily-limit', 429)
-  return reply({ signedIn: true, ...(await reviewsPage(payload, app, userId, null)) })
+  if (result.status === 'daily-limit') return fail('daily-limit', 429)
+  if (result.status !== 'unchanged' && result.textChanged) {
+    const { reviewId } = result
+    // After the answer is sent: the member never waits for the job queue.
+    after(() => queueTranslation(reviewId))
+  }
+  return reply({ signedIn: true, ...(await reviewsPage(payload, app, userId, null, locale)) })
 }
 
-/** DELETE /api/reviews?app=12 → the first page again: the member's review of the app is gone. */
+/** DELETE /api/reviews?app=12[&locale=ja] → the first page again: the member's review of the app is gone. */
 export async function DELETE(request: NextRequest) {
   if (isCrossSite(request)) return fail('cross-site', 403)
-  const appId = parseId(request.nextUrl.searchParams.get('app'))
-  if (!appId) return fail('invalid-request', 400)
+  const params = request.nextUrl.searchParams
+  const appId = parseId(params.get('app'))
+  const locale = localeOf(params)
+  if (!appId || locale === undefined) return fail('invalid-request', 400)
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) return fail('sign-in', 401)
   const { payload } = await getDb()
   await deleteReview(payload, appId, session.user.id)
-  return reply({ signedIn: true, ...(await reviewsPage(payload, appId, session.user.id, null)) })
+  return reply({ signedIn: true, ...(await reviewsPage(payload, appId, session.user.id, null, locale)) })
 }

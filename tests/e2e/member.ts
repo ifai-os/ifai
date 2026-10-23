@@ -6,7 +6,7 @@ import pg from 'pg'
  * A throwaway member who is signed in: a user and a session written straight to the database,
  * and the session cookie Better Auth would have set (the token, signed with BETTER_AUTH_SECRET).
  * Needs DATABASE_URI and BETTER_AUTH_SECRET, the same ones the server uses; CI sets both.
- * `remove()` deletes the member, and with it their sessions, saves and reviews.
+ * `remove()` deletes the member, and with it their sessions, saves, reviews and their translations.
  */
 export async function createMember(baseURL: string, name = 'Smoke test member') {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URI })
@@ -44,13 +44,20 @@ export async function createMember(baseURL: string, name = 'Smoke test member') 
       return rows[0].id
     },
     /** A review of the app written straight to the table, as if the member had just written it. */
-    async addReview(appId: number, body: string, rating = 4): Promise<void> {
-      await client.query(`insert into app_reviews (app_id, user_id, rating, body, lang) values ($1, $2, $3, $4, 'en')`, [
-        appId,
-        id,
-        rating,
-        body,
-      ])
+    async addReview(appId: number, body: string, rating = 4, lang = 'en'): Promise<number> {
+      const { rows } = await client.query<{ id: number }>(
+        `insert into app_reviews (app_id, user_id, rating, body, lang) values ($1, $2, $3, $4, $5) returning id`,
+        [appId, id, rating, body, lang],
+      )
+      return rows[0].id
+    },
+    /** Machine translations of one of their reviews, stored as the translation job stores them. */
+    async addTranslations(reviewId: number, texts: Record<string, string>): Promise<void> {
+      await client.query(
+        `insert into app_review_translations (review_id, source, status, language, texts, model)
+         select id, body, 'done', lang, $2, 'smoke test' from app_reviews where id = $1`,
+        [reviewId, JSON.stringify(texts)],
+      )
     },
     async remove() {
       await client.query('delete from auth_users where id = $1', [id])
