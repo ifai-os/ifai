@@ -18,9 +18,9 @@ export default defineConfig({
     baseURL,
     locale: 'en-US',
     trace: 'retain-on-failure',
-    extraHTTPHeaders: bypass
-      ? { 'x-vercel-protection-bypass': bypass, 'x-vercel-set-bypass-cookie': 'true' }
-      : undefined,
+    // The header goes on every request. Asking Vercel to set the bypass cookie instead would answer
+    // the first request with a 307, which breaks the tests that check a status without following redirects.
+    extraHTTPHeaders: bypass ? { 'x-vercel-protection-bypass': bypass } : undefined,
   },
   projects: [
     {

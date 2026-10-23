@@ -160,6 +160,8 @@ jobs:
       # Needed only if Vercel Deployment Protection is on for previews (docs/setup.md step 3).
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       E2E_ADMIN: '1'
+      # Tests that only hold on production (robots.txt) check the preview's behaviour instead.
+      E2E_PREVIEW: '1'
 
     steps:
       - uses: actions/checkout@v5
