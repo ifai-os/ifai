@@ -127,6 +127,11 @@ test('the list leads to the submit page', async ({ page }) => {
   await expect(card.getByRole('link', { name: en.apps.submitApp })).toHaveAttribute('href', '/en/apps/submit')
 })
 
+test('the submit page is in the sitemap, in every language', async ({ request }) => {
+  const pages = await (await request.get('/sitemaps/pages-1.xml')).text()
+  for (const prefix of ['/en', '/zh-hans', '/zh-hant', '/ja', '/ko']) expect(pages).toContain(`${prefix}/apps/submit</loc>`)
+})
+
 test('a search with no match offers to submit the app', async ({ page }) => {
   await page.goto('/en/apps?q=nothing-matches-this')
   await expect(page.getByText(en.apps.noMatchBody)).toBeVisible()
