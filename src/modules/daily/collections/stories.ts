@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
 import { storyCategories } from '../categories'
+import { followPublishing, leaveOnDelete } from '../poster/hooks'
 import { reviewEndpoints } from '../review/endpoints'
 import { heatTrends, sourceRoles, storyStatuses, type HeatTrend, type SourceRole, type StoryStatus } from '../story-fields'
 
@@ -48,7 +49,8 @@ const hantFields = ['title', 'summary', 'tryIt'] as const
  * zh-Hans by the shared hook (AGENTS.md rule 4), so an editor's zh-Hans correction updates it
  * too. Review (the「审核队列」screen at /admin/collections/stories/review, backed by
  * `src/modules/daily/review/`) moves `status`, rewrites the other languages when the simplified
- * Chinese changed, sets the times and refreshes the site's cache.
+ * Chinese changed, sets the times and refreshes the site's cache. The day's poster follows a
+ * story going on or off the site (../poster/hooks.ts).
  */
 export const Stories: CollectionConfig = {
   slug: 'stories',
@@ -57,7 +59,8 @@ export const Stories: CollectionConfig = {
     plural: { en: 'Stories', zh: '新闻' },
   },
   hooks: {
-    afterChange: [syncHantFromHans(hantFields)],
+    afterChange: [syncHantFromHans(hantFields), followPublishing],
+    afterDelete: [leaveOnDelete],
   },
   endpoints: reviewEndpoints,
   admin: {

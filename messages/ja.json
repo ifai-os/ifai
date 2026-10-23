@@ -309,6 +309,24 @@
     "feedTitle": "IFAI デイリー",
     "feedDescription": "情報源を確認したAIニュースを、わかりやすい要約つきでお届けします。"
   },
+  "poster": {
+    "title": "AIデイリーハイライト",
+    "brand": "IFAI · AIハイライト",
+    "dateLine": "{date} · 上海時間",
+    "count": "{count, plural, other {#件}}",
+    "view": "ポスターを見る",
+    "head": "トップ",
+    "imageLine": "{year} · {weekday} · 上海時間 · {count, plural, other {#件}}",
+    "imageFooter": "すべてのニュースを情報源と照合済み · {site}",
+    "pageTitle": "AIデイリーハイライト · {date}",
+    "pageDescription": "{date}（上海時間）のAIニュース{count, plural, other {#件}}。トップ：{head}",
+    "imageAlt": "{date}のAIハイライトのポスター、{count, plural, other {#件}}",
+    "downloads": "5つの言語のポスター",
+    "download": "{language}版をダウンロード",
+    "stories": "ポスターに載ったニュース",
+    "earlier": "前の号",
+    "later": "次の号"
+  },
   "categories": {
     "product": "製品アップデート",
     "industry": "業界動向",

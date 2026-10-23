@@ -18,10 +18,21 @@ test('the daily list opens', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: en.daily.filterLabel })).toBeVisible()
 })
 
-test('unknown stories, categories and pages answer 404', async ({ page }) => {
-  for (const path of ['/en/daily/not-a-story', '/en/daily/category/not-a-category', '/en/daily?page=0', '/en/daily?page=x']) {
+test('unknown stories, categories, pages and posters answer 404', async ({ page, request }) => {
+  for (const path of [
+    '/en/daily/not-a-story',
+    '/en/daily/category/not-a-category',
+    '/en/daily?page=0',
+    '/en/daily?page=x',
+    '/en/daily/poster/2020-01-01',
+    '/en/daily/poster/2026-02-30',
+    '/en/daily/poster/not-a-date',
+  ]) {
     const response = await page.goto(path)
     expect(response?.status(), path).toBe(404)
+  }
+  for (const path of ['/en/daily/poster/2020-01-01/image.png', '/en/daily/poster/not-a-date/image.png', '/xx/daily/poster/2020-01-01/image.png']) {
+    expect((await request.get(path)).status(), path).toBe(404)
   }
 })
 
@@ -74,6 +85,38 @@ test.describe('with the sample stories', () => {
     await page.goto('/en/daily/category/open')
     await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
     await expect(page.getByRole('region', { name: en.daily.hotTitle })).toBeVisible()
+  })
+
+  test("the list leads to the day's poster: the stories on it and its image in every language", async ({ page, request }) => {
+    await page.goto('/en/daily')
+    const card = page.getByRole('link', { name: new RegExp(`^${en.poster.title}`) })
+    await expect(card).toContainText(en.poster.view)
+    await card.click()
+    await expect(page).toHaveURL(/\/en\/daily\/poster\/\d{4}-\d{2}-\d{2}$/)
+    const date = new URL(page.url()).pathname.split('/').at(-1)
+    await expect(page.getByRole('heading', { level: 1, name: en.poster.title })).toBeVisible()
+
+    // Chosen automatically, the hottest story first.
+    const stories = page.getByRole('region', { name: en.poster.stories }).getByRole('link')
+    await expect(stories.first()).toHaveText(titles.workspaces)
+    await expect(stories.first()).toHaveAttribute('href', '/en/daily/sample-lumen-chat-adds-shared-workspaces')
+
+    const image = new RegExp(`/en/daily/poster/${date}/image\\.png\\?v=\\w+$`)
+    await expect(page.getByRole('img', { name: /^Poster of the AI highlights of / })).toHaveAttribute('src', image)
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', image)
+
+    const downloads = page.getByRole('region', { name: en.poster.downloads }).getByRole('link')
+    await expect(downloads).toHaveCount(5)
+    for (const [index, locale] of ['en', 'zh-Hans', 'zh-Hant', 'ja', 'ko'].entries()) {
+      const link = downloads.nth(index)
+      await expect(link).toHaveAttribute('download', `ifai-${date}-${locale}.png`)
+      const href = await link.getAttribute('href')
+      expect(href, locale).toMatch(new RegExp(`^/${locale.toLowerCase()}/daily/poster/${date}/image\\.png\\?v=`))
+      const response = await request.get(href!)
+      expect(response.status(), locale).toBe(200)
+      expect(response.headers()['content-type'], locale).toBe('image/png')
+      expect((await response.body()).byteLength, locale).toBeGreaterThan(10_000)
+    }
   })
 
   test("the apps in today's stories link to their pages", async ({ page }) => {

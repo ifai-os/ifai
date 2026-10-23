@@ -1,3 +1,5 @@
+import { localizePath, type Locale } from '@/i18n/config'
+
 import type { StoryCategory } from '../categories'
 
 export type SearchParams = Record<string, string | string[] | undefined>
@@ -27,3 +29,20 @@ export function storyHref(slug: string): `/${string}` {
 }
 
 export const feedPath = '/daily/rss.xml'
+
+/** The poster page of a Shanghai calendar day (YYYY-MM-DD). */
+export function posterHref(date: string): `/${string}` {
+  return `/daily/poster/${date}`
+}
+
+/** A poster's image in one language; `version` makes browsers fetch it again after the next generation. */
+export function posterImagePath(locale: Locale, date: string, version: string): string {
+  return `${localizePath(locale, `${posterHref(date)}/image.png`)}?v=${version}`
+}
+
+/** A poster date ("2026-10-21") in the reader's language; it is a Shanghai calendar day, not an instant. */
+export function posterDay(date: string, locale: Locale, withYear = true): string {
+  return new Intl.DateTimeFormat(locale, { year: withYear ? 'numeric' : undefined, month: 'long', day: 'numeric', timeZone: 'UTC' }).format(
+    new Date(`${date}T00:00:00Z`),
+  )
+}

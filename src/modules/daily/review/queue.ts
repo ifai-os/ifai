@@ -3,9 +3,10 @@ import { and, count, eq, gte } from '@payloadcms/db-postgres/drizzle'
 import { ai as defaultAi } from '@/lib/ai'
 import type { Ai } from '@/lib/ai/client'
 import { getDb } from '@/lib/db/drizzle'
-import { shanghaiDayStart } from '@/lib/shanghai-day'
+import { shanghaiDate, shanghaiDayStart } from '@/lib/shanghai-day'
 import { collectEnabled, modelCallsEnabled } from '@/lib/switches'
 
+import { loadPosterDesk } from '../poster/desk'
 import { events, itemAnalyses, rawItems } from '../schema'
 import {
   analysesFor,
@@ -16,10 +17,9 @@ import {
   hansOf,
   moreReportsOf,
   unverifiedCount,
-  type StoryAll,
 } from './load'
 import { compareQueue, hansHash, needsAttention, queueFlags } from './rules'
-import type { PublishedItem, QueueItem, ReviewQueue, ReviewSummary } from './types'
+import type { QueueItem, ReviewQueue, ReviewSummary } from './types'
 
 export type QueueDeps = { ai?: Ai; now?: () => Date }
 
@@ -66,23 +66,8 @@ export async function loadReviewQueue(deps: QueueDeps = {}): Promise<ReviewQueue
     .sort(compareQueue)
 
   const dayStart = shanghaiDayStart(now)
-  const [published, summary] = await Promise.all([publishedToday(payload, dayStart), summarize(db, payload, ai, dayStart, items)])
-  return { items, published, summary, loadedAt: now.toISOString() }
-}
-
-async function publishedToday(payload: Awaited<ReturnType<typeof getDb>>['payload'], dayStart: Date): Promise<PublishedItem[]> {
-  const docs = await findStoriesAll(payload, {
-    and: [{ status: { equals: 'published' } }, { publishedAt: { greater_than_equal: dayStart.toISOString() } }],
-  })
-  return docs
-    .map((story: StoryAll) => ({
-      id: story.id,
-      title: hansOf(story).title,
-      category: story.category,
-      publishedAt: story.publishedAt ?? null,
-      correctedAt: story.correctedAt ?? null,
-    }))
-    .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
+  const [poster, summary] = await Promise.all([loadPosterDesk(payload, shanghaiDate(now)), summarize(db, payload, ai, dayStart, items)])
+  return { items, poster, summary, loadedAt: now.toISOString() }
 }
 
 async function summarize(
