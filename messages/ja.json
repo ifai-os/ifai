@@ -22,7 +22,8 @@
     "account": "アカウントメニュー",
     "saves": "保存したもの",
     "accountPage": "アカウント",
-    "signOut": "ログアウト"
+    "signOut": "ログアウト",
+    "search": "検索"
   },
   "home": {
     "todayAI": "今日のAI",
@@ -94,6 +95,37 @@
     "body": "リンクが切れているか、ページが移動した可能性があります。",
     "back": "ホームに戻る",
     "daily": "今日のデイリーを見る"
+  },
+  "search": {
+    "title": "検索",
+    "queryTitle": "検索：{q}",
+    "label": "IFAIを検索",
+    "placeholder": "デイリー、アプリ、Skillsを検索",
+    "submit": "検索",
+    "clear": "検索をクリア",
+    "intro": "デイリーのニュース、アプリ、Skillsをまとめて検索できます。",
+    "typesLabel": "結果の種類",
+    "tabs": {
+      "all": "すべて",
+      "daily": "デイリー",
+      "apps": "アプリ",
+      "skills": "Skills"
+    },
+    "kind": {
+      "daily": "デイリー",
+      "apps": "アプリ",
+      "skills": "Skill"
+    },
+    "found": "「{q}」の検索結果 {count} 件",
+    "seeAll": "{count} 件をすべて見る",
+    "noMatchTitle": "「{q}」に一致する結果はありません",
+    "noMatchBody": "短いキーワードや英語でも試してみてください。",
+    "noMatchKind": "{kind}には「{q}」に一致する結果がありません。ほかのタブを見てください。",
+    "popular": "人気",
+    "pages": "ページ",
+    "previous": "前へ",
+    "next": "次へ",
+    "pageOf": "{page} / {pages} ページ"
   },
   "legal": {
     "updated": "最終更新日：{date}",
