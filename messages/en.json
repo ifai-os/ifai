@@ -294,6 +294,15 @@
     "next": "Next",
     "pageOf": "Page {page} of {pages}",
     "hotTags": "Popular tags",
+    "risers": {
+      "title": "Rising this week",
+      "new": "New",
+      "rise": "+{rise}%"
+    },
+    "ranking": {
+      "title": "Most installed",
+      "all": "Full ranking"
+    },
     "categoryTitle": "{category} Skills",
     "searchTitle": "“{q}” · Skills",
     "pageTitle": "{title} · page {page}",

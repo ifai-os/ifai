@@ -59,6 +59,17 @@ test.describe('with the sample Skills', () => {
     await expect(main.getByRole('article').getByRole('link', { name: names })).toHaveText(['SQL Helper', 'Release Notes Writer'])
   })
 
+  test('the list ranks the most installed, and shows 本周飙升 only with three rising Skills', async ({ page }) => {
+    await page.goto('/en/resources')
+    // Only SQL Helper is rising (40 installs, then 140); Release Notes Writer fell from 120 to 96.
+    await expect(page.getByRole('heading', { name: en.resources.steps.title })).toBeVisible()
+    await expect(page.getByRole('region', { name: en.resources.risers.title })).toHaveCount(0)
+
+    const ranking = page.getByRole('region', { name: en.resources.ranking.title })
+    await expect(ranking.getByRole('list').getByRole('link')).toHaveText([/Release Notes Writer/, /SQL Helper/])
+    await expect(ranking.getByRole('link', { name: en.resources.ranking.all })).toHaveAttribute('href', '/en/resources?sort=installs')
+  })
+
   test('search and filters narrow the list through the address', async ({ page }) => {
     await page.goto('/en/resources')
     const main = page.getByRole('main')

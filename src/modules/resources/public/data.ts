@@ -11,7 +11,19 @@ import { skillCategories, type SkillCategory } from '../categories'
 import { compareVersions } from '../normalize'
 import { CHECK_KEYS, type CheckKey } from '../scan/scan'
 import { skillsCacheTag } from './cache'
-import { effectiveCurrent, filterSkills, hotTags, isNewThisWeek, orderSkills, pickFeatured, searchable, type SkillCandidate } from './order'
+import {
+  effectiveCurrent,
+  filterSkills,
+  hotTags,
+  isNewThisWeek,
+  mostInstalled,
+  orderSkills,
+  pickFeatured,
+  risePercent,
+  searchable,
+  weeklyRisers,
+  type SkillCandidate,
+} from './order'
 import type { SkillListParams } from './list-params'
 
 /**
@@ -23,6 +35,8 @@ import type { SkillListParams } from './list-params'
 
 export const skillsPerPage = 30
 const hotTagsShown = 8
+const risersShown = 3
+const rankShown = 5
 const relatedPool = 6
 export const homeSkillsShown = 4
 
@@ -61,6 +75,10 @@ export type SkillsOverview = {
   categories: { slug: SkillCategory; count: number }[]
   featured: SkillListItem | null
   hotTags: TagRef[]
+  /** 本周飙升, with the rise over the week before in percent (null: no installs that week). */
+  risers: { skill: SkillListItem; rise: number | null }[]
+  /** 安装榜. */
+  mostInstalled: SkillListItem[]
 }
 
 export type CompatStatus = NonNullable<SkillVersion['compatibility']>[number]['status']
@@ -279,6 +297,7 @@ function entries(catalog: Catalog): Entry[] {
         featured: Boolean(skill.featured),
         installs: skill.stats?.installs ?? 0,
         installs7d: skill.stats?.installs7d ?? 0,
+        installsPrev7d: skill.stats?.installsPrev7d ?? 0,
         listedAt,
         updatedAt: current.publishedAt ?? null,
         item: (locale: Locale) => toItem(skill, current, locale),
@@ -305,7 +324,7 @@ export async function listSkills(params: Omit<SkillListParams, 'page'> & { page:
   }
 }
 
-/** The list's header and side column: counts, 本周精选 and 热门标签. */
+/** The list's header and side column: counts, 本周精选, 本周飙升, 安装榜 and 热门标签. */
 export async function getSkillsOverview(locale: Locale): Promise<SkillsOverview> {
   const { catalog, entries: all } = await getEntries()
   const now = new Date()
@@ -319,6 +338,8 @@ export async function getSkillsOverview(locale: Locale): Promise<SkillsOverview>
       .map((slug) => tags.get(slug))
       .filter((tag) => tag !== undefined)
       .map((tag) => ({ slug: tag.slug, name: inAnyLanguage(tag.name, locale) ?? { value: tag.slug, lang: 'en' } })),
+    risers: weeklyRisers(all, risersShown).map((entry) => ({ skill: entry.item(locale), rise: risePercent(entry) })),
+    mostInstalled: mostInstalled(all, rankShown).map((entry) => entry.item(locale)),
   }
 }
 

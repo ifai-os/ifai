@@ -401,13 +401,25 @@ export const Skills: CollectionConfig = {
               name: 'stats',
               type: 'group',
               label: { en: 'Install statistics', zh: '安装统计' },
-              admin: { description: { en: 'Rolled up hourly from skill_events. Not edited by hand.', zh: '每小时从 skill_events 汇总，不用手改。' } },
+              admin: {
+                description: {
+                  en: 'Rolled up hourly from skill_events and saves (skill-stats-rollup). Not edited by hand.',
+                  zh: '每小时从 skill_events 和收藏汇总（skill-stats-rollup），不用手改。',
+                },
+              },
               fields: [
                 {
                   type: 'row',
                   fields: [
                     { name: 'installs', type: 'number', defaultValue: 0, label: { en: 'Installs', zh: '安装数' }, admin: { readOnly: true } },
                     { name: 'installs7d', type: 'number', defaultValue: 0, label: { en: 'Installs, last 7 days', zh: '近 7 天安装数' }, admin: { readOnly: true } },
+                    {
+                      name: 'installsPrev7d',
+                      type: 'number',
+                      defaultValue: 0,
+                      label: { en: 'Installs, the 7 days before', zh: '再往前 7 天安装数' },
+                      admin: { readOnly: true, description: { en: 'For the Trending sort and the week’s risers.', zh: '算「近期飙升」「本周飙升」用。' } },
+                    },
                     { name: 'saves', type: 'number', defaultValue: 0, label: { en: 'Saves', zh: '收藏数' }, admin: { readOnly: true } },
                   ],
                 },

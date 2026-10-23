@@ -67,7 +67,7 @@ src/
     daily/                 信源与新闻集合（collections/）、读取器（readers/）、采集任务（collect/）、提示词（prompts/）、判断流水线（judge/）、写作（write/）、审核与发布（review/）、热度（heat/）、海报（poster/：规则、冻结内容、排版、画图、后台接口）、前台数据与组件（public/）、后台组件（admin/）、Drizzle 表（schema.ts）
     apps/                  集合（collections/）、页面数据与组件（data.ts，热度读取 heat-reads.ts，榜单与排序 boards.ts，页面开关 settings.ts，components/）、资料草稿（profile/：取材、核对、任务、批量添加）、热度（heat.ts 打分，metrics/：点击、日报提及、Tranco、热度任务、后台接口）、评价（reviews/：规则 rules.ts、读写 data.ts、后台读写 admin.ts 与接口 endpoints.ts、页面组件 components/；接口在 src/app/api/reviews）、Drizzle 表（schema.ts）、提示词（prompts/）、后台组件（admin/）
     saves/                 通用收藏：Drizzle 表（schema.ts）、类型与校验（target.ts）、读写（data.ts）、收藏按钮和「我的收藏」（components/）；接口在 src/app/api/saves
-    resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、前台（public/：数据、筛选排序、install.md、安装计数、页面组件）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
+    resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、前台（public/：数据、筛选排序、install.md、安装计数、页面组件）、统计汇总（stats/）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
   payload.config.ts
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko

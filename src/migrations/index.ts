@@ -13,6 +13,7 @@ import * as migration_20261023_020510_daily_heat from './20261023_020510_daily_h
 import * as migration_20261023_023543_saves from './20261023_023543_saves';
 import * as migration_20261023_030415_daily_posters from './20261023_030415_daily_posters';
 import * as migration_20261023_033517_app_reviews from './20261023_033517_app_reviews';
+import * as migration_20261023_042731_skills_stats_prev_week from './20261023_042731_skills_stats_prev_week';
 
 export const migrations = [
   {
@@ -88,6 +89,11 @@ export const migrations = [
   {
     up: migration_20261023_033517_app_reviews.up,
     down: migration_20261023_033517_app_reviews.down,
-    name: '20261023_033517_app_reviews'
+    name: '20261023_033517_app_reviews',
+  },
+  {
+    up: migration_20261023_042731_skills_stats_prev_week.up,
+    down: migration_20261023_042731_skills_stats_prev_week.down,
+    name: '20261023_042731_skills_stats_prev_week'
   },
 ];

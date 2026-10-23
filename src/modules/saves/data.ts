@@ -51,6 +51,17 @@ export async function savedIds(userId: string, type: SaveType): Promise<number[]
   return rows.map((row) => row.id)
 }
 
+/** How many members have each target of a type saved now: what the Skills stats roll-up keeps. */
+export async function saveCounts(type: SaveType): Promise<Map<number, number>> {
+  const { db } = await getDb()
+  const rows = await db
+    .select({ id: saves.targetId, count: count() })
+    .from(saves)
+    .where(eq(saves.targetType, type))
+    .groupBy(saves.targetId)
+  return new Map(rows.map((row) => [row.id, Number(row.count)]))
+}
+
 /** New saves per target made in [from, to) and still saved: what the apps heat counts. */
 export async function newSaveCounts(type: SaveType, from: Date, to: Date): Promise<Map<number, number>> {
   const { db } = await getDb()

@@ -83,21 +83,45 @@ export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) 
               </span>
             </Link>
           )}
-          <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-2.5 rounded-hero border border-surface-2 bg-surface px-6 py-5">
-            <h2 className="text-title font-semibold">{t('steps.title')}</h2>
-            <ol className="flex flex-col gap-2">
-              {(['pick', 'enable', 'ask'] as const).map((step, index) => (
-                <li key={step} className="flex items-center gap-2.5 text-ui text-ink-2">
-                  <span aria-hidden="true" className="flex size-6 flex-none items-center justify-center rounded-pill bg-bg text-small font-semibold text-ink">
-                    {index + 1}
-                  </span>
-                  {t(`steps.${step}`)}
-                </li>
-              ))}
-            </ol>
-            <Link href={guideHref} className="flex min-h-8 items-center self-start text-meta font-medium text-link hover:underline">
-              {t('steps.guide')} ›
-            </Link>
+          <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-4">
+            <div className="flex flex-col gap-2.5 rounded-hero border border-surface-2 bg-surface px-6 py-5">
+              <h2 className="text-title font-semibold">{t('steps.title')}</h2>
+              <ol className="flex flex-col gap-2">
+                {(['pick', 'enable', 'ask'] as const).map((step, index) => (
+                  <li key={step} className="flex items-center gap-2.5 text-ui text-ink-2">
+                    <span aria-hidden="true" className="flex size-6 flex-none items-center justify-center rounded-pill bg-bg text-small font-semibold text-ink">
+                      {index + 1}
+                    </span>
+                    {t(`steps.${step}`)}
+                  </li>
+                ))}
+              </ol>
+              <Link href={guideHref} className="flex min-h-8 items-center self-start text-meta font-medium text-link hover:underline">
+                {t('steps.guide')} ›
+              </Link>
+            </div>
+            {overview.risers.length > 0 && (
+              <section aria-labelledby="risers" className="flex flex-col gap-2 rounded-hero border border-surface-2 bg-surface px-6 py-5">
+                <h2 id="risers" className="text-title font-semibold">
+                  {t('risers.title')}
+                </h2>
+                <ol className="flex flex-col">
+                  {overview.risers.map(({ skill, rise }, index) => (
+                    <li key={skill.id}>
+                      <Link href={skillHref(skill.slug)} className="group flex min-h-8 items-center gap-2 text-ui">
+                        <span aria-hidden="true" className="w-3 flex-none font-semibold text-accent tabular-nums">
+                          {index + 1}
+                        </span>
+                        <span lang={skill.name.lang} className="min-w-0 flex-1 truncate group-hover:text-accent">
+                          {skill.name.value}
+                        </span>
+                        <span className="flex-none text-meta text-ink-4 tabular-nums">{rise === null ? t('risers.new') : t('risers.rise', { rise })}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
           </div>
         </div>
       </section>
@@ -275,27 +299,56 @@ export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) 
           )}
         </div>
 
-        {overview.hotTags.length > 0 && (
-          <aside className="flex flex-col gap-5 md:w-side md:flex-none">
-            <section aria-labelledby="hot-tags" className="flex flex-col gap-3 rounded-hero border border-surface-2 px-5 py-4.5">
-              <h2 id="hot-tags" className="text-title font-semibold">
-                {t('hotTags')}
-              </h2>
-              <ul className="flex flex-wrap gap-2">
-                {overview.hotTags.map((hot) => (
-                  <li key={hot.slug}>
-                    <Link
-                      href={skillsHref({ tag: hot.slug })}
-                      aria-current={hot.slug === params.tag ? 'true' : undefined}
-                      lang={hot.name.lang}
-                      className="flex h-7 items-center rounded-pill border border-surface-2 bg-surface px-3 text-meta text-ink-2 hover:border-line hover:text-ink aria-[current]:border-ink aria-[current]:text-ink"
-                    >
-                      {hot.name.value}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
+        {(overview.mostInstalled.length > 0 || overview.hotTags.length > 0) && (
+          <aside className="flex flex-col gap-7 md:w-side md:flex-none">
+            {overview.mostInstalled.length > 0 && (
+              <section aria-labelledby="ranking" className="flex flex-col">
+                <div className="flex items-baseline justify-between gap-3 pb-1.5">
+                  <h2 id="ranking" className="text-title font-semibold">
+                    {t('ranking.title')}
+                  </h2>
+                  <Link href={skillsHref({ sort: 'installs' })} className="flex-none text-meta text-ink-4 hover:text-ink">
+                    {t('ranking.all')}
+                  </Link>
+                </div>
+                <ol className="flex flex-col">
+                  {overview.mostInstalled.map((skill, index) => (
+                    <li key={skill.id}>
+                      <Link href={skillHref(skill.slug)} className="group flex min-h-10 items-center gap-2.5 text-ui">
+                        <span aria-hidden="true" className={`w-4 flex-none font-semibold tabular-nums ${index < 3 ? 'text-accent' : 'text-ink-4'}`}>
+                          {index + 1}
+                        </span>
+                        <span lang={skill.name.lang} className="min-w-0 flex-1 truncate group-hover:text-accent">
+                          {skill.name.value}
+                        </span>
+                        <span className="flex-none text-meta text-ink-4 tabular-nums">{format.number(skill.installs, { notation: 'compact' })}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+            {overview.hotTags.length > 0 && (
+              <section aria-labelledby="hot-tags" className="flex flex-col gap-3">
+                <h2 id="hot-tags" className="text-title font-semibold">
+                  {t('hotTags')}
+                </h2>
+                <ul className="flex flex-wrap gap-2">
+                  {overview.hotTags.map((hot) => (
+                    <li key={hot.slug}>
+                      <Link
+                        href={skillsHref({ tag: hot.slug })}
+                        aria-current={hot.slug === params.tag ? 'true' : undefined}
+                        lang={hot.name.lang}
+                        className="flex h-7 items-center rounded-pill border border-surface-2 bg-surface px-3 text-meta text-ink-2 hover:border-line hover:text-ink aria-[current]:border-ink aria-[current]:text-ink"
+                      >
+                        {hot.name.value}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
           </aside>
         )}
       </div>
