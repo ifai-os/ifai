@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "リストを読み込み中",
     "loadingCards": "カードを読み込み中",
+    "loadingPage": "ページを読み込み中",
     "failedTitle": "読み込めませんでした",
     "retry": "もう一度試す",
     "errorTitle": "問題が発生しました",

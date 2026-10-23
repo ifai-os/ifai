@@ -162,6 +162,55 @@ test.describe('with the sample Skills', () => {
     await expect(main.getByText(en.resources.noMatchTitle.replace('{q}', 'zzzz'))).toBeVisible()
   })
 
+  test('a slow list keeps the page and puts a skeleton, then a retry, where the results were', async ({ page }) => {
+    await page.clock.install()
+    // Once the page's scripts have run, a filter changes the list inside the page.
+    await page.goto('/en/resources', { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    // Hold the next view of the list back, as a slow connection would.
+    let release = (): void => undefined
+    const held = new Promise<void>((resolve) => (release = resolve))
+    await page.route(
+      (url) => url.pathname === '/en/resources' && url.searchParams.has('_rsc'),
+      async (route) => {
+        await held
+        await route.continue()
+      },
+    )
+
+    await main.getByRole('list', { name: en.resources.filtersLabel }).getByRole('link', { name: en.resources.filters.noKey }).click()
+    const skeleton = main.getByRole('status', { name: en.states.loadingList })
+    await expect(skeleton).toBeVisible()
+    await expect(main.getByRole('article')).toHaveCount(0)
+    await expect(main.getByRole('navigation', { name: en.resources.categoriesLabel })).toBeVisible()
+    await expect(main.getByRole('search')).toBeVisible()
+
+    // After 10 s the skeleton gives way to a retry, and retrying brings it straight back.
+    await page.clock.fastForward(10_000)
+    await expect(main.getByRole('alert')).toContainText(en.states.failedTitle)
+    await main.getByRole('button', { name: en.states.retry }).click()
+    await expect(skeleton).toBeVisible()
+
+    release()
+    await expect(page).toHaveURL(/\/en\/resources\?nokey=1$/)
+    await expect(main.getByRole('article').getByRole('link', { name: names })).toHaveText(['Release Notes Writer'])
+    await expect(skeleton).toHaveCount(0)
+  })
+
+  test('a Skill’s page shows its skeleton while it comes in over a slow connection', async ({ page, context }) => {
+    await page.goto('/en/resources', { waitUntil: 'networkidle' })
+    const cdp = await context.newCDPSession(page)
+    await cdp.send('Network.enable')
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 400, downloadThroughput: 12 * 1024, uploadThroughput: 12 * 1024 })
+
+    await page.getByRole('main').getByRole('article').getByRole('link', { name: 'Release Notes Writer' }).first().click()
+    const skeleton = page.getByRole('status', { name: en.states.loadingPage })
+    await expect(skeleton).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Release Notes Writer' })).toBeVisible({ timeout: 20_000 })
+    await expect(skeleton).toHaveCount(0)
+  })
+
   test('the detail page installs the current version', async ({ page }) => {
     const response = await page.goto('/en/resources/skills/sample-release-notes')
     expect(response?.status()).toBe(200)

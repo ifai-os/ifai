@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "목록을 불러오는 중",
     "loadingCards": "카드를 불러오는 중",
+    "loadingPage": "페이지를 불러오는 중",
     "failedTitle": "불러오지 못했어요",
     "retry": "다시 시도",
     "errorTitle": "문제가 발생했어요",

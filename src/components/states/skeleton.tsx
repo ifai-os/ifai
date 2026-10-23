@@ -25,6 +25,15 @@ export function Skeleton({ className, style }: SkeletonProps) {
   return <span aria-hidden="true" className={className ? `skeleton ${className}` : 'skeleton'} style={style} />
 }
 
+/** One line of text as a bar, in a box as tall as that text's line (`text` is its type class), so the page keeps its height. */
+export function SkeletonLine({ text, width, bar = 'h-3' }: { text: string; width: string; bar?: string }) {
+  return (
+    <span className={`flex h-lh items-center ${text}`}>
+      <Skeleton className={bar} style={{ width }} />
+    </span>
+  )
+}
+
 /** Rows shaped like the app, Skill and story lists: a 44px tile, two lines, a count on the right. Match `rows` to the real list so nothing jumps when it arrives. */
 export function ListSkeleton({ rows = 4 }: { rows?: number }) {
   const t = useTranslations('states')
