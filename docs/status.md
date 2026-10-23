@@ -48,6 +48,7 @@
 - **资源第 5 步之五（加载骨架）已完成**，资源第 1–5 步至此全部完成。列表没有用 `loading.tsx`（它会让 `?page=0`、超过最后一页这些地址返回 200）：分类、排序、筛选、标签、作者、搜索、翻页这些列表里的链接改在页面里切换（`components/list-navigation.tsx`），页面不动，过 300 毫秒结果区换成骨架（列表和卡片两种视图都按真实条目的形状，`skill-list-skeleton.tsx`），10 秒还没到换成「加载失败」和重试。详情页是静态生成的，加了 `[slug]/loading.tsx`（`skill-detail-skeleton.tsx`，按页面自己的栅格），不存在的 Skill 仍然返回 404；它在点进 Skill 而页面还没到的时候显示，网速正常时一闪而过或看不到。两个骨架都是客户端组件，原因见「已知问题」。冒烟测试拦住列表请求看骨架、加载失败和重试，再用限速看详情骨架。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块；其中「提交成功」资源投稿做成了共用的 `src/components/states/submitted.tsx`，应用的提交表单直接用。`LoadingState` 可以传 `skeleton` 换成按页面形状画的骨架，一行字的占位用 `SkeletonLine`。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
+- **部署改由 GitHub Actions 做**（`.github/workflows/deploy.yml`）：Vercel Hobby 不能导入私有组织仓库，所以 Vercel 项目 `ifai1/ifai` 不连 Git，`main` 用 Vercel CLI 部署生产；每个 PR 先由 `neondatabase/create-branch-action` 建 Neon 分支 `preview/pr-<编号>`，连接串作为 `DATABASE_URI` 传给构建（迁移）和预览运行时，部署完对预览地址跑冒烟测试（原来挂在 `deployment_status` 上的 `preview-smoke.yml` 删掉了），PR 关闭时删分支。Vercel 的 Neon 集成不再用。缺 secret 时 Deploy 跳过、不报错。
 
 ## 分期
 
@@ -122,6 +123,7 @@
 - [x] 把 Claude 的 GitHub 应用装到 ifai-os 组织，只授权 `ifai` 这一个仓库（2026-10-22 已完成）。以后要给它加仓库：ifai-os 组织 → Settings → GitHub Apps → Claude → Configure → Repository access。
 - [ ] 删除临时的 `bootstrap` 分支和两个「Temporary bootstrap」草稿 release。
 - [ ] 按 `docs/setup.md` 开账号、配 Vercel。
+- [ ] 在 GitHub 仓库 Settings → Secrets and variables → Actions 填 `VERCEL_TOKEN`、`NEON_API_KEY`、`NEON_PROJECT_ID`（预览开着访问保护时再加 `VERCEL_AUTOMATION_BYPASS_SECRET`），见 setup.md 第 3 步；Vercel 的环境变量不要勾 Sensitive。`ifai.io` 接到 Vercel 之前，Resend 回调和第三方登录的回调都收不到。
 - [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，装 Vercel 集成），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。先在 Inngest 控制台跑通 `ifai/health.check`。
 - [ ] 邮件订阅：开好 `news@ifai.io` 邮箱，按 setup.md 第 7 步在 Resend 验证 `ifai.io`（SPF、DKIM，再加一条 DMARC `p=none`），Vercel 生产和预览都填 `DAILY_EMAIL_FROM` = `news@ifai.io`；在 Resend 加回调端点，把签名密钥填到生产的 `RESEND_WEBHOOK_SECRET`（第 7 步第 6 条）。生产的 `DAILY_EMAIL_ENABLED` 等预览验过再打开。免费版每天 100 封、和登录邮件共用，订阅者到 80 人左右时换 Pro（后台订阅者列表上方会提示）。
 - [ ] 日报邮件部署到预览环境后（先做完上一条）：Preview 设 `DAILY_EMAIL_ENABLED=true` 并重新部署。看 `/zh-hans/daily`（桌面右上、手机列表后面）和首页的订阅框；输 `name@gmial.com` 看提示，点一下改过来；用**管理员的邮箱**订阅（预览环境只给管理员发），在 Gmail 网页和手机上看欢迎信，点「管理订阅」改语言和时区、退订、重新订阅；后台「日报 → 订阅者」看概览和列表，点「预览邮件」切五种语言，点「发测试邮件」看收到的邮件，试一次停发再撤销。第二天当地 8:00–8:15 应该收到第一封日报邮件，后台「今天的发送」里显示送达。都没问题就在生产打开 `DAILY_EMAIL_ENABLED`。

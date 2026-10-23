@@ -1,0 +1,192 @@
+name: Deploy
+
+# Vercel Hobby can't import a private organisation repo, so GitHub Actions builds
+# and deploys with the Vercel CLI instead of the Vercel Git integration.
+#   push to main  → production deployment
+#   pull request  → preview deployment with its own Neon branch, then the smoke tests against it
+#   PR closed     → the Neon branch is deleted
+# Secrets (repository → Settings → Secrets and variables → Actions), see docs/setup.md step 3:
+# VERCEL_TOKEN, NEON_API_KEY, NEON_PROJECT_ID and, if previews are protected, VERCEL_AUTOMATION_BYPASS_SECRET.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: deploy-${{ github.event.pull_request.number || github.ref }}
+  # Never cancel a production deployment halfway through its migrations.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # Not secret: they only say which Vercel project to deploy to. Repository variables override them.
+  VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID || 'team_5ej7Y4L2sAmq0AqIlyXG4sHI' }}
+  VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID || 'prj_75LhQzJ83dQTRSSvmxhosJkobFGh' }}
+  VERCEL_CLI: vercel@63.1.2
+  NEON_BRANCH: preview/pr-${{ github.event.pull_request.number }}
+
+jobs:
+  # Until the secrets are filled in, skip deploying instead of failing every PR.
+  config:
+    name: Check secrets
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          IS_PR: ${{ github.event_name == 'pull_request' }}
+        run: |
+          missing=()
+          [ -n "$VERCEL_TOKEN" ] || missing+=(VERCEL_TOKEN)
+          if [ "$IS_PR" = true ]; then
+            [ -n "$NEON_API_KEY" ] || missing+=(NEON_API_KEY)
+            [ -n "$NEON_PROJECT_ID" ] || missing+=(NEON_PROJECT_ID)
+          fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::notice::Not deploying: missing secrets ${missing[*]} (see docs/setup.md step 3)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    name: Deploy to ${{ github.event_name == 'push' && 'production' || 'preview' }}
+    needs: config
+    if: needs.config.outputs.ready == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: ${{ github.event_name == 'push' && 'Production' || 'Preview' }}
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+      sha: ${{ steps.sha.outputs.sha }}
+    env:
+      TARGET: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+      PROD_FLAG: ${{ github.event_name == 'push' && '--prod' || '' }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      # Check out the branch itself (not the PR merge commit) so the Vercel CLI records the
+      # branch name and commit, like a Git-integration deployment would.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+
+      - id: sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install Vercel CLI
+        run: npm install --global "$VERCEL_CLI"
+
+      # Each PR gets its own copy of the database, branched from Neon's default (production) branch.
+      # Re-runs reuse the branch, so its data survives pushes to the PR.
+      - name: Neon branch for this PR
+        id: neon
+        if: github.event_name == 'pull_request'
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: ${{ env.NEON_BRANCH }}
+
+      - name: Pull Vercel settings and ${{ env.TARGET }} environment variables
+        run: vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
+
+      # `pnpm run ci` (vercel.json) migrates the database, then builds. Variables set here win over the
+      # pulled ones, so a preview migrates and builds against its own Neon branch, never production.
+      # (Only when there is a branch: even an empty DATABASE_URI here would hide the pulled one.)
+      - name: Build
+        env:
+          NEON_DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
+        run: |
+          if [ -n "$NEON_DATABASE_URI" ]; then export DATABASE_URI="$NEON_DATABASE_URI"; fi
+          vercel build $PROD_FLAG --token="$VERCEL_TOKEN"
+
+      - name: Deploy
+        id: deploy
+        env:
+          NEON_DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
+        run: |
+          args=(--prebuilt $PROD_FLAG --token="$VERCEL_TOKEN")
+          # The preview's functions read the same Neon branch at runtime.
+          if [ -n "$NEON_DATABASE_URI" ]; then args+=(--env "DATABASE_URI=$NEON_DATABASE_URI"); fi
+          url=$(vercel deploy "${args[@]}")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $url" >> "$GITHUB_STEP_SUMMARY"
+
+  # The same Playwright smoke tests as CI, against the preview that was just deployed.
+  smoke:
+    name: Preview smoke tests
+    needs: deploy
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      BASE_URL: ${{ needs.deploy.outputs.url }}
+      # Needed only if Vercel Deployment Protection is on for previews (docs/setup.md step 3).
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      E2E_ADMIN: '1'
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.deploy.outputs.sha }}
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: Smoke tests against ${{ env.BASE_URL }}
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-playwright-report
+          path: playwright-report
+          retention-days: 7
+
+  cleanup:
+    name: Delete the PR's Neon branch
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check secrets
+        id: check
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: echo "ready=$([ -n "$NEON_API_KEY" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      # Fails harmlessly if the PR never got a branch (for example, closed before the secrets existed).
+      - uses: neondatabase/delete-branch-action@v3
+        if: steps.check.outputs.ready == 'true'
+        continue-on-error: true
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch: ${{ env.NEON_BRANCH }}
