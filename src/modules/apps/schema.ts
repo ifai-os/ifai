@@ -2,6 +2,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgTable,
   serial,
   smallint,
@@ -12,7 +13,7 @@ import {
 
 import { authUsers } from '@/lib/auth/schema'
 
-import { reportReasons, reviewStatuses } from './reviews/rules'
+import { reportReasons, reviewStatuses, translationStatuses, type TranslatedTexts } from './reviews/rules'
 
 /**
  * The apps module's own tables (docs/specs/apps.md「数据」「热度」). Written by the visit route,
@@ -193,6 +194,33 @@ export const appReviewReports = pgTable(
   ],
 )
 
+/**
+ * A review's machine translations (docs/specs/apps.md 5c), one row per review. `source` is the
+ * review's text they were made from: once the author changes it, the row no longer matches and
+ * counts as missing until the job translates again. `texts` holds what the model wrote, never in
+ * the review's own language; zh-Hant is converted from zh-Hans when read. `runs` counts the paid
+ * runs on `runs_day` (a Shanghai date), at most `reviewRules.dailyTranslations`.
+ */
+export const appReviewTranslations = pgTable('app_review_translations', {
+  reviewId: integer('review_id')
+    .primaryKey()
+    .references(() => appReviews.id, { onDelete: 'cascade' }),
+  source: text('source').notNull(),
+  status: text('status', { enum: translationStatuses }).notNull(),
+  /** The review's language as the model read it (BCP 47): fr for a review the page took for English. */
+  language: text('language'),
+  texts: jsonb('texts').$type<TranslatedTexts>().default({}).notNull(),
+  model: text('model'),
+  /** Why the last try failed, when it did. */
+  error: text('error'),
+  runsDay: date('runs_day'),
+  runs: smallint('runs').default(0).notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+})
+
 export const appsTables = {
   app_clicks: appClicks,
   app_mentions: appMentions,
@@ -200,4 +228,5 @@ export const appsTables = {
   app_heat_runs: appHeatRuns,
   app_reviews: appReviews,
   app_review_reports: appReviewReports,
+  app_review_translations: appReviewTranslations,
 }

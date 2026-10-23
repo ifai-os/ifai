@@ -70,6 +70,7 @@
     "report": "檢舉",
     "reportName": "檢舉 {name} 的評價",
     "reported": "已檢舉",
+    "translateFailed": "譯文沒有載入成功。",
     "reportTitle": "檢舉這條評價",
     "reportSend": "檢舉",
     "reportFailed": "沒檢舉成功，請再試一次。",

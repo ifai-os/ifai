@@ -2157,6 +2157,96 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.app_review_translations": {
+      "name": "app_review_translations",
+      "schema": "",
+      "columns": {
+        "review_id": {
+          "name": "review_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "language": {
+          "name": "language",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "texts": {
+          "name": "texts",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "runs_day": {
+          "name": "runs_day",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "runs": {
+          "name": "runs",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "app_review_translations_review_id_app_reviews_id_fk": {
+          "name": "app_review_translations_review_id_app_reviews_id_fk",
+          "tableFrom": "app_review_translations",
+          "tableTo": "app_reviews",
+          "columnsFrom": [
+            "review_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.saves": {
       "name": "saves",
       "schema": "",
@@ -9389,6 +9479,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "32cedfe6-6c99-4503-9a9d-f6fe1fe4d529",
+  "id": "110f3efb-043a-4f75-97a2-c0172dfe95af",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

@@ -1,7 +1,8 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 
-import { adminReviews, moderateReview, openReports, type AdminReview, type OpenReport } from './admin'
+import { adminReviews, hasReview, moderateReview, openReports, type AdminReview, type OpenReport } from './admin'
 import { parseId, reviewStatuses, type ReviewStatus } from './rules'
+import { queueTranslation } from './translations'
 
 export type AdminReviewsResponse = { reviews: AdminReview[] }
 export type OpenReportsResponse = { total: number; items: OpenReport[] }
@@ -42,7 +43,8 @@ export const reviewEndpoints: Endpoint[] = [
     },
   },
   {
-    // POST /api/apps/:id/reviews/:reviewId { status: 'hidden' | 'shown' } or { keep: true } (the reports were wrong).
+    // POST /api/apps/:id/reviews/:reviewId { status: 'hidden' | 'shown' }, { keep: true } (the reports were
+    // wrong) or { translate: true } (「重新翻译」: a new model call, whatever is stored).
     path: '/:id/reviews/:reviewId',
     method: 'post',
     handler: async (req) => {
@@ -51,6 +53,11 @@ export const reviewEndpoints: Endpoint[] = [
       const reviewId = parseId(req.routeParams?.reviewId)
       if (!appId || !reviewId) return Response.json({ error: 'Bad id' }, { status: 400 })
       const body = await jsonOf(req)
+      if (body.translate === true) {
+        if (!(await hasReview(req.payload, appId, reviewId))) return Response.json({ error: 'Not found' }, { status: 404 })
+        const queued = await queueTranslation(reviewId, `retry:${new Date().toISOString()}`)
+        return queued.ok ? Response.json({ ok: true }) : Response.json({ error: queued.error }, { status: 502 })
+      }
       const status = body.status
       let change: { status: ReviewStatus } | { keep: true }
       if (typeof status === 'string' && (reviewStatuses as readonly string[]).includes(status)) {
@@ -58,7 +65,10 @@ export const reviewEndpoints: Endpoint[] = [
       } else if (body.keep === true) {
         change = { keep: true }
       } else {
-        return Response.json({ error: 'Send JSON: { "status": "hidden" }, { "status": "shown" } or { "keep": true }' }, { status: 400 })
+        return Response.json(
+          { error: 'Send JSON: { "status": "hidden" }, { "status": "shown" }, { "keep": true } or { "translate": true }' },
+          { status: 400 },
+        )
       }
       const ok = await moderateReview(req.payload, appId, reviewId, change)
       return ok ? Response.json({ ok: true }) : Response.json({ error: 'Not found' }, { status: 404 })

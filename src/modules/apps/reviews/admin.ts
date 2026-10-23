@@ -4,13 +4,14 @@ import type { Payload } from 'payload'
 
 import { authUsers } from '@/lib/auth/schema'
 
-import { appReviewReports, appReviews } from '../schema'
-import { cleanName, type ReportReason, type ReviewStatus } from './rules'
+import { appReviewReports, appReviews, appReviewTranslations } from '../schema'
+import { cleanName, type ReportReason, type ReviewStatus, type TranslatedTexts } from './rules'
+import { currentTexts } from './translations'
 
 /**
- * What the back office reads and changes about reviews: every review of an app with its reports,
- * hiding and showing them again, and the reports nobody has looked at yet. Free of the Payload
- * config, so the collection (through ./endpoints) can import it.
+ * What the back office reads and changes about reviews: every review of an app with its reports
+ * and translations, hiding and showing them again, and the reports nobody has looked at yet. Free
+ * of the Payload config, so the collection (through ./endpoints) can import it.
  */
 
 const drizzleOf = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
@@ -25,6 +26,14 @@ export type AdminReview = {
   editedAt: string | null
   author: { name: string; email: string }
   reports: { open: number; total: number; reasons: Partial<Record<ReportReason, number>> }
+  /**
+   * Its machine translations: `waiting` until there are some for the text it has now (the job
+   * runs a minute after writing; the sweep every 30 minutes), `failed` until「重新翻译」.
+   */
+  translation:
+    | { state: 'done'; language: string | null; texts: TranslatedTexts }
+    | { state: 'failed'; error: string | null }
+    | { state: 'waiting' }
 }
 
 /** An app's reviews, shown and hidden, newest first, with how often and why each was reported. */
@@ -41,9 +50,15 @@ export async function adminReviews(payload: Payload, appId: number, limit = 200)
       editedAt: appReviews.editedAt,
       name: authUsers.name,
       email: authUsers.email,
+      translatedFrom: appReviewTranslations.source,
+      translation: appReviewTranslations.status,
+      language: appReviewTranslations.language,
+      texts: appReviewTranslations.texts,
+      translationError: appReviewTranslations.error,
     })
     .from(appReviews)
     .innerJoin(authUsers, eq(authUsers.id, appReviews.userId))
+    .leftJoin(appReviewTranslations, eq(appReviewTranslations.reviewId, appReviews.id))
     .where(eq(appReviews.appId, appId))
     .orderBy(desc(appReviews.id))
     .limit(limit)
@@ -67,6 +82,8 @@ export async function adminReviews(payload: Payload, appId: number, limit = 200)
 
   return rows.map((row) => {
     const mine = reports.filter((report) => report.reviewId === row.id)
+    const current = row.translatedFrom === row.body
+    const texts = currentTexts(row.body, current && row.translation ? { source: row.body, status: row.translation, texts: row.texts ?? {} } : null)
     return {
       id: row.id,
       rating: row.rating,
@@ -81,8 +98,23 @@ export async function adminReviews(payload: Payload, appId: number, limit = 200)
         total: mine.reduce((sum, report) => sum + Number(report.total), 0),
         reasons: Object.fromEntries(mine.map((report) => [report.reason, Number(report.total)])),
       },
+      translation: texts
+        ? { state: 'done' as const, language: row.language, texts }
+        : current && row.translation === 'failed'
+          ? { state: 'failed' as const, error: row.translationError }
+          : { state: 'waiting' as const },
     }
   })
+}
+
+/** Whether the app has this review, before the back office asks for its translation again. */
+export async function hasReview(payload: Payload, appId: number, reviewId: number): Promise<boolean> {
+  const [review] = await drizzleOf(payload)
+    .select({ id: appReviews.id })
+    .from(appReviews)
+    .where(and(eq(appReviews.id, reviewId), eq(appReviews.appId, appId)))
+    .limit(1)
+  return Boolean(review)
 }
 
 /** Marks a review's open reports as dealt with. */

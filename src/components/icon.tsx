@@ -51,6 +51,13 @@ const icons = {
   // Filled with currentColor once saved.
   bookmark: <path d="M6 4h12v16l-6-4-6 4z" />,
   message: <path d="M4 5h16v11H9l-5 4z" />,
+  // The「机器翻译」mark.
+  translate: (
+    <>
+      <path d="M4 5h8M8 3v2M10 5c-.8 4-3 7-6 9M6 9c1.2 2.4 3.2 4.2 6 5.5" />
+      <path d="m13 21 4-9 4 9M14.5 18h5" />
+    </>
+  ),
   share: (
     <>
       <path d="M12 3v12M7 8l5-5 5 5" />

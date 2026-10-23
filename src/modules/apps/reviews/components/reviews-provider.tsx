@@ -9,7 +9,7 @@ import type { Locale } from '@/i18n/config'
 import { authClient } from '@/lib/auth/client'
 import type { AuthProviders } from '@/lib/auth/providers'
 
-import type { ReportReason, ReviewsError, ReviewsPage } from '../rules'
+import type { ReportReason, ReviewsError, ReviewsPage, ReviewTranslation } from '../rules'
 import { ReviewDialog, type ReviewDraft } from './review-dialog'
 
 type Status = 'loading' | 'ready' | 'failed'
@@ -35,6 +35,8 @@ type ReviewsContextValue = {
   /** Deletes the member's review; false when it did not work. */
   remove: () => Promise<boolean>
   report: (reviewId: number, reason: ReportReason) => Promise<boolean>
+  /** A review in the page's language, by machine; null when it did not load. */
+  translate: (reviewId: number) => Promise<string | null>
 }
 
 const ReviewsContext = createContext<ReviewsContextValue | null>(null)
@@ -98,13 +100,13 @@ export function ReviewsProvider({ app, signIn, children }: ReviewsProviderProps)
   /** Reads the first page and shows it when it arrives, unless a newer read started meanwhile. */
   const load = useCallback(() => {
     const ticket = ++latest.current
-    return fetchPage(`/api/reviews?app=${app.id}`).then(({ page: next }) => {
+    return fetchPage(`/api/reviews?app=${app.id}&locale=${locale}`).then(({ page: next }) => {
       if (ticket !== latest.current) return
       if (next) show(next)
       // A failed reload keeps what is on screen.
       else setStatus((current) => (current === 'ready' ? current : 'failed'))
     })
-  }, [app.id, show])
+  }, [app.id, locale, show])
 
   const askToSignIn = useCallback(() => {
     wanted.current = true
@@ -135,7 +137,7 @@ export function ReviewsProvider({ app, signIn, children }: ReviewsProviderProps)
     if (!page?.next || loadingMore) return
     setLoadingMore(true)
     setMoreFailed(false)
-    const { page: more } = await fetchPage(`/api/reviews?app=${app.id}&before=${page.next}`)
+    const { page: more } = await fetchPage(`/api/reviews?app=${app.id}&before=${page.next}&locale=${locale}`)
     setLoadingMore(false)
     if (!more) {
       setMoreFailed(true)
@@ -146,7 +148,7 @@ export function ReviewsProvider({ app, signIn, children }: ReviewsProviderProps)
       const seen = new Set(current.reviews.map((review) => review.id))
       return { ...more, reviews: [...current.reviews, ...more.reviews.filter((review) => !seen.has(review.id))] }
     })
-  }, [app.id, page, loadingMore])
+  }, [app.id, locale, page, loadingMore])
 
   const write = useCallback(() => {
     if (isPending) return
@@ -181,10 +183,10 @@ export function ReviewsProvider({ app, signIn, children }: ReviewsProviderProps)
   )
 
   const remove = useCallback(async () => {
-    const { page: next } = await fetchPage(`/api/reviews?app=${app.id}`, { method: 'DELETE' })
+    const { page: next } = await fetchPage(`/api/reviews?app=${app.id}&locale=${locale}`, { method: 'DELETE' })
     if (next) show(next)
     return Boolean(next)
-  }, [app.id, show])
+  }, [app.id, locale, show])
 
   const report = useCallback(async (reviewId: number, reason: ReportReason) => {
     const response = await fetch('/api/reviews/report', {
@@ -195,6 +197,20 @@ export function ReviewsProvider({ app, signIn, children }: ReviewsProviderProps)
     return Boolean(response?.ok)
   }, [])
 
+  // Read only when the reader asks: translations stay out of the page and out of search engines.
+  const translate = useCallback(
+    async (reviewId: number) => {
+      const response = await fetch(`/api/reviews/translation?review=${reviewId}&locale=${locale}`, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(loadTimeoutMs),
+      }).catch(() => null)
+      if (!response?.ok) return null
+      const data = (await response.json().catch(() => null)) as ReviewTranslation | null
+      return data?.text ?? null
+    },
+    [locale],
+  )
+
   const retry = useCallback(() => {
     setStatus('loading')
     void load()
@@ -202,7 +218,7 @@ export function ReviewsProvider({ app, signIn, children }: ReviewsProviderProps)
 
   return (
     <ReviewsContext
-      value={{ app, status, page, loadedAt, loadingMore, moreFailed, loadMore, retry, write, remove, report }}
+      value={{ app, status, page, loadedAt, loadingMore, moreFailed, loadMore, retry, write, remove, report, translate }}
     >
       {children}
       <ReviewDialog

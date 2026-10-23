@@ -61,12 +61,12 @@ src/
     auth/                  Better Auth 服务端配置、客户端、表结构、邮件
     db/url.ts              数据库连接串（DATABASE_URI，预览环境回退到 DATABASE_URL）
     db/drizzle.ts          getDb()：Payload 实例和它的 Drizzle 连接，模块自己的表用它读写
-    i18n/hant.ts           简体 → 台湾繁体
+    i18n/hant.ts           简体 → 台湾繁体（toHant），读者自己写的繁体 → 简体（toHans）
     i18n/detect.ts         按文字判断读者写的内容是哪种语言（评价的 lang）
   migrations/              Payload 迁移文件（自动生成，和代码一起提交）
   modules/                 按模块组织的业务代码：daily/、apps/、resources/ …
     daily/                 信源与新闻集合（collections/）、读取器（readers/）、采集任务（collect/）、提示词（prompts/）、判断流水线（judge/）、写作（write/）、审核与发布（review/）、热度（heat/）、海报（poster/：规则、冻结内容、排版、画图、后台接口）、前台数据与组件（public/）、后台组件（admin/）、Drizzle 表（schema.ts）
-    apps/                  集合（collections/）、页面数据与组件（data.ts，热度读取 heat-reads.ts，榜单与排序 boards.ts，页面开关 settings.ts，components/）、资料草稿（profile/：取材、核对、任务、批量添加）、热度（heat.ts 打分，metrics/：点击、日报提及、Tranco、热度任务、后台接口）、评价（reviews/：规则 rules.ts、读写 data.ts、后台读写 admin.ts 与接口 endpoints.ts、页面组件 components/；接口在 src/app/api/reviews）、Drizzle 表（schema.ts）、提示词（prompts/）、后台组件（admin/）
+    apps/                  集合（collections/）、页面数据与组件（data.ts，热度读取 heat-reads.ts，榜单与排序 boards.ts，页面开关 settings.ts，components/）、资料草稿（profile/：取材、核对、任务、批量添加）、热度（heat.ts 打分，metrics/：点击、日报提及、Tranco、热度任务、后台接口）、评价（reviews/：规则 rules.ts、读写 data.ts、后台读写 admin.ts 与接口 endpoints.ts、翻译 translations.ts（读译文、排队）与 translate.ts、jobs.ts（翻译任务）、页面组件 components/；接口在 src/app/api/reviews）、Drizzle 表（schema.ts）、提示词（prompts/）、后台组件（admin/）
     saves/                 通用收藏：Drizzle 表（schema.ts）、类型与校验（target.ts）、读写（data.ts）、收藏按钮和「我的收藏」（components/）；接口在 src/app/api/saves
     resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、前台（public/：数据、筛选排序、install.md、安装计数、页面组件）、统计汇总（stats/）、投稿（submit/：校验、投稿与通知、邮件、发信任务、页面组件；接口在 src/app/api/resources/submissions）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
   payload.config.ts
