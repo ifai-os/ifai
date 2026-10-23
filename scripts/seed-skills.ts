@@ -271,6 +271,15 @@ for (const [slug, dirs] of Object.entries(sampleDirs)) {
   if (host && !host.globalDir && !host.projectDir) await payload.update({ collection: 'agent-hosts', id: host.id, data: dirs, depth: 0 })
 }
 
+// A sample install note in English and Simplified Chinese (Traditional follows), for the install guide.
+const sampleNotes = { en: 'Sample note: start a new session after adding the folder.', 'zh-Hans': '示例说明：放好文件夹后，新开一个会话。' } as const
+const claudeCode = (await payload.find({ collection: 'agent-hosts', where: { slug: { equals: 'claude-code' } }, limit: 1, depth: 0, locale: 'en' })).docs[0]
+if (claudeCode && !claudeCode.instructions) {
+  for (const [locale, instructions] of Object.entries(sampleNotes)) {
+    await payload.update({ collection: 'agent-hosts', id: claudeCode.id, data: { instructions }, locale: locale as keyof typeof sampleNotes, depth: 0 })
+  }
+}
+
 const tagIds = await upsertTags(payload)
 for (const sample of samples) await seedSkill(payload, sample, tagIds)
 process.exit(0)

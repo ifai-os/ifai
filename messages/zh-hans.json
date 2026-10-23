@@ -248,7 +248,8 @@
       "title": "三步用上 Skill",
       "pick": "挑选 Skill，点「安装」",
       "enable": "让你的 AI 助手装好它",
-      "ask": "在对话里直接说出需求"
+      "ask": "在对话里直接说出需求",
+      "guide": "查看使用指南"
     },
     "categoriesLabel": "分类",
     "allCategories": "全部",
@@ -359,7 +360,8 @@
     "fingerprint": {
       "title": "内容指纹",
       "label": "Zip 的 sha256",
-      "how": "核对下载的文件：运行 shasum -a 256 {file}（或 sha256sum），和上面的值对比。"
+      "how": "核对下载的文件：运行 shasum -a 256 {file}（或 sha256sum），和上面的值对比。",
+      "verify": "如何验证"
     },
     "related": "相关 Skill",
     "shuffle": "换一换",
@@ -412,7 +414,45 @@
       "noTools": "不需要",
       "noKeys": "不需要"
     },
-    "disclaimer": "安全检测是对这个版本文件的自动静态检测，不代表 IFAI 为它的功能或安全背书。"
+    "disclaimer": "安全检测是对这个版本文件的自动静态检测，不代表 IFAI 为它的功能或安全背书。",
+    "guide": {
+      "title": "Skill 使用指南",
+      "description": "怎么把 Agent Skill 装进 Claude Code、Codex 等 AI 助手：三步用上、各助手的 Skills 目录、怎么核对下载文件的指纹。",
+      "intro": "Skill 是一个带 SKILL.md 的文件夹。把它放进 AI 助手的 Skills 目录，助手在需要时就会用上它。IFAI 收录的每个版本都经过安全检测和 IFAI 审核。",
+      "steps": {
+        "pick": "挑选 Skill",
+        "pickBody": "按分类浏览或搜索，打开详情页看它能做什么、需要什么：API Key、联网、要装的工具。",
+        "install": "装到你的 AI 助手",
+        "installBody": "在详情页选你用的助手，点「{copy}」，粘贴给它。它会读取安装说明，下载 Zip、核对指纹，放进自己的 Skills 目录。也可以点「{download}」，自己解压到下面的目录。",
+        "use": "在对话里直接说需求",
+        "useBody": "不用记命令，像平时一样说要做什么，助手会在合适的时候用上这个 Skill。有的助手要新开会话或在设置里启用，见下面各助手的说明。"
+      },
+      "hosts": {
+        "title": "各 AI 助手的 Skills 目录",
+        "intro": "把 Zip 解压成一个以 Skill 的 slug（名字下面那行英文）命名的文件夹，放进下面的某个目录，让 SKILL.md 的位置是：",
+        "path": "<Skills 目录>/<slug>/SKILL.md",
+        "global": "所有项目",
+        "project": "单个项目",
+        "website": "官网",
+        "unknown": "这里还没写它的 Skills 目录，先看它的官方文档。"
+      },
+      "verify": {
+        "title": "核对内容指纹",
+        "body": "每个版本都有一个由 Zip 本身算出的 sha256 指纹，写在 Skill 详情页的「{fingerprint}」和安装说明里。下载后核对一下，确认拿到的和 IFAI 审核的是同一份文件：",
+        "file": "<slug>-<版本号>.zip",
+        "mac": "macOS、Linux",
+        "windows": "Windows（PowerShell）",
+        "match": "结果和页面上的一样才安装（Windows 显示的是大写字母，不影响）。不一样就重新下载一次；还是不一样，就不要安装。",
+        "assistant": "安装说明也要求 AI 助手核对指纹，对不上就停下来告诉你。"
+      },
+      "safety": {
+        "title": "安全检测查什么",
+        "blocked": "每个版本导入时都会做静态检测：包结构不对、写死了密钥、读取 ~/.ssh 之类敏感位置的，不能发布。",
+        "reviewed": "危险命令、没有声明的外联、提示注入的迹象会被标出来，IFAI 人工看过才发布。",
+        "noScripts": "安装说明只告诉助手把文件放在哪里，并要求它不要运行包里的任何脚本。",
+        "limits": "检测只读文件，不能保证 Skill 绝对安全。装之前看一下详情页的「{security}」页签：它会联网的域名、读写哪些文件、需要哪些工具和 API Key。"
+      }
+    }
   },
   "saves": {
     "save": "收藏",

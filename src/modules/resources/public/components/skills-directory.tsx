@@ -9,7 +9,7 @@ import type { Locale } from '@/i18n/config'
 import { getPathname, Link } from '@/i18n/navigation'
 
 import { getSkillsOverview, getTag, listSkills } from '../data'
-import { isFiltered, skillHref, skillSorts, skillsHref, type SkillListParams } from '../list-params'
+import { guideHref, isFiltered, skillHref, skillSorts, skillsHref, type SkillListParams } from '../list-params'
 import { SkillItem } from './skill-item'
 import { SkillTile } from './skill-tile'
 import { ViewSwitch } from './view-switch'
@@ -95,6 +95,9 @@ export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) 
                 </li>
               ))}
             </ol>
+            <Link href={guideHref} className="flex min-h-8 items-center self-start text-meta font-medium text-link hover:underline">
+              {t('steps.guide')} ›
+            </Link>
           </div>
         </div>
       </section>
