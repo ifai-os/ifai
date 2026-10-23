@@ -82,6 +82,7 @@ test.describe('with the sample apps', () => {
 
   test("an app's page shows its heat and its places on the lists", async ({ page }) => {
     await page.goto('/en/apps/lumen-chat')
+    await page.getByRole('tab', { name: en.apps.heat }).click()
     const heat = page.getByRole('region', { name: en.apps.heat })
     await expect(heat.getByRole('img', { name: /^Heat over the last 30 days, from \d+ to 39$/ })).toBeVisible()
     await expect(heat.getByRole('table', { name: en.apps.heatTable }).getByRole('row')).toHaveCount(32)
@@ -93,11 +94,15 @@ test.describe('with the sample apps', () => {
     for (const [part, weight] of [['rank', 50], ['engagement', 30], ['mentions', 20]] as const) {
       await expect(heat.getByText(`${en.apps.weights[part]} · weight ${weight}%`)).toBeVisible()
     }
-    await expect(heat.getByRole('link', { name: `${en.apps.placeTop} #1` })).toHaveAttribute('href', '/en/apps')
-    await expect(heat.getByRole('link', { name: `${en.apps.placeRising} ${en.apps.notOnList}` })).toHaveAttribute(
+    // Beside the tabs on wider screens, whichever tab is open.
+    const places = page.getByRole('complementary', { name: en.apps.places })
+    await expect(places.getByRole('link', { name: `${en.apps.placeTop} #1` })).toHaveAttribute('href', '/en/apps')
+    await expect(places.getByRole('link', { name: `${en.apps.placeRising} ${en.apps.notOnList}` })).toHaveAttribute(
       'href',
       '/en/apps?board=rising',
     )
+    await page.getByRole('tab', { name: en.reviews.title }).click()
+    await expect(places).toBeVisible()
   })
 
   test('the home page shows the hottest apps and the top riser', async ({ page }) => {
@@ -114,6 +119,7 @@ test.describe('with the sample apps', () => {
   test("an app's page lists the Daily stories about it", async ({ page }) => {
     test.skip(!process.env.E2E_SAMPLE_STORIES, 'Run scripts/seed-stories.ts before scripts/seed-apps.ts and set E2E_SAMPLE_STORIES=1.')
     await page.goto('/en/apps/lumen-chat')
+    await page.getByRole('tab', { name: en.apps.heat }).click()
     const mentions = page.getByRole('region', { name: en.apps.mentionsTitle })
     await expect(mentions.getByRole('link', { name: /^Sample: Lumen Chat adds shared workspaces/ })).toHaveAttribute(
       'href',
@@ -182,12 +188,66 @@ test.describe('with the sample apps', () => {
     await expect(page.getByText('There is a free plan and a paid plan.')).toBeVisible()
 
     // No alternatives were picked, so the page shows the hottest others from the same category.
+    await page.getByRole('tab', { name: en.apps.alternatives }).click()
     const alternatives = page.getByRole('region', { name: en.apps.alternatives })
     await expect(alternatives.getByRole('link')).toHaveText([/Kitecode/, /Orbit Notes/])
   })
 
+  test("on wider screens an app's page is in tabs, the open one in the address", async ({ page }) => {
+    await page.goto('/en/apps/lumen-chat')
+    const tabs = page.getByRole('tablist', { name: en.apps.tabs.label })
+    await expect(tabs.getByRole('tab')).toHaveText([en.apps.tabs.overview, en.apps.heat, en.reviews.title, en.apps.alternatives])
+    await expect(tabs.getByRole('tab', { name: en.apps.tabs.overview })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('tabpanel', { name: en.apps.tabs.overview })).toHaveCount(2)
+    await expect(page.getByRole('heading', { level: 2, name: en.apps.faqs })).toBeVisible()
+    await expect(page.getByRole('region', { name: en.apps.heat })).toBeHidden()
+
+    await tabs.getByRole('tab', { name: en.apps.heat }).click()
+    await expect(page).toHaveURL(/\/en\/apps\/lumen-chat#heat$/)
+    await expect(page.getByRole('region', { name: en.apps.heat })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: en.apps.faqs })).toBeHidden()
+
+    // Arrow keys move between the tabs; Home and End go to the first and the last.
+    await page.keyboard.press('ArrowRight')
+    await expect(tabs.getByRole('tab', { name: en.reviews.title })).toBeFocused()
+    await expect(page).toHaveURL(/#reviews$/)
+    await expect(page.getByRole('region', { name: en.reviews.title })).toBeVisible()
+    await page.keyboard.press('End')
+    await expect(page).toHaveURL(/#alternatives$/)
+    await page.keyboard.press('Home')
+    await expect(page).toHaveURL(/\/en\/apps\/lumen-chat$/)
+    await expect(tabs.getByRole('tab', { name: en.apps.tabs.overview })).toBeFocused()
+
+    // An address opens its tab, and so does one for a place inside a tab.
+    await page.goto('/en/apps/lumen-chat#reviews')
+    await expect(tabs.getByRole('tab', { name: en.reviews.title })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('region', { name: en.reviews.title })).toBeVisible()
+    await page.goto('/en/apps/lumen-chat#faqs')
+    await expect(tabs.getByRole('tab', { name: en.apps.tabs.overview })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('heading', { level: 2, name: en.apps.faqs })).toBeInViewport()
+  })
+
+  test("on phones an app's page is one long page, without tabs", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/en/apps/lumen-chat')
+    await expect(page.getByRole('tablist')).toHaveCount(0)
+    await expect(page.getByRole('tabpanel')).toHaveCount(0)
+    // In the phone board's order: the FAQ comes after the heat.
+    const order = [en.apps.about, en.apps.features, en.apps.heat, en.apps.faqs, en.reviews.title, en.apps.alternatives]
+    let above = 0
+    for (const name of order) {
+      const heading = page.getByRole('heading', { level: 2, name, exact: true })
+      await expect(heading).toBeVisible()
+      const top = (await heading.boundingBox())?.y ?? 0
+      expect(top, name).toBeGreaterThan(above)
+      above = top
+    }
+    await expect(page.getByRole('heading', { level: 3, name: en.apps.places })).toBeVisible()
+  })
+
   test('picked alternatives that are not published are left out', async ({ page }) => {
     await page.goto('/en/apps/kitecode')
+    await page.getByRole('tab', { name: en.apps.alternatives }).click()
     const alternatives = page.getByRole('region', { name: en.apps.alternatives })
     await expect(alternatives.getByRole('link')).toHaveText([/Lumen Chat/])
   })

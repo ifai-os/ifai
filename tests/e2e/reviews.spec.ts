@@ -8,6 +8,7 @@ import { createMember } from './member'
 
 const read = (name: string) => JSON.parse(readFileSync(new URL(`../../messages/${name}.json`, import.meta.url), 'utf8')) as typeof enMessages
 const r = read('en').reviews
+const heatTab = read('en').apps.heat
 const hant = read('zh-hant').reviews
 
 /** Presses the star itself, as a reader would; the radio inside it is visually hidden. */
@@ -59,6 +60,7 @@ test.describe('with the sample apps', () => {
     expect(response.headers()['cache-control']).toBe('private, no-store')
     expect(await response.json()).toMatchObject({ signedIn: false, mine: null, summary: { count: 0, average: null } })
 
+    await page.getByRole('tab', { name: r.title }).click()
     const reviews = page.getByRole('region', { name: r.title })
     await expect(reviews.getByText(r.emptyTitle)).toBeVisible()
     await reviews.getByRole('button', { name: r.write }).click()
@@ -81,11 +83,11 @@ test.describe('with the sample apps', () => {
       const reviews = page.getByRole('region', { name: r.title })
       const writeTitle = r.writeTitle.replace('{name}', 'Orbit Notes')
 
-      // Back from signing in with ?review=write: the form opens by itself, and the address is cleaned up.
+      // Back from signing in with ?review=write: the form opens by itself, and the address goes to the reviews' tab.
       await page.goto('/en/apps/orbit-notes?review=write')
       const form = page.getByRole('dialog', { name: writeTitle })
       await expect(form).toBeVisible()
-      await expect(page).toHaveURL(/\/en\/apps\/orbit-notes$/)
+      await expect(page).toHaveURL(/\/en\/apps\/orbit-notes#reviews$/)
       await expect(form.getByLabel(r.nameLabel)).toHaveValue('Ada Reviewer')
 
       await form.getByLabel(r.bodyLabel, { exact: true }).fill('Good for reading long articles.')
@@ -100,6 +102,14 @@ test.describe('with the sample apps', () => {
       await expect(reviews.getByText('Good for reading long articles.')).toBeVisible()
       await expect(reviews.getByText('2 reviews', { exact: true })).toBeVisible()
       await expect(reviews.getByText(/^Rated /)).toHaveCount(0)
+
+      // The count under the app's name goes to the reviews, from any tab. Orbit Notes has no overview, so Heat comes first.
+      await page.getByRole('tab', { name: heatTab }).click()
+      await expect(page).toHaveURL(/\/en\/apps\/orbit-notes$/)
+      await expect(reviews).toBeHidden()
+      await page.getByRole('link', { name: '2 reviews' }).click()
+      await expect(page.getByRole('tab', { name: r.title })).toHaveAttribute('aria-selected', 'true')
+      await expect(reviews).toBeVisible()
 
       // Changing it, and the name shown with it.
       await reviews.getByRole('button', { name: r.edit }).first().click()
@@ -154,7 +164,7 @@ test.describe('with the sample apps', () => {
       await kenji.addTranslations(japanese, { en: 'It summarises notes very fast.', 'zh-Hans': '笔记总结得非常快。', ko: '메모 요약이 아주 빨라요.' })
       await lin.addReview(appId, '这个软件很好用', 4, 'zh-Hans')
 
-      await page.goto('/en/apps/lumen-chat')
+      await page.goto('/en/apps/lumen-chat#reviews')
       const reviews = page.getByRole('region', { name: r.title })
       await expect(reviews.getByText('メモの要約がとても速い。')).toHaveAttribute('lang', 'ja')
       // The Chinese one has no English yet, so there is nothing to translate it with.
@@ -176,6 +186,7 @@ test.describe('with the sample apps', () => {
 
       // On the Traditional Chinese page, OpenCC converts: the Simplified review itself, and the stored Simplified translation.
       await page.goto('/zh-hant/apps/lumen-chat')
+      await page.getByRole('tab', { name: hant.title }).click()
       const hantReviews = page.getByRole('region', { name: hant.title })
       await hantReviews.getByRole('button', { name: hant.translateName.replace('{name}', 'Lin Reviewer') }).click()
       await expect(hantReviews.getByText('這個軟體很好用')).toHaveAttribute('lang', 'zh-Hant')
