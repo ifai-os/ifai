@@ -6,16 +6,16 @@ import pg from 'pg'
  * A throwaway member who is signed in: a user and a session written straight to the database,
  * and the session cookie Better Auth would have set (the token, signed with BETTER_AUTH_SECRET).
  * Needs DATABASE_URI and BETTER_AUTH_SECRET, the same ones the server uses; CI sets both.
- * `remove()` deletes the member, and with it their sessions and saves.
+ * `remove()` deletes the member, and with it their sessions, saves and reviews.
  */
-export async function createMember(baseURL: string) {
+export async function createMember(baseURL: string, name = 'Smoke test member') {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URI })
   await client.connect()
   const id = randomUUID()
   const token = randomBytes(24).toString('base64url')
   await client.query(`insert into auth_users (id, name, email, email_verified) values ($1, $2, $3, true)`, [
     id,
-    'Smoke test member',
+    name,
     `smoke-${id}@example.com`,
   ])
   await client.query(`insert into auth_sessions (id, token, user_id, expires_at) values ($1, $2, $3, now() + interval '1 hour')`, [
@@ -37,6 +37,15 @@ export async function createMember(baseURL: string) {
       const { rows } = await client.query<{ id: number }>('select id from apps where slug = $1', [slug])
       if (!rows[0]) throw new Error(`No app ${slug}; run scripts/seed-apps.ts`)
       return rows[0].id
+    },
+    /** A review of the app written straight to the table, as if the member had just written it. */
+    async addReview(appId: number, body: string, rating = 4): Promise<void> {
+      await client.query(`insert into app_reviews (app_id, user_id, rating, body, lang) values ($1, $2, $3, $4, 'en')`, [
+        appId,
+        id,
+        rating,
+        body,
+      ])
     },
     async remove() {
       await client.query('delete from auth_users where id = $1', [id])

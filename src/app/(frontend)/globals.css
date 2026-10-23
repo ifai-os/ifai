@@ -32,6 +32,7 @@
   --color-night: #1f2024; /* dark feature cards (today's hottest story, the daily poster); white text — 16.3:1 */
 
   --color-link: #0355e3; /* links, verification — 6.2:1 */
+  --color-star: #d97a1e; /* rating stars, always with the number or a text alternative — 3.1:1 */
   --color-up: #2e7d4f; /* rising, passed */
   --color-down: #b42318; /* falling, risk, errors */
   --color-warn: #fff4e6; /* demo banner, notices */

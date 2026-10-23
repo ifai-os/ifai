@@ -12,6 +12,7 @@ import * as migration_20261022_215046_resources_describe from './20261022_215046
 import * as migration_20261023_020510_daily_heat from './20261023_020510_daily_heat';
 import * as migration_20261023_023543_saves from './20261023_023543_saves';
 import * as migration_20261023_030415_daily_posters from './20261023_030415_daily_posters';
+import * as migration_20261023_033517_app_reviews from './20261023_033517_app_reviews';
 
 export const migrations = [
   {
@@ -83,5 +84,10 @@ export const migrations = [
     up: migration_20261023_030415_daily_posters.up,
     down: migration_20261023_030415_daily_posters.down,
     name: '20261023_030415_daily_posters',
+  },
+  {
+    up: migration_20261023_033517_app_reviews.up,
+    down: migration_20261023_033517_app_reviews.down,
+    name: '20261023_033517_app_reviews'
   },
 ];

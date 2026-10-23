@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { isCrossSite, parseSaveTarget, pendingSaveValue, readPendingSave } from '@/modules/saves/target'
+import { isCrossSite } from '@/lib/same-origin'
+import { parseSaveTarget, pendingSaveValue, readPendingSave } from '@/modules/saves/target'
 
 describe('parseSaveTarget', () => {
   it('reads a type and a Payload id from a query string or a JSON body', () => {

@@ -1,5 +1,5 @@
 /** Seven tile tones from the design tokens. Class names are literal so Tailwind can see them. */
-const tones = [
+export const tileTones = [
   'bg-tile-1 text-tile-1-ink',
   'bg-tile-2 text-tile-2-ink',
   'bg-tile-3 text-tile-3-ink',
@@ -24,7 +24,7 @@ export type TileSize = keyof typeof tileSizes
 export function toneFor(id: string): number {
   let hash = 0
   for (const char of id) hash = (hash * 31 + (char.codePointAt(0) ?? 0)) >>> 0
-  return hash % tones.length
+  return hash % tileTones.length
 }
 
 type InitialTileProps = {
@@ -36,11 +36,11 @@ type InitialTileProps = {
 
 /** Placeholder icon for apps and skills that have no logo yet. */
 export function InitialTile({ label, tone, size = 'md' }: InitialTileProps) {
-  const index = (tone ?? toneFor(label)) % tones.length
+  const index = (tone ?? toneFor(label)) % tileTones.length
   return (
     <span
       aria-hidden="true"
-      className={`flex flex-none items-center justify-center font-bold ${tileSizes[size]} ${tones[index]}`}
+      className={`flex flex-none items-center justify-center font-bold ${tileSizes[size]} ${tileTones[index]}`}
     >
       {label}
     </span>
