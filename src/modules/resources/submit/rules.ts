@@ -2,6 +2,7 @@ import { defaultLocale, isLocale, type Locale } from '@/i18n/config'
 import { cleanText, textLength } from '@/modules/apps/reviews/rules'
 
 import { parseRepositoryUrl } from '../import/github'
+import { shanghaiDay } from '../normalize'
 
 /**
  * Skill submissions (docs/specs/resources.md, rule 12): the limits and input checks shared by the
@@ -12,6 +13,8 @@ export const submissionRules = {
   maxNote: 200,
   /** Submissions a member can send per Shanghai day. */
   dailyLimit: 5,
+  /** Working days the review usually takes, as the page and the emails promise. */
+  reviewDays: 2,
 } as const
 
 /** Inngest event: a submission was listed or turned down, so its submitter gets an email. */
@@ -39,6 +42,28 @@ export function normalizeRepository(value: string): string | null {
   const folder = (ref.subdir ?? '').replace(/(^|\/)SKILL\.md$/i, '')
   const path = folder ? `/${folder.split('/').map(encodeSegment).join('/')}` : ''
   return `${base}/tree/${encodeSegment(ref.ref)}${path}`
+}
+
+/** "acme/skills" and the folder, if one was given, to show a submitter what they sent. */
+export function repositoryParts(repository: string): { name: string; folder?: string } {
+  const ref = parseRepositoryUrl(repository)
+  return ref ? { name: `${ref.owner}/${ref.repo}`, folder: ref.subdir } : { name: repository }
+}
+
+/**
+ * The day the review should be done by: `reviewDays` Shanghai working days (Monday to Friday)
+ * after the day it was sent, as noon there. Public holidays are not counted, so the page calls
+ * it an estimate.
+ */
+export function reviewDeadline(sentAt: Date): Date {
+  // Noon in Shanghai is 04:00 UTC on the same date, so the UTC weekday is Shanghai's.
+  const day = new Date(`${shanghaiDay(sentAt)}T12:00:00+08:00`)
+  let left = submissionRules.reviewDays
+  while (left > 0) {
+    day.setTime(day.getTime() + 24 * 60 * 60 * 1000)
+    if (day.getUTCDay() !== 0 && day.getUTCDay() !== 6) left -= 1
+  }
+  return day
 }
 
 /** One path segment, encoded once whether or not the address arrived encoded. */

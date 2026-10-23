@@ -9,7 +9,8 @@ import { shanghaiDayStart } from '../normalize'
 import { buildSubmissionEmail } from './email'
 import { submissionRules, type SubmissionInput } from './rules'
 
-export type SubmitOutcome = { ok: true; code: string; email: string } | { ok: false; error: 'daily-limit' }
+/** `submittedAt` is when that submission was made: the earlier one when the same repository was sent again. */
+export type SubmitOutcome = { ok: true; code: string; email: string; submittedAt: string } | { ok: false; error: 'daily-limit' }
 
 /** Two submissions in the same instant can pick the same number; the unique index turns one away. */
 function isTakenCode(error: unknown): boolean {
@@ -31,7 +32,7 @@ export async function submitSkill(payload: Payload, input: SubmissionInput, user
     overrideAccess: true,
   })
   const existing = waiting.docs[0]
-  if (existing?.code) return { ok: true, code: existing.code, email: existing.email }
+  if (existing?.code) return { ok: true, code: existing.code, email: existing.email, submittedAt: existing.createdAt }
 
   const today = await payload.count({
     collection: 'skill-submissions',
@@ -46,7 +47,7 @@ export async function submitSkill(payload: Payload, input: SubmissionInput, user
     if (isTakenCode(error)) return create()
     throw error
   })
-  return { ok: true, code: created.code ?? '', email: created.email }
+  return { ok: true, code: created.code ?? '', email: created.email, submittedAt: created.createdAt }
 }
 
 /** "SKILL.md:3 — message" for each thing the scan flagged in the Skill's newest version, if that scan blocked it. */

@@ -509,9 +509,16 @@
         }
       },
       "done": {
-        "title": "Skill を受け付けました",
+        "title": "送信しました",
         "number": "受付番号 {code}",
-        "body": "通常 2 営業日以内に対応し、結果を {email} にお送りします。",
+        "body": "2 営業日以内に審査し、結果を {email} にお送りします",
+        "steps": {
+          "sent": "送信済み",
+          "review": "審査中",
+          "reviewBy": "{date}までに完了予定",
+          "live": "掲載",
+          "liveBody": "通過すると Skills 一覧に掲載されます"
+        },
         "again": "もう 1 つ送る",
         "back": "Skills に戻る"
       },

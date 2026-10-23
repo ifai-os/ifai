@@ -79,18 +79,21 @@ export async function SkillSubmit({ member, signIn }: SkillSubmitProps) {
         </Section>
 
         <section id="form" aria-labelledby="form-title" className="flex scroll-mt-20 flex-col gap-4 rounded-card border border-surface-2 p-5 md:p-6">
-          <h2 id="form-title" className="text-h3 font-semibold">
-            {t('submit.form.title')}
-          </h2>
           {member ? (
-            <SubmitForm email={member.email} />
+            // Heads the section itself: its title turns into「提交成功」 once the Skill is sent.
+            <SubmitForm email={member.email} titleId="form-title" />
           ) : (
-            <div className="flex w-full max-w-105 flex-col gap-5">
-              <p className="text-ui text-ink-3">{t('submit.form.signIn')}</p>
-              <Suspense>
-                <SignInForm providers={signIn} callbackURL={localizePath(locale, submitHref)} />
-              </Suspense>
-            </div>
+            <>
+              <h2 id="form-title" className="text-h3 font-semibold">
+                {t('submit.form.title')}
+              </h2>
+              <div className="flex w-full max-w-105 flex-col gap-5">
+                <p className="text-ui text-ink-3">{t('submit.form.signIn')}</p>
+                <Suspense>
+                  <SignInForm providers={signIn} callbackURL={localizePath(locale, submitHref)} />
+                </Suspense>
+              </div>
+            </>
           )}
         </section>
       </div>

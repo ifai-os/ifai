@@ -509,9 +509,16 @@
         }
       },
       "done": {
-        "title": "We have your Skill",
+        "title": "Submitted",
         "number": "Submission number {code}",
-        "body": "We usually review Skills within two working days, and will email the result to {email}.",
+        "body": "We review it within two working days and email the result to {email}",
+        "steps": {
+          "sent": "Sent",
+          "review": "In review",
+          "reviewBy": "Expected by {date}",
+          "live": "Listed",
+          "liveBody": "Once it passes, it appears in the Skills list"
+        },
         "again": "Send another",
         "back": "Back to Skills"
       },

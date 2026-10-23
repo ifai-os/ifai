@@ -21,12 +21,17 @@ export function parseRepositoryUrl(input: string): RepoRef | null {
   if (!match) return null
   const [, owner, repo, ref, subdir] = match
   if (!owner || !repo || owner === '.' || owner === '..') return null
-  const cleanSubdir = subdir ? decodeURIComponent(subdir).replace(/\/+$/, '') : ''
-  return {
-    owner,
-    repo,
-    ref: ref ? decodeURIComponent(ref) : undefined,
-    subdir: cleanSubdir || undefined,
+  try {
+    const cleanSubdir = subdir ? decodeURIComponent(subdir).replace(/\/+$/, '') : ''
+    return {
+      owner,
+      repo,
+      ref: ref ? decodeURIComponent(ref) : undefined,
+      subdir: cleanSubdir || undefined,
+    }
+  } catch {
+    // A broken escape such as "%zz" is not an address anyone can import.
+    return null
   }
 }
 

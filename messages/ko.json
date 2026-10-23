@@ -509,9 +509,16 @@
         }
       },
       "done": {
-        "title": "Skill을 받았어요",
+        "title": "제출했어요",
         "number": "접수 번호 {code}",
-        "body": "보통 영업일 기준 2일 안에 처리하고, 결과를 {email}(으)로 보내 드려요.",
+        "body": "영업일 기준 2일 안에 검토하고, 결과를 {email}(으)로 보내 드려요",
+        "steps": {
+          "sent": "제출 완료",
+          "review": "검토 중",
+          "reviewBy": "{date}까지 마칠 예정",
+          "live": "게시",
+          "liveBody": "통과하면 Skills 목록에 올라가요"
+        },
         "again": "하나 더 보내기",
         "back": "Skills로 돌아가기"
       },

@@ -147,7 +147,10 @@
         }
       },
       "done": {
-        "body": "我們一般在兩個工作日內處理，結果會寄到 {email}。"
+        "body": "2 個工作日內審核，結果會寄到 {email}",
+        "steps": {
+          "review": "審核中"
+        }
       },
       "email": {
         "receivedBody": "謝謝你投稿 {repository}。我們一般在兩個工作日內處理，結果會寄信告訴你。",

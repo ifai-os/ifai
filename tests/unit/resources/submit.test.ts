@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { emailHtml, emailText } from '@/lib/email/layout'
-import { nextSubmissionSequence, submissionCode } from '@/modules/resources/normalize'
+import { nextSubmissionSequence, shanghaiDay, submissionCode } from '@/modules/resources/normalize'
 import { buildSubmissionEmail } from '@/modules/resources/submit/email'
-import { normalizeRepository, parseSubmissionInput, submissionRules } from '@/modules/resources/submit/rules'
+import { normalizeRepository, parseSubmissionInput, repositoryParts, reviewDeadline, submissionRules } from '@/modules/resources/submit/rules'
 
 describe('the submitted repository address', () => {
   it('keeps a repository, or the folder and ref when one was given', () => {
@@ -29,7 +29,7 @@ describe('the submitted repository address', () => {
   })
 
   it('turns down anything that is not a GitHub repository', () => {
-    for (const value of ['', 'acme/skills', 'https://gitlab.com/acme/skills', 'https://github.com/acme', 'javascript:alert(1)']) {
+    for (const value of ['', 'acme/skills', 'https://gitlab.com/acme/skills', 'https://github.com/acme', 'javascript:alert(1)', 'github.com/acme/skills/tree/main/%zz']) {
       expect(normalizeRepository(value), value).toBeNull()
     }
   })
@@ -83,6 +83,21 @@ describe('submission numbers', () => {
   it('use the Shanghai date', () => {
     expect(submissionCode(new Date('2026-10-22T16:30:00Z'), 7)).toBe('S-1023-07')
     expect(submissionCode(new Date('2026-10-22T15:30:00Z'), 112)).toBe('S-1022-112')
+  })
+})
+
+describe('what the page says once a Skill is sent', () => {
+  it('expects the review two Shanghai working days later', () => {
+    const by = (sent: string) => shanghaiDay(reviewDeadline(new Date(sent)))
+    expect(by('2026-10-21T06:52:00+08:00')).toBe('2026-10-23') // Wednesday → Friday
+    expect(by('2026-10-23T10:00:00+08:00')).toBe('2026-10-27') // Friday → Tuesday
+    expect(by('2026-10-24T10:00:00+08:00')).toBe('2026-10-27') // Saturday → Tuesday
+    expect(by('2026-10-22T17:30:00Z')).toBe('2026-10-27') // already Friday in Shanghai
+  })
+
+  it('names the repository and the folder that were sent', () => {
+    expect(repositoryParts('https://github.com/acme/skills')).toEqual({ name: 'acme/skills', folder: undefined })
+    expect(repositoryParts('https://github.com/acme/skills/tree/main/skills/my%20notes')).toEqual({ name: 'acme/skills', folder: 'skills/my notes' })
   })
 })
 

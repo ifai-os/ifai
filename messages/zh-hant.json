@@ -509,9 +509,16 @@
         }
       },
       "done": {
-        "title": "已收到投稿",
+        "title": "提交成功",
         "number": "投稿編號 {code}",
-        "body": "我們一般在兩個工作日內處理，結果會寄到 {email}。",
+        "body": "2 個工作日內審核，結果會寄到 {email}",
+        "steps": {
+          "sent": "已提交",
+          "review": "審核中",
+          "reviewBy": "預計 {date}前完成",
+          "live": "上線",
+          "liveBody": "通過後出現在 Skills 列表"
+        },
         "again": "再投一個",
         "back": "回到 Skills"
       },

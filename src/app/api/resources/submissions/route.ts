@@ -16,7 +16,7 @@ function reply(body: object, status = 200) {
 }
 
 /**
- * POST /api/resources/submissions { repository, note, email, locale } → { code, email }: a member
+ * POST /api/resources/submissions { repository, note, email, locale } → { code, email, submittedAt }: a member
  * sends a Skill for review (docs/specs/resources.md, rule 12). Members only, from IFAI's own
  * pages; 400 names the fields that are not right; at most five a day (429).
  */
@@ -29,5 +29,5 @@ export async function POST(request: NextRequest) {
   const { payload } = await getDb()
   const outcome = await submitSkill(payload, parsed.value, session.user.id)
   if (!outcome.ok) return reply({ error: outcome.error }, 429)
-  return reply({ code: outcome.code, email: outcome.email })
+  return reply({ code: outcome.code, email: outcome.email, submittedAt: outcome.submittedAt })
 }

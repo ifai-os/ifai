@@ -86,8 +86,13 @@ test('a member sends a Skill and gets its number', async ({ page, context, baseU
     await form.getByLabel(f.repository).fill('github.com/acme/smoke-skill?tab=readme-ov-file')
     await form.getByLabel(f.note).fill('Writes release notes from merged pull requests')
     await form.getByRole('button', { name: f.send }).click()
-    await expect(form.getByRole('heading', { name: en.resources.submit.done.title })).toBeFocused()
-    const number = (await form.getByText(/^Submission number S-\d{4}-\d{2,}$/).textContent())?.replace('Submission number ', '')
+
+    // 「提交成功」 takes the form's place and names the section.
+    const sent = page.getByRole('region', { name: en.resources.submit.done.title })
+    await expect(sent.getByRole('heading', { name: en.resources.submit.done.title })).toBeFocused()
+    await expect(sent.getByText('acme/smoke-skill', { exact: true })).toBeVisible()
+    await expect(sent.getByRole('listitem').filter({ hasText: en.resources.submit.done.steps.review })).toHaveAttribute('aria-current', 'step')
+    const number = (await sent.getByText(/^Submission number S-\d{4}-\d{2,}$/).textContent())?.replace('Submission number ', '')
 
     // The same repository again while it waits: the same submission.
     const again = await page.request.post('/api/resources/submissions', {
@@ -96,8 +101,9 @@ test('a member sends a Skill and gets its number', async ({ page, context, baseU
     expect(again.status()).toBe(200)
     expect((await again.json()).code).toBe(number)
 
-    await form.getByRole('button', { name: en.resources.submit.done.again }).click()
+    await sent.getByRole('button', { name: en.resources.submit.done.again }).click()
     await expect(form.getByLabel(f.repository)).toHaveValue('')
+    await expect(form.getByLabel(f.repository)).toBeFocused()
   } finally {
     await member.remove()
   }
