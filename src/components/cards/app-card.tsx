@@ -1,21 +1,24 @@
 import { useTranslations } from 'next-intl'
+import type { ReactNode } from 'react'
 
-import { InitialTile } from '@/components/cards/initial-tile'
 import { Link } from '@/i18n/navigation'
 
 export type AppCardProps = {
   href: `/${string}`
   name: string
-  initials: string
-  tone?: number
-  category: string
-  description: string
-  /** Heat score, 0–100. Not a visit count. */
-  heat: number
-  rank: number
+  /** The app's icon or initial tile. */
+  icon: ReactNode
+  category: string | null
+  description: string | null
+  /** The language of the description, when it is not the page's (an English fallback). */
+  descriptionLang?: string
+  /** Heat score, 0–100. Not a visit count. Null before the app is first scored. */
+  heat: number | null
+  /** Place by heat; null when it has none yet. */
+  rank: number | null
 }
 
-export function AppCard({ href, name, initials, tone, category, description, heat, rank }: AppCardProps) {
+export function AppCard({ href, name, icon, category, description, descriptionLang, heat, rank }: AppCardProps) {
   const t = useTranslations('card')
 
   return (
@@ -24,18 +27,24 @@ export function AppCard({ href, name, initials, tone, category, description, hea
       className="group flex flex-col gap-3 rounded-card border border-surface-2 bg-bg px-5 py-4.5 transition-colors hover:border-line"
     >
       <span className="flex items-center gap-3">
-        <InitialTile label={initials} tone={tone} size="lg" />
+        {icon}
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-title font-semibold group-hover:text-accent">{name}</span>
-          <span className="text-small text-ink-4">{category}</span>
+          {category && <span className="text-small text-ink-4">{category}</span>}
         </span>
-        <span className={`text-body font-semibold ${rank <= 3 ? 'text-accent' : 'text-ink-4'}`}>
-          <span aria-hidden="true">#{rank}</span>
-          <span className="sr-only">{t('rank', { rank })}</span>
-        </span>
+        {rank !== null && (
+          <span className={`text-body font-semibold ${rank <= 3 ? 'text-accent' : 'text-ink-4'}`}>
+            <span aria-hidden="true">#{rank}</span>
+            <span className="sr-only">{t('rank', { rank })}</span>
+          </span>
+        )}
       </span>
-      <span className="line-clamp-2 text-ui text-ink-2">{description}</span>
-      <span className="text-small text-ink-4">{t('heat', { value: heat })}</span>
+      {description && (
+        <span lang={descriptionLang} className="line-clamp-2 text-ui text-ink-2">
+          {description}
+        </span>
+      )}
+      {heat !== null && <span className="text-small text-ink-4">{t('heat', { value: heat })}</span>}
     </Link>
   )
 }

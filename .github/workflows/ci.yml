@@ -70,8 +70,9 @@ jobs:
       - name: Migrations apply to an empty database
         run: pnpm payload migrate
 
-      - name: Sample apps and stories for the smoke tests
-        run: pnpm payload run scripts/seed-apps.ts && pnpm payload run scripts/seed-stories.ts
+      # Stories first, so the apps seed can match the stories that mention the sample apps.
+      - name: Sample stories and apps for the smoke tests
+        run: pnpm payload run scripts/seed-stories.ts && pnpm payload run scripts/seed-apps.ts
 
       - name: Build
         run: pnpm build
