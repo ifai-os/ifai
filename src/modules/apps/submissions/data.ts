@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 
 import { defaultLocale, type Locale } from '@/i18n/config'
+import { isFieldError } from '@/lib/field-error'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
 
 import { submissionRules, type AppSubmissionInput, type SubmissionStatus } from './rules'
@@ -16,15 +17,8 @@ export type SubmitOutcome =
   | { ok: false; error: 'listed'; app: { slug: string; name: string } }
   | { ok: false; error: 'daily-limit' }
 
-/**
- * Two submissions in the same instant can pick the same number; the unique index turns one away.
- * Read by its shape, not `instanceof ValidationError`: the production build loads `payload` once
- * for pages and once for routes, and the database adapter may throw the other copy's error.
- */
-function isTakenCode(error: unknown): boolean {
-  const problems = (error as { data?: { errors?: unknown } } | null)?.data?.errors
-  return Array.isArray(problems) && problems.some((problem) => (problem as { path?: unknown } | null)?.path === 'code')
-}
+/** Two submissions in the same instant can pick the same number; the unique index turns one away. */
+const isTakenCode = (error: unknown) => isFieldError(error, 'code')
 
 function relationId(value: unknown): number | null {
   if (typeof value === 'number') return value

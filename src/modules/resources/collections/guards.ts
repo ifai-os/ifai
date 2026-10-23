@@ -1,5 +1,6 @@
-import { ValidationError, type CollectionSlug, type DataFromCollectionSlug, type PayloadRequest } from 'payload'
+import type { CollectionSlug, DataFromCollectionSlug, PayloadRequest } from 'payload'
 
+import { rejectField } from '@/lib/field-error'
 import { keepingRequest } from '@/lib/i18n/hant-sync'
 
 import { adminMessage } from './shared'
@@ -15,7 +16,7 @@ export function isSystemWrite(req: PayloadRequest): boolean {
 
 /** Stop a save with a message on one field, in the admin language. */
 export function reject(req: PayloadRequest, collection: string, path: string, message: { en: string; zh: string }): never {
-  throw new ValidationError({ collection, errors: [{ path, message: adminMessage(req, message) }] })
+  rejectField(collection, path, adminMessage(req, message))
 }
 
 /** A relationship value as stored (id), whether Payload gave us the id or the populated document. */
