@@ -141,7 +141,8 @@ jobs:
         env:
           NEON_DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
         run: |
-          args=(--prebuilt $PROD_FLAG --token="$VERCEL_TOKEN")
+          # One archive instead of thousands of files: Hobby allows 5000 uploaded files a day (api-upload-free).
+          args=(--prebuilt --archive=tgz $PROD_FLAG --token="$VERCEL_TOKEN")
           # The preview's functions read the same Neon branch at runtime.
           if [ -n "$NEON_DATABASE_URI" ]; then args+=(--env "DATABASE_URI=$NEON_DATABASE_URI"); fi
           url=$(vercel deploy "${args[@]}")
