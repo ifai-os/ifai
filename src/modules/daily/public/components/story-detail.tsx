@@ -1,9 +1,12 @@
 import { useTranslations } from 'next-intl'
 
-import { buttonClass } from '@/components/button'
+import { buttonBase, buttonClass } from '@/components/button'
 import { LocalTime } from '@/components/local-time'
 import { ShareButton } from '@/components/share-button'
 import { Link } from '@/i18n/navigation'
+import type { AuthProviders } from '@/lib/auth/providers'
+import { SaveButton } from '@/modules/saves/components/save-button'
+import { SaveProvider } from '@/modules/saves/components/save-provider'
 
 import type { StoryDetail } from '../story-item'
 import { listHref, storyHref } from '../list-params'
@@ -16,8 +19,11 @@ function hostOf(url: string): string {
   }
 }
 
-/** A story's page (「IFAI 资讯详情页 · v1」board): title and times, summary, try-it, sources, other developments. */
-export function StoryDetailView({ story }: { story: StoryDetail }) {
+/**
+ * A story's page (「IFAI 资讯详情页 · v1」board): title and times, summary, try-it, sources, save
+ * and share, other developments. The page stays static; the save state is read in the browser.
+ */
+export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn: AuthProviders }) {
   const t = useTranslations('daily')
   const names = useTranslations('categories')
   const card = useTranslations('card')
@@ -115,6 +121,9 @@ export function StoryDetailView({ story }: { story: StoryDetail }) {
           )}
 
           <div className="flex flex-wrap gap-2">
+            <SaveProvider target={{ type: 'story', id: story.id }} signIn={signIn}>
+              <SaveButton className={`${buttonBase} border border-line bg-bg hover:border-ink-4`} />
+            </SaveProvider>
             <ShareButton
               title={story.title.value}
               className={buttonClass('secondary')}

@@ -148,3 +148,53 @@ test.describe('with the sample Skills', () => {
     }
   })
 })
+
+// Needs the sample stories from scripts/seed-stories.ts: CI adds them; preview databases don't have them.
+test.describe('with the sample stories', () => {
+  test.skip(!process.env.E2E_SAMPLE_STORIES, 'Run `pnpm payload run scripts/seed-stories.ts` and set E2E_SAMPLE_STORIES=1.')
+
+  test('a visitor who saves a story is asked to sign in', async ({ page }) => {
+    await page.goto('/en/daily/sample-orbit-notes-benchmark')
+    const save = page.getByRole('main').getByRole('button', { name: en.saves.save, exact: true })
+    await expect(save).toHaveAttribute('aria-pressed', 'false')
+    await save.click()
+    const dialog = page.getByRole('dialog', { name: en.saves.signInTitle })
+    await expect(dialog).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+  })
+
+  test('a member saves a story and finds it under Saved', async ({ page, context, baseURL }) => {
+    test.skip(
+      !process.env.DATABASE_URI || !process.env.BETTER_AUTH_SECRET,
+      'Signs a member in through the database: needs DATABASE_URI and BETTER_AUTH_SECRET, as in CI.',
+    )
+    const member = await createMember(baseURL ?? 'http://localhost:3000')
+    try {
+      await context.addCookies([member.cookie])
+      const main = page.getByRole('main')
+
+      // Back from signing in with the save in the address: it finishes by itself, and the address is cleaned up.
+      await page.goto(`/en/daily/sample-orbit-notes-benchmark?save=story-${await member.storyId('sample-orbit-notes-benchmark')}`)
+      await expect(main.getByRole('button', { name: en.saves.saved, exact: true })).toHaveAttribute('aria-pressed', 'true')
+      await expect(page).toHaveURL(/\/en\/daily\/sample-orbit-notes-benchmark$/)
+
+      // Only published stories are saved.
+      for (const slug of ['sample-withdrawn-story', 'sample-pending-story']) {
+        const hidden = await page.request.post('/api/saves', { data: { type: 'story', id: await member.storyId(slug), saved: true } })
+        expect(hidden.status(), slug).toBe(404)
+      }
+
+      await page.goto('/en/me/saves')
+      const saved = page.getByRole('region', { name: new RegExp(`^${en.saves.stories}`) })
+      await expect(saved.getByRole('link')).toHaveText([/Orbit Notes reports a new summarization benchmark/])
+      await expect(saved.getByRole('link')).toHaveAttribute('href', '/en/daily/sample-orbit-notes-benchmark')
+      await saved
+        .getByRole('button', { name: en.saves.removeName.replace('{name}', 'Sample: Orbit Notes reports a new summarization benchmark') })
+        .click()
+      await expect(page.getByText(en.saves.emptyTitle)).toBeVisible()
+    } finally {
+      await member.remove()
+    }
+  })
+})
