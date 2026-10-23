@@ -6,6 +6,7 @@ import { HeatStatus as HeatStatus_f910cd358bdcc46e0c7fb035c893c100 } from '../..
 import { ReviewReports as ReviewReports_8e96545e70b9997208c5ec0c15febf45 } from '../../../modules/apps/admin/review-reports'
 import { ReportsNotice as ReportsNotice_0b61006e31d9472851e469ab6a015301 } from '../../../modules/apps/admin/reports-notice'
 import { SubmissionsNotice as SubmissionsNotice_b37963b15c0fd770e1f6bd4386ad7502 } from '../../../modules/apps/admin/submissions-notice'
+import { RecheckNotice as RecheckNotice_2936e53c9e7b9511c7179f73bff63f63 } from '../../../modules/apps/admin/recheck-notice'
 import { ImportBox as ImportBox_240395083c95ae6702fb50945e8d4929 } from '../../../modules/apps/admin/import-box'
 import { SubmissionPanel as SubmissionPanel_4bf778e4ff33021d55ae22b7dffc8927 } from '../../../modules/apps/admin/submission-panel'
 import { TestFetchButton as TestFetchButton_b1dc21837ee664b416d7310fb91f4040 } from '../../../modules/daily/admin/test-fetch-button'
@@ -30,6 +31,7 @@ export const importMap = {
   "/modules/apps/admin/review-reports#ReviewReports": ReviewReports_8e96545e70b9997208c5ec0c15febf45,
   "/modules/apps/admin/reports-notice#ReportsNotice": ReportsNotice_0b61006e31d9472851e469ab6a015301,
   "/modules/apps/admin/submissions-notice#SubmissionsNotice": SubmissionsNotice_b37963b15c0fd770e1f6bd4386ad7502,
+  "/modules/apps/admin/recheck-notice#RecheckNotice": RecheckNotice_2936e53c9e7b9511c7179f73bff63f63,
   "/modules/apps/admin/import-box#ImportBox": ImportBox_240395083c95ae6702fb50945e8d4929,
   "/modules/apps/admin/submission-panel#SubmissionPanel": SubmissionPanel_4bf778e4ff33021d55ae22b7dffc8927,
   "/modules/daily/admin/test-fetch-button#TestFetchButton": TestFetchButton_b1dc21837ee664b416d7310fb91f4040,
