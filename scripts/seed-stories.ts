@@ -1,8 +1,8 @@
 /**
- * Sample stories for local development and the CI smoke tests (tests/e2e/daily.spec.ts).
- * The stories are fictional (sources on .example). Runs only against a database on this
- * machine, so it can never put sample stories on a real site. Safe to run again: stories
- * are matched by slug and overwritten.
+ * Sample stories, and the poster of their day, for local development and the CI smoke tests
+ * (tests/e2e/daily.spec.ts). The stories are fictional (sources on .example). Runs only
+ * against a database on this machine, so it can never put sample stories on a real site.
+ * Safe to run again: stories are matched by slug and overwritten.
  *
  *   pnpm payload run scripts/seed-stories.ts
  */
@@ -13,7 +13,10 @@ import { getPayload } from 'payload'
 
 import type { Story } from '../src/payload-types'
 import { databaseUrl } from '../src/lib/db/url'
+import { shanghaiDate } from '../src/lib/shanghai-day'
 import { appMentions } from '../src/modules/apps/schema'
+import { generatePoster } from '../src/modules/daily/poster/desk'
+import { ReviewError } from '../src/modules/daily/review/actions'
 
 type Text = Pick<Story, 'title' | 'summary'> & Partial<Pick<Story, 'tryIt'>>
 
@@ -239,6 +242,25 @@ for (const mention of sampleMentions) {
   mentions++
 }
 
+// 「每日 AI 大事」: the poster of the day the newest sample story went up, the stories chosen
+// automatically as on the review screen. The images are drawn when first requested.
+const newest = sampleStories
+  .filter((story) => story.status === 'published' && story.publishedAt)
+  .map((story) => story.publishedAt as string)
+  .sort()
+  .at(-1)
+let poster = 'none'
+if (newest) {
+  const date = shanghaiDate(new Date(newest))
+  try {
+    const desk = await generatePoster(payload, date, { render: async () => {}, refresh: async () => {} })
+    poster = `${date} (${desk.items.length} stories)`
+  } catch (error) {
+    if (!(error instanceof ReviewError && error.code === 'poster_empty')) throw error
+  }
+}
+
 console.log(`Sample stories ready: ${sampleStories.map((story) => `${story.slug} (${story.status})`).join(', ')}`)
+console.log(`Sample poster: ${poster}`)
 console.log(mentions ? `Sample app mentions ready: ${mentions}` : 'No sample apps yet: scripts/seed-apps.ts adds them and matches these stories for「今天提到的应用」.')
 process.exit(0)

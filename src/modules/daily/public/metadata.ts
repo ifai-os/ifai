@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
-import { localizePath, type Locale } from '@/i18n/config'
+import { localizePath, locales, ogLocales, type Locale } from '@/i18n/config'
 import { alternatesFor } from '@/lib/seo'
 
 import type { StoryCategory } from '../categories'
-import { getStory } from './data'
-import { feedPath, listHref, storyHref } from './list-params'
+import { posterVersion } from '../poster/snapshot'
+import { POSTER_SIZE } from '../poster/layout'
+import { getPoster, getStory } from './data'
+import { feedPath, listHref, posterDay, posterHref, posterImagePath, storyHref } from './list-params'
 
 const descriptionLength = 160
 
@@ -50,5 +52,35 @@ export async function storyMetadata(slug: string, locale: Locale): Promise<Metad
       publishedTime: story.publishedAt,
       modifiedTime: story.correctedAt ?? undefined,
     },
+  }
+}
+
+/** A poster page: its title and day, the head story in the description, the image as the share picture. */
+export async function posterMetadata(date: string, locale: Locale): Promise<Metadata> {
+  const snapshot = await getPoster(date)
+  if (!snapshot) return {}
+  const t = await getTranslations({ locale, namespace: 'poster' })
+  const day = posterDay(date, locale)
+  const count = snapshot.entries.length
+  const title = t('pageTitle', { date: day })
+  const image = {
+    url: posterImagePath(locale, date, posterVersion(snapshot)),
+    width: POSTER_SIZE.width,
+    height: POSTER_SIZE.height,
+    alt: t('imageAlt', { date: day, count }),
+  }
+  return {
+    title,
+    description: t('pageDescription', { date: day, count, head: snapshot.entries[0].title[locale].value }),
+    alternates: alternatesFor(posterHref(date), locale),
+    openGraph: {
+      type: 'article',
+      siteName: 'IFAI',
+      title,
+      locale: ogLocales[locale],
+      alternateLocale: locales.filter((item) => item !== locale).map((item) => ogLocales[item]),
+      images: [image],
+    },
+    twitter: { card: 'summary_large_image', images: [image.url] },
   }
 }

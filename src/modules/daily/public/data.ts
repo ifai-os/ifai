@@ -6,11 +6,13 @@ import { cache } from 'react'
 
 import type { Locale } from '@/i18n/config'
 import { getDb } from '@/lib/db/drizzle'
+import { shanghaiDate } from '@/lib/shanghai-day'
 import { appsCacheTag } from '@/modules/apps/cache'
 import { appMentions } from '@/modules/apps/schema'
 import type { Media } from '@/payload-types'
 
 import type { StoryCategory } from '../categories'
+import { posterVersion, readSnapshot, type PosterSnapshot } from '../poster/snapshot'
 import { DAILY_CACHE_TAG } from '../review/cache'
 import { onePerEvent, sourcesOf, toHot, toItem, type HotStory, type RawStory, type StoryDetail, type StoryItem } from './story-item'
 
@@ -33,6 +35,8 @@ export const hotShown = 5
 const hottestWithinMs = 24 * 3_600_000
 /** Apps mentioned in stories of the last 48 hours: today in any time zone. */
 const mentionsWithinMs = 48 * 3_600_000
+/** The list page shows the newest poster generated for one of the last few Shanghai days. */
+const posterShownDays = 7
 
 export type StoryPage = { stories: StoryItem[]; total: number; page: number; pages: number }
 
@@ -212,6 +216,41 @@ function logoOf(media: number | Media | null | undefined): MentionedApp['logo'] 
   return { url, width: (thumb?.url ? thumb.width : media.width) ?? null, height: (thumb?.url ? thumb.height : media.height) ?? null }
 }
 
+// Generated posters only (the visitor's access rules); the editor's generating refreshes the tag.
+const findPoster = unstable_cache(
+  async (date: string): Promise<PosterSnapshot | null> => {
+    const { docs } = await (await payload()).find({
+      collection: 'posters',
+      where: { and: [{ date: { equals: date } }, { status: { equals: 'generated' } }] },
+      limit: 1,
+      depth: 0,
+      select: { snapshot: true },
+      overrideAccess: false,
+    })
+    const snapshot = readSnapshot(docs[0]?.snapshot)
+    return snapshot?.entries.length ? snapshot : null
+  },
+  ['daily-poster'],
+  cacheOptions,
+)
+
+const findPosterDates = unstable_cache(
+  async (): Promise<string[]> => {
+    const { docs } = await (await payload()).find({
+      collection: 'posters',
+      where: { status: { equals: 'generated' } },
+      sort: '-date',
+      pagination: false,
+      depth: 0,
+      select: { date: true },
+      overrideAccess: false,
+    })
+    return docs.map((doc) => doc.date)
+  },
+  ['daily-poster-dates'],
+  cacheOptions,
+)
+
 const countSources = unstable_cache(
   async () => (await (await payload()).count({ collection: 'sources', where: { enabled: { equals: true } } })).totalDocs,
   ['daily-sources-count'],
@@ -261,4 +300,24 @@ export async function mentionedApps(): Promise<MentionedApp[]> {
 /** How many sources the pipeline reads, for the list page's introduction. */
 export async function sourceCount(): Promise<number> {
   return countSources()
+}
+
+/** A Shanghai day's poster as generated (what its images show); null when that day has none. */
+export const getPoster = cache(async (date: string): Promise<PosterSnapshot | null> => findPoster(date))
+
+/** The generated posters just before and after a day, for the poster page's links. */
+export async function posterNeighbours(date: string): Promise<{ earlier: string | null; later: string | null }> {
+  const dates = await findPosterDates()
+  // Newest first: the earlier one is the first older date, the later one the last newer date.
+  return { earlier: dates.find((other) => other < date) ?? null, later: [...dates].reverse().find((other) => other > date) ?? null }
+}
+
+export type PosterSummary = { date: string; count: number; version: string }
+
+/**「每日 AI 大事」on the list page: the newest generated poster of the last week; null when there is none. */
+export async function latestPoster(now = new Date()): Promise<PosterSummary | null> {
+  const [date] = await findPosterDates()
+  if (!date || date < shanghaiDate(new Date(now.getTime() - posterShownDays * 24 * 3_600_000))) return null
+  const snapshot = await findPoster(date)
+  return snapshot ? { date, count: snapshot.entries.length, version: posterVersion(snapshot) } : null
 }

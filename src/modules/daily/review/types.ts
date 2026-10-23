@@ -1,5 +1,6 @@
 /** Shapes the review endpoints return and the admin screen renders (types only; no server code). */
 import type { StoryCategory } from '../categories'
+import type { PosterDesk } from '../poster/types'
 import type { SourceRole, StoryStatus } from '../story-fields'
 import type { AnalysisFlag } from '../judge/rules'
 import type { LocaleStatus, RewrittenLocale, Verification } from './rules'
@@ -50,14 +51,6 @@ export type QueueItem = {
   createdAt: string
 }
 
-export type PublishedItem = {
-  id: number
-  title: string
-  category: StoryCategory
-  publishedAt: string | null
-  correctedAt: string | null
-}
-
 export type SourceHealth = { id: number; name: string; error: string }
 
 export type ReviewSummary = {
@@ -74,7 +67,8 @@ export type ReviewSummary = {
 
 export type ReviewQueue = {
   items: QueueItem[]
-  published: PublishedItem[]
+  /** Today's poster (Shanghai day) and the other stories published today: the right column. */
+  poster: PosterDesk
   summary: ReviewSummary
   loadedAt: string
 }

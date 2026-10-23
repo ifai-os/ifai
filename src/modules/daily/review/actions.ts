@@ -57,6 +57,9 @@ export type ReviewErrorCode =
   | 'rewrite_failed'
   | 'no_reports'
   | 'bad_target'
+  | 'poster_invalid'
+  | 'poster_empty'
+  | 'render_failed'
 
 /** A refusal the screen explains to the editor; `detail` carries what the message needs. */
 export class ReviewError extends Error {

@@ -8,7 +8,7 @@ import { Link } from '@/i18n/navigation'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
 
 import type { StoryCategory } from '../../categories'
-import { hotStories, hottestStory, listStories, mentionedApps, sourceCount } from '../data'
+import { hotStories, hottestStory, latestPoster, listStories, mentionedApps, sourceCount } from '../data'
 import { listHref } from '../list-params'
 import { CategoryNav } from './category-nav'
 import { DailyFeed } from './daily-feed'
@@ -16,6 +16,7 @@ import { TodayBadge, UpdatedStat } from './hero-bits'
 import { HotList } from './hot-list'
 import { HottestCard } from './hottest-card'
 import { MentionedApps } from './mentioned-apps'
+import { PosterCard } from './poster-card'
 
 type DailyListProps = {
   locale: Locale
@@ -26,16 +27,19 @@ type DailyListProps = {
 
 /**
  * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): header with today's hottest story
- * (first page of every story only), categories, stories by day and earlier pages, and beside
- * them the apps in today's news and the hottest events of the last 48 hours.
+ * and the latest「每日 AI 大事」poster (first page of every story only), categories, stories by
+ * day and earlier pages, and beside them the apps in today's news and the hottest events of the
+ * last 48 hours.
  */
 export async function DailyList({ locale, category, page }: DailyListProps) {
-  const [t, names, result, sources, hottest, hot, apps] = await Promise.all([
+  const front = !category && page === 1
+  const [t, names, result, sources, hottest, poster, hot, apps] = await Promise.all([
     getTranslations('daily'),
     getTranslations('categories'),
     listStories({ locale, category, page }),
     sourceCount(),
-    !category && page === 1 ? hottestStory(locale) : null,
+    front ? hottestStory(locale) : null,
+    front ? latestPoster() : null,
     hotStories(locale),
     mentionedApps(),
   ])
@@ -49,10 +53,11 @@ export async function DailyList({ locale, category, page }: DailyListProps) {
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 pt-5 pb-16 md:gap-7 md:pt-8 md:pb-24">
-      <div className="flex flex-col gap-4 md:flex-row">
+      {/* The board's row: header, hottest story and poster share it 1 : 2 : 1 and wrap when there is no room. */}
+      <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
         <header
-          className={`flex items-start gap-4 rounded-hero border border-surface-2 bg-surface px-5 py-5 md:gap-6 md:px-8 md:py-7 ${
-            hottest ? 'md:w-2/5 md:flex-none md:flex-col md:gap-5 lg:w-1/3' : 'md:flex-1 md:items-center'
+          className={`flex items-start gap-4 rounded-hero border border-surface-2 bg-surface px-5 py-5 md:grow md:basis-54 md:gap-6 md:px-8 md:py-7 ${
+            hottest ? 'md:flex-col md:gap-5' : 'md:items-center'
           }`}
         >
           <TodayBadge serverToday={serverToday} />
@@ -71,6 +76,11 @@ export async function DailyList({ locale, category, page }: DailyListProps) {
           </div>
         </header>
         {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
+        {poster && (
+          <div className="flex flex-col gap-4 md:grow md:basis-54">
+            <PosterCard poster={poster} locale={locale} />
+          </div>
+        )}
       </div>
 
       <CategoryNav current={category} />

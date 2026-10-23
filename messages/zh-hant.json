@@ -309,6 +309,24 @@
     "feedTitle": "IFAI 日報",
     "feedDescription": "每條都核對過來源的 AI 新聞，配白話摘要。"
   },
+  "poster": {
+    "title": "每日 AI 大事",
+    "brand": "IFAI · AI 大事",
+    "dateLine": "{date} · 上海時間",
+    "count": "{count, plural, other {# 件大事}}",
+    "view": "檢視海報",
+    "head": "頭條",
+    "imageLine": "{year} · {weekday} · 上海時間 · {count, plural, other {# 件大事}}",
+    "imageFooter": "每條都核對過來源 · {site}",
+    "pageTitle": "每日 AI 大事 · {date}",
+    "pageDescription": "{date}（上海時間）的 {count, plural, other {# 件}} AI 大事，頭條：{head}",
+    "imageAlt": "{date} 每日 AI 大事海報，{count, plural, other {# 件大事}}",
+    "downloads": "五種語言的海報",
+    "download": "下載{language}版",
+    "stories": "海報上的新聞",
+    "earlier": "上一期",
+    "later": "下一期"
+  },
   "categories": {
     "product": "產品更新",
     "industry": "產業動態",
