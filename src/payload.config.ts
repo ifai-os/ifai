@@ -28,6 +28,7 @@ import { SkillSubmissions } from './modules/resources/collections/SkillSubmissio
 import { SkillTags } from './modules/resources/collections/SkillTags'
 import { SkillVersions } from './modules/resources/collections/SkillVersions'
 import { resourcesTables } from './modules/resources/db/schema'
+import { savesTables } from './modules/saves/schema'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -98,7 +99,15 @@ export default buildConfig({
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
-        tables: { ...schema.tables, ...authTables, ...aiTables, ...dailyTables, ...resourcesTables, ...appsTables },
+        tables: {
+          ...schema.tables,
+          ...authTables,
+          ...aiTables,
+          ...dailyTables,
+          ...resourcesTables,
+          ...appsTables,
+          ...savesTables,
+        },
       }),
     ],
   }),

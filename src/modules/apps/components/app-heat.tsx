@@ -80,8 +80,7 @@ export function HeatSection({ app, heat, showSiteRank }: { app: AppDetail; heat:
       key: 'engagement',
       score: latest.engagementScore,
       max: heatWeights.engagement,
-      // Saves arrive with step 5; until then this part is clicks only.
-      note: t('partNotes.engagement', { count: latest.clicks }),
+      note: t('partNotes.engagement', { clicks: latest.clicks, saves: latest.saves }),
     },
     { key: 'mentions', score: latest.mentionScore, max: heatWeights.mentions, note: t('partNotes.mentions', { count: latest.mentions }) },
   ] as const

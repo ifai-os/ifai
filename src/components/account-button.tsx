@@ -79,6 +79,13 @@ export function AccountButton() {
           className="absolute right-0 top-12 z-30 flex w-60 flex-col gap-1 rounded-tile bg-bg p-1.5 shadow-float"
         >
           <p className="truncate px-2.5 py-2 text-meta text-ink-4">{user.email}</p>
+          <Link
+            href="/me/saves"
+            onClick={() => setOpen(false)}
+            className="flex h-10 items-center rounded-thumb px-2.5 text-ui text-ink hover:bg-surface"
+          >
+            {t('saves')}
+          </Link>
           <button
             type="button"
             onClick={signOut}

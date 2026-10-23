@@ -2,10 +2,13 @@ import Image from 'next/image'
 import { useFormatter, useLocale, useTranslations } from 'next-intl'
 import type { ReactNode } from 'react'
 
-import { buttonClass } from '@/components/button'
+import { buttonBase, buttonClass } from '@/components/button'
 import { Icon } from '@/components/icon'
 import { ShareButton } from '@/components/share-button'
 import { getPathname, Link } from '@/i18n/navigation'
+import type { AuthProviders } from '@/lib/auth/providers'
+import { SaveButton, SaveCount } from '@/modules/saves/components/save-button'
+import { SaveProvider } from '@/modules/saves/components/save-provider'
 
 import type { AppDetail } from '../data'
 import { listHref } from '../list-params'
@@ -18,9 +21,17 @@ type FactKey = 'developer' | 'pricing' | 'platforms' | 'listedAt'
 // The phone's bottom bar uses taller buttons than `buttonClass`.
 const barButton =
   'inline-flex h-12 items-center justify-center gap-1.5 rounded-btn px-4 text-body font-medium whitespace-nowrap transition-colors'
+// Outlined like a secondary button; the save button colors its own text.
+const outline = 'border border-line bg-bg hover:border-ink-4'
+
+type AppDetailViewProps = {
+  app: AppDetail
+  /** The sign-in methods, for the dialog a visitor gets on pressing save. */
+  signIn: AuthProviders
+}
 
 /** An app's page: header and facts, its heat figures, then what it is, features, heat, daily mentions, FAQ and alternatives. */
-export function AppDetailView({ app }: { app: AppDetail }) {
+export function AppDetailView({ app, signIn }: AppDetailViewProps) {
   const t = useTranslations('apps')
   const nav = useTranslations('nav')
   const card = useTranslations('card')
@@ -38,8 +49,10 @@ export function AppDetailView({ app }: { app: AppDetail }) {
     facts.push({ key: 'listedAt', value: format.dateTime(new Date(app.listedAt), { year: 'numeric', month: 'long' }) })
   }
 
+  const shareLabels = { share: t('share'), copied: t('copied') }
+
   return (
-    <>
+    <SaveProvider target={{ type: 'app', id: app.id }} signIn={signIn}>
       <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-7 px-4 pt-5 pb-12 md:pb-24">
         <nav aria-label={t('breadcrumb')} className="text-meta text-ink-4">
           <ol className="flex flex-wrap items-center gap-2">
@@ -77,8 +90,17 @@ export function AppDetailView({ app }: { app: AppDetail }) {
                       {app.category.name}
                     </Link>
                   )}
+                  {/* Phones show the count on the save button in the bottom bar. */}
+                  {(app.developer || app.category) && <SaveCount className="hidden md:inline" />}
                 </p>
               </div>
+              {/* Phones share from here; the bottom bar keeps save and the website. */}
+              <ShareButton
+                title={app.name}
+                iconOnly
+                className="ml-auto flex size-11 flex-none items-center justify-center text-ink md:hidden"
+                labels={shareLabels}
+              />
             </div>
 
             {app.tagline && (
@@ -126,7 +148,8 @@ export function AppDetailView({ app }: { app: AppDetail }) {
                   {t('openSite')}
                 </OpenSiteLink>
               )}
-              <ShareButton title={app.name} className={buttonClass('secondary')} labels={{ share: t('share'), copied: t('copied') }} />
+              <SaveButton className={`${buttonBase} ${outline}`} />
+              <ShareButton title={app.name} className={buttonClass('secondary')} labels={shareLabels} />
             </div>
           </div>
 
@@ -280,13 +303,9 @@ export function AppDetailView({ app }: { app: AppDetail }) {
         </div>
       </main>
 
-      {/* Phones: the two actions stay in reach while reading. */}
+      {/* Phones: save and the website stay in reach while reading. */}
       <div className="sticky bottom-0 z-10 flex gap-2.5 border-t border-line bg-bg px-4 pt-2.5 pb-3.5 md:hidden">
-        <ShareButton
-          title={app.name}
-          className={`${barButton} border border-line bg-bg text-ink hover:border-ink-4`}
-          labels={{ share: t('share'), copied: t('copied') }}
-        />
+        <SaveButton withCount className={`${barButton} ${outline} ${app.website ? '' : 'flex-1'}`} />
         {app.website && (
           <OpenSiteLink slug={app.slug} className={`${barButton} flex-1 bg-ink text-white hover:bg-ink-2`}>
             {t('openSite')}
@@ -294,7 +313,7 @@ export function AppDetailView({ app }: { app: AppDetail }) {
           </OpenSiteLink>
         )}
       </div>
-    </>
+    </SaveProvider>
   )
 }
 

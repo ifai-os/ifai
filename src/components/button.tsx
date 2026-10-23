@@ -10,14 +10,12 @@ const variants = {
 
 export type ButtonVariant = keyof typeof variants
 
+/** Size and shape without colors, for buttons that color themselves (a save button turns red once saved). */
+export const buttonBase =
+  'inline-flex h-10 items-center justify-center gap-1.5 rounded-btn px-4 text-ui font-medium whitespace-nowrap transition-colors'
+
 export function buttonClass(variant: ButtonVariant = 'primary', className?: string): string {
-  return [
-    'inline-flex h-10 items-center justify-center gap-1.5 rounded-btn px-4 text-ui font-medium whitespace-nowrap transition-colors',
-    variants[variant],
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ')
+  return [buttonBase, variants[variant], className].filter(Boolean).join(' ')
 }
 
 type ButtonLinkProps = {

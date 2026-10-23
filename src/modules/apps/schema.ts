@@ -88,7 +88,7 @@ export const appMetricsDaily = pgTable(
     trancoListId: text('tranco_list_id'),
     /** Visitor-days that opened the website from IFAI in the 7 days before `day`. */
     clicks: integer('clicks').default(0).notNull(),
-    /** New saves in the same 7 days (saves arrive with step 5; 0 until then). */
+    /** New saves in the same 7 days that are still saved (src/modules/saves). */
     saves: integer('saves').default(0).notNull(),
     /** Published daily stories about the app in the 30 days before `day`, one per event. */
     mentions: integer('mentions').default(0).notNull(),

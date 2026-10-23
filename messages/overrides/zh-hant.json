@@ -26,14 +26,19 @@
   "auth": {
     "title": "登入 IFAI",
     "subtitle": "登入後可以收藏應用、追蹤話題、訂閱日報。",
+    "dialogSubtitle": "用電子郵件登入，不用設密碼",
     "emailLabel": "電子郵件",
     "sendLink": "傳送登入連結",
     "sending": "正在傳送…",
-    "sent": "登入連結已寄到 {email}，10 分鐘內有效。",
+    "sentTitle": "登入連結已寄出",
+    "sentBody": "去 {email} 查收，連結 10 分鐘內有效。",
+    "resend": "沒收到？換個電子郵件或重新傳送",
     "invalidEmail": "請輸入有效的電子郵件地址",
     "unavailable": "這個環境還沒有設定登入方式。",
     "signedInAs": "已登入：{email}",
-    "signOut": "登出"
+    "signOut": "登出",
+    "googleShort": "Google 登入",
+    "githubShort": "GitHub 登入"
   },
   "email": {
     "subject": "你的 IFAI 登入連結",
@@ -58,6 +63,11 @@
     "weights": {
       "engagement": "站內點擊與收藏"
     }
+  },
+  "saves": {
+    "signInTitle": "登入後就能收藏",
+    "afterSignIn": "登入後會自動幫你完成收藏。",
+    "signInBody": "登入後就能看到你收藏的應用。"
   },
   "categories": {
     "industry": "產業動態"

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
 import { isLocale } from '@/i18n/config'
+import { authProviders } from '@/lib/auth/providers'
 import { AppDetailView } from '@/modules/apps/components/app-detail'
 import { getApp } from '@/modules/apps/data'
 import { appMetadata } from '@/modules/apps/metadata'
@@ -27,5 +28,5 @@ export default async function AppPage({ params }: Props) {
   const app = await getApp(slug, locale)
   if (!app) notFound()
 
-  return <AppDetailView app={app} />
+  return <AppDetailView app={app} signIn={authProviders()} />
 }

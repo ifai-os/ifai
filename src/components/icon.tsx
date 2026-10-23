@@ -48,6 +48,14 @@ const icons = {
     </>
   ),
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  // Filled with currentColor once saved.
+  bookmark: <path d="M6 4h12v16l-6-4-6 4z" />,
+  share: (
+    <>
+      <path d="M12 3v12M7 8l5-5 5 5" />
+      <path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6" />
+    </>
+  ),
   mail: (
     <>
       <rect x="3" y="5" width="18" height="14" rx="2" />

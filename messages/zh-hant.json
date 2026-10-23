@@ -20,6 +20,7 @@
     "language": "切換語言",
     "signIn": "登入",
     "account": "帳號選單",
+    "saves": "我的收藏",
     "signOut": "登出"
   },
   "home": {
@@ -61,14 +62,19 @@
   "auth": {
     "title": "登入 IFAI",
     "subtitle": "登入後可以收藏應用、追蹤話題、訂閱日報。",
+    "dialogSubtitle": "用電子郵件登入，不用設密碼",
     "google": "使用 Google 繼續",
+    "googleShort": "Google 登入",
     "github": "使用 GitHub 繼續",
+    "githubShort": "GitHub 登入",
     "or": "或",
     "emailLabel": "電子郵件",
     "emailPlaceholder": "you@example.com",
     "sendLink": "傳送登入連結",
     "sending": "正在傳送…",
-    "sent": "登入連結已寄到 {email}，10 分鐘內有效。",
+    "sentTitle": "登入連結已寄出",
+    "sentBody": "去 {email} 查收，連結 10 分鐘內有效。",
+    "resend": "沒收到？換個電子郵件或重新傳送",
     "invalidEmail": "請輸入有效的電子郵件地址",
     "failed": "出了點問題，請稍後再試。",
     "unavailable": "這個環境還沒有設定登入方式。",
@@ -204,7 +210,7 @@
       "rank": "Tranco 第 {rank, number} 名",
       "rankHidden": "按官網在 Tranco 榜單上的名次計算",
       "unranked": "不在 Tranco 前 100 萬名裡，或官網是大網站上的一個頁面",
-      "engagement": "近 7 天從 IFAI 開啟官網 {count} 次（同一訪客每天算一次）",
+      "engagement": "近 7 天從 IFAI 開啟官網 {clicks} 次（同一訪客每天算一次），新增收藏 {saves} 個",
       "mentions": "近 30 天日報提及 {count} 次"
     },
     "partsSum": "三項得分相加即為熱度。熱度反映關注度，不代表實際使用者數。",
@@ -236,6 +242,23 @@
       "browser-extension": "瀏覽器擴充功能",
       "api": "API"
     }
+  },
+  "saves": {
+    "save": "收藏",
+    "saved": "已收藏",
+    "count": "{count, plural, other {# 人收藏}}",
+    "signInTitle": "登入後就能收藏",
+    "afterSignIn": "登入後會自動幫你完成收藏。",
+    "title": "我的收藏",
+    "description": "你收藏的 AI 應用。",
+    "signInBody": "登入後就能看到你收藏的應用。",
+    "emptyTitle": "還沒有收藏",
+    "emptyBody": "看到喜歡的應用，點一下收藏，就會出現在這裡",
+    "browseApps": "逛逛 AI 應用",
+    "apps": "應用",
+    "remove": "取消收藏",
+    "removeName": "取消收藏 {name}",
+    "failed": "沒能取消收藏，請再試一次。"
   },
   "daily": {
     "title": "日報",
