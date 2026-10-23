@@ -699,6 +699,64 @@
     "earlier": "이전 호",
     "later": "다음 호"
   },
+  "subscribe": {
+    "title": "매일 아침 8시, AI 데일리를 이메일로 받아 보세요",
+    "note": "선택한 언어로, 계신 곳 시간 기준 아침 8시에 보내 드려요. 언제든 구독을 취소할 수 있어요",
+    "email": "이메일 주소",
+    "submit": "구독하기",
+    "done": "구독 완료! 내일 아침 8시에 만나요",
+    "invalid": "올바른 이메일 주소를 입력해 주세요",
+    "suggest": "혹시 <fix>{domain}</fix> 아닌가요?",
+    "failed": "구독하지 못했어요. 잠시 후 다시 시도해 주세요"
+  },
+  "subscription": {
+    "title": "구독 관리",
+    "address": "구독 이메일",
+    "statusLabel": "상태",
+    "status": {
+      "subscribed": "구독 중",
+      "unsubscribed": "구독 취소됨",
+      "stopped": "발송 중지됨"
+    },
+    "stopped": {
+      "bounce": "이 주소로 보낸 메일이 반송되어 발송을 멈췄어요.",
+      "complaint": "이 주소에서 데일리가 스팸으로 신고되어 발송을 멈췄어요.",
+      "owner": "이 주소로 보내는 메일은 중지되었어요."
+    },
+    "next": "다음 메일: {time}({zone})",
+    "settings": "메일 설정",
+    "language": "언어",
+    "timeZone": "시간대",
+    "timeZoneHint": "이 시간대 기준 아침 8시에 보내 드려요.",
+    "save": "저장",
+    "saved": "저장했어요",
+    "unsubscribe": "구독 취소",
+    "unsubscribed": "구독을 취소했어요. 앞으로 데일리 메일을 보내지 않아요.",
+    "resubscribe": "다시 구독하기",
+    "resubscribed": "다시 구독했어요.",
+    "invalidTitle": "링크가 유효하지 않아요",
+    "invalidBody": "링크가 잘렸거나 구독이 이미 삭제되었어요.",
+    "failed": "저장하지 못했어요. 잠시 후 다시 시도해 주세요"
+  },
+  "dailyEmail": {
+    "senderName": "IFAI 데일리",
+    "welcome": {
+      "subject": "IFAI 데일리 구독을 환영해요",
+      "preheader": "첫 메일은 {time}에 도착해요.",
+      "heading": "구독이 완료됐어요",
+      "schedule": "매일 아침 8시({zone})에 지난 24시간의 AI 소식을 이 주소로 보내 드려요.",
+      "first": "첫 메일은 {time}에 도착해요.",
+      "change": "언어나 시간대를 바꾸려면 아래 ‘구독 관리’를 눌러 주세요. 매번 보내 드리는 메일 아래쪽에도 같은 링크가 있어요.",
+      "manage": "구독 관리",
+      "notYou": "직접 구독하지 않으셨나요?",
+      "unsubscribe": "한 번에 구독 취소"
+    },
+    "footer": {
+      "why": "IFAI 데일리를 구독하셔서 이 메일을 보내 드려요.",
+      "manage": "구독 관리",
+      "unsubscribe": "구독 취소"
+    }
+  },
   "categories": {
     "product": "제품 업데이트",
     "industry": "업계 동향",

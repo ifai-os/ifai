@@ -9,6 +9,7 @@ import { ReviewCell as ReviewCell_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../..
 import { ReviewField as ReviewField_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../../../modules/daily/admin/review/links'
 import { ReviewQueueButton as ReviewQueueButton_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../../../modules/daily/admin/review/links'
 import { ReviewQueueView as ReviewQueueView_c111dd891c468b16971f847e61641fc2 } from '../../../modules/daily/admin/review/view'
+import { SubscriberCounts as SubscriberCounts_c9a57641a50a61f9c67637a16542f9b5 } from '../../../modules/daily/email/admin/subscriber-counts'
 import { ImportButton as ImportButton_732f6da2a57c9425424227b664ca593e } from '../../../modules/resources/admin/import-button'
 import { DescribePanel as DescribePanel_62e1fd9685e86a291070552a381d803d } from '../../../modules/resources/admin/describe-panel'
 import { ReviewNavLink as ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../../../modules/daily/admin/review/links'
@@ -28,6 +29,7 @@ export const importMap = {
   "/modules/daily/admin/review/links#ReviewField": ReviewField_2112a3d97e8d3e9907989fea4d7ef9c1,
   "/modules/daily/admin/review/links#ReviewQueueButton": ReviewQueueButton_2112a3d97e8d3e9907989fea4d7ef9c1,
   "/modules/daily/admin/review/view#ReviewQueueView": ReviewQueueView_c111dd891c468b16971f847e61641fc2,
+  "/modules/daily/email/admin/subscriber-counts#SubscriberCounts": SubscriberCounts_c9a57641a50a61f9c67637a16542f9b5,
   "/modules/resources/admin/import-button#ImportButton": ImportButton_732f6da2a57c9425424227b664ca593e,
   "/modules/resources/admin/describe-panel#DescribePanel": DescribePanel_62e1fd9685e86a291070552a381d803d,
   "/modules/daily/admin/review/links#ReviewNavLink": ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1,
