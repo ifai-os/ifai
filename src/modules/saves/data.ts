@@ -73,7 +73,7 @@ export async function newSaveCounts(type: SaveType, from: Date, to: Date): Promi
   return new Map(rows.map((row) => [row.id, Number(row.count)]))
 }
 
-/** Whether visitors can see the target, which is what saving it needs: a published app or Skill. */
+/** Whether visitors can see the target, which is what saving it needs: a published app, Skill or story. */
 const visible: Record<SaveType, (id: number) => Promise<boolean>> = {
   app: async (id) => {
     const { payload } = await getDb()
@@ -84,6 +84,16 @@ const visible: Record<SaveType, (id: number) => Promise<boolean>> = {
   skill: async (id) => {
     const { payload } = await getDb()
     const { totalDocs } = await payload.count({ collection: 'skills', where: { id: { equals: id } }, overrideAccess: false })
+    return totalDocs > 0
+  },
+  // Withdrawn, merged and unpublished stories cannot be saved.
+  story: async (id) => {
+    const { payload } = await getDb()
+    const { totalDocs } = await payload.count({
+      collection: 'stories',
+      where: { and: [{ id: { equals: id } }, { status: { equals: 'published' } }] },
+      overrideAccess: false,
+    })
     return totalDocs > 0
   },
 }

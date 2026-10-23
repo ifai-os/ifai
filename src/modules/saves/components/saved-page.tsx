@@ -3,12 +3,15 @@ import { Suspense } from 'react'
 
 import { SignInForm } from '@/components/auth/sign-in-form'
 import { ButtonLink } from '@/components/button'
+import { LocalTime } from '@/components/local-time'
 import { EmptyState } from '@/components/states/empty-state'
 import { localizePath, type Locale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
 import { AppTile } from '@/modules/apps/components/app-tile'
 import type { HeatedApp } from '@/modules/apps/data'
+import { storyHref } from '@/modules/daily/public/list-params'
+import type { StoryItem } from '@/modules/daily/public/story-item'
 import { SkillTile } from '@/modules/resources/public/components/skill-tile'
 import type { SkillListItem } from '@/modules/resources/public/data'
 import { skillHref } from '@/modules/resources/public/list-params'
@@ -16,14 +19,15 @@ import { skillHref } from '@/modules/resources/public/list-params'
 import { RemoveSave } from './remove-save'
 
 type SavedPageProps = {
-  /** The member's saved apps and Skills, newest first; null for a visitor, who gets the sign-in form. */
-  saved: { apps: HeatedApp[]; skills: SkillListItem[] } | null
+  /** The member's saved stories, apps and Skills, newest first; null for a visitor, who gets the sign-in form. */
+  saved: { stories: StoryItem[]; apps: HeatedApp[]; skills: SkillListItem[] } | null
   signIn: AuthProviders
 }
 
-/** 「我的收藏」(docs/specs/apps.md「页面与路由」): apps, then Skills. */
+/** 「我的收藏」(docs/specs/apps.md「页面与路由」): stories, then apps, then Skills. */
 export function SavedPage({ saved, signIn }: SavedPageProps) {
   const t = useTranslations('saves')
+  const categories = useTranslations('categories')
   const locale = useLocale() as Locale
 
   return (
@@ -37,7 +41,7 @@ export function SavedPage({ saved, signIn }: SavedPageProps) {
             <SignInForm providers={signIn} callbackURL={localizePath(locale, '/me/saves')} />
           </Suspense>
         </div>
-      ) : saved.apps.length + saved.skills.length === 0 ? (
+      ) : saved.stories.length + saved.apps.length + saved.skills.length === 0 ? (
         <EmptyState icon="bookmark" title={t('emptyTitle')} body={t('emptyBody')}>
           <ButtonLink href="/apps">{t('browseApps')}</ButtonLink>
           <ButtonLink href="/resources" variant="secondary">
@@ -46,6 +50,29 @@ export function SavedPage({ saved, signIn }: SavedPageProps) {
         </EmptyState>
       ) : (
         <div className="flex w-full max-w-190 flex-col gap-8">
+          {saved.stories.length > 0 && (
+            <section aria-labelledby="saved-stories" className="flex flex-col gap-3">
+              <h2 id="saved-stories" className="text-title font-semibold">
+                {t('stories')} <span className="font-normal text-ink-4">{saved.stories.length}</span>
+              </h2>
+              <ul className="flex flex-col border-t border-surface-2">
+                {saved.stories.map((story) => (
+                  <li key={story.id} className="flex items-center gap-3 border-b border-surface-2 py-3">
+                    <Link href={storyHref(story.slug)} className="group flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span lang={story.title.lang} className="line-clamp-2 text-body font-medium group-hover:text-accent">
+                        {story.title.value}
+                      </span>
+                      <span className="text-small text-ink-4">
+                        {categories(story.category)} · <LocalTime iso={story.publishedAt} style="date" />
+                      </span>
+                    </Link>
+                    <RemoveSave target={{ type: 'story', id: story.id }} name={story.title.value} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {saved.apps.length > 0 && (
             <section aria-labelledby="saved-apps" className="flex flex-col gap-3">
               <h2 id="saved-apps" className="text-title font-semibold">

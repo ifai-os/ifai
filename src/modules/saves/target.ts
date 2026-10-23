@@ -3,8 +3,8 @@
  * No server imports: the button uses this file too.
  */
 
-/** Apps and Skills now; daily stories later (adding a type here needs no new table or migration). */
-export const saveTypes = ['app', 'skill'] as const
+/** Apps, Skills and daily stories (adding a type here needs no new table or migration). */
+export const saveTypes = ['app', 'skill', 'story'] as const
 export type SaveType = (typeof saveTypes)[number]
 
 /** A thing to save: its type and its Payload id in that type's collection. */

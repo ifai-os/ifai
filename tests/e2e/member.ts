@@ -40,6 +40,11 @@ export async function createMember(baseURL: string, name = 'Smoke test member', 
       if (!rows[0]) throw new Error(`No app ${slug}; run scripts/seed-apps.ts`)
       return rows[0].id
     },
+    async storyId(slug: string): Promise<number> {
+      const { rows } = await client.query<{ id: number }>('select id from stories where slug = $1', [slug])
+      if (!rows[0]) throw new Error(`No story ${slug}; run scripts/seed-stories.ts`)
+      return rows[0].id
+    },
     async skillId(slug: string): Promise<number> {
       const { rows } = await client.query<{ id: number }>('select id from skills where slug = $1', [slug])
       if (!rows[0]) throw new Error(`No Skill ${slug}; run scripts/seed-skills.ts`)

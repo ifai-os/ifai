@@ -256,7 +256,7 @@ describe('a story’s page', () => {
   }
 
   it('lists the sources in order with their role, and the other developments', () => {
-    const html = render(<StoryDetailView story={detail} />)
+    const html = render(<StoryDetailView story={detail} signIn={{ google: false, github: false, email: true }} />)
     expect(html.indexOf('Maker')).toBeLessThan(html.indexOf('Outlet'))
     expect(html).toContain('href="https://www.maker.example/post" target="_blank" rel="noopener"')
     expect(html).toContain(`>${en.daily.roles.original}<`)
@@ -264,6 +264,12 @@ describe('a story’s page', () => {
     expect(html).toContain(`>${en.daily.corrected} <time dateTime="2026-10-22T12:00:00Z">`)
     expect(html).toContain('href="/en/daily/earlier"')
     expect(html).toContain('1 more outlet reported this')
+  })
+
+  it('has a save button next to share', () => {
+    const html = render(<StoryDetailView story={detail} signIn={{ google: false, github: false, email: true }} />)
+    expect(html).toContain(`aria-pressed="false"`)
+    expect(html.indexOf(`>${en.saves.save}</button>`)).toBeLessThan(html.indexOf(en.daily.share))
   })
 })
 
