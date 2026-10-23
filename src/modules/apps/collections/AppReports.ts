@@ -1,6 +1,6 @@
 import type { CollectionBeforeChangeHook, CollectionConfig, FieldAccess } from 'payload'
 
-import { appsAdminGroup, isAdmin } from './shared'
+import { appsAdminGroup, isAdmin, localeOptions } from './shared'
 
 /** What the reader wrote stays as they wrote it: no one changes it through the API or the back office. */
 const asWritten: FieldAccess = () => false
@@ -86,13 +86,7 @@ export const AppReports: CollectionConfig = {
       name: 'pageLocale',
       type: 'select',
       label: { en: 'Page language', zh: '页面语言' },
-      options: [
-        { value: 'en', label: { en: 'English', zh: '英语' } },
-        { value: 'zh-Hans', label: { en: 'Simplified Chinese', zh: '简体中文' } },
-        { value: 'zh-Hant', label: { en: 'Traditional Chinese', zh: '繁体中文' } },
-        { value: 'ja', label: { en: 'Japanese', zh: '日语' } },
-        { value: 'ko', label: { en: 'Korean', zh: '韩语' } },
-      ],
+      options: localeOptions,
       access: { update: asWritten },
       admin: { readOnly: true, description: { en: 'The language of the page they reported from.', zh: '读者报错时看的是哪种语言的页面。' } },
     },

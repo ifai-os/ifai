@@ -9,7 +9,7 @@ import { draftEvent, requestDraft } from './state'
 export type Queued = { ok: true } | { ok: false; error: string }
 
 /** Hand drafts to the background job. If Inngest is unreachable they stay「待生成」for the sweep. */
-async function queueDrafts(appIds: number[]): Promise<Queued> {
+export async function queueDrafts(appIds: number[]): Promise<Queued> {
   if (appIds.length === 0) return { ok: true }
   try {
     await inngest.send(appIds.map((appId) => ({ name: draftEvent, data: { appId } })))

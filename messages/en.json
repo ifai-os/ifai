@@ -120,8 +120,9 @@
     "allCategories": "All",
     "found": "{count, plural, one {# app matches “{q}”} other {# apps match “{q}”}}",
     "noMatchTitle": "No apps match “{q}”",
-    "noMatchBody": "Try a shorter or different keyword.",
+    "noMatchBody": "Try another keyword, or submit this app.",
     "searchEverywhere": "Search all categories",
+    "submitApp": "Submit an app",
     "emptyCategoryTitle": "No apps in this category yet",
     "emptyCategoryBody": "Try another category, or check back in a few days.",
     "allApps": "See all apps",
@@ -185,6 +186,11 @@
       "rank": "Site rank",
       "engagement": "Clicks and saves",
       "mentions": "Daily mentions"
+    },
+    "submitLink": "Submit or update your app",
+    "submitCard": {
+      "title": "Built an AI app?",
+      "body": "We review submissions within 2 business days. Approved apps show up here."
     },
     "emptyRisingTitle": "No apps are rising right now",
     "emptyRisingBody": "The Rising list takes apps with a Heat of at least 30 that went up over the past week.",
@@ -666,6 +672,81 @@
       "contactTooLong": "Keep the contact to {max} characters.",
       "dailyLimit": "You have sent {limit} reports today. Come back tomorrow.",
       "failed": "That did not go through. Try again."
+    }
+  },
+  "appSubmissions": {
+    "title": "Submit an app",
+    "description": "Built an AI app? Send IFAI its website. We review it within 2 business days and email you the result.",
+    "intro": "Send us an AI app’s website and name. We review submissions within 2 business days and email you the result; approved apps show up in the AI Apps list. If an app is already listed and something on its page is wrong, tell us with “Something wrong?” on that page.",
+    "form": {
+      "title": "App details",
+      "signIn": "Sign in to submit an app. We email you the review result.",
+      "website": "Website",
+      "websiteHint": "The app’s own website, not a page in an app store or a directory.",
+      "websitePlaceholder": "https://your-app.com",
+      "name": "App name",
+      "category": "Category (optional)",
+      "categoryNone": "Not sure",
+      "note": "What it does, in one sentence (optional)",
+      "notePlaceholder": "Turns a document into slides",
+      "count": "{count} / {max}",
+      "email": "Contact email",
+      "emailHint": "Only for the review result.",
+      "send": "Submit",
+      "sending": "Submitting…",
+      "listed": "<link>{name}</link> is already listed. If something on its page is wrong, use “Something wrong?” there.",
+      "errors": {
+        "website": "Enter the app’s website, like https://your-app.com.",
+        "name": "Enter the app’s name (up to {max} characters).",
+        "note": "Keep it to {max} characters.",
+        "email": "Enter an email address we can write to.",
+        "tooMany": "That’s {max} apps today. Please send the rest tomorrow.",
+        "signIn": "You’ve been signed out. Sign in again, then submit it.",
+        "failed": "That didn’t go through. Please try again in a moment."
+      }
+    },
+    "done": {
+      "title": "Submitted",
+      "body": "We review it within 2 business days and email the result to {email}",
+      "number": "Submission number {code}",
+      "steps": {
+        "sent": "Sent",
+        "review": "In review",
+        "reviewBy": "Expected by {date}",
+        "live": "Listed",
+        "liveBody": "Once approved, it shows up in the AI Apps list"
+      },
+      "mine": "See my submissions",
+      "again": "Submit another"
+    },
+    "mine": {
+      "title": "My submissions",
+      "sentOn": "Sent <time></time>",
+      "status": {
+        "pending": "In review",
+        "accepted": "Listed",
+        "duplicate": "Already listed",
+        "rejected": "Not listed"
+      },
+      "view": "See {name}",
+      "reply": "From the IFAI team:"
+    },
+    "email": {
+      "receivedSubject": "We have your app submission ({code})",
+      "receivedHeading": "We have your submission",
+      "receivedBody": "Thanks for submitting {name}. We usually review submissions within 2 business days, and will email you the result.",
+      "acceptedSubject": "{name} is listed on IFAI ({code})",
+      "acceptedHeading": "{name} is listed",
+      "acceptedBody": "{name} passed review and is now in the AI Apps list on IFAI. Thanks for submitting it.",
+      "duplicateSubject": "About the app you submitted ({code})",
+      "duplicateHeading": "It is already listed",
+      "duplicateBody": "{name} is already in the AI Apps list on IFAI, so we have not added it again. If something on its page is wrong, use “Something wrong?” there.",
+      "rejectedSubject": "About the app you submitted ({code})",
+      "rejectedHeading": "We are not listing it this time",
+      "rejectedBody": "We looked at {name} and are not listing it on IFAI this time. Thanks for submitting it.",
+      "button": "See it on IFAI",
+      "reply": "From the IFAI team:",
+      "footer": "Submission number {code}"
     }
   },
   "daily": {

@@ -120,8 +120,9 @@
     "allCategories": "전체",
     "found": "{count, plural, other {‘{q}’ 검색 결과 #개}}",
     "noMatchTitle": "‘{q}’ 검색 결과가 없어요",
-    "noMatchBody": "더 짧은 검색어나 영어로 검색해 보세요.",
+    "noMatchBody": "다른 검색어를 써 보거나 이 앱을 제출해 주세요.",
     "searchEverywhere": "전체 분류에서 검색",
+    "submitApp": "앱 제출하기",
     "emptyCategoryTitle": "이 분류에는 아직 앱이 없어요",
     "emptyCategoryBody": "다른 분류를 보거나 며칠 뒤에 다시 확인해 주세요.",
     "allApps": "전체 앱 보기",
@@ -185,6 +186,11 @@
       "rank": "사이트 순위",
       "engagement": "클릭과 저장",
       "mentions": "데일리 언급"
+    },
+    "submitLink": "앱 제출 또는 정보 업데이트",
+    "submitCard": {
+      "title": "AI 앱을 만드셨나요?",
+      "body": "제출하면 영업일 기준 2일 안에 검토하고, 승인되면 여기에 표시돼요."
     },
     "emptyRisingTitle": "지금 급상승 중인 앱이 없어요",
     "emptyRisingBody": "급상승에는 인기도가 30 이상이고 지난 일주일 동안 오른 앱만 들어가요.",
@@ -666,6 +672,81 @@
       "contactTooLong": "연락처는 {max}자 이내로 써 주세요.",
       "dailyLimit": "오늘 이미 {limit}번 신고했어요. 내일 다시 해 주세요.",
       "failed": "보내지 못했어요. 다시 시도해 주세요."
+    }
+  },
+  "appSubmissions": {
+    "title": "앱 제출하기",
+    "description": "AI 앱을 만드셨나요? 공식 사이트를 IFAI에 보내 주세요. 영업일 기준 2일 안에 검토하고, 결과를 이메일로 알려 드려요.",
+    "intro": "AI 앱의 공식 사이트와 이름을 보내 주세요. 영업일 기준 2일 안에 검토하고, 승인되면 앱 목록에 올라가요. 결과는 이메일로 알려 드려요. 이미 등록된 앱의 정보가 틀렸다면 그 앱 페이지의 ‘정보 오류 신고’로 알려 주세요.",
+    "form": {
+      "title": "앱 정보",
+      "signIn": "앱을 제출하려면 로그인하세요. 검토 결과는 이메일로 보내 드려요.",
+      "website": "공식 사이트 주소",
+      "websiteHint": "앱 스토어나 모음 사이트의 페이지가 아닌, 앱의 공식 사이트예요.",
+      "websitePlaceholder": "https://your-app.com",
+      "name": "앱 이름",
+      "category": "분류(선택)",
+      "categoryNone": "잘 모르겠어요",
+      "note": "무엇을 하는지 한 문장으로(선택)",
+      "notePlaceholder": "문서를 슬라이드로 바꿔요",
+      "count": "{count} / {max}",
+      "email": "연락받을 이메일",
+      "emailHint": "검토 결과를 알릴 때만 써요.",
+      "send": "제출하기",
+      "sending": "제출하는 중…",
+      "listed": "<link>{name}</link>은(는) 이미 등록돼 있어요. 페이지의 정보가 틀렸다면 그 페이지의 ‘정보 오류 신고’로 알려 주세요.",
+      "errors": {
+        "website": "앱의 공식 사이트 주소를 입력하세요. 예: https://your-app.com",
+        "name": "앱 이름을 입력하세요({max}자 이내).",
+        "note": "{max}자 이내로 써 주세요.",
+        "email": "이메일을 받을 수 있는 주소를 입력하세요.",
+        "tooMany": "오늘은 이미 {max}개를 제출했어요. 나머지는 내일 제출해 주세요.",
+        "signIn": "로그인이 만료됐어요. 다시 로그인한 뒤 제출해 주세요.",
+        "failed": "제출하지 못했어요. 잠시 후 다시 시도해 주세요."
+      }
+    },
+    "done": {
+      "title": "제출했어요",
+      "body": "영업일 기준 2일 안에 검토하고, 결과를 {email}(으)로 보내 드려요",
+      "number": "접수 번호 {code}",
+      "steps": {
+        "sent": "제출 완료",
+        "review": "검토 중",
+        "reviewBy": "{date}까지 마칠 예정",
+        "live": "등록",
+        "liveBody": "승인되면 앱 목록에 올라가요"
+      },
+      "mine": "내 제출 보기",
+      "again": "하나 더 제출하기"
+    },
+    "mine": {
+      "title": "내 제출",
+      "sentOn": "<time></time> 제출",
+      "status": {
+        "pending": "검토 중",
+        "accepted": "등록됨",
+        "duplicate": "이미 등록됨",
+        "rejected": "등록 안 함"
+      },
+      "view": "{name} 보기",
+      "reply": "IFAI 팀의 메모:"
+    },
+    "email": {
+      "receivedSubject": "앱 제출을 받았어요({code})",
+      "receivedHeading": "제출을 받았어요",
+      "receivedBody": "{name}을(를) 제출해 주셔서 고마워요. 보통 영업일 기준 2일 안에 검토하고, 결과를 이메일로 알려 드려요.",
+      "acceptedSubject": "{name}이(가) IFAI에 등록됐어요({code})",
+      "acceptedHeading": "{name}이(가) 등록됐어요",
+      "acceptedBody": "{name}이(가) 검토를 통과해 IFAI 앱 목록에 올라갔어요. 제출해 주셔서 고마워요.",
+      "duplicateSubject": "제출해 주신 앱에 대해({code})",
+      "duplicateHeading": "이미 등록된 앱이에요",
+      "duplicateBody": "{name}은(는) 이미 IFAI 앱 목록에 있어서 이번에는 따로 등록하지 않았어요. 페이지의 정보가 틀렸다면 그 페이지의 ‘정보 오류 신고’로 알려 주세요.",
+      "rejectedSubject": "제출해 주신 앱에 대해({code})",
+      "rejectedHeading": "이번에는 등록하지 않기로 했어요",
+      "rejectedBody": "{name}을(를) 살펴봤지만, 이번에는 IFAI에 등록하지 않기로 했어요. 제출해 주셔서 고마워요.",
+      "button": "IFAI에서 보기",
+      "reply": "IFAI 팀의 메모:",
+      "footer": "접수 번호 {code}"
     }
   },
   "daily": {

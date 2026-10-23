@@ -17,6 +17,8 @@ export type ImportEntry = {
   name: string
   website: string
   domain: string
+  /** The main category, when it is known: a submitted app's (../submissions/admin.ts). */
+  category?: number | null
 }
 
 export type ImportProblem = {
@@ -160,7 +162,15 @@ export async function importApps(payload: Payload, entries: ImportEntry[], now: 
       const slug = await freeSlug(payload, slugify(name) || slugify(entry.domain) || 'app')
       const app = await payload.create({
         collection: 'apps',
-        data: { name, slug, website: entry.website, status: 'draft', draftStatus: 'pending', draftInfo: info },
+        data: {
+          name,
+          slug,
+          website: entry.website,
+          ...(entry.category ? { primaryCategory: entry.category } : {}),
+          status: 'draft',
+          draftStatus: 'pending',
+          draftInfo: info,
+        },
         depth: 0,
       })
       result.created.push({ line: entry.line, id: app.id, name: app.name, website: app.website })

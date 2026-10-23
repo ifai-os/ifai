@@ -18,6 +18,7 @@ import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
 import { AppCategories } from './modules/apps/collections/AppCategories'
 import { AppReports } from './modules/apps/collections/AppReports'
+import { AppSubmissions } from './modules/apps/collections/AppSubmissions'
 import { Apps } from './modules/apps/collections/Apps'
 import { appsTables } from './modules/apps/schema'
 import { Posters } from './modules/daily/collections/posters'
@@ -68,7 +69,7 @@ export default buildConfig({
     supportedLanguages: { zh, en },
     fallbackLanguage: 'zh',
   },
-  collections: [Admins, Media, AppCategories, Apps, AppReports, Sources, Stories, Posters, Subscribers, Skills, SkillVersions, AgentHosts, SkillTags, SkillSubmissions],
+  collections: [Admins, Media, AppCategories, Apps, AppReports, AppSubmissions, Sources, Stories, Posters, Subscribers, Skills, SkillVersions, AgentHosts, SkillTags, SkillSubmissions],
   editor: lexicalEditor(),
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;

@@ -8,7 +8,7 @@ import type { Locale } from '@/i18n/config'
 
 import { defaultSorts, type Board, type Sort } from '../boards'
 import { getCategories, getNewcomers, listApps, type CategoryItem } from '../data'
-import { listHref } from '../list-params'
+import { listHref, submitHref } from '../list-params'
 import { showTrancoRank } from '../settings'
 import { BoardTabs } from './board-tabs'
 import { CategoryNav } from './category-nav'
@@ -19,6 +19,7 @@ import { Podium } from './podium'
 import { RankingTable } from './ranking-table'
 import { RevealRows } from './reveal-rows'
 import { SearchForm } from './search-form'
+import { SubmitCard } from './submit-card'
 import { UpdatedBadge } from './updated-badge'
 
 /** The first page shows this many rows, then「查看第 11–50 名」. */
@@ -133,10 +134,16 @@ export async function AppsDirectory({ locale, category, q, page, board, ...props
             </RevealRows>
           ) : q ? (
             <EmptyState icon="search" title={t('noMatchTitle', { q })} body={t('noMatchBody')}>
-              <ButtonLink href={listHref({ category: slug, board })} variant="secondary">
-                {t('clearSearch')}
-              </ButtonLink>
-              {category && <ButtonLink href={listHref({ q, board })}>{t('searchEverywhere')}</ButtonLink>}
+              {category ? (
+                <ButtonLink href={listHref({ q, board })} variant="secondary">
+                  {t('searchEverywhere')}
+                </ButtonLink>
+              ) : (
+                <ButtonLink href={listHref({ board })} variant="secondary">
+                  {t('clearSearch')}
+                </ButtonLink>
+              )}
+              <ButtonLink href={submitHref(q)}>{t('submitApp')}</ButtonLink>
             </EmptyState>
           ) : board !== 'top' ? (
             <EmptyState
@@ -165,6 +172,9 @@ export async function AppsDirectory({ locale, category, q, page, board, ...props
         <Newcomers apps={newcomers} now={now} />
         <HowHeatCard />
       </div>
+
+      {/* A search with no match offers to submit the app already. */}
+      {!(q && result.apps.length === 0) && <SubmitCard />}
     </main>
   )
 }

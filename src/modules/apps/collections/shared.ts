@@ -5,6 +5,15 @@ import { isValidSlug, slugify } from '../normalize'
 
 export const appsAdminGroup = { en: 'Apps', zh: '应用' }
 
+/** The five site languages, for a reader's page language in the back office. */
+export const localeOptions = [
+  { value: 'en', label: { en: 'English', zh: '英语' } },
+  { value: 'zh-Hans', label: { en: 'Simplified Chinese', zh: '简体中文' } },
+  { value: 'zh-Hant', label: { en: 'Traditional Chinese', zh: '繁体中文' } },
+  { value: 'ja', label: { en: 'Japanese', zh: '日语' } },
+  { value: 'ko', label: { en: 'Korean', zh: '韩语' } },
+]
+
 /** Back-office admins only. Site members (Better Auth) never act through Payload. */
 export const isAdmin: Access = ({ req: { user } }) => Boolean(user)
 
