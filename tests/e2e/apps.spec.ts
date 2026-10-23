@@ -33,13 +33,93 @@ test.describe('with the sample apps', () => {
 
   const appLink = (name: string) => new RegExp(`^${name}\\b`)
 
-  test('lists published apps A–Z and leaves drafts out', async ({ page }) => {
+  // The sample heat (scripts/seed-apps.ts): Lumen Chat leads, Kitecode is rising, Orbit Notes is new this week.
+  const names = /^(Kitecode|Lumen Chat|Orbit Notes)\b/
+
+  test('lists published apps by heat and leaves drafts out', async ({ page }) => {
     await page.goto('/en/apps')
     const main = page.getByRole('main')
-    await expect(main.getByText(/^3 apps listed$/)).toBeVisible()
-    const rows = main.getByRole('link', { name: /^(Kitecode|Lumen Chat|Orbit Notes)\b/ })
-    await expect(rows).toHaveText([/Kitecode/, /Lumen Chat/, /Orbit Notes/])
+    await expect(main.getByText(/^3 apps listed · Heat updates once a day/)).toBeVisible()
+    await expect(main.getByRole('table').getByRole('link', { name: names })).toHaveText([/Lumen Chat/, /Kitecode/, /Orbit Notes/])
+    await expect(main.getByRole('list', { name: en.apps.podium }).getByRole('link')).toHaveText([
+      /Lumen Chat/,
+      /Kitecode/,
+      /Orbit Notes/,
+    ])
     await expect(main.getByText('Draft Demo')).toHaveCount(0)
+    await expect(main.getByRole('region', { name: en.apps.newcomers }).getByRole('link')).toHaveText([/Orbit Notes/])
+  })
+
+  test('the rising and new boards take their own apps', async ({ page }) => {
+    await page.goto('/en/apps')
+    const boards = page.getByRole('navigation', { name: en.apps.boardsLabel })
+    const table = page.getByRole('main').getByRole('table')
+
+    await boards.getByRole('link', { name: en.apps.boards.rising }).click()
+    await expect(page).toHaveURL(/\/en\/apps\?board=rising$/)
+    await expect(boards.getByRole('link', { name: en.apps.boards.rising })).toHaveAttribute('aria-current', 'page')
+    await expect(table.getByRole('link', { name: names })).toHaveText([/Kitecode/])
+    await expect(page.getByRole('list', { name: en.apps.podium })).toHaveCount(0)
+
+    await boards.getByRole('link', { name: en.apps.boards.new }).click()
+    await expect(page).toHaveURL(/\/en\/apps\?board=new$/)
+    await expect(table.getByRole('link', { name: names })).toHaveText([/Orbit Notes/, /Kitecode/])
+    await expect(table.getByRole('link', { name: /^Orbit Notes/ })).toContainText('Added 3 days ago')
+  })
+
+  test('column headings sort the list through the address', async ({ page }) => {
+    await page.goto('/en/apps')
+    const table = page.getByRole('main').getByRole('table')
+    await expect(table.getByRole('columnheader', { name: en.apps.columns.heat })).toHaveAttribute('aria-sort', 'descending')
+
+    await table.getByRole('link', { name: en.apps.columns.change }).click()
+    await expect(page).toHaveURL(/\/en\/apps\?sort=change$/)
+    await expect(table.getByRole('columnheader', { name: en.apps.columns.change })).toHaveAttribute('aria-sort', 'descending')
+    await expect(table.getByRole('link', { name: names })).toHaveText([/Kitecode/, /Lumen Chat/, /Orbit Notes/])
+    // Site rank is hidden until APPS_SHOW_TRANCO_RANK is on.
+    await expect(table.getByRole('columnheader', { name: en.apps.columns.site })).toHaveCount(0)
+  })
+
+  test("an app's page shows its heat and its places on the lists", async ({ page }) => {
+    await page.goto('/en/apps/lumen-chat')
+    const heat = page.getByRole('region', { name: en.apps.heat })
+    await expect(heat.getByRole('img', { name: /^Heat over the last 30 days, from \d+ to 39$/ })).toBeVisible()
+    await expect(heat.getByRole('table', { name: en.apps.heatTable }).getByRole('row')).toHaveCount(32)
+
+    await heat.getByRole('button', { name: '7 days' }).click()
+    await expect(heat.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true')
+    await expect(heat.getByRole('img', { name: 'Heat over the last 7 days, from 40 to 39' })).toBeVisible()
+
+    for (const [part, weight] of [['rank', 50], ['engagement', 30], ['mentions', 20]] as const) {
+      await expect(heat.getByText(`${en.apps.weights[part]} · weight ${weight}%`)).toBeVisible()
+    }
+    await expect(heat.getByRole('link', { name: `${en.apps.placeTop} #1` })).toHaveAttribute('href', '/en/apps')
+    await expect(heat.getByRole('link', { name: `${en.apps.placeRising} ${en.apps.notOnList}` })).toHaveAttribute(
+      'href',
+      '/en/apps?board=rising',
+    )
+  })
+
+  test('the home page shows the hottest apps and the top riser', async ({ page }) => {
+    await page.goto('/en')
+    const trending = page.getByRole('region', { name: en.home.trendingApps })
+    await expect(trending.getByRole('link', { name: names })).toHaveText([/Lumen Chat/, /Kitecode/, /Orbit Notes/])
+    await expect(trending.getByRole('link', { name: /^Lumen Chat/ })).toHaveAttribute('href', '/en/apps/lumen-chat')
+    await expect(page.getByRole('link', { name: new RegExp(`^${en.home.pickApp} Kitecode`) })).toHaveAttribute(
+      'href',
+      '/en/apps/kitecode',
+    )
+  })
+
+  test("an app's page lists the Daily stories about it", async ({ page }) => {
+    test.skip(!process.env.E2E_SAMPLE_STORIES, 'Run scripts/seed-stories.ts before scripts/seed-apps.ts and set E2E_SAMPLE_STORIES=1.')
+    await page.goto('/en/apps/lumen-chat')
+    const mentions = page.getByRole('region', { name: en.apps.mentionsTitle })
+    await expect(mentions.getByRole('link', { name: /^Sample: Lumen Chat adds shared workspaces/ })).toHaveAttribute(
+      'href',
+      '/en/daily/sample-lumen-chat-adds-shared-workspaces',
+    )
+    await expect(mentions.getByRole('link', { name: /^Sample: Kitecode/ })).toHaveCount(0)
   })
 
   test('categories include apps listed there as a second category', async ({ page }) => {
@@ -47,14 +127,15 @@ test.describe('with the sample apps', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'AI assistants' })).toBeVisible()
     const filter = page.getByRole('navigation', { name: en.apps.filterLabel })
     await expect(filter.getByRole('link', { name: /^AI assistants/ })).toHaveAttribute('aria-current', 'page')
+    const table = page.getByRole('main').getByRole('table')
     for (const name of ['Kitecode', 'Lumen Chat', 'Orbit Notes']) {
-      await expect(page.getByRole('main').getByRole('link', { name: appLink(name) })).toBeVisible()
+      await expect(table.getByRole('link', { name: appLink(name) })).toBeVisible()
     }
 
     await filter.getByRole('link', { name: /^Coding/ }).click()
     await expect(page).toHaveURL(/\/en\/apps\/category\/coding$/)
-    await expect(page.getByRole('main').getByRole('link', { name: appLink('Kitecode') })).toBeVisible()
-    await expect(page.getByRole('main').getByRole('link', { name: appLink('Lumen Chat') })).toHaveCount(0)
+    await expect(table.getByRole('link', { name: appLink('Kitecode') })).toBeVisible()
+    await expect(table.getByRole('link', { name: appLink('Lumen Chat') })).toHaveCount(0)
   })
 
   test('an empty category says so and links to all apps', async ({ page }) => {
@@ -100,7 +181,7 @@ test.describe('with the sample apps', () => {
     expect(visit.headers()['cache-control']).toBe('no-store')
     await expect(page.getByText('There is a free plan and a paid plan.')).toBeVisible()
 
-    // No alternatives were picked, so the page shows others from the same category.
+    // No alternatives were picked, so the page shows the hottest others from the same category.
     const alternatives = page.getByRole('region', { name: en.apps.alternatives })
     await expect(alternatives.getByRole('link')).toHaveText([/Kitecode/, /Orbit Notes/])
   })

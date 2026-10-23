@@ -9,6 +9,8 @@ import { getPathname, Link } from '@/i18n/navigation'
 
 import type { AppDetail } from '../data'
 import { listHref } from '../list-params'
+import { showTrancoRank } from '../settings'
+import { HeatSection, HeatStats } from './app-heat'
 import { AppTile } from './app-tile'
 
 type FactKey = 'developer' | 'pricing' | 'platforms' | 'listedAt'
@@ -17,10 +19,14 @@ type FactKey = 'developer' | 'pricing' | 'platforms' | 'listedAt'
 const barButton =
   'inline-flex h-12 items-center justify-center gap-1.5 rounded-btn px-4 text-body font-medium whitespace-nowrap transition-colors'
 
-/** An app's page: header and facts, then what it is, features, FAQ and alternatives. */
+/** An app's page: header and facts, its heat figures, then what it is, features, heat, daily mentions, FAQ and alternatives. */
 export function AppDetailView({ app }: { app: AppDetail }) {
   const t = useTranslations('apps')
+  const nav = useTranslations('nav')
+  const card = useTranslations('card')
+  const categories = useTranslations('categories')
   const format = useFormatter()
+  const showSiteRank = showTrancoRank()
 
   const facts: { key: FactKey; value: string }[] = []
   if (app.developer) facts.push({ key: 'developer', value: app.developer })
@@ -146,6 +152,8 @@ export function AppDetailView({ app }: { app: AppDetail }) {
           )}
         </section>
 
+        {app.heat && <HeatStats app={app} heat={app.heat} showSiteRank={showSiteRank} />}
+
         <div className="flex w-full max-w-190 flex-col gap-8 md:gap-10">
           {app.description && (
             <Section id="about" title={t('about')}>
@@ -181,6 +189,33 @@ export function AppDetailView({ app }: { app: AppDetail }) {
                   </li>
                 ))}
               </ol>
+            </Section>
+          )}
+
+          {app.heat && <HeatSection app={app} heat={app.heat} showSiteRank={showSiteRank} />}
+
+          {app.mentions.length > 0 && (
+            <Section id="mentions" title={t('mentionsTitle')}>
+              <div className="flex flex-col">
+                <ul className="flex flex-col border-t border-surface-2">
+                  {app.mentions.map((mention) => (
+                    <li key={mention.slug} className="border-b border-surface-2">
+                      <Link href={`/daily/${mention.slug}`} className="group flex flex-col gap-1 py-3">
+                        <span lang={mention.title.lang} className="text-body font-medium group-hover:text-accent">
+                          {mention.title.value}
+                        </span>
+                        <span className="text-small text-ink-4">
+                          {format.dateTime(new Date(mention.publishedAt), { month: 'long', day: 'numeric' })} · {nav('daily')}
+                          {mention.category && ` · ${categories(mention.category)}`}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                {app.heat && app.heat.latest.mentions > 0 && (
+                  <p className="pt-2.5 text-meta text-ink-4">{t('mentionsCount', { count: app.heat.latest.mentions })}</p>
+                )}
+              </div>
             </Section>
           )}
 
@@ -232,6 +267,9 @@ export function AppDetailView({ app }: { app: AppDetail }) {
                         >
                           {alternative.tagline.value}
                         </span>
+                      )}
+                      {alternative.heat && (
+                        <span className="mt-auto text-small text-ink-4">{card('heat', { value: alternative.heat.heat })}</span>
                       )}
                     </Link>
                   </li>

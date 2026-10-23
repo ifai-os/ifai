@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl'
 
 import { Link } from '@/i18n/navigation'
 
+import type { Board } from '../boards'
 import type { CategoryItem } from '../data'
 import { listHref } from '../list-params'
 
@@ -10,12 +11,13 @@ type CategoryNavProps = {
   total: number
   /** Slug of the category being shown; null for all apps. */
   current: string | null
-  /** A search in progress carries over to the category picked. */
+  /** A search in progress and the board carry over to the category picked. */
   q: string
+  board: Board
 }
 
 /** Phones: a row of chips that scrolls sideways. Wider screens: a column with counts, beside the list. */
-export function CategoryNav({ categories, total, current, q }: CategoryNavProps) {
+export function CategoryNav({ categories, total, current, q, board }: CategoryNavProps) {
   const t = useTranslations('apps')
   const items = [
     { slug: null, name: t('allCategories'), count: total },
@@ -30,7 +32,7 @@ export function CategoryNav({ categories, total, current, q }: CategoryNavProps)
           return (
             <li key={item.slug ?? 'all'} className="flex-none">
               <Link
-                href={listHref({ category: item.slug, q })}
+                href={listHref({ category: item.slug, q, board })}
                 aria-current={active ? 'page' : undefined}
                 className={`flex h-8.5 items-center gap-2.5 rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors md:h-10 md:rounded-none md:border-0 md:px-0 md:text-body md:font-medium ${
                   active

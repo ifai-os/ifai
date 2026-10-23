@@ -6,9 +6,17 @@ import { initialOf, inReaderLanguage } from '@/modules/apps/localized'
 
 describe('list addresses', () => {
   it('reads the search and the page', () => {
-    expect(readListParams({})).toEqual({ q: '', page: 1 })
-    expect(readListParams({ q: '  ai   video ', page: '3' })).toEqual({ q: 'ai video', page: 3 })
-    expect(readListParams({ q: ['first', 'second'] })).toEqual({ q: 'first', page: 1 })
+    expect(readListParams({})).toEqual({ q: '', page: 1, board: 'top', sort: 'heat' })
+    expect(readListParams({ q: '  ai   video ', page: '3' })).toMatchObject({ q: 'ai video', page: 3 })
+    expect(readListParams({ q: ['first', 'second'] })).toMatchObject({ q: 'first', page: 1 })
+  })
+
+  it('reads the board and the sort, each board with its own default sort', () => {
+    expect(readListParams({ board: 'rising' })).toMatchObject({ board: 'rising', sort: 'change' })
+    expect(readListParams({ board: 'new' })).toMatchObject({ board: 'new', sort: 'newest' })
+    expect(readListParams({ board: 'new', sort: 'heat' })).toMatchObject({ board: 'new', sort: 'heat' })
+    expect(readListParams({ board: 'hot', sort: 'random' })).toMatchObject({ board: 'top', sort: 'heat' })
+    expect(readListParams({ board: 'rising', sort: 'random' })).toMatchObject({ board: 'rising', sort: 'change' })
   })
 
   it('cuts long searches to 64 characters', () => {
@@ -26,6 +34,13 @@ describe('list addresses', () => {
     expect(listHref({ category: 'coding' })).toBe('/apps/category/coding')
     expect(listHref({ category: 'coding', q: 'AI 视频', page: 2 })).toBe('/apps/category/coding?q=AI+%E8%A7%86%E9%A2%91&page=2')
     expect(listHref({ q: '', page: 1 })).toBe('/apps')
+  })
+
+  it('keeps the board and the sort in addresses only when they are not the default', () => {
+    expect(listHref({ board: 'top', sort: 'heat' })).toBe('/apps')
+    expect(listHref({ board: 'rising', sort: 'change' })).toBe('/apps?board=rising')
+    expect(listHref({ board: 'rising', sort: 'heat', page: 2 })).toBe('/apps?board=rising&sort=heat&page=2')
+    expect(listHref({ category: 'coding', sort: 'change' })).toBe('/apps/category/coding?sort=change')
   })
 })
 

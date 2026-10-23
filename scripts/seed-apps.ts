@@ -1,27 +1,45 @@
 /**
- * Sample apps for local development and the CI smoke tests (tests/e2e/apps.spec.ts).
- * The apps are fictional (websites on .example). Runs only against a database on this
- * machine, so it can never put sample apps on a real site. Safe to run again: apps are
- * matched by slug and overwritten.
+ * Sample apps for local development and the CI smoke tests (tests/e2e/apps.spec.ts), with a
+ * few weeks of heat scored the way the daily job scores it. The apps are fictional (websites
+ * on .example). Runs only against a database on this machine, so it can never put sample apps
+ * on a real site. Safe to run again: apps are matched by slug and overwritten, and their heat
+ * is written anew. Run it after scripts/seed-stories.ts to match the sample stories that
+ * mention the apps.
  *
  *   pnpm payload run scripts/seed-apps.ts
  */
 import config from '@payload-config'
+import type { PostgresAdapter } from '@payloadcms/db-postgres'
+import { inArray } from '@payloadcms/db-postgres/drizzle'
 import { getPayload } from 'payload'
 
 import type { App } from '../src/payload-types'
 import { databaseUrl } from '../src/lib/db/url'
+import { shanghaiDate } from '../src/lib/shanghai-day'
+import { scoreApps, type HeatInput } from '../src/modules/apps/heat'
+import { addDays, shanghaiMidnight } from '../src/modules/apps/metrics/days'
+import { syncMentions } from '../src/modules/apps/metrics/mentions'
+import { appMetricsDaily } from '../src/modules/apps/schema'
 
 type Profile = Partial<Pick<App, 'tagline' | 'description' | 'features' | 'faqs' | 'tags'>>
 
+/** What the heat job reads for an app on one day. */
+type Figures = Pick<HeatInput, 'trancoRank' | 'clicks' | 'mentions'>
+
 type SampleApp = Pick<App, 'name' | 'slug' | 'status' | 'website'> &
-  Partial<Pick<App, 'developer' | 'aliases' | 'pricing' | 'platforms' | 'listedAt'>> & {
+  Partial<Pick<App, 'developer' | 'aliases' | 'pricing' | 'platforms'>> & {
+    /** Listed this many days ago, so the「新上架」board and「本周新上架」keep working. */
+    listedDaysAgo?: number
     category: string
     alsoIn?: string[]
     alternatives?: string[]
     /** English is required; zh-Hant comes from zh-Hans; a missing language falls back to English. */
     profile: { en: Profile } & Partial<Record<'zh-Hans' | 'ja' | 'ko', Profile>>
   }
+
+const DAY_MS = 24 * 60 * 60 * 1000
+const HOUR_MS = 60 * 60 * 1000
+const now = new Date()
 
 const sampleApps: SampleApp[] = [
   {
@@ -35,7 +53,7 @@ const sampleApps: SampleApp[] = [
     alsoIn: ['writing'],
     pricing: 'freemium',
     platforms: ['web', 'mobile', 'api'],
-    listedAt: '2026-09-01T00:00:00.000Z',
+    listedDaysAgo: 52,
     profile: {
       en: {
         tagline: 'Sample AI assistant for chat, writing and research',
@@ -88,7 +106,7 @@ const sampleApps: SampleApp[] = [
     alsoIn: ['assistants'],
     pricing: 'paid',
     platforms: ['desktop'],
-    listedAt: '2026-10-01T00:00:00.000Z',
+    listedDaysAgo: 22,
     alternatives: ['lumen-chat', 'draft-demo'],
     profile: {
       en: {
@@ -119,7 +137,7 @@ const sampleApps: SampleApp[] = [
     category: 'assistants',
     pricing: 'free',
     platforms: ['web', 'browser-extension'],
-    listedAt: '2026-10-20T00:00:00.000Z',
+    listedDaysAgo: 3,
     profile: {
       en: { tagline: 'Sample note-taking assistant that summarizes web pages' },
     },
@@ -135,6 +153,20 @@ const sampleApps: SampleApp[] = [
     },
   },
 ]
+
+/** Each published app's figures `ago` days before the latest scored day, from the day after it was listed. */
+const sampleFigures: Record<string, (ago: number) => Figures> = {
+  // The hottest: its site rank swings a little, then slips over the last ten days.
+  'lumen-chat': (ago) => ({
+    trancoRank: Math.round(600 * 0.9 ** Math.min(ago, 10) * (1 + 0.4 * Math.sin(Math.max(ago - 10, 0) / 3))),
+    clicks: 40 + (ago % 5),
+    mentions: 3,
+  }),
+  // Climbing fast: the top of the rising board and the home page's pick.
+  kitecode: (ago) => ({ trancoRank: 2600 + 160 * ago, clicks: 47 - 2 * ago, mentions: ago < 7 ? 2 : 1 }),
+  // New this week and not in the Tranco list.
+  'orbit-notes': (ago) => ({ trancoRank: null, clicks: 5 - ago, mentions: 1 }),
+}
 
 const localHosts = new Set(['localhost', '127.0.0.1', '[::1]'])
 
@@ -165,10 +197,11 @@ const ids = new Map<string, number>()
 const alternativesOf = new Map<string, string[]>()
 
 for (const app of sampleApps) {
-  const { category, alsoIn = [], alternatives = [], profile, ...fields } = app
+  const { category, alsoIn = [], alternatives = [], profile, listedDaysAgo, ...fields } = app
   alternativesOf.set(app.slug, alternatives)
   const data = {
     ...fields,
+    ...(listedDaysAgo !== undefined && { listedAt: new Date(now.getTime() - listedDaysAgo * DAY_MS).toISOString() }),
     ...profile.en,
     primaryCategory: categoryId(category),
     secondaryCategories: alsoIn.map(categoryId),
@@ -196,5 +229,42 @@ for (const [slug, alternatives] of alternativesOf) {
   await payload.update({ collection: 'apps', id: ids.get(slug) as number, data, depth: 0 })
 }
 
+// Heat: one row per published app per day after it was listed, up to the latest 06:00 run.
+const db = (payload.db as unknown as PostgresAdapter).drizzle
+const latestDay = shanghaiDate(new Date(now.getTime() - 6 * HOUR_MS))
+const scored = sampleApps.filter((app) => app.status === 'published' && app.listedDaysAgo !== undefined && sampleFigures[app.slug])
+const heatOn = new Map<string, number>()
+const rows: (typeof appMetricsDaily.$inferInsert)[] = []
+for (let ago = Math.max(...scored.map((app) => (app.listedDaysAgo as number) - 1)); ago >= 0; ago--) {
+  const day = addDays(latestDay, -ago)
+  const createdAt = new Date(shanghaiMidnight(day).getTime() + 6 * HOUR_MS)
+  const apps = scored
+    .filter((app) => ago < (app.listedDaysAgo as number))
+    .map((app) => {
+      const appId = ids.get(app.slug) as number
+      const domain = new URL(app.website as string).hostname
+      return { app, appId, figures: { ...sampleFigures[app.slug](ago), saves: 0, categoryId: categoryId(app.category) }, domain }
+    })
+  const results = scoreApps(
+    apps.map(({ app, appId, figures }) => ({
+      appId,
+      name: app.name,
+      heatBefore: heatOn.get(`${appId}:${addDays(day, -7)}`) ?? null,
+      ...figures,
+    })),
+  )
+  for (const [index, result] of results.entries()) {
+    const { figures, domain } = apps[index]
+    heatOn.set(`${result.appId}:${day}`, result.heat)
+    const ranked = figures.trancoRank !== null
+    rows.push({ ...figures, ...result, day, trancoDomain: ranked ? domain : null, trancoListId: ranked ? 'SAMPLE' : null, createdAt })
+  }
+}
+await db.delete(appMetricsDaily).where(inArray(appMetricsDaily.appId, [...ids.values()]))
+await db.insert(appMetricsDaily).values(rows)
+
+const mentions = await syncMentions(new Date(now.getTime() - 90 * DAY_MS), now)
+
 console.log(`Sample apps ready: ${sampleApps.map((app) => `${app.slug} (${app.status})`).join(', ')}`)
+console.log(`Heat: ${rows.length} rows up to ${latestDay}; ${mentions.mentions} mentions in ${mentions.stories} sample stories`)
 process.exit(0)
