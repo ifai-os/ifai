@@ -62,11 +62,17 @@ export async function newSaveCounts(type: SaveType, from: Date, to: Date): Promi
   return new Map(rows.map((row) => [row.id, Number(row.count)]))
 }
 
-/** Whether visitors can see the target, which is what saving it needs: a published app. */
+/** Whether visitors can see the target, which is what saving it needs: a published app or Skill. */
 const visible: Record<SaveType, (id: number) => Promise<boolean>> = {
   app: async (id) => {
     const { payload } = await getDb()
     const { totalDocs } = await payload.count({ collection: 'apps', where: { id: { equals: id } }, overrideAccess: false })
+    return totalDocs > 0
+  },
+  // Visitors read published Skills only, so a delisted one cannot be saved.
+  skill: async (id) => {
+    const { payload } = await getDb()
+    const { totalDocs } = await payload.count({ collection: 'skills', where: { id: { equals: id } }, overrideAccess: false })
     return totalDocs > 0
   },
 }

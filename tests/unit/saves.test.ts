@@ -6,10 +6,11 @@ describe('parseSaveTarget', () => {
   it('reads a type and a Payload id from a query string or a JSON body', () => {
     expect(parseSaveTarget('app', '12')).toEqual({ type: 'app', id: 12 })
     expect(parseSaveTarget('app', 12)).toEqual({ type: 'app', id: 12 })
+    expect(parseSaveTarget('skill', '3')).toEqual({ type: 'skill', id: 3 })
   })
 
   it('refuses unknown types and ids that are not positive whole numbers in range', () => {
-    expect(parseSaveTarget('skill', '12')).toBeNull()
+    expect(parseSaveTarget('story', '12')).toBeNull()
     expect(parseSaveTarget(null, '12')).toBeNull()
     for (const id of ['0', '-1', '1.5', '012', 'abc', '', '99999999999', 0, -3, 1.5, 2 ** 31, null, undefined]) {
       expect(parseSaveTarget('app', id), String(id)).toBeNull()
@@ -23,10 +24,11 @@ describe('the save to finish after signing in', () => {
     const value = pendingSaveValue({ type: 'app', id: 7 })
     expect(value).toBe('app-7')
     expect(readPendingSave(value)).toEqual({ type: 'app', id: 7 })
+    expect(readPendingSave('skill-3')).toEqual({ type: 'skill', id: 3 })
   })
 
   it('ignores anything else', () => {
-    for (const value of [null, '', 'app', 'app-', 'app-x', 'skill-3', 'app-3-4', 'APP-3']) {
+    for (const value of [null, '', 'app', 'app-', 'app-x', 'story-3', 'app-3-4', 'APP-3']) {
       expect(readPendingSave(value), String(value)).toBeNull()
     }
   })

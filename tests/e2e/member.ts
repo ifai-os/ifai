@@ -38,6 +38,11 @@ export async function createMember(baseURL: string) {
       if (!rows[0]) throw new Error(`No app ${slug}; run scripts/seed-apps.ts`)
       return rows[0].id
     },
+    async skillId(slug: string): Promise<number> {
+      const { rows } = await client.query<{ id: number }>('select id from skills where slug = $1', [slug])
+      if (!rows[0]) throw new Error(`No Skill ${slug}; run scripts/seed-skills.ts`)
+      return rows[0].id
+    },
     async remove() {
       await client.query('delete from auth_users where id = $1', [id])
       await client.end()

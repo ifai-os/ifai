@@ -1,16 +1,23 @@
 import { getFormatter, getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
+import { buttonBase, buttonClass } from '@/components/button'
 import { Icon } from '@/components/icon'
+import { ShareButton } from '@/components/share-button'
 import { Link } from '@/i18n/navigation'
+import type { AuthProviders } from '@/lib/auth/providers'
+import { SaveButton, SaveCount } from '@/modules/saves/components/save-button'
+import { SaveProvider } from '@/modules/saves/components/save-provider'
 
 import type { SkillDetail, VersionDetail } from '../data'
 import { fileTree, guessLang } from '../files'
 import { installMdUrl, zipPath } from '../install'
 import { fileHref, skillHref, skillsHref, versionHref } from '../list-params'
 import { ApiKeyBadge, CertifiedBadge, ScanBadgeView } from './badges'
+import { copyButtonClass } from './classes'
 import { DetailTabs } from './detail-tabs'
 import { InstallPanel } from './install-panel'
+import { CopyInstallButton, InstallProvider } from './install-state'
 import { RelatedSkills } from './related-skills'
 import { SkillTile } from './skill-tile'
 
@@ -18,6 +25,8 @@ type SkillDetailViewProps = {
   skill: SkillDetail
   /** A fixed link to one version (/v/<version>) rather than the Skill's page. */
   pinned: boolean
+  /** The sign-in methods, for the dialog a visitor gets on pressing save. */
+  signIn: AuthProviders
 }
 
 // Literal class names so Tailwind sees them; deeper folders stop indenting.
@@ -25,13 +34,18 @@ const indents = ['pl-4', 'pl-9', 'pl-14', 'pl-19', 'pl-24'] as const
 
 const kib = (bytes: number) => `${(bytes / 1024).toFixed(bytes < 10240 ? 1 : 0)} KB`
 
+// Outlined like a secondary button; the save button colors its own text.
+const outline = 'border border-line bg-bg hover:border-ink-4'
+
 /**
  * A Skill's page (boards「IFAI Skill 详情」and「手机 · Skill 详情」): header with badges and facts,
  * the install panel (right column on wide screens, right under the header on phones), then
  * 概述 / 文件 / 版本记录 / 安全检测, and information, fingerprint and related Skills beside them.
- * Text from the package (SKILL.md, file names) is rendered as text, never as markup (rule 4).
+ * Phones also get a bottom bar with save and copy. Saving reads the member's state in the
+ * browser, so the page stays static. Text from the package (SKILL.md, file names) is rendered
+ * as text, never as markup (rule 4).
  */
-export async function SkillDetailView({ skill, pinned }: SkillDetailViewProps) {
+export async function SkillDetailView({ skill, pinned, signIn }: SkillDetailViewProps) {
   const t = await getTranslations('resources')
   const categoryName = await getTranslations('skillCategories')
   const card = await getTranslations('card')
@@ -91,7 +105,9 @@ export async function SkillDetailView({ skill, pinned }: SkillDetailViewProps) {
     })
   }
 
-  return (
+  const shareLabels = { share: t('share'), copied: t('linkCopied') }
+
+  const page = (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-6 px-4 pt-5 pb-16 md:gap-8 md:pb-24">
       <nav aria-label={t('breadcrumb')} className="text-meta text-ink-4">
         <ol className="flex flex-wrap items-center gap-2">
@@ -147,7 +163,7 @@ export async function SkillDetailView({ skill, pinned }: SkillDetailViewProps) {
         <header className="order-1 flex min-w-0 flex-col gap-3.5 md:order-none md:col-start-1">
           <div className="flex items-center gap-4">
             <SkillTile name={skill.name.value} slug={skill.slug} size="2xl" />
-            <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <h1 lang={skill.name.lang} className="text-h2 wrap-anywhere md:text-h1">
                 {skill.name.value}
               </h1>
@@ -156,6 +172,14 @@ export async function SkillDetailView({ skill, pinned }: SkillDetailViewProps) {
                 {shown && ` · v${shown.version}`}
               </p>
             </div>
+            {!delisted && (
+              <ShareButton
+                title={skill.name.value}
+                labels={shareLabels}
+                iconOnly
+                className="flex size-11 flex-none items-center justify-center rounded-pill text-ink-2 hover:text-ink md:hidden"
+              />
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {skill.certified && <CertifiedBadge />}
@@ -169,7 +193,10 @@ export async function SkillDetailView({ skill, pinned }: SkillDetailViewProps) {
             </p>
           )}
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-meta text-ink-4">
-            <span>{card('installs', { count: installs })}</span>
+            <span>
+              {card('installs', { count: installs })}
+              {!delisted && <SaveCount />}
+            </span>
             {shown?.publishedAt && <span>{t('updatedOn', { date: date(shown.publishedAt) ?? '' })}</span>}
             <span>
               {t('by')}{' '}
@@ -194,21 +221,19 @@ export async function SkillDetailView({ skill, pinned }: SkillDetailViewProps) {
               ))}
             </ul>
           )}
+          {!delisted && (
+            <div className="hidden flex-wrap gap-2 pt-1 md:flex">
+              <SaveButton className={`${buttonBase} ${outline}`} />
+              <ShareButton title={skill.name.value} className={buttonClass('secondary')} labels={shareLabels} />
+            </div>
+          )}
         </header>
 
         {/* Phones: the install panel right under the header, the facts after the tabs (`contents` lets the grid order them). */}
         <div className="contents md:col-start-2 md:row-span-2 md:row-start-1 md:flex md:min-w-0 md:flex-col md:gap-6">
           {!delisted && shown && (
             <div className="order-2 min-w-0 md:order-none">
-              <InstallPanel
-                slug={skill.slug}
-                version={shown.version}
-                hosts={shown.hosts}
-                instructions={instructions}
-                zipHref={zipPath(skill.slug, shown.version)}
-                disabled={disabled}
-                pending={pending}
-              />
+              <InstallPanel pending={pending} />
             </div>
           )}
 
@@ -278,6 +303,32 @@ export async function SkillDetailView({ skill, pinned }: SkillDetailViewProps) {
         </div>
       </div>
     </main>
+  )
+
+  // A delisted Skill can be neither saved nor installed.
+  if (delisted) return page
+  return (
+    <SaveProvider target={{ type: 'skill', id: skill.id }} signIn={signIn}>
+      {shown ? (
+        <InstallProvider
+          slug={skill.slug}
+          version={shown.version}
+          hosts={shown.hosts}
+          instructions={instructions}
+          zipHref={zipPath(skill.slug, shown.version)}
+          disabled={disabled}
+        >
+          {page}
+          {/* Phones: save and copy stay in reach while reading (board「手机 · Skill 详情」). */}
+          <div className="sticky bottom-0 z-10 flex gap-2.5 border-t border-line bg-bg px-4 pt-2.5 pb-3.5 md:hidden">
+            <SaveButton iconOnly className={`flex size-12 flex-none items-center justify-center rounded-btn transition-colors ${outline}`} />
+            <CopyInstallButton className={`h-12 flex-1 text-body ${copyButtonClass}`} />
+          </div>
+        </InstallProvider>
+      ) : (
+        page
+      )}
+    </SaveProvider>
   )
 }
 
