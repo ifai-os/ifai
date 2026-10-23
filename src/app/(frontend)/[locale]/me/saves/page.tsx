@@ -8,6 +8,7 @@ import { auth } from '@/lib/auth/auth'
 import { authProviders } from '@/lib/auth/providers'
 import { alternatesFor } from '@/lib/seo'
 import { getSavedApps } from '@/modules/apps/data'
+import { getSavedSkills } from '@/modules/resources/public/data'
 import { SavedPage } from '@/modules/saves/components/saved-page'
 import { savedIds } from '@/modules/saves/data'
 
@@ -31,7 +32,12 @@ export default async function SavesPage({ params }: Props) {
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
   const session = await auth.api.getSession({ headers: await headers() })
-  const apps = session ? await getSavedApps(await savedIds(session.user.id, 'app'), locale) : null
+  const saved = session
+    ? await Promise.all([
+        savedIds(session.user.id, 'app').then((ids) => getSavedApps(ids, locale)),
+        savedIds(session.user.id, 'skill').then((ids) => getSavedSkills(ids, locale)),
+      ]).then(([apps, skills]) => ({ apps, skills }))
+    : null
 
-  return <SavedPage apps={apps} signIn={authProviders()} />
+  return <SavedPage saved={saved} signIn={authProviders()} />
 }
