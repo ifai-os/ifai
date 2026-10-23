@@ -118,7 +118,14 @@ export default buildConfig({
   plugins: [
     s3Storage({
       enabled: r2Enabled,
-      collections: { media: { prefix: 'media' }, 'skill-versions': { prefix: 'skills' } },
+      collections: {
+        media: { prefix: 'media' },
+        // Downloads go to a short-lived R2 address; the site's own reads (the file viewer) stream through.
+        'skill-versions': {
+          prefix: 'skills',
+          signedDownloads: { expiresIn: 300, shouldUseSignedURL: ({ req }) => !req.context?.internalRead },
+        },
+      },
       bucket: process.env.R2_BUCKET || '',
       config: {
         endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,

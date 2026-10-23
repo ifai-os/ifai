@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
+import { refreshSkillsAfterChange, refreshSkillsAfterDelete } from '../public/cache'
 import { isAdmin, resourcesAdminGroup, slugField } from './shared'
 
 /** Free-form tags on Skills ("Agent", "code review" …). The list page shows the most used ones. */
@@ -27,7 +28,8 @@ export const SkillTags: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    afterChange: [syncHantFromHans(['name'])],
+    afterChange: [syncHantFromHans(['name']), refreshSkillsAfterChange],
+    afterDelete: [refreshSkillsAfterDelete],
   },
   fields: [
     {
