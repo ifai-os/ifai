@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-23（应用第 4 步前半·热度的数据与任务；日报第 5 步·前台）。
+更新于 2026-10-23（资源第 3 步·说明起草；应用第 4 步前半·热度的数据与任务；日报第 5 步·前台）。
 
 ## 现在到哪了
 
@@ -28,6 +28,7 @@
 - **应用第 4 步前半（热度的数据与任务）已完成**：迁移 `apps_heat` 建 Drizzle 表 `app_clicks`、`app_mentions`、`app_metrics_daily`、`app_heat_runs`（`src/modules/apps/schema.ts`）。Inngest 任务 `apps-heat-daily` 每天上海时间 06:00（或后台应用列表上方「现在重算」，事件 `apps/heat.run`）：下载 Tranco 每日名单按注册域名查名次（失败沿用最近一次的名次并在后台提示），匹配近 30 天已发布日报的产品、公司和来源链接写进 `app_mentions`，再按 `src/modules/apps/heat.ts` 打分写 `app_metrics_daily`、刷新 `apps` 缓存。「打开网站」改走 `/[locale]/apps/[slug]/visit`：同一访客每天每个应用记一次点击（哈希在 `src/lib/visitor.ts`，不存 IP，爬虫和预取不记），再跳官网。后台应用编辑页多了「热度」标签（三项构成、名次、近 30 天、匹配到的日报，误配可以删掉）。收藏第 5 步才有，现在这一项只算点击。本地库上用假的 Tranco 名单跑通了打分、7 天变化、飙升、同一事件只算一次、删掉误配、Tranco 失败沿用、点击去重和爬虫过滤。tranco-list.eu 在沙盒里连不上，上线后第一次运行要在后台确认名单编号。做法写在 apps.md「热度」末尾。
 - **资源第 1 步（集合与后台录入）已完成**：`src/modules/resources/collections/` 里的 `skills`、`skill-versions`（上传集合，Zip 存 R2 的 `skills/` 前缀）、`agent-hosts`、`skill-tags`、`skill-submissions`，Drizzle 表 `skill_events`（`db/schema.ts`），迁移 `resources` 建表并写入 6 个宿主；分类固定 7 个在 `categories.ts`，名称在 `messages/`。
 - **资源第 2 步（导入与检测）已完成**：后台 Skill 页侧栏有「导入版本」（接口 `POST /api/skills/:id/import`，可填分支 / tag / commit 和版本号），发事件 `skill/import` 给 Inngest 任务 `skill-import`（`src/modules/resources/import/`）：从 codeload 拉仓库的 tar.gz 快照（commit 取自归档头，公开仓库不用令牌；可选 `GITHUB_TOKEN` 提限额），按仓库地址里的子目录或唯一的 `SKILL.md` 找到 Skill 目录，去掉 `.git`、`.DS_Store` 之类，打成确定性的 Zip（同样的文件得到同样的 sha256），以「待审」状态创建版本；版本号取请求的 → `SKILL.md` 头部的 → 最新版本号加一；同一 commit 只导入一次；结果写在 Skill 侧栏「最近导入」里。sha256、文件清单、SKILL.md 原文与 frontmatter、声明的域名和静态检测全部在 `skill-versions` 的上传钩子里由 Zip 算出（`package/inspect.ts`），所以手动上传的 Zip 和导入的走同一套检查。静态检测（`scan/`）按规格 7 项：包结构、密钥、敏感位置为「拦截」，危险命令、外联、提示注入为「有提示」，许可缺失则不能发布（仓库 SPDX → `SKILL.md` 的 `license` → 包内或仓库根 LICENSE → Skill 上填的许可 → 「作者书面同意」勾选）。发布校验：拦截不能发，待检测不能发，有提示要填「复核备注」，没有许可要有许可或作者同意；发布时自动填 `publishedAt`，把 Skill 的当前版本换成更新的版本并让草稿 Skill 上线。已发布 / 已弃用 / 已撤回的版本不能换 Zip、不能退回待审，版本号、commit、sha256、文件清单、SKILL.md、frontmatter、声明、检测结果都不能改（规则 2）；更新说明和兼容记录仍可改。撤回要填原因，Skill 下架要填原因，已发布的 Skill 必须指向已发布的版本。`skills` 开了 Payload 版本历史（显示字段的修改记录）。本地库上用假的 GitHub 响应跑通了导入、重复导入、导入失败记录、拦截不能发布、有提示需备注、发布后 Skill 上线、不可改、撤回、下架。
+- **资源第 3 步（说明起草）已完成**：新用途 `describe`（`src/lib/ai/purposes.ts`，可用 `AI_MODEL_DESCRIBE` 换模型）。起草以版本为单位（`src/modules/resources/describe/`，提示词在 `prompts/describe.ts`）：一次调用按文件提取声明（外联域名、读写范围、工具、API Key，温度 0），四次调用分别写简体、英语、日语、韩语的显示名、一句话介绍、「它能做什么」、使用示例、工作流程和注意事项；SKILL.md、README（包内的，没有时取仓库根目录的，存在版本的 `readme` 字段）和文件清单全部用 `untrusted()` 包成数据。文字写进 Skill（简体先写，繁体由钩子生成），声明写进版本；名字和数字用日报的原文核对检查，文件里找不到的外联域名、工具、API Key 不写入，列在面板上；版本已发布时不改它的声明（规则 2）。状态记在版本上：「说明草稿」待生成 → 已生成 / 没生成（`draftStatus`、`draftInfo`）。Skill 还没有说明时，导入后自动排队起草，只填空着的字段；之后在版本页侧栏点「生成说明草稿」重写（接口 `POST /api/skill-versions/:id/describe`），显示名只在空着时填，试用笔记不动，「需要 API Key」和运行依赖也只在空着时填。Inngest 任务 `skill-describe`（同一版本的新请求取消旧的，模型调用失败三次标「没生成」）和 `skill-describe-sweep`（每 20 分钟补漏：开关关着、预算用完或事件丢了的草稿）。模型关着、没有 key、预算用完时草稿停在「待生成」，导入照常完成。迁移 `resources_describe` 给 `skill_versions` 加 `draft_status`、`draft_info`、`readme`。本地库上用假模型跑通了：四种语言和繁体写入、声明核对、只填空字段与重写、旧请求不覆盖新请求、补漏、已发布版本不改声明、没有 SKILL.md 正文时标「没生成」、开关关着时等待。真实模型的草稿质量要在预览环境试。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 
@@ -40,7 +41,7 @@
 | 第一期 | 1–2 | 地基 | 完成 |
 | 第一期 | 3 起 | 日报 | 第 5 步完成，下一步热度与海报 |
 | 第一期 | 日报之后 | 应用 | 第 1–3 步（集合与后台录入、官网取材与资料草稿、列表页和详情页）、第 4 步前半（热度的数据与任务）完成，下一步热度页面 |
-| 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）、第 2 步（导入与检测）完成，下一步说明起草 |
+| 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）、第 2 步（导入与检测）、第 3 步（说明起草）完成，下一步前台 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
 | 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
 
@@ -50,7 +51,7 @@
 
 1. **日报第 6 步（热度与海报）**，对应画板「IFAI 日报（新版）」的「今日最热」「每日 AI 大事」卡片和「日报审核后台」右栏「今日海报」：事件热度、热门标记、每日海报（上海日期）和分享图，`/[locale]/daily/poster/[YYYY-MM-DD]`；归组时后来并入事件的「同一次发生」报道要同步加进已发布新闻的来源列表。列表页右栏的「今天提到的应用」「48 小时热门」也留在这一步。
 2. **应用首批导入**：站长从 Toolify 挑 200–300 个应用的名称和官网网址，贴进后台「批量添加应用」，在预览环境先试几个，确认草稿质量后再批量。**应用第 4 步后半（热度页面）**正在做：列表的榜单（综合 / 飙升 / 新上架）、热度前三、7 天走势、「热度怎么算」，详情页的热度和「日报里提到它」（链到日报第 5 步的 `/[locale]/daily/[slug]`），替代品改成同类热度前几名，首页「热门应用」改读 `app_metrics_daily`。然后是第 5 步收藏、评价与提交。这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，Tranco 下载要在预览环境验证，或者在项目设置里加白名单。
-3. **资源第 3 步：说明起草**（见 resources.md「实现顺序」和「定时任务与 AI」）：新用途 `skill.describe` 加在 `src/lib/ai/purposes.ts`，输入 SKILL.md、README 和文件清单（全部用 `untrusted()` 包起来），输出简体、英语、日语、韩语的显示名、一句话介绍、「它能做什么」、使用示例、注意事项，以及提取出的外联域名、读写范围、工具和 API Key，填进版本的「声明」和 Skill 的说明字段作草稿；模型失败时字段留空，不阻塞导入。导入任务 `skill-import` 现在只做到检测，起草接在它后面（`src/modules/resources/import/jobs.ts`）。繁体由 `syncHantFromHans` 自动生成，已挂好。然后是第 4 步前台（列表、详情、固定版本页、`install.md` 和下载接口、安装事件）。6 个宿主里 Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
+3. **资源第 4 步：前台**（见 resources.md「实现顺序」，画板「IFAI 资源 · Skills」「IFAI Skill 详情」「手机 · Skill 详情」）：列表、详情（桌面、手机）、固定版本页、`install.md` 和下载接口、安装事件（访客哈希用 `src/lib/visitor.ts`，同一访客对同一 Skill 一天算一次）、首页「新上架 Skills」接真实数据。说明起草要在预览环境配好 `OPENROUTER_API_KEY`、打开 `MODEL_CALLS_ENABLED`，对两三个真实 Skill 点「生成说明草稿」看质量。6 个宿主里 Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用应用的 `saves` 表，谁先做谁建表。
 
 ## 已做的决定
 
@@ -87,6 +88,7 @@
 - 宿主显示 6 个：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy；第一批只在 Claude Code 和 Codex 上验证兼容。
 - 用户投稿只做轻量表单，由站长导入审核；第一批从公开仓库挑 20–30 个有明确开源许可的。
 - 安装数：复制指令、下载 Zip、拉取 install.md 各算一次，同一访客对同一 Skill 一天一次。
+- 说明草稿以版本为单位起草，写进 Skill 的说明字段：首次导入自动起草，只填空着的字段；之后由站长在版本页手动重写。显示名只填不改，试用笔记不动；规格列出的字段之外也起草「工作流程」。
 
 品牌：
 

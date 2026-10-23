@@ -11,10 +11,11 @@ import { text } from 'payload/shared'
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 import type { Skill, SkillVersion } from '@/payload-types'
 
+import { describeEndpoints } from '../describe/endpoints'
 import { compareVersions, isSha256, isValidVersion, normalizeSha256, normalizeVersion } from '../normalize'
 import { inspectPackage, type ImportContext } from '../package/inspect'
-import { isSystemWrite, peek, reject, relationId, systemUpdate } from './guards'
-import { adminMessage, isAdmin, resourcesAdminGroup } from './shared'
+import { FROZEN_STATUSES, isSystemWrite, peek, reject, relationId, systemUpdate } from './guards'
+import { adminMessage, isAdmin, jobsOnly, resourcesAdminGroup, signedIn } from './shared'
 
 /**
  * Everything that comes from the Zip is computed from it, never typed: the sha256, the file list,
@@ -34,9 +35,6 @@ const inspectUpload: CollectionBeforeValidateHook = async ({ data, originalDoc, 
   )
   return { ...data, ...fields, declarations: { ...(data?.declarations ?? {}), domains: declaredDomains } }
 }
-
-/** Once a version is out, its content never changes (rule 2); only these statuses remain. */
-const FROZEN = new Set(['published', 'deprecated', 'withdrawn'])
 
 type Row = Record<string, unknown>
 
@@ -63,6 +61,7 @@ function frozenSnapshot(doc: Row): Record<string, string> {
     sha256: canon(doc.sha256 || null),
     files: rows(doc.files, (row) => [row.path, row.size ?? null, row.sha256 ?? null]),
     skillMd: canon(doc.skillMd || null),
+    readme: canon(doc.readme || null),
     frontmatter: canon(doc.frontmatter ?? null),
     declarations: canon({
       domains: declarations.domains ?? [],
@@ -88,14 +87,14 @@ const guardVersion: CollectionBeforeChangeHook = async ({ data, originalDoc, ope
   const status = merged.status as string | undefined
   const collection = 'skill-versions'
 
-  if (operation === 'update' && originalDoc && FROZEN.has(originalDoc.status)) {
+  if (operation === 'update' && originalDoc && FROZEN_STATUSES.has(originalDoc.status)) {
     if (req.file) {
       reject(req, collection, 'file', {
         en: 'A published version keeps its Zip. Import or upload a new version instead.',
         zh: '已发布的版本不能换 Zip，要改就发新版本。',
       })
     }
-    if (!status || !FROZEN.has(status)) {
+    if (!status || !FROZEN_STATUSES.has(status)) {
       reject(req, collection, 'status', {
         en: 'A published version cannot go back to review; deprecate or withdraw it instead.',
         zh: '已发布的版本不能退回待审，可以标为已弃用或撤回。',
@@ -259,6 +258,7 @@ export const SkillVersions: CollectionConfig = {
     beforeChange: [guardVersion],
     afterChange: [promoteSkill, syncHantFromHans(['changelog'])],
   },
+  endpoints: describeEndpoints,
   fields: [
     {
       name: 'skill',
@@ -324,6 +324,27 @@ export const SkillVersions: CollectionConfig = {
           zh: '检测有提示的版本要写一句才能发布：看了什么，为什么没问题。',
         },
       },
+    },
+    {
+      name: 'draftStatus',
+      type: 'select',
+      index: true,
+      label: { en: 'Description draft', zh: '说明草稿' },
+      options: [
+        { value: 'pending', label: { en: 'Waiting', zh: '待生成' } },
+        { value: 'drafted', label: { en: 'Drafted', zh: '已生成' } },
+        { value: 'failed', label: { en: 'Not written', zh: '没生成' } },
+      ],
+      access: { read: signedIn, create: jobsOnly, update: jobsOnly },
+      // Shown as the「说明草稿」panel (state, check results, draft button); a plain column in the list.
+      admin: { position: 'sidebar', readOnly: true, components: { Field: '/modules/resources/admin/describe-panel#DescribePanel' } },
+    },
+    {
+      name: 'draftInfo',
+      type: 'json',
+      label: { en: 'Description draft details', zh: '说明草稿详情' },
+      access: { read: signedIn, create: jobsOnly, update: jobsOnly },
+      admin: { hidden: true },
     },
     {
       type: 'tabs',
@@ -395,6 +416,14 @@ export const SkillVersions: CollectionConfig = {
               type: 'json',
               label: { en: 'Frontmatter', zh: 'frontmatter' },
               admin: { description: { en: 'name, description and the rest of the SKILL.md header.', zh: 'SKILL.md 头部的 name、description 等。' } },
+            },
+            {
+              name: 'readme',
+              type: 'textarea',
+              label: { en: 'README (for the description draft)', zh: 'README（起草用）' },
+              access: { read: signedIn },
+              // The package's own README, else the repository's; captured from the Zip, kept out of the form.
+              admin: { hidden: true },
             },
           ],
         },

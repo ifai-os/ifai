@@ -22,6 +22,7 @@ describe('selectSkillDir', () => {
     expect(result.files.map((f) => f.path).sort()).toEqual(['SKILL.md', 'references/notes.md', 'scripts/run.py'])
     expect(result.symlinks).toEqual(['link-to-readme'])
     expect(result.repoLicenseFile).toBe('LICENSE')
+    expect(result.repoReadme?.path).toBe('README.md')
   })
 
   it('reports a directory without SKILL.md', () => {
