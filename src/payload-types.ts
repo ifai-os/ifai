@@ -251,7 +251,7 @@ export interface App {
   status: 'draft' | 'published' | 'delisted';
   listedAt?: string | null;
   /**
-   * Re-check pricing and platforms every 90 days.
+   * Re-check pricing and platforms every 90 days, then set today. Publishing fills it in; the apps list says when apps are due.
    */
   checkedAt?: string | null;
   draftStatus?: ('pending' | 'drafted' | 'failed') | null;

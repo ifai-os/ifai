@@ -22,7 +22,8 @@
     "account": "Account menu",
     "saves": "Saved",
     "accountPage": "Account",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "search": "Search"
   },
   "home": {
     "todayAI": "AI today",
@@ -95,6 +96,37 @@
     "back": "Back to home",
     "daily": "See today's Daily"
   },
+  "search": {
+    "title": "Search",
+    "queryTitle": "Search: {q}",
+    "label": "Search IFAI",
+    "placeholder": "Search the Daily, apps and Skills",
+    "submit": "Search",
+    "clear": "Clear search",
+    "intro": "News from the Daily, apps and Skills, all in one search.",
+    "typesLabel": "Result types",
+    "tabs": {
+      "all": "All",
+      "daily": "Daily",
+      "apps": "Apps",
+      "skills": "Skills"
+    },
+    "kind": {
+      "daily": "Daily",
+      "apps": "App",
+      "skills": "Skill"
+    },
+    "found": "{count, plural, one {# result} other {# results}} for “{q}”",
+    "seeAll": "See all {count}",
+    "noMatchTitle": "Nothing found for “{q}”",
+    "noMatchBody": "Try a shorter keyword, or search in English.",
+    "noMatchKind": "No {kind} results for “{q}”. See what the other tabs found.",
+    "popular": "Popular",
+    "pages": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}"
+  },
   "legal": {
     "updated": "Last updated: {date}",
     "englishPrevails": "This page is available in five languages. If the versions differ, the English version applies.",
@@ -125,7 +157,7 @@
         },
         "choices": {
           "title": "Your choices",
-          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews and remove saves at any time.\n- You can delete your account yourself: sign in and open Account from the account menu. Your saves, reviews, reports and submissions are deleted with it.\n- You can ask us to show you, correct or delete the information we hold about you by writing to {email}, and to delete your account if you can't sign in. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
+          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews and remove saves at any time.\n- You can download a copy of your data as a JSON file: sign in and open Account from the account menu. It includes your account details, sign-ins, saves, reviews, reports and submissions, and the Daily email subscription of your sign-in email if it has one.\n- On the same page you can delete your account yourself. Your saves, reviews, reports and submissions are deleted with it.\n- You can ask us to show you, correct or delete the information we hold about you by writing to {email}, and to delete your account if you can't sign in. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
         },
         "children": {
           "title": "Children",
@@ -661,12 +693,13 @@
     "signInTitle": "Sign in to save",
     "afterSignIn": "Once you're signed in, it's saved for you.",
     "title": "Saved",
-    "description": "The AI apps and Skills you saved.",
-    "signInBody": "Sign in to see the apps and Skills you saved.",
+    "description": "The news, AI apps and Skills you saved.",
+    "signInBody": "Sign in to see the news, apps and Skills you saved.",
     "emptyTitle": "Nothing saved yet",
-    "emptyBody": "Press Save on an app or Skill you like and it will show up here",
+    "emptyBody": "Press Save on a story, app or Skill you like and it will show up here",
     "browseApps": "Browse AI apps",
     "browseSkills": "Browse Skills",
+    "stories": "News",
     "apps": "Apps",
     "skills": "Skills",
     "remove": "Remove",
@@ -675,9 +708,17 @@
   },
   "account": {
     "title": "Account",
-    "description": "Your IFAI account, and deleting it.",
-    "signInBody": "Sign in to see or delete your account.",
+    "description": "Your IFAI account: download your data, or delete the account.",
+    "signInBody": "Sign in to download your data or delete your account.",
     "email": "Signed in as",
+    "exportTitle": "Download your data",
+    "exportBody": "A JSON file with what IFAI keeps about this account: account details, sign-ins, saves, reviews, reports, and the apps and Skills you submitted. If your sign-in email has subscribed to the daily email, it also includes the subscription settings and a record of each email sent.",
+    "exportButton": "Download my data",
+    "exporting": "Preparing…",
+    "exported": "Downloaded {file}",
+    "exportFailed": "We couldn't export your data. Please try again in a moment.",
+    "exportSignedOut": "You've been signed out. Reload the page and sign in again, then download your data.",
+    "exportAbout": "The data IFAI keeps about the account {email}, exported at {time}. The privacy policy explains what each part is: {url}",
     "deleteTitle": "Delete account",
     "deleteBody": "Deleting your account also deletes your saves, the app reviews you wrote, the reports you sent, and the apps and Skills you submitted. This can't be undone. Apps and Skills already listed on IFAI stay.",
     "deleteKeeps": "The daily email is separate from your account, so deleting it doesn't unsubscribe you. To stop the emails, use the unsubscribe link at the bottom of any email.",

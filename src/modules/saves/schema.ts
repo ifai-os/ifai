@@ -9,7 +9,7 @@ import { saveTypes } from './target'
  * One row per member and thing they saved; unsaving deletes the row. So the rows for a target
  * are the members who have it saved now, and the rows created in a window are its new saves
  * (what the apps heat counts). `target_id` is the Payload id in the type's collection (`apps`
- * for 'app', `skills` for 'skill'). Rows go with the member's account.
+ * for 'app', `skills` for 'skill', `stories` for 'story'). Rows go with the member's account.
  */
 export const saves = pgTable(
   'saves',

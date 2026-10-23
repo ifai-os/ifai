@@ -7,6 +7,7 @@ import type { Locale } from '@/i18n/config'
 import { inAnyLanguage } from '@/lib/i18n/localized'
 import type { StoryCategory } from '@/modules/daily/categories'
 import { isStoryCategory } from '@/modules/daily/public/story-item'
+import { namesFirst } from '@/modules/search/rank'
 import type { App, Media } from '@/payload-types'
 
 import {
@@ -411,6 +412,42 @@ export async function getHomeApps(locale: Locale, count: number): Promise<{ tren
     trending: ids.map((id) => items.get(id)).filter((item) => item !== undefined),
     pick: (pickId && items.get(pickId)) || null,
   }
+}
+
+/**
+ * The site search's apps (docs/specs/search.md): every published app matching the search, the
+ * ones named exactly so first, then by heat; `offset` and `limit` pick the page shown.
+ */
+export async function searchApps({
+  locale,
+  q,
+  offset,
+  limit,
+}: {
+  locale: Locale
+  q: string
+  offset: number
+  limit: number
+}): Promise<{ apps: HeatedApp[]; total: number }> {
+  const [found, latest, categories] = await Promise.all([
+    (await payload()).find({
+      collection: 'apps',
+      where: { and: [published, matching(q)] },
+      pagination: false,
+      locale: 'all',
+      depth: 0,
+      select: { name: true, aliases: true, listedAt: true },
+      overrideAccess: false,
+    }),
+    loadLatestHeat(),
+    categoryMap(locale),
+  ])
+  const aliases = new Map(found.docs.map((doc) => [doc.id, doc.aliases ?? []]))
+  const candidates = found.docs.map((doc) => ({ id: doc.id, name: doc.name, listedAt: doc.listedAt ?? null }))
+  const byHeat = orderApps(candidates, heatOf(latest), { board: 'top', sort: 'heat', now: new Date(), newSince: null })
+  const ordered = namesFirst(byHeat, q, (app) => [app.name, ...(aliases.get(app.id) ?? [])])
+  const docs = await findAppsByIds(ordered.slice(offset, offset + limit).map((app) => app.id))
+  return { apps: docs.map((doc) => withHeat(doc, locale, categories, latest)), total: ordered.length }
 }
 
 /**

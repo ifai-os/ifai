@@ -22,7 +22,8 @@
     "account": "账号菜单",
     "saves": "我的收藏",
     "accountPage": "账号",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "search": "搜索"
   },
   "home": {
     "todayAI": "今天的 AI",
@@ -95,6 +96,37 @@
     "back": "返回首页",
     "daily": "看今天的日报"
   },
+  "search": {
+    "title": "搜索",
+    "queryTitle": "搜索：{q}",
+    "label": "搜索 IFAI",
+    "placeholder": "搜索日报、应用和 Skills",
+    "submit": "搜索",
+    "clear": "清除搜索",
+    "intro": "日报新闻、应用和 Skills，一次查遍。",
+    "typesLabel": "结果类型",
+    "tabs": {
+      "all": "全部",
+      "daily": "日报",
+      "apps": "应用",
+      "skills": "Skills"
+    },
+    "kind": {
+      "daily": "日报",
+      "apps": "应用",
+      "skills": "Skill"
+    },
+    "found": "找到 {count} 个与「{q}」相关的结果",
+    "seeAll": "查看全部 {count} 条",
+    "noMatchTitle": "没有找到「{q}」相关内容",
+    "noMatchBody": "也可以试试更短的关键词，或者换成英文。",
+    "noMatchKind": "{kind}里没有「{q}」相关内容，看看其他标签。",
+    "popular": "热门",
+    "pages": "翻页",
+    "previous": "上一页",
+    "next": "下一页",
+    "pageOf": "第 {page} / {pages} 页"
+  },
   "legal": {
     "updated": "最后更新：{date}",
     "englishPrevails": "本页有五种语言版本，各版本有出入时以英文版为准。",
@@ -125,7 +157,7 @@
         },
         "choices": {
           "title": "你可以做什么",
-          "body": "- 每封日报邮件里都有退订链接，也可以改语言和时区。\n- 你随时可以修改、删除自己的评价，取消收藏。\n- 登录后在账号菜单的「账号」页，可以自己删除账号，你的收藏、评价、报错和投稿会一起删除。\n- 写信到 {email}，可以要求查看、更正或删除我们保存的你的信息；登录不了时，也可以写信要求删除账号。我们会在 30 天内回复。\n\n根据你所在的地区，你可能还有其他权利，比如反对处理，或者向当地的数据保护机构投诉。"
+          "body": "- 每封日报邮件里都有退订链接，也可以改语言和时区。\n- 你随时可以修改、删除自己的评价，取消收藏。\n- 登录后在账号菜单的「账号」页，可以下载一份你的数据（JSON 文件），里面有账号信息、登录记录、收藏、评价、报错、举报和投稿，登录邮箱订阅过日报的话还有这份订阅。\n- 在同一页还可以自己删除账号，你的收藏、评价、报错和投稿会一起删除。\n- 写信到 {email}，可以要求查看、更正或删除我们保存的你的信息；登录不了时，也可以写信要求删除账号。我们会在 30 天内回复。\n\n根据你所在的地区，你可能还有其他权利，比如反对处理，或者向当地的数据保护机构投诉。"
         },
         "children": {
           "title": "未成年人",
@@ -661,12 +693,13 @@
     "signInTitle": "登录后就能收藏",
     "afterSignIn": "登录后会自动帮你完成收藏。",
     "title": "我的收藏",
-    "description": "你收藏的 AI 应用和 Skill。",
-    "signInBody": "登录后就能看到你收藏的应用和 Skill。",
+    "description": "你收藏的日报、AI 应用和 Skill。",
+    "signInBody": "登录后就能看到你收藏的日报、应用和 Skill。",
     "emptyTitle": "还没有收藏",
-    "emptyBody": "看到喜欢的应用或 Skill，点一下收藏，就会出现在这里",
+    "emptyBody": "看到喜欢的日报、应用或 Skill，点一下收藏，就会出现在这里",
     "browseApps": "逛逛 AI 应用",
     "browseSkills": "逛逛 Skill",
+    "stories": "日报",
     "apps": "应用",
     "skills": "Skill",
     "remove": "取消收藏",
@@ -675,9 +708,17 @@
   },
   "account": {
     "title": "账号",
-    "description": "你的 IFAI 账号，以及删除账号。",
-    "signInBody": "登录后可以查看或删除你的账号。",
+    "description": "你的 IFAI 账号：下载你的数据，或者删除账号。",
+    "signInBody": "登录后可以下载你的数据，或者删除账号。",
     "email": "登录邮箱",
+    "exportTitle": "下载我的数据",
+    "exportBody": "一份 JSON 文件，里面是 IFAI 保存的、和这个账号有关的资料：账号信息、登录记录、收藏、评价、报错和举报，以及提交的应用和 Skill 投稿。登录邮箱订阅过日报的话，订阅设置和每封日报的发送记录也在里面。",
+    "exportButton": "下载我的数据",
+    "exporting": "正在准备…",
+    "exported": "已下载 {file}",
+    "exportFailed": "没能导出你的数据，请稍后再试。",
+    "exportSignedOut": "你已经退出登录。请刷新页面重新登录，再来下载。",
+    "exportAbout": "这是 IFAI 保存的、和账号 {email} 有关的资料，导出于 {time}。每一项是什么意思，见隐私政策：{url}",
     "deleteTitle": "删除账号",
     "deleteBody": "删除账号会一起删掉你的收藏、写过的应用评价、报错和举报，以及提交过的应用和 Skill 投稿，不能恢复。已经收录到 IFAI 的应用和 Skill 不受影响。",
     "deleteKeeps": "日报邮件和账号是分开的，删除账号不会退订。不想再收，请点任意一封日报邮件底部的退订链接。",

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { isLocale } from '@/i18n/config'
+import { authProviders } from '@/lib/auth/providers'
 import { JsonLd } from '@/lib/structured-data'
 import { StoryDetailView } from '@/modules/daily/public/components/story-detail'
 import { getStory } from '@/modules/daily/public/data'
@@ -39,7 +40,7 @@ export default async function StoryPage({ params }: Props) {
           category: t(`categories.${story.category}`),
         })}
       />
-      <StoryDetailView story={story} />
+      <StoryDetailView story={story} signIn={authProviders()} />
     </>
   )
 }

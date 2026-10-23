@@ -13,6 +13,7 @@ import { refreshAppsAfterChange, refreshAppsAfterDelete } from '../cache'
 import { heatEndpoints } from '../metrics/endpoints'
 import { domainFromUrl, isHttpUrl, reservedAppSlugs } from '../normalize'
 import { draftEndpoints } from '../profile/endpoints'
+import { checkOnPublish } from '../profile/recheck'
 import { deleteAppReports } from '../reports/admin'
 import { reportEndpoints } from '../reports/endpoints'
 import { reviewEndpoints } from '../reviews/endpoints'
@@ -72,6 +73,7 @@ export const Apps: CollectionConfig = {
         '/modules/apps/admin/review-reports#ReviewReports',
         '/modules/apps/admin/reports-notice#ReportsNotice',
         '/modules/apps/admin/submissions-notice#SubmissionsNotice',
+        '/modules/apps/admin/recheck-notice#RecheckNotice',
         '/modules/apps/admin/import-box#ImportBox',
       ],
     },
@@ -87,6 +89,7 @@ export const Apps: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
+    beforeChange: [checkOnPublish],
     afterChange: [syncHantFromHans(hantFields), refreshAppsAfterChange, acceptOnPublish],
     beforeDelete: [deleteReports],
     afterDelete: [refreshAppsAfterDelete],
@@ -128,7 +131,10 @@ export const Apps: CollectionConfig = {
       label: { en: 'Profile checked on', zh: '资料核对时间' },
       admin: {
         position: 'sidebar',
-        description: { en: 'Re-check pricing and platforms every 90 days.', zh: '每 90 天重新核对一次定价和平台。' },
+        description: {
+          en: 'Re-check pricing and platforms every 90 days, then set today. Publishing fills it in; the apps list says when apps are due.',
+          zh: '每 90 天重新核对一次定价和平台，核对后改成今天。发布时自动填上；到期的应用，列表上方会提醒。',
+        },
       },
     },
     {

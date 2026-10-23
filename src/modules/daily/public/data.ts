@@ -263,6 +263,36 @@ export async function listStories({ locale, ...args }: ListArgs & { locale: Loca
   return { stories: result.docs.map((doc) => toItem(doc, locale)), total: result.total, page: args.page, pages: result.pages }
 }
 
+/**
+ * The site search's stories (docs/specs/search.md): published stories whose title or summary
+ * contains the search in any language, newest first. Not cached: every search is its own query.
+ */
+export async function searchStories({
+  locale,
+  q,
+  page,
+  limit,
+}: {
+  locale: Locale
+  q: string
+  page: number
+  limit: number
+}): Promise<StoryPage> {
+  const result = await (await payload()).find({
+    collection: 'stories',
+    where: { and: [published, { or: [{ title: { like: q } }, { summary: { like: q } }] }] },
+    sort: '-publishedAt',
+    page,
+    limit,
+    locale: 'all',
+    depth: 0,
+    select,
+    overrideAccess: false,
+  })
+  const docs = result.docs as unknown as RawStory[]
+  return { stories: docs.map((doc) => toItem(doc, locale)), total: result.totalDocs, page, pages: result.totalPages }
+}
+
 /** The newest published stories, for the home page and the feeds. */
 export async function latestStories(locale: Locale, limit: number): Promise<StoryItem[]> {
   return (await findLatest(limit)).map((doc) => toItem(doc, locale))
@@ -279,6 +309,29 @@ export const getStory = cache(async (slug: string, locale: Locale): Promise<Stor
     developments: developments.map((other) => toItem(other, locale)),
   }
 })
+
+/**
+ * A member's saved stories, in the order given (newest save first); stories no longer published
+ * (withdrawn or merged) are left out. Read fresh, not from the shared cache, since every member's
+ * list is different.
+ */
+export async function getSavedStories(ids: number[], locale: Locale): Promise<StoryItem[]> {
+  if (ids.length === 0) return []
+  const { docs } = await (await payload()).find({
+    collection: 'stories',
+    where: { and: [published, { id: { in: ids } }] },
+    pagination: false,
+    locale: 'all',
+    depth: 0,
+    select,
+    overrideAccess: false,
+  })
+  const byId = new Map((docs as unknown as RawStory[]).map((doc) => [doc.id, doc]))
+  return ids.flatMap((id) => {
+    const doc = byId.get(id)
+    return doc ? [toItem(doc, locale)] : []
+  })
+}
 
 /** The five hottest events of the last 48 hours, one story each (the newest of its event). */
 export async function hotStories(locale: Locale): Promise<HotStory[]> {
