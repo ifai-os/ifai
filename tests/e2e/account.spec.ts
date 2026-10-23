@@ -36,6 +36,14 @@ test.describe('a signed-in member', () => {
     let subscriber: number | undefined
     try {
       await member.query(`insert into saves (user_id, target_type, target_id) values ($1, 'app', $2)`, [member.id, nowhere])
+      // With the sample stories (CI adds them), a saved story is named and linked in the page language.
+      const story = process.env.E2E_SAMPLE_STORIES ? await member.storyId('sample-orbit-notes-benchmark') : null
+      if (story !== null) {
+        await member.query(`insert into saves (user_id, target_type, target_id, created_at) values ($1, 'story', $2, now() - interval '1 minute')`, [
+          member.id,
+          story,
+        ])
+      }
       const review = await member.addReview(nowhere, 'Exported with the rest')
       const otherReview = await other.addReview(nowhere, 'Words of another member')
       await member.query(`insert into app_review_reports (review_id, reporter, reason) values ($1, $2, 'spam')`, [otherReview, `u:${member.id}`])
@@ -78,7 +86,20 @@ test.describe('a signed-in member', () => {
       expect(data.account).toMatchObject({ id: member.id, email: member.email, emailVerified: true })
       expect(data.linkedAccounts).toEqual([])
       expect(data.sessions).toEqual([expect.objectContaining({ current: true })])
-      expect(data.saves).toEqual([{ type: 'app', id: nowhere, name: null, url: null, savedAt: expect.any(String) }])
+      expect(data.saves).toEqual([
+        { type: 'app', id: nowhere, name: null, url: null, savedAt: expect.any(String) },
+        ...(story === null
+          ? []
+          : [
+              {
+                type: 'story',
+                id: story,
+                name: 'Sample: Orbit Notes reports a new summarization benchmark',
+                url: expect.stringMatching(/\/en\/daily\/sample-orbit-notes-benchmark$/),
+                savedAt: expect.any(String),
+              },
+            ]),
+      ])
       expect(data.reviews).toEqual([expect.objectContaining({ id: review, text: 'Exported with the rest', rating: 4, status: 'shown' })])
       expect(data.reviewReports).toEqual([expect.objectContaining({ review: otherReview, reason: 'spam' })])
       expect(data.appSubmissions).toEqual([
