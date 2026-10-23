@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { isLocale } from '@/i18n/config'
+import { JsonLd } from '@/lib/structured-data'
 import { StoryDetailView } from '@/modules/daily/public/components/story-detail'
 import { getStory } from '@/modules/daily/public/data'
 import { storyMetadata } from '@/modules/daily/public/metadata'
+import { storyJsonLd } from '@/modules/daily/public/structured-data'
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
 
@@ -26,6 +28,18 @@ export default async function StoryPage({ params }: Props) {
   setRequestLocale(locale)
   const story = await getStory(slug, locale)
   if (!story) notFound()
+  const t = await getTranslations()
 
-  return <StoryDetailView story={story} />
+  return (
+    <>
+      <JsonLd
+        data={storyJsonLd(story, locale, {
+          home: t('metadata.title'),
+          daily: t('nav.daily'),
+          category: t(`categories.${story.category}`),
+        })}
+      />
+      <StoryDetailView story={story} />
+    </>
+  )
 }

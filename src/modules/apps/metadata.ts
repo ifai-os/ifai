@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/config'
-import { alternatesFor } from '@/lib/seo'
+import { alternatesFor, shareCard } from '@/lib/seo'
 
 import type { Board } from './boards'
 import { getApp, type CategoryItem } from './data'
@@ -51,6 +51,15 @@ export async function appMetadata(slug: string, locale: Locale): Promise<Metadat
     title: app.tagline ? t('detailTitle', { name: app.name, tagline: app.tagline.value }) : app.name,
     description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
     alternates: alternatesFor(`/apps/${app.slug}`, locale),
+    // The website's own share picture, shown on the page too; the site's when there is none.
+    ...shareCard(locale, {
+      image: app.screenshot && {
+        url: app.screenshot.url,
+        width: app.screenshot.width ?? undefined,
+        height: app.screenshot.height ?? undefined,
+        alt: app.name,
+      },
+    }),
   }
 }
 

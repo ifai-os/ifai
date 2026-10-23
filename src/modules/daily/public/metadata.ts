@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 import { localizePath, locales, ogLocales, type Locale } from '@/i18n/config'
-import { alternatesFor } from '@/lib/seo'
+import { alternatesFor, shareCard } from '@/lib/seo'
 
 import type { StoryCategory } from '../categories'
 import { posterVersion } from '../poster/snapshot'
@@ -47,11 +47,7 @@ export async function storyMetadata(slug: string, locale: Locale): Promise<Metad
     title: story.title.value,
     description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
     alternates: alternatesFor(storyHref(story.slug), locale),
-    openGraph: {
-      type: 'article',
-      publishedTime: story.publishedAt,
-      modifiedTime: story.correctedAt ?? undefined,
-    },
+    ...shareCard(locale, { article: { publishedTime: story.publishedAt, modifiedTime: story.correctedAt } }),
   }
 }
 

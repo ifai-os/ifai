@@ -7,8 +7,8 @@ import type { ReactNode } from 'react'
 import { SiteFooter } from '@/components/site-footer'
 import { SiteHeader } from '@/components/site-header'
 import { NetworkNotice } from '@/components/states/network-notice'
-import { ogLocales } from '@/i18n/config'
 import { routing } from '@/i18n/routing'
+import { shareCard } from '@/lib/seo'
 import { siteUrl } from '@/lib/site-url'
 
 import '../globals.css'
@@ -26,21 +26,13 @@ export async function generateMetadata({ params }: Omit<Props, 'children'>): Pro
   const { locale } = await params
   if (!hasLocale(routing.locales, locale)) return {}
   const t = await getTranslations({ locale, namespace: 'metadata' })
-  const ogImage = locale.startsWith('zh') ? '/og-image-zh.png' : '/og-image.png'
 
   return {
     metadataBase: new URL(siteUrl()),
     title: { default: t('title'), template: t('titleTemplate') },
     description: t('description'),
     applicationName: 'IFAI',
-    openGraph: {
-      type: 'website',
-      siteName: 'IFAI',
-      locale: ogLocales[locale],
-      alternateLocale: routing.locales.filter((item) => item !== locale).map((item) => ogLocales[item]),
-      images: [{ url: ogImage, width: 1200, height: 630, alt: 'IFAI' }],
-    },
-    twitter: { card: 'summary_large_image', images: [ogImage] },
+    ...shareCard(locale),
   }
 }
 
