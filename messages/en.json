@@ -461,6 +461,76 @@
         "noScripts": "The install steps only say where the files go, and tell the assistant not to run anything from the package.",
         "limits": "The check reads the files; it cannot prove a Skill is safe. Before installing, look at the “{security}” tab: the domains it contacts, the files it touches, and the tools and API keys it needs."
       }
+    },
+    "submit": {
+      "title": "Publish a Skill",
+      "description": "Send IFAI a Skill from GitHub. We import it, check it and review it, list it when it passes, and email you the result.",
+      "intro": "Send us a Skill from GitHub. We import it, run the security check and read it through; when it passes, it is listed on IFAI. Either way, we email you the result.",
+      "button": "Publish a Skill",
+      "card": {
+        "title": "Made a useful Skill?",
+        "body": "Publish it on IFAI. It is listed once it passes review, and the best ones get the IFAI certified badge and a spot on the home page.",
+        "link": "Publishing guide"
+      },
+      "before": {
+        "title": "Before you send it",
+        "repo": "The Skill is in a public GitHub repository, in a folder with a SKILL.md that starts with its name and description. If the repository holds several Skills, send the address of the one folder (…/tree/main/skills/your-skill).",
+        "license": "It has a clear open-source license, such as MIT or Apache-2.0, in the repository or in SKILL.md. Without one, we ask for your written permission first.",
+        "safe": "No keys or passwords in the files, and nothing that reads places like ~/.ssh. SKILL.md says which scripts it runs and which sites it reaches.",
+        "languages": "Say what it does and how to use it, in any language. We write its description in all five of IFAI’s languages."
+      },
+      "after": {
+        "title": "What happens next",
+        "number": "You get a submission number right away, here and by email.",
+        "review": "We import the repository, run the security check and read it through, usually within two working days.",
+        "result": "We email you either way. If it is listed, the email links to its page.",
+        "certified": "Skills we try and find useful get the IFAI certified badge, and can be picked for the home page."
+      },
+      "form": {
+        "title": "Send a Skill",
+        "signIn": "Sign in to send a Skill. We email you the review result.",
+        "repository": "GitHub address",
+        "repositoryHint": "The repository, or the folder with SKILL.md in it.",
+        "repositoryPlaceholder": "https://github.com/you/your-skill",
+        "note": "What it does, in one sentence",
+        "notePlaceholder": "Turns merged pull requests into release notes",
+        "count": "{count} / {max}",
+        "email": "Contact email",
+        "emailHint": "Only for the review result.",
+        "send": "Send",
+        "sending": "Sending…",
+        "errors": {
+          "repository": "Enter a GitHub address, like https://github.com/you/your-skill.",
+          "note": "Say in one sentence what the Skill does (up to {max} characters).",
+          "email": "Enter an email address we can write to.",
+          "tooMany": "That’s {max} Skills today. Please send the rest tomorrow.",
+          "signIn": "You’ve been signed out. Sign in again, then send it.",
+          "failed": "That didn’t go through. Please try again in a moment."
+        }
+      },
+      "done": {
+        "title": "We have your Skill",
+        "number": "Submission number {code}",
+        "body": "We usually review Skills within two working days, and will email the result to {email}.",
+        "again": "Send another",
+        "back": "Back to Skills"
+      },
+      "email": {
+        "receivedSubject": "We have your Skill ({code})",
+        "receivedHeading": "We have your Skill",
+        "receivedBody": "Thanks for sending {repository}. We usually review Skills within two working days, and will email you the result.",
+        "acceptedSubject": "Your Skill is listed on IFAI ({code})",
+        "acceptedHeading": "Your Skill is listed",
+        "acceptedBody": "{repository} passed review and is listed on IFAI. Thanks for sharing it.",
+        "acceptedButton": "See it on IFAI",
+        "rejectedSubject": "About the Skill you sent ({code})",
+        "rejectedHeading": "We are not listing it this time",
+        "rejectedBody": "We looked at {repository} and are not listing it on IFAI this time. Thanks for sending it.",
+        "reply": "From the IFAI team:",
+        "findings": "What the security check found:",
+        "findingsMore": "…and {count} more",
+        "footer": "Submission number {code}"
+      }
     }
   },
   "saves": {

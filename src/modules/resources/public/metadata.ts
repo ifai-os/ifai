@@ -5,7 +5,7 @@ import type { Locale } from '@/i18n/config'
 import { alternatesFor } from '@/lib/seo'
 
 import { getSkill } from './data'
-import { guideHref, isFiltered, skillHref, skillsHref, type SkillListParams } from './list-params'
+import { guideHref, isFiltered, skillHref, skillsHref, submitHref, type SkillListParams } from './list-params'
 
 const descriptionLength = 160
 
@@ -50,4 +50,10 @@ export async function skillMetadata(slug: string, locale: Locale, version?: stri
 export async function guideMetadata(locale: Locale): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'resources' })
   return { title: t('guide.title'), description: t('guide.description'), alternates: alternatesFor(guideHref, locale) }
+}
+
+/** The publishing guide and form: one page per language, in search engines (the form needs signing in, the guide does not). */
+export async function submitMetadata(locale: Locale): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: 'resources' })
+  return { title: t('submit.title'), description: t('submit.description'), alternates: alternatesFor(submitHref, locale) }
 }

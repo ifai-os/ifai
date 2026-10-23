@@ -92,3 +92,6 @@ export function fileHref(slug: string, version: string, path: string): `/${strin
 
 /** The install guide; `#verify` is its fingerprint section. */
 export const guideHref = '/resources/guide'
+
+/** 发布指南与投稿 (docs/specs/resources.md「页面与路由」). */
+export const submitHref = '/resources/submit'

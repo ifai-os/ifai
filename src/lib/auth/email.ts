@@ -2,6 +2,7 @@ import { createTranslator } from 'next-intl'
 
 import { defaultLocale, localeFromPathSegment, messagesFileName, type Locale } from '@/i18n/config'
 import { emailDeliveryConfigured } from '@/lib/auth/providers'
+import { emailHtml, emailText } from '@/lib/email/layout'
 
 /** The magic-link URL carries callbackURL=/zh-hans/…; its first segment decides the email language. */
 export function localeFromMagicLink(url: string): Locale {
@@ -12,15 +13,6 @@ export function localeFromMagicLink(url: string): Locale {
   } catch {
     return defaultLocale
   }
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
 }
 
 type MagicLinkEmail = {
@@ -34,25 +26,14 @@ export async function buildMagicLinkEmail(url: string): Promise<MagicLinkEmail> 
   const locale = localeFromMagicLink(url)
   const messages = (await import(`../../../messages/${messagesFileName(locale)}.json`)).default
   const t = createTranslator({ locale, messages, namespace: 'email' })
-  const href = escapeHtml(url)
-
-  const html = `<!doctype html>
-<html lang="${locale}">
-  <body style="margin:0;padding:32px 16px;background:#F7F7F9;font-family:-apple-system,system-ui,'Segoe UI',Roboto,'PingFang SC','Hiragino Sans','Apple SD Gothic Neo',sans-serif;color:#000000">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background:#FFFFFF;border-radius:16px">
-      <tr><td style="padding:32px">
-        <h1 style="margin:0 0 12px;font-size:22px;font-weight:600">${escapeHtml(t('heading'))}</h1>
-        <p style="margin:0 0 24px;font-size:15px;line-height:1.75;color:#48494C">${escapeHtml(t('body'))}</p>
-        <a href="${href}" style="display:inline-block;padding:12px 24px;border-radius:6px;background:#000000;color:#FFFFFF;font-size:15px;font-weight:500;text-decoration:none">${escapeHtml(t('button'))}</a>
-        <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#6F7174">${escapeHtml(t('ignore'))}</p>
-      </td></tr>
-    </table>
-  </body>
-</html>`
-
-  const text = `${t('heading')}\n\n${t('body')}\n\n${url}\n\n${t('ignore')}\n`
-
-  return { locale, subject: t('subject'), html, text }
+  const content = {
+    locale,
+    heading: t('heading'),
+    paragraphs: [t('body')],
+    button: { label: t('button'), href: url },
+    footer: t('ignore'),
+  }
+  return { locale, subject: t('subject'), html: emailHtml(content), text: emailText(content) }
 }
 
 /** Sends the sign-in link with Resend. Without Resend configured (local dev), prints the link instead. */

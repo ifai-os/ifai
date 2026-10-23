@@ -39,6 +39,12 @@ export function submissionCode(date: Date, sequence: number): string {
   return `S-${month}${day}-${String(sequence).padStart(2, '0')}`
 }
 
+/** The number after the highest one taken on that date. Counting would collide with a number still in use once one is deleted. */
+export function nextSubmissionSequence(codes: (string | null | undefined)[]): number {
+  const taken = codes.map((code) => Number(/^S-\d{4}-(\d+)$/.exec(code ?? '')?.[1] ?? 0))
+  return Math.max(0, ...taken) + 1
+}
+
 /** Numeric comparison of 1.2.10 vs 1.2.9; a pre-release tag sorts before the plain version. */
 export function compareVersions(a: string, b: string): number {
   const split = (value: string) => {
