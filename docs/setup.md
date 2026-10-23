@@ -47,7 +47,8 @@ pnpm dev                 # http://localhost:3000
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | 见第 6 步 | 不填 | 同上 |
 | `RESEND_API_KEY` / `EMAIL_FROM` | 见第 7 步 | 同生产 | 预览环境用邮箱魔法链接登录 |
 | `DAILY_EMAIL_FROM` | `news@ifai.io`（见第 7 步） | 同生产 | 日报邮件的发件地址。和 `RESEND_API_KEY` 都配好，订阅框才会出现 |
-| `DAILY_EMAIL_ENABLED` | 先不填，日报邮件第 2 步验过后改成 `true` | 要测订阅时设 `true` | 不是 `true` 就不显示订阅框、不接受新订阅、不发日报邮件；已有的订阅保留 |
+| `DAILY_EMAIL_ENABLED` | 先不填，预览环境验过发送后改成 `true` | 要测订阅和发送时设 `true` | 不是 `true` 就不显示订阅框、不接受新订阅、不发日报邮件；已有的订阅保留。预览环境只给管理员的邮箱发 |
+| `RESEND_WEBHOOK_SECRET` | 见第 7 步 | 不填 | Resend 回调的签名密钥。不填时退信和投诉不会自动停发 |
 | `R2_*` | 见第 4 步 | 建议用单独的存储桶 | |
 | `OPENROUTER_API_KEY` | 见第 8 步 | 另一个 key | 预览用单独的 key，额度设小一点 |
 | `AI_DAILY_BUDGET_USD` | `10` | `1` | 每天（上海时间）的模型费用上限，美元 |
@@ -107,9 +108,10 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 3. 在 `ifai.io` 的 DNS 里加一条 DMARC 记录：类型 TXT，名称 `_dmarc`，值 `v=DMARC1; p=none;`。Gmail 和 Yahoo 要求群发的域名有 DMARC，先用 `p=none` 只观察不拦截。已经有 `_dmarc` 记录的话保留原来的，不要再加一条。
 4. 在这个域名的设置里确认 Click Tracking 和 Open Tracking 是关着的（默认关）：规格要求不改写链接、不统计打开。
 5. Vercel 的生产和预览环境都填 `DAILY_EMAIL_FROM` = `news@ifai.io`，只填地址，发件人名称（IFAI Daily、IFAI 日报……）按订阅者的语言自动加。`RESEND_API_KEY` 用登录邮件那个；如果建 key 时限定了域名，改成全部域名，或者给 `ifai.io` 另建一个 key。
-6. `DAILY_EMAIL_ENABLED` 先不填：现在合并的是第 1 步（订阅与退订），每天早上的发送在第 2 步。第 2 步合并、在预览环境验过以后，生产环境改成 `true`。要在预览环境试订阅，只在 Preview 设 `true`。改完环境变量要重新部署一次才生效（Deployments → 最新一次 → Redeploy）。
-7. 试一遍：在预览环境的 `/zh-hans/daily` 用自己的邮箱订阅，收到欢迎信后点「管理订阅」改语言和时区，再点「一键退订」。Gmail 会在发件人旁边显示「退订」，但新域名发得少时可能不显示，不影响邮件里的退订链接。
-8. 免费版每天 100 封、每月 3,000 封，和登录邮件共用；订阅者到 80 人左右换 Pro（Settings → Billing）。退信和投诉的回调（`RESEND_WEBHOOK_SECRET`）在第 2 步加。
+6. 退信和投诉的回调：Resend → Webhooks → Add Endpoint，地址填 `https://<域名>/api/subscriptions/webhook`，事件勾选 `email.sent`、`email.delivered`、`email.bounced`、`email.complained`、`email.failed`、`email.suppressed`。建好后点开这个端点，复制 Signing Secret（`whsec_` 开头），填到 Vercel **生产环境**的 `RESEND_WEBHOOK_SECRET`，重新部署。只建这一个端点：预览环境发出的邮件回调也会到生产，生产按邮件上的环境标记忽略它们。之后每封邮件的回调在这个端点的页面里都能看到，正常是 200。
+7. `DAILY_EMAIL_ENABLED` 先只在 Preview 设 `true`。改完环境变量要重新部署一次才生效（Deployments → 最新一次 → Redeploy）。预览环境验过下一条以后，生产环境也改成 `true`，就算上线了。
+8. 在预览环境试一遍：在 `/zh-hans/daily` 用**管理员的邮箱**订阅（预览环境只给管理员发），收到欢迎信后点「管理订阅」改语言和时区，再点「一键退订」，然后重新订阅。后台「日报 → 订阅者」列表上方点「预览邮件」，五种语言各看一眼；点「发测试邮件」，在 Gmail 网页和手机上看。第二天当地 8 点到 8:15 之间应该收到第一封日报邮件，后台的「今天的发送」里能看到它送达了。Gmail 会在发件人旁边显示「退订」，但新域名发得少时可能不显示，不影响邮件里的退订链接。
+9. 免费版每天 100 封（UTC 0 点恢复）、每月 3,000 封，和登录邮件共用；后台订阅者列表上方显示今天还剩多少，订阅者到 80 人时会提示换 Pro（Resend → Settings → Billing）。当天额度用完时这一轮停下，后台写明原因，没发出去的在当地 11 点前的下一轮再发。
 
 ## 8. OpenRouter（模型）
 
@@ -138,6 +140,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 9. 应用资料草稿：后台「应用」里打开一个应用，右栏「资料草稿」点「生成草稿」；或在应用列表页上方「批量添加应用」里每行贴一个「名称, 官网网址」（只贴网址也行）。任务 `apps-draft-profile` 抓官网、写四种语言的草稿、取 logo 和 og 图，一般一两分钟，右栏会显示原文核对结果。也要 `MODEL_CALLS_ENABLED` 为 `true`；关着或当天预算用完时停在「待生成」，`apps-draft-sweep` 每 20 分钟把等着的重新排队，也可以发事件 `apps/draft.sweep` 立刻跑。单个应用也可以发 `apps/profile.draft`，数据 `{"appId": 12}`，但它只处理状态是「待生成」的应用，平时用后台按钮。
 10. 应用热度：`apps-heat-daily` 每天上海时间 06:00 下载 Tranco 名单（不用 key）、匹配近 30 天的已发布日报、算所有已发布应用的热度。要立刻算一次，在后台应用列表上方点「现在重算」，或发事件 `apps/heat.run`，数据 `{}`；同一天再算会覆盖这一天的数字。结果在应用编辑页的「热度」标签里；列表上方显示最近一次运行，Tranco 下载失败时写明原因并沿用之前的名次。上线后第一次运行完，确认列表上方的 Tranco 名单编号不是空的。点击由「打开网站」的站内跳转 `/[locale]/apps/[slug]/visit` 记录，访客哈希用 `PAYLOAD_SECRET` 派生，不需要另配变量。算完后前台的榜单、详情页的热度和首页「热门应用」自动刷新；页面上的 Tranco 名次和「新上架」的起始日由 `APPS_SHOW_TRANCO_RANK`、`APPS_NEW_SINCE` 控制（见第 3 步的表）。
 11. 应用评价翻译：读者写好或改了评价正文后，`apps-review-translate` 约一分钟后用用途 `translate` 把它译成英、简、日、韩里原文以外的几种（繁体由简体转换，简繁之间只用 OpenCC），存进 `app_review_translations`；一条评价每天最多花钱翻 5 次（站长点「重新翻译」不算）。也要 `MODEL_CALLS_ENABLED` 为 `true`；关着或当天预算用完时评价只显示原文，`apps-review-translate-sweep` 每 30 分钟把还没译文的补上，也可以发事件 `apps/translate.sweep` 立刻跑。连续失败 3 次的在后台应用的「评价」标签里标红，点「重新翻译」再试；单条也可以发 `apps/review.translate`，数据 `{"reviewId": 345}`，已经译好的会跳过。
+12. 日报邮件：`DAILY_EMAIL_ENABLED` 为 `true` 时，`daily-email-send` 每 15 分钟（UTC 第 0、15、30、45 分）找当地时间到了早上 8 点、今天还没收到的订阅者，每 100 封一批经 Resend 发出；要立刻跑一次，发事件 `daily/email.run`，数据 `{}`（只发给当地 8:00–11:00 之间的人）。每次运行的结果（发了几封、停下的原因）在 Runs 里，汇总在后台订阅者列表上方。`daily-email-cleanup` 每天 UTC 4:30 删退订满 30 天的订阅和过期的记录。两个任务都不调用模型。
 
 ## 10. 第一次上线检查
 

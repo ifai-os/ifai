@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "목록을 불러오는 중",
     "loadingCards": "카드를 불러오는 중",
+    "loadingPage": "페이지를 불러오는 중",
     "failedTitle": "불러오지 못했어요",
     "retry": "다시 시도",
     "errorTitle": "문제가 발생했어요",
@@ -867,6 +868,12 @@
       "manage": "구독 관리",
       "notYou": "직접 구독하지 않으셨나요?",
       "unsubscribe": "한 번에 구독 취소"
+    },
+    "digest": {
+      "subject": "{count, plural, offset:1 =1 {{title}} other {{title} 외 #건의 AI 소식}}",
+      "intro": "지난 24시간 · 뉴스 {count}건",
+      "top": "톱뉴스",
+      "all": "사이트에서 모두 보기"
     },
     "footer": {
       "why": "IFAI 데일리를 구독하셔서 이 메일을 보내 드려요.",

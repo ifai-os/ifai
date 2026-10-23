@@ -330,14 +330,14 @@ describe('sending through Resend', () => {
 
   it('prints the email locally and refuses on Vercel when Resend is not set up', async () => {
     const print = vi.spyOn(console, 'info').mockImplementation(() => {})
-    expect(await sendEmail(email, {})).toBeNull()
+    expect(await sendEmail(email, {})).toEqual({ ids: [null], quota: null })
     expect(print.mock.calls[0][0]).toContain('reader@gmail.com')
     await expect(sendEmail(email, { VERCEL_ENV: 'production' })).rejects.toThrow(/DAILY_EMAIL_FROM/)
   })
 
   it('posts the email with the sender name, unsubscribe headers and its kind', async () => {
     const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ id: 'email-1' }))
-    expect(await sendEmail(email, { RESEND_API_KEY: 're_x', DAILY_EMAIL_FROM: 'news@ifai.io' })).toBe('email-1')
+    expect(await sendEmail(email, { RESEND_API_KEY: 're_x', DAILY_EMAIL_FROM: 'news@ifai.io' })).toEqual({ ids: ['email-1'], quota: null })
     const [url, init] = fetch.mock.calls[0] as [string, RequestInit]
     expect(url).toBe('https://api.resend.com/emails')
     expect(new Headers(init.headers).get('authorization')).toBe('Bearer re_x')
@@ -346,7 +346,10 @@ describe('sending through Resend', () => {
       from: 'IFAI 日报 <news@ifai.io>',
       to: ['reader@gmail.com'],
       headers: email.headers,
-      tags: [{ name: 'kind', value: 'daily_welcome' }],
+      tags: [
+        { name: 'kind', value: 'daily_welcome' },
+        { name: 'env', value: 'development' },
+      ],
     })
   })
 
@@ -398,6 +401,7 @@ describe('the welcome email', () => {
     })
     expect(email.text).toContain('IFAI · https://ifai.example/ko · news@ifai.io')
     expect(email.kind).toBe('daily_welcome')
+    expect(email.tags).toEqual({ subscriber: '7' })
   })
 
   it('stays small and plain: no tracking, no scripts', async () => {

@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "正在載入列表",
     "loadingCards": "正在載入卡片",
+    "loadingPage": "正在載入頁面",
     "failedTitle": "載入失敗",
     "retry": "點此重試",
     "errorTitle": "頁面出錯了",
@@ -867,6 +868,12 @@
       "manage": "管理訂閱",
       "notYou": "不是你訂閱的？",
       "unsubscribe": "一鍵取消訂閱"
+    },
+    "digest": {
+      "subject": "{count, plural, =1 {{title}} other {{title} 等 # 件 AI 大事}}",
+      "intro": "過去 24 小時 · {count} 件大事",
+      "top": "頭條",
+      "all": "在網站上看全部"
     },
     "footer": {
       "why": "你收到這封郵件，是因為在 IFAI 訂閱了日報。",

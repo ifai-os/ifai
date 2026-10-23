@@ -10,7 +10,7 @@ export const localeNames: Record<RewrittenLocale, string> = { en: 'English', ja:
 const zh = {
   title: '审核队列',
   subtitle: '通过即发布',
-  metaLine: '审核通过后立即发布到网站和 RSS。海报按上海时间每天一期。',
+  metaLine: '审核通过后立即发布到网站和 RSS。邮件在每位订阅者当地时间早上 8 点发出，海报按上海时间每天一期。',
   openSite: '查看前台日报',
   allStories: '全部新闻',
   refresh: '刷新',
@@ -217,7 +217,7 @@ export type ReviewText = typeof zh
 const en: ReviewText = {
   title: 'Review queue',
   subtitle: 'Approved means published',
-  metaLine: 'An approved story goes to the site and RSS at once. The poster comes once a day on Shanghai time.',
+  metaLine: 'An approved story goes to the site and RSS at once. The email goes out at 8 a.m. in each subscriber’s time zone; the poster comes once a day on Shanghai time.',
   openSite: 'Open the daily page',
   allStories: 'All stories',
   refresh: 'Refresh',

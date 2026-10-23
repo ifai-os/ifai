@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "正在加载列表",
     "loadingCards": "正在加载卡片",
+    "loadingPage": "正在加载页面",
     "failedTitle": "加载失败",
     "retry": "点此重试",
     "errorTitle": "页面出错了",
@@ -867,6 +868,12 @@
       "manage": "管理订阅",
       "notYou": "不是你订阅的？",
       "unsubscribe": "一键退订"
+    },
+    "digest": {
+      "subject": "{count, plural, =1 {{title}} other {{title} 等 # 件 AI 大事}}",
+      "intro": "过去 24 小时 · {count} 件大事",
+      "top": "头条",
+      "all": "在网站上看全部"
     },
     "footer": {
       "why": "你收到这封邮件，是因为在 IFAI 订阅了日报。",

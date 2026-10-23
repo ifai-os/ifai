@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation'
 import type { SkillListItem } from '../data'
 import { skillHref, skillsHref } from '../list-params'
 import { ApiKeyBadge, ScanBadgeView } from './badges'
+import { ListLink } from './list-navigation'
 import { SkillTile } from './skill-tile'
 
 /**
@@ -45,12 +46,12 @@ export function SkillItem({ skill }: { skill: SkillListItem }) {
               <span className="sr-only">{t('certified')}</span>
             </span>
           )}
-          <Link
+          <ListLink
             href={skillsHref({ category: skill.category })}
             className="flex h-6 items-center rounded-tag bg-surface px-2 text-small text-ink-2 hover:text-ink"
           >
             {categories(skill.category)}
-          </Link>
+          </ListLink>
           {skill.needsApiKey && <ApiKeyBadge />}
         </div>
         {skill.tagline && (
@@ -60,9 +61,9 @@ export function SkillItem({ skill }: { skill: SkillListItem }) {
         )}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-small text-ink-4">
           <span>{card('installs', { count: installs })}</span>
-          <Link href={skillsHref({ author: skill.author.name })} className="hover:text-ink group-data-[view=grid]/view:hidden">
+          <ListLink href={skillsHref({ author: skill.author.name })} className="hover:text-ink group-data-[view=grid]/view:hidden">
             {skill.author.name}
-          </Link>
+          </ListLink>
           {skill.updatedAt && (
             <span>{t('updatedOn', { date: format.dateTime(new Date(skill.updatedAt), { year: 'numeric', month: 'short', day: 'numeric' }) })}</span>
           )}
