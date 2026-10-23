@@ -125,7 +125,7 @@
         },
         "choices": {
           "title": "Your choices",
-          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews and remove saves at any time.\n- You can ask us to show you, correct or delete the information we hold about you, or to delete your account, by writing to {email}. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
+          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews and remove saves at any time.\n- You can delete your account yourself: sign in and open Account from the account menu. Your saves, reviews, reports and submissions are deleted with it.\n- You can ask us to show you, correct or delete the information we hold about you by writing to {email}, and to delete your account if you can't sign in. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
         },
         "children": {
           "title": "Children",
@@ -180,7 +180,7 @@
         },
         "ending": {
           "title": "Ending use",
-          "body": "You can stop using IFAI at any time and ask us to delete your account. We may suspend or close an account that breaks these terms."
+          "body": "You can stop using IFAI at any time and delete your account on the Account page. We may suspend or close an account that breaks these terms."
         },
         "changes": {
           "title": "Changes",
@@ -679,7 +679,7 @@
     "signInBody": "Sign in to see or delete your account.",
     "email": "Signed in as",
     "deleteTitle": "Delete account",
-    "deleteBody": "Deleting your account also deletes your saves, the app reviews you wrote, and the apps and Skills you submitted. This can't be undone. Apps and Skills already listed on IFAI stay.",
+    "deleteBody": "Deleting your account also deletes your saves, the app reviews you wrote, the reports you sent, and the apps and Skills you submitted. This can't be undone. Apps and Skills already listed on IFAI stay.",
     "deleteKeeps": "The daily email is separate from your account, so deleting it doesn't unsubscribe you. To stop the emails, use the unsubscribe link at the bottom of any email.",
     "deleteButton": "Delete account",
     "confirmTitle": "Delete your account for good?",

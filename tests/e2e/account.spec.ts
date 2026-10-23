@@ -23,8 +23,9 @@ test.describe('a signed-in member', () => {
     'Signs a member in through the database: needs DATABASE_URI and BETTER_AUTH_SECRET, as in CI.',
   )
 
-  test('deletes their account, and their saves, reviews and submissions go with it', async ({ page, context, baseURL }) => {
+  test('deletes their account, and their saves, reviews, reports and submissions go with it', async ({ page, context, baseURL }) => {
     const member = await createMember(baseURL ?? 'http://localhost:3000')
+    const other = await createMember(baseURL ?? 'http://localhost:3000', 'Smoke test reviewer')
     try {
       // On an app id no sample app has, so tests running alongside never see this save or review.
       await member.query(`insert into saves (user_id, target_type, target_id) values ($1, 'app', $2)`, [member.id, nowhere])
@@ -37,6 +38,9 @@ test.describe('a signed-in member', () => {
         member.email,
         member.id,
       ])
+      // Their report of someone else's review goes; the review stays.
+      const otherReview = await other.addReview(nowhere, 'Still here')
+      await member.query(`insert into app_review_reports (review_id, reporter, reason) values ($1, $2, 'spam')`, [otherReview, `u:${member.id}`])
       await context.addCookies([member.cookie])
 
       // From the account menu.
@@ -58,19 +62,22 @@ test.describe('a signed-in member', () => {
       await expect(page.getByRole('main').getByRole('status')).toHaveText(en.account.deleted)
       await expect(page.getByRole('link', { name: en.header.signIn })).toBeVisible()
 
-      const left = await member.query<{ users: string; sessions: string; saves: string; reviews: string; apps: string; skills: string }>(
+      const left = await member.query<Record<string, string>>(
         `select
            (select count(*) from auth_users where id = $1) as users,
            (select count(*) from auth_sessions where user_id = $1) as sessions,
            (select count(*) from saves where user_id = $1) as saves,
            (select count(*) from app_reviews where user_id = $1) as reviews,
+           (select count(*) from app_review_reports where reporter = 'u:' || $1) as reports,
            (select count(*) from app_submissions where submitter_id = $1) as apps,
-           (select count(*) from skill_submissions where submitter_id = $1) as skills`,
-        [member.id],
+           (select count(*) from skill_submissions where submitter_id = $1) as skills,
+           (select count(*) from app_reviews where id = $2) as others`,
+        [member.id, otherReview],
       )
-      expect(left.rows[0]).toEqual({ users: '0', sessions: '0', saves: '0', reviews: '0', apps: '0', skills: '0' })
+      expect(left.rows[0]).toEqual({ users: '0', sessions: '0', saves: '0', reviews: '0', reports: '0', apps: '0', skills: '0', others: '1' })
     } finally {
       await member.remove()
+      await other.remove()
     }
   })
 
