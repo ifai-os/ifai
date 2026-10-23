@@ -22,6 +22,7 @@
 | 设计令牌写成 Tailwind 主题；导航栏和卡片组件 | `globals.css`、`src/components/` |
 | 空状态与加载状态：列表 / 卡片骨架（300 ms 后显示，10 s 后改为重试）、空状态、加载失败、断网提示（恢复后自动刷新）、全站错误页、404 | `src/components/states/`、`src/components/button.tsx`、`[locale]/error.tsx`、`[locale]/not-found.tsx` |
 | 站点地图与 robots.txt（见下） | `src/lib/sitemap.ts`、`src/lib/robots.ts`、`src/app/sitemap.xml/`、`src/app/sitemaps/`、`src/app/robots.ts`、各模块的 `sitemap.ts` |
+| 结构化数据（JSON-LD）与分享卡片（见下） | `src/lib/structured-data.tsx`、`src/lib/seo.ts`（`shareCard`）、各模块的 `structured-data.ts` |
 | AGENTS.md、GitHub Actions、Vercel 预览环境 | `AGENTS.md`、`.github/workflows/`、`vercel.json`、`docs/setup.md` |
 
 首页目前用 `src/modules/home/demo-data.ts` 里的示例数据，页面顶部有「演示数据」提示；日报、应用、资源三个入口是「即将上线」占位页。
@@ -35,6 +36,17 @@
 - 不列：搜索、筛选、排序、翻页、应用的其他榜单、Skill 固定版本和文件页、下架的 Skill（页面还在但不进 sitemap）、撤回或待审的新闻、草稿、个人页、登录页、管理订阅页。
 - 数据跟着各模块自己的缓存标签走（`daily`、`apps`、`skills`），发布、撤回、下架后随页面一起刷新；CDN 缓存 10 分钟。
 - `robots.txt`：只拦不是页面的地址（`/admin`、`/api/`、应用的「打开网站」跳转 `/*/apps/*/visit`，爬虫点它会算进应用热度）。noindex 的页面不拦，否则爬虫读不到 noindex。Vercel 预览环境整站 `Disallow: /`。
+
+## 结构化数据与分享卡片
+
+技术方案「SEO 验收」：页面标题、描述、结构化数据与可见内容、日期一致。JSON-LD 只写页面上看得到的东西，用 `<JsonLd>` 输出（`<`、`>`、`&` 转义，空字段不写）。
+
+- 首页：`WebSite`（这种语言的首页地址、站点简介）和 `Organization`（IFAI 和 logo）。搜索框（`SearchAction`）等全站搜索上线后再加。
+- 日报详情：`NewsArticle`。标题（超过 110 字截断）、摘要、语言是标题实际显示的语言（缺译回退英文时就是 `en`）；`datePublished` 是审核通过的时间，`dateModified` 是更正时间（没更正过就同发布时间）；`isBasedOn` 是原始公告的链接；作者和发布者都是 IFAI。
+- 应用详情：`SoftwareApplication`。名字、介绍、主分类、logo、官网图、功能标题、开发者，`sameAs` 是官网。不写评分：评价在浏览器里读，满 5 条才有平均分；价格只在「免费」「开源」时写 0。常见问题不写 `FAQPage`（Google 只给政府和医疗网站显示）。
+- Skill 详情：`SoftwareSourceCode`。名字、简介、仓库、许可证（SPDX 链接）、作者（「IFAI 官方」写成 IFAI）、显示的版本和它的发布时间、标签。固定版本页（noindex）和下架的 Skill 不写。
+- 三个详情页都带面包屑 `BreadcrumbList`：首页 › 模块 › 分类 › 本页。
+- 分享卡片：页面自己设 `openGraph` 时会整个替换布局里的（Next.js 只合并一层），所以一律经过 `shareCard()`，保留站名、语言和图片；标题和描述由 Next.js 从页面的标题、描述补上。日报详情是 `article`，带发布和更正时间；应用详情用官网图（页面上也显示），没有就用站点图；海报页用自己的海报图。
 
 ## 账号页与删除账号
 
