@@ -24,7 +24,6 @@
     "signOut": "로그아웃"
   },
   "home": {
-    "demoBanner": "데모 데이터 · 이 페이지의 스킬은 예시이며, 리소스 공개 후 실제 데이터로 바뀝니다",
     "todayAI": "오늘의 AI",
     "dailyMeta": "오늘 소식 {count}개 게시 · 최근 업데이트 {time}",
     "dailyMetaPast": "최신 소식 {date} · {count}개",
@@ -50,14 +49,8 @@
     "heat": "인기도 {value}",
     "rank": "{rank}위",
     "install": "설치",
-    "rating": "평점 {value}",
     "installs": "설치 {count}회",
     "moreSources": "{count, plural, =0 {단독 출처} other {외 #곳 보도}}"
-  },
-  "placeholder": {
-    "badge": "출시 예정",
-    "body": "이 섹션은 준비 중이며 1단계에 공개됩니다.",
-    "back": "홈으로 돌아가기"
   },
   "auth": {
     "title": "IFAI 로그인",
@@ -242,6 +235,182 @@
       "browser-extension": "브라우저 확장 프로그램",
       "api": "API"
     }
+  },
+  "resources": {
+    "title": "Skills",
+    "resources": "리소스",
+    "description": "AI 어시스턴트에 설치해 쓰는 Agent Skills. 버전마다 보안 검사를 거치고, 고정 링크가 있습니다.",
+    "intro": "AI 어시스턴트에 전문 기술을 더하세요. 코딩, 자료 조사부터 주간 보고서까지, 한 문장만 복사하면 설치됩니다.",
+    "listed": "개 등록",
+    "newThisWeek": "이번 주 신규",
+    "featured": "이번 주 추천",
+    "steps": {
+      "title": "세 단계로 Skill 사용하기",
+      "pick": "Skill을 골라 「설치」를 누르기",
+      "enable": "AI 어시스턴트가 설치하게 하기",
+      "ask": "대화에서 바로 원하는 일을 말하기"
+    },
+    "categoriesLabel": "분류",
+    "allCategories": "전체",
+    "searchLabel": "Skill 검색",
+    "searchPlaceholder": "이름, 설명, 태그로 검색",
+    "searchSubmit": "검색",
+    "clearSearch": "검색어 지우기",
+    "filtersLabel": "필터",
+    "filters": {
+      "noKey": "API 키 불필요",
+      "certified": "IFAI 인증만"
+    },
+    "activeFilters": "적용된 필터",
+    "tagFilter": "태그: {tag}",
+    "authorFilter": "작성자: {author}",
+    "removeFilter": "이 필터 해제",
+    "view": {
+      "label": "보기 방식",
+      "list": "목록 보기",
+      "grid": "카드 보기"
+    },
+    "sortLabel": "정렬",
+    "sorts": {
+      "default": "종합",
+      "rising": "급상승",
+      "installs": "설치 수",
+      "newest": "최신"
+    },
+    "found": "{count, plural, other {「{q}」 관련 Skill # 개}}",
+    "showing": "{scope} · {count, plural, other {Skill # 개}}",
+    "noMatchTitle": "「{q}」 관련 Skill을 찾지 못했습니다",
+    "noFilterMatchTitle": "이 조건에 맞는 Skill이 없습니다",
+    "noMatchBody": "더 짧은 검색어를 쓰거나, 필터를 해제하거나, 인기 태그를 둘러보세요.",
+    "clearFilters": "필터 지우기",
+    "emptyCategoryTitle": "이 분류에는 아직 Skill이 없습니다",
+    "emptyCategoryBody": "다른 분류를 보거나 며칠 뒤에 다시 와 주세요.",
+    "allSkills": "전체 Skill 보기",
+    "emptyTitle": "아직 등록된 Skill이 없습니다",
+    "emptyBody": "첫 Skill들을 검사하고 심사하는 중입니다. 곧 여기에 표시됩니다.",
+    "pages": "페이지",
+    "previous": "이전",
+    "next": "다음",
+    "pageOf": "{page} / {pages} 페이지",
+    "hotTags": "인기 태그",
+    "categoryTitle": "{category} · Skills",
+    "searchTitle": "「{q}」 · Skills",
+    "pageTitle": "{title} · {page} 페이지",
+    "detailTitle": "{name}: {tagline}",
+    "versionTitle": "{name} v{version}",
+    "certified": "IFAI 인증",
+    "scan": {
+      "passed": "보안 검사 통과",
+      "reviewed": "IFAI 검토 완료",
+      "when": "v{version} · {date} 검사",
+      "reviewedNote": "그 밖에 {count}개 항목에서 확인할 점이 있었고, IFAI가 검토한 뒤 이 버전을 공개했습니다."
+    },
+    "needsKey": "API 키 필요",
+    "updatedOn": "{date} 업데이트",
+    "by": "작성자",
+    "official": "IFAI 공식",
+    "tags": "태그",
+    "breadcrumb": "현재 위치",
+    "pinned": {
+      "current": "v{version}의 고정 링크이며, 현재 버전입니다.",
+      "notCurrent": "v{version}입니다. 현재 버전은 v{current}입니다.",
+      "toCurrent": "현재 버전 보기"
+    },
+    "withdrawn": "v{version}은(는) 회수되어 더 이상 설치할 수 없습니다.",
+    "reason": "사유: {reason}",
+    "deprecated": "v{version}은(는) 더 이상 권장되지 않습니다. 설치는 되지만 새 버전을 권장합니다.",
+    "delisted": "이 Skill은 게시가 중단되어 더 이상 설치할 수 없습니다.",
+    "install": {
+      "title": "AI 어시스턴트에 설치",
+      "hosts": "사용하는 어시스턴트",
+      "compatLine": "{host}: {status}",
+      "instruction": "{url} 을(를) 읽고 그 단계에 따라 이 Skill을 {host}에 설치해 주세요.",
+      "copy": "설치 명령 복사",
+      "copied": "복사했습니다. AI에 붙여 넣으세요",
+      "download": "Zip 다운로드",
+      "hint": "이 문장을 어시스턴트에 붙여 넣으면 Zip 다운로드, 지문 확인, 배치까지 스스로 합니다. Zip을 Skills 폴더에 직접 풀어도 됩니다.",
+      "none": "이 Skill은 지금 설치할 수 있는 버전이 없습니다.",
+      "withdrawn": "이 버전은 회수되어 설치할 수 없습니다.",
+      "pending": {
+        "scanning": "v{version}은(는) 검사 중입니다. 아래에서는 계속 v{current}이(가) 설치됩니다.",
+        "blocked": "v{version}은(는) 보안 검사를 통과하지 못해 설치할 수 없습니다. 아래에서는 계속 v{current}이(가) 설치됩니다."
+      }
+    },
+    "compat": {
+      "verified": "IFAI 확인 완료",
+      "claimed": "작성자 기준 동작",
+      "untested": "테스트 전",
+      "failed": "지원 안 됨",
+      "needs_recheck": "업데이트 후 재확인 대기"
+    },
+    "info": {
+      "title": "정보",
+      "version": "버전",
+      "updated": "업데이트",
+      "license": "라이선스",
+      "runtime": "필요 환경",
+      "apiKey": "API 키",
+      "size": "크기",
+      "repository": "출처",
+      "noLicense": "없음(작성자의 서면 동의로 등록)",
+      "needed": "필요",
+      "notNeeded": "필요 없음"
+    },
+    "fingerprint": {
+      "title": "지문",
+      "label": "Zip의 sha256",
+      "how": "내려받은 파일은 shasum -a 256 {file}(또는 sha256sum)을 실행해 비교하세요."
+    },
+    "related": "관련 Skill",
+    "shuffle": "다른 것 보기",
+    "tabs": {
+      "label": "Skill 정보",
+      "overview": "개요",
+      "files": "파일",
+      "versions": "버전 기록",
+      "security": "보안 검사"
+    },
+    "overview": {
+      "capabilities": "할 수 있는 일",
+      "example": "사용 예시",
+      "exampleHint": "설치 후에는 대화에서 원하는 일을 말하기만 하면 됩니다. 예:",
+      "workflow": "작동 방식",
+      "notes": "알아 둘 점",
+      "ownerNotes": "IFAI 사용 노트",
+      "empty": "아직 설명이 없습니다. 아래 SKILL.md는 작성자의 원문입니다.",
+      "skillMd": "SKILL.md 원문"
+    },
+    "files": {
+      "summary": "{count, plural, other {파일 # 개}} · {size}",
+      "viewerNote": "패키지 내용을 그대로 텍스트로 표시 · {size}",
+      "notShown": "이 파일은 여기에서 보여 주지 않습니다(이미지나 바이너리 파일이거나 지금 읽을 수 없음). Zip을 내려받아 확인하세요."
+    },
+    "versionStatus": {
+      "current": "현재 버전",
+      "published": "공개",
+      "deprecated": "권장 안 함",
+      "withdrawn": "회수됨"
+    },
+    "checks": {
+      "structure": "패키지 구조가 올바름",
+      "secrets": "하드코딩된 키 없음",
+      "sensitive_paths": "민감한 위치를 읽지 않음",
+      "dangerous_commands": "위험한 명령 없음",
+      "network": "선언한 사이트에만 접속",
+      "prompt_injection": "프롬프트 인젝션 징후 없음",
+      "license": "오픈소스 라이선스 있음"
+    },
+    "declarations": {
+      "domains": "접속 도메인",
+      "fileScope": "읽고 쓰는 범위",
+      "tools": "명령줄 도구",
+      "apiKeys": "API 키",
+      "noDomains": "선언 없음",
+      "unknown": "명시 안 됨",
+      "noTools": "필요 없음",
+      "noKeys": "필요 없음"
+    },
+    "disclaimer": "보안 검사는 이 버전의 파일을 자동으로 정적 검사한 결과입니다. IFAI가 이 Skill의 기능이나 안전성을 보증한다는 뜻은 아닙니다."
   },
   "saves": {
     "save": "저장",

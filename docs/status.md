@@ -2,11 +2,11 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-23（应用第 5 步中段·评价；日报第 6 步后半·海报；应用第 5 步前半·收藏；应用·日报改动后立即匹配提及；日报第 6 步前半·热度）。
+更新于 2026-10-23（应用第 5 步中段·评价；资源第 4 步·前台；日报第 6 步后半·海报；应用第 5 步前半·收藏；应用·日报改动后立即匹配提及）。
 
 ## 现在到哪了
 
-- **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。首页用的是演示数据，日报、应用、资源三个入口是「即将上线」占位页。详见 [specs/foundation.md](./specs/foundation.md)。
+- **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。当时首页用的是演示数据、三个入口是「即将上线」占位页，现在都已换成各模块的真实页面（最后的占位页和演示数据在资源第 4 步删掉）。详见 [specs/foundation.md](./specs/foundation.md)。
 - **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。
 - **日报第 1 步（基础）已完成**：装好了 Inngest、Vercel AI SDK + OpenRouter、feedsmith（RSS）、cheerio、linkedom + Readability；迁移 `model_receipts_pgvector` 启用 pgvector 并建 `model_receipts` 表；`src/lib/ai` 提供按用途选模型、回执（重试不重复扣费）、每日预算（上海时间，默认 10 美元）、总开关；Inngest 入口 `/api/inngest`，带一个不花钱的 `health-check` 任务（事件 `ifai/health.check`）用来验证连通。真实模型调用已用 `pnpm ai:smoke` 验证过（DeepSeek，一次 0.00004 美元）。
 - **日报第 2 步（信源与采集）已完成**：`sources` 集合（后台「日报 → 信源」，每条有「试抓」按钮，接口 `POST /api/sources/:id/test-fetch`，只预览不入库）；迁移 `daily_sources_raw_items` 建 `sources`、`raw_items`（1536 维向量列 + HNSW 索引，外键随信源级联删除）并导入 16 个信源，其中 Future Tools、The Rundown、Forward Future 三个网页列表信源的选择器是占位值，先停用，站长试抓确认后再启用；三种读取器（RSS / Atom / JSON Feed、网页列表、Hacker News JSON）在 `src/modules/daily/readers/`；Inngest 任务 `daily-collect-due-sources`（每 15 分钟找到期信源，也可发事件 `daily/collect.run` 手动跑）、`daily-fetch-source`（抓一个信源，按判重 / 48 小时 / 首次导入最多 30 条的规则写入 `raw_items`，自动调整间隔，失败原因记在信源上）、`daily-fetch-item-content`（Readability 取原文正文、发布时间和外链）。三个任务都先检查 `COLLECT_ENABLED`。沙盒连不到新闻站点，真实信源还没抓过，要在预览环境验证。
@@ -35,6 +35,7 @@
 - **资源第 1 步（集合与后台录入）已完成**：`src/modules/resources/collections/` 里的 `skills`、`skill-versions`（上传集合，Zip 存 R2 的 `skills/` 前缀）、`agent-hosts`、`skill-tags`、`skill-submissions`，Drizzle 表 `skill_events`（`db/schema.ts`），迁移 `resources` 建表并写入 6 个宿主；分类固定 7 个在 `categories.ts`，名称在 `messages/`。
 - **资源第 2 步（导入与检测）已完成**：后台 Skill 页侧栏有「导入版本」（接口 `POST /api/skills/:id/import`，可填分支 / tag / commit 和版本号），发事件 `skill/import` 给 Inngest 任务 `skill-import`（`src/modules/resources/import/`）：从 codeload 拉仓库的 tar.gz 快照（commit 取自归档头，公开仓库不用令牌；可选 `GITHUB_TOKEN` 提限额），按仓库地址里的子目录或唯一的 `SKILL.md` 找到 Skill 目录，去掉 `.git`、`.DS_Store` 之类，打成确定性的 Zip（同样的文件得到同样的 sha256），以「待审」状态创建版本；版本号取请求的 → `SKILL.md` 头部的 → 最新版本号加一；同一 commit 只导入一次；结果写在 Skill 侧栏「最近导入」里。sha256、文件清单、SKILL.md 原文与 frontmatter、声明的域名和静态检测全部在 `skill-versions` 的上传钩子里由 Zip 算出（`package/inspect.ts`），所以手动上传的 Zip 和导入的走同一套检查。静态检测（`scan/`）按规格 7 项：包结构、密钥、敏感位置为「拦截」，危险命令、外联、提示注入为「有提示」，许可缺失则不能发布（仓库 SPDX → `SKILL.md` 的 `license` → 包内或仓库根 LICENSE → Skill 上填的许可 → 「作者书面同意」勾选）。发布校验：拦截不能发，待检测不能发，有提示要填「复核备注」，没有许可要有许可或作者同意；发布时自动填 `publishedAt`，把 Skill 的当前版本换成更新的版本并让草稿 Skill 上线。已发布 / 已弃用 / 已撤回的版本不能换 Zip、不能退回待审，版本号、commit、sha256、文件清单、SKILL.md、frontmatter、声明、检测结果都不能改（规则 2）；更新说明和兼容记录仍可改。撤回要填原因，Skill 下架要填原因，已发布的 Skill 必须指向已发布的版本。`skills` 开了 Payload 版本历史（显示字段的修改记录）。本地库上用假的 GitHub 响应跑通了导入、重复导入、导入失败记录、拦截不能发布、有提示需备注、发布后 Skill 上线、不可改、撤回、下架。
 - **资源第 3 步（说明起草）已完成**：新用途 `describe`（`src/lib/ai/purposes.ts`，可用 `AI_MODEL_DESCRIBE` 换模型）。起草以版本为单位（`src/modules/resources/describe/`，提示词在 `prompts/describe.ts`）：一次调用按文件提取声明（外联域名、读写范围、工具、API Key，温度 0），四次调用分别写简体、英语、日语、韩语的显示名、一句话介绍、「它能做什么」、使用示例、工作流程和注意事项；SKILL.md、README（包内的，没有时取仓库根目录的，存在版本的 `readme` 字段）和文件清单全部用 `untrusted()` 包成数据。文字写进 Skill（简体先写，繁体由钩子生成），声明写进版本；名字和数字用日报的原文核对检查，文件里找不到的外联域名、工具、API Key 不写入，列在面板上；版本已发布时不改它的声明（规则 2）。状态记在版本上：「说明草稿」待生成 → 已生成 / 没生成（`draftStatus`、`draftInfo`）。Skill 还没有说明时，导入后自动排队起草，只填空着的字段；之后在版本页侧栏点「生成说明草稿」重写（接口 `POST /api/skill-versions/:id/describe`），显示名只在空着时填，试用笔记不动，「需要 API Key」和运行依赖也只在空着时填。Inngest 任务 `skill-describe`（同一版本的新请求取消旧的，模型调用失败三次标「没生成」）和 `skill-describe-sweep`（每 20 分钟补漏：开关关着、预算用完或事件丢了的草稿）。模型关着、没有 key、预算用完时草稿停在「待生成」，导入照常完成。迁移 `resources_describe` 给 `skill_versions` 加 `draft_status`、`draft_info`、`readme`。本地库上用假模型跑通了：四种语言和繁体写入、声明核对、只填空字段与重写、旧请求不覆盖新请求、补漏、已发布版本不改声明、没有 SKILL.md 正文时标「没生成」、开关关着时等待。真实模型的草稿质量要在预览环境试。
+- **资源第 4 步（前台）已完成**：`/[locale]/resources` Skills 列表：顶部收录数和本周新增（真实数字）、本周精选（站长勾的「精选」，没勾时取最近更新的认证 Skill）、三步用上 Skill、7 个分类（带数量）、搜索（显示名、一句话介绍、标签，五种语言都查，也查 slug）、「无需 API Key」「仅看认证」筛选、标签和作者筛选、综合 / 近期飙升 / 安装数 / 最近上新四种排序、列表 / 卡片切换（记在浏览器里）、每页 30 条、热门标签、三种空状态；分类、排序、筛选、搜索词、标签、作者、页码都在查询参数里，搜索、筛选和非默认排序的页面不进索引。`/[locale]/resources/skills/[slug]` 详情：面包屑、徽章、安装面板（6 个宿主切换，安装指令和兼容状态跟着变，复制安装指令、下载 Zip）、概述 / 文件 / 版本记录 / 安全检测四个页签（地址带 `#files` 这类锚点）、信息、内容指纹、相关 Skill（同分类按安装数取 6 条，换一换）；手机上的顺序是头部 → 安装面板 → 页签 → 信息。`/v/[version]` 固定版本页（不进索引，提示是不是当前版本；已撤回的显示原因、安装面板禁用；已弃用的照常可装并提示），`/v/[version]/files/...` 看单个文件的原文（转义后放在 `<pre>` 里，按 Zip 的 sha256 缓存）。已下架的 Skill 主页保留并显示原因，没有安装面板。接口：`GET /api/skills/<slug>/install.md`（`?v=` 固定版本，`?host=` 把那个宿主排第一），英文 Markdown，只写站长审过的字段和由 Zip 算出的值，不放作者写的任何文字；`GET /api/skills/<slug>/<版本>.zip` 核对版本后记一次下载，302 到 Payload 的文件地址，配了 R2 时再跳到 5 分钟有效的签名地址；`POST /api/skills/<slug>/installs` 记「复制安装指令」。三种安装都写进 `skill_events`，同一访客（`src/lib/visitor.ts`）对同一 Skill 在同一个上海日只算一次，爬虫不算；汇总成安装数是第 5 步的事，现在页面上的安装数读 Skill 上的统计缓存。页面显示的版本：当前版本已发布就用它，否则用最新的已发布版本。缓存标签 `skills`，Skill、版本、宿主、标签保存或删除后立即刷新。首页「新上架 Skills」读最近发布的 4 条，右上「新上架 Skill」读本周精选；演示数据、演示提示和「即将上线」占位页都删了。代码在 `src/modules/resources/public/`（`data.ts` 读数据，`order.ts` 筛选和排序，`install.ts` 生成 install.md，`components/` 是页面组件），页面文件只做组装。本机示例数据：`pnpm payload run scripts/seed-skills.ts`（只认本机数据库，带已撤回、已弃用、已下架和草稿的例子），CI 冒烟测试用它（`tests/e2e/resources.spec.ts`，`E2E_SAMPLE_SKILLS=1`）。收藏、使用指南、投稿、安装榜和本周飙升、加载骨架留到第 5 步。和规格不同的地方写在 resources.md「页面与路由」末尾。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 
@@ -47,7 +48,7 @@
 | 第一期 | 1–2 | 地基 | 完成 |
 | 第一期 | 3 起 | 日报 | 第 1–6 步（实现顺序）完成，下一步预览环境验收，邮件订阅另做 |
 | 第一期 | 日报之后 | 应用 | 第 1–4 步（集合与后台录入、官网取材与资料草稿、列表页和详情页、热度）和第 5 步的收藏、评价完成，下一步评价翻译、提交应用与报错 |
-| 第一期 | 日报之后 | 资源（Agent Skills） | 第 1 步（集合、skill_events 表、后台录入）、第 2 步（导入与检测）、第 3 步（说明起草）完成，下一步前台 |
+| 第一期 | 日报之后 | 资源（Agent Skills） | 第 1–4 步（集合与后台录入、导入与检测、说明起草、前台）完成，下一步收尾（使用指南、投稿、收藏、统计汇总） |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
 | 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
 
@@ -57,7 +58,7 @@
 
 1. **日报预览环境验收**：按 daily.md「验收标准」在预览环境逐条过一遍（要先按 setup.md 配好 Neon、Vercel、OpenRouter、Inngest），发现的问题各开一个 PR。然后是**邮件订阅**（daily.md「流程」第 7 条，第 6 周）：先在 daily.md 补规格（订阅与退订、按订阅者时区早上 8 点发、语言、Resend 发送），再实现。
 2. **应用首批导入**：站长从 Toolify 挑 200–300 个应用的名称和官网网址，贴进后台「批量添加应用」，在预览环境先试几个，确认草稿质量后再批量。然后是**应用第 5 步余下的两个 PR**：评价翻译（5c：用途 `review-translate`，评价下面点「翻译」才加载译文，标「机器翻译」、不进索引），提交应用和「信息有误？」（5d）；之后把桌面详情拆成四个标签（第 6 步）。这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，Tranco 下载要在预览环境验证，或者在项目设置里加白名单。
-3. **资源第 4 步：前台**（见 resources.md「实现顺序」，画板「IFAI 资源 · Skills」「IFAI Skill 详情」「手机 · Skill 详情」）：列表、详情（桌面、手机）、固定版本页、`install.md` 和下载接口、安装事件（访客哈希用 `src/lib/visitor.ts`，同一访客对同一 Skill 一天算一次）、首页「新上架 Skills」接真实数据。说明起草要在预览环境配好 `OPENROUTER_API_KEY`、打开 `MODEL_CALLS_ENABLED`，对两三个真实 Skill 点「生成说明草稿」看质量。6 个宿主里 Codex 之后几个的目录位置、官网和安装说明要站长在后台补。收藏复用 `saves` 表（`src/modules/saves/`）：在 `target.ts` 的 `saveTypes` 加 `skill`、在 `data.ts` 的 `visible` 写怎么判断能收藏，再在页面外面包一层 `SaveProvider`，用 `SaveButton`。
+3. **资源第 5 步：收尾**（见 resources.md「实现顺序」）：使用指南 `/[locale]/resources/guide`（三步说明、各宿主的 Skills 目录、怎么核对 sha256；列表的「三步用上 Skill」和详情页指纹下的说明链过去）；发布指南与投稿表单 `/[locale]/resources/submit`（要登录，写进 `skill-submissions`，Resend 发邮件），列表顶部加「发布 Skill」按钮和右栏投稿入口；收藏复用 `saves`（`src/modules/saves/`：`target.ts` 的 `saveTypes` 加 `skill`，`data.ts` 的 `visible` 写怎么判断能收藏，详情页包一层 `SaveProvider`、放 `SaveButton`，「我的收藏」加一段 Skill）；统计汇总（每小时把 `skill_events` 汇总到 Skill 的安装数和近 7 天安装数，列表顶部「本周飙升」前 3、右栏安装榜前 5，「近期飙升」改成和前一周比）；列表和详情的加载骨架。说明起草要在预览环境配好 `OPENROUTER_API_KEY`、打开 `MODEL_CALLS_ENABLED`，对两三个真实 Skill 点「生成说明草稿」看质量。6 个宿主里 Codex 之后几个的目录位置、官网和安装说明要站长在后台补（install.md 会写进去）。
 
 ## 已做的决定
 
@@ -95,6 +96,9 @@
 - 用户投稿只做轻量表单，由站长导入审核；第一批从公开仓库挑 20–30 个有明确开源许可的。
 - 安装数：复制指令、下载 Zip、拉取 install.md 各算一次，同一访客对同一 Skill 一天一次。
 - 说明草稿以版本为单位起草，写进 Skill 的说明字段：首次导入自动起草，只填空着的字段；之后由站长在版本页手动重写。显示名只填不改，试用笔记不动；规格列出的字段之外也起草「工作流程」。
+- 下载先经过站点：`/api/skills/<slug>/<版本>.zip` 核对版本、记下载，再交给 Payload 的文件地址（R2 上是 5 分钟签名地址）。文件地址本身也只给已发布或已弃用、且 Skill 没下架的版本，绕过下载路由也拿不到撤回版本和下架 Skill 的 Zip。
+- install.md 只写站长审过的字段和由 Zip 算出的值（英文，各语言共用），不放作者写的文字；里面的 Zip 地址带 `?via=install`，助手照着装只算一次安装。
+- 页面显示的版本：当前版本已发布就用它；当前版本被撤回或弃用而没指定新的，就用最新的已发布版本，Skill 不会因此从列表消失。
 
 品牌：
 
@@ -118,6 +122,7 @@
 - [ ] 日报第 5 步部署到预览环境后：在后台发布一条新闻，1 分钟内看 `/en/daily`、`/zh-hans/daily`、详情页、`/en/daily/rss.xml` 和首页「今天的 AI」有没有出现；保存更正和撤回也同样看一遍。把浏览器时区换到别的地区（或用手机）看时间和「今天 / 昨天」分组是否跟着变；手机宽度下点一遍列表和详情。
 - [ ] 日报第 4 步部署到预览环境后：后台左侧点「审核队列」，走一遍通过并发布、改简体再发布（看英日韩是否重写、繁体是否跟着变）、拒绝、稍后再看、撤回、保存更正；重写和 AI 辅助要 `MODEL_CALLS_ENABLED=true`。前台页面要等第 5 步才能看到发布结果。
 - [ ] 日报第 2 步部署到预览环境后：把预览环境的 `COLLECT_ENABLED` 设为 `true`，在后台「日报 → 信源」逐个点「试抓」，确认抓到的是文章、日期也对；给 Future Tools、The Rundown、Forward Future 填好选择器后启用；试抓 Anthropic、Meta AI 的新闻列表页，能读就新建信源（T1）。然后发事件 `daily/collect.run`，看 `raw_items` 里有没有条目。
+- [ ] 资源第 4 步部署到预览环境后：在后台发布一两个真实 Skill，看 `/zh-hans/resources` 列表的分类、搜索、筛选、排序和卡片视图，详情页（桌面和手机）的安装面板、四个页签和文件原文；点「下载 Zip」，确认最后跳到 R2 并能下载，`shasum -a 256` 和页面上的指纹一致；打开 `/api/skills/<slug>/install.md` 看内容。预览环境有部署保护，AI 助手拉不到 install.md，让 Claude Code 照安装指令实装一次要等正式环境（或者用 Vercel 的保护绕过链接）。再撤回一个版本、下架一个 Skill，1 分钟内看列表、详情和首页有没有跟着变。
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。
 - [ ] 以后再定：商业化方式；排行第一批参赛模型和题库（第三期前）。
 
@@ -136,6 +141,7 @@
 - Payload 生成的 down 迁移会先 `DROP TABLE … CASCADE`，再删已经被连带删掉的外键，执行时报错。生成后把这类 `DROP CONSTRAINT` 改成 `DROP CONSTRAINT IF EXISTS`，并跑一次 `pnpm payload migrate:down` 验证。
 - 应用资料草稿的每一步（`src/modules/apps/profile/draft.ts`）都可以传入 `fetch`、`resolve`、`ai`，本机用假网页和假模型在本地库上跑通整条流程。抓取只访问公网地址，所以假网页要配一个返回公网 IP 的 `resolve`。仓库外的临时脚本用 `pnpm payload run` 跑时，扩展名用 `.mts`，并把仓库的 `node_modules` 链接到脚本旁边。
 - 沙盒里有 PostgreSQL 16：`service postgresql start`，建库 `ifai`，在 `.env` 里填本地的 `DATABASE_URI`，就能跑迁移和 `pnpm build`。
+- 本机重新跑示例数据脚本之后，先删掉 `.next/cache/fetch-cache` 再 `pnpm build`：数据缓存会跨构建保留，首页这类构建时预渲染的页面会用上旧数据，冒烟测试跟着失败。CI 每次都是新环境，不受影响。
 - ESLint 10 的 peer 依赖警告是已知情况，见 AGENTS.md。
 
 ## 设计稿

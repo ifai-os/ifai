@@ -24,7 +24,6 @@
     "signOut": "登出"
   },
   "home": {
-    "demoBanner": "示範資料 · 本頁的 Skill 還是範例內容，資源模組上線後換成真實資料",
     "todayAI": "今天的 AI",
     "dailyMeta": "今天已發布 {count, plural, other {# 則}} · 最近更新 {time}",
     "dailyMetaPast": "最近一期 {date} · {count, plural, other {# 則}}",
@@ -50,14 +49,8 @@
     "heat": "熱度 {value}",
     "rank": "第 {rank} 名",
     "install": "安裝",
-    "rating": "評分 {value}",
     "installs": "{count} 次安裝",
     "moreSources": "{count, plural, =0 {單一來源} other {另有 # 家報導}}"
-  },
-  "placeholder": {
-    "badge": "即將上線",
-    "body": "這個單元正在建置，第一期上線。",
-    "back": "返回首頁"
   },
   "auth": {
     "title": "登入 IFAI",
@@ -242,6 +235,182 @@
       "browser-extension": "瀏覽器擴充功能",
       "api": "API"
     }
+  },
+  "resources": {
+    "title": "Skills",
+    "resources": "資源",
+    "description": "可以裝進 AI 助手的 Agent Skills：每個版本都過安全檢測，版本有固定連結。",
+    "intro": "給 AI 裝上專家技能：從寫程式碼、查資料到做週報，複製一句話就能裝好。",
+    "listed": "收錄",
+    "newThisWeek": "本週新增",
+    "featured": "本週精選",
+    "steps": {
+      "title": "三步用上 Skill",
+      "pick": "挑選 Skill，點「安裝」",
+      "enable": "讓你的 AI 助手裝好它",
+      "ask": "在對話裡直接說出需求"
+    },
+    "categoriesLabel": "分類",
+    "allCategories": "全部",
+    "searchLabel": "搜尋 Skill",
+    "searchPlaceholder": "搜尋名稱、描述或標籤",
+    "searchSubmit": "搜尋",
+    "clearSearch": "清除搜尋",
+    "filtersLabel": "篩選",
+    "filters": {
+      "noKey": "無需 API Key",
+      "certified": "僅看認證"
+    },
+    "activeFilters": "當前篩選",
+    "tagFilter": "標籤：{tag}",
+    "authorFilter": "作者：{author}",
+    "removeFilter": "去掉這個篩選",
+    "view": {
+      "label": "顯示方式",
+      "list": "列表檢視",
+      "grid": "卡片檢視"
+    },
+    "sortLabel": "排序",
+    "sorts": {
+      "default": "綜合",
+      "rising": "近期飆升",
+      "installs": "安裝數",
+      "newest": "最近上新"
+    },
+    "found": "{count, plural, other {找到 # 個與「{q}」相關的 Skill}}",
+    "showing": "{scope} · {count, plural, other {# 個 Skill}}",
+    "noMatchTitle": "沒有找到與「{q}」相關的 Skill",
+    "noFilterMatchTitle": "沒有符合這些篩選條件的 Skill",
+    "noMatchBody": "換個更短的關鍵詞、去掉一個篩選，或者看看熱門標籤。",
+    "clearFilters": "清除篩選",
+    "emptyCategoryTitle": "這個分類下暫時沒有 Skill",
+    "emptyCategoryBody": "看看其他分類，或者過幾天再來。",
+    "allSkills": "檢視全部 Skill",
+    "emptyTitle": "還沒有收錄 Skill",
+    "emptyBody": "第一批 Skill 正在檢測和稽核，很快會出現在這裡。",
+    "pages": "翻頁",
+    "previous": "上一頁",
+    "next": "下一頁",
+    "pageOf": "第 {page} / {pages} 頁",
+    "hotTags": "熱門標籤",
+    "categoryTitle": "{category} · Skills",
+    "searchTitle": "「{q}」· Skills",
+    "pageTitle": "{title} · 第 {page} 頁",
+    "detailTitle": "{name}：{tagline}",
+    "versionTitle": "{name} v{version}",
+    "certified": "IFAI 認證",
+    "scan": {
+      "passed": "安全檢測通過",
+      "reviewed": "已人工複核",
+      "when": "v{version} · {date} 檢測",
+      "reviewedNote": "另有 {count} 項檢測有提示，IFAI 人工複核後才釋出了這個版本。"
+    },
+    "needsKey": "需 API Key",
+    "updatedOn": "{date} 更新",
+    "by": "作者",
+    "official": "IFAI 官方",
+    "tags": "標籤",
+    "breadcrumb": "當前位置",
+    "pinned": {
+      "current": "這是 v{version} 的固定連結，也是當前版本。",
+      "notCurrent": "這是 v{version}，當前版本是 v{current}。",
+      "toCurrent": "檢視當前版本"
+    },
+    "withdrawn": "v{version} 已撤回，不能再安裝。",
+    "reason": "原因：{reason}",
+    "deprecated": "v{version} 已棄用：仍可安裝，但建議用更新的版本。",
+    "delisted": "這個 Skill 已下架，不能再安裝。",
+    "install": {
+      "title": "安裝到你的 AI 助手",
+      "hosts": "你的 AI 助手",
+      "compatLine": "{host}：{status}",
+      "instruction": "請讀取 {url}，按裡面的步驟把這個 Skill 裝到 {host}。",
+      "copy": "複製安裝指令",
+      "copied": "已複製，貼上給你的 AI 即可",
+      "download": "下載 Zip",
+      "hint": "把這句話貼上給你的 AI 助手，它會自己下載 Zip、核對指紋並放好；也可以下載 Zip，自己解壓到它的 Skills 目錄。",
+      "none": "這個 Skill 現在沒有可以安裝的版本。",
+      "withdrawn": "這個版本已撤回，暫不可安裝。",
+      "pending": {
+        "scanning": "v{version} 正在檢測中，下面安裝的仍是 v{current}。",
+        "blocked": "v{version} 沒有通過安全檢測，暫不可安裝；下面安裝的仍是 v{current}。"
+      }
+    },
+    "compat": {
+      "verified": "IFAI 已驗證",
+      "claimed": "作者宣告可用",
+      "untested": "未測試",
+      "failed": "不適用",
+      "needs_recheck": "宿主更新後待複核"
+    },
+    "info": {
+      "title": "資訊",
+      "version": "版本",
+      "updated": "更新時間",
+      "license": "許可協議",
+      "runtime": "執行依賴",
+      "apiKey": "API Key",
+      "size": "大小",
+      "repository": "來源倉庫",
+      "noLicense": "無（經作者書面同意收錄）",
+      "needed": "需要",
+      "notNeeded": "不需要"
+    },
+    "fingerprint": {
+      "title": "內容指紋",
+      "label": "Zip 的 sha256",
+      "how": "核對下載的檔案：執行 shasum -a 256 {file}（或 sha256sum），和上面的值對比。"
+    },
+    "related": "相關 Skill",
+    "shuffle": "換一換",
+    "tabs": {
+      "label": "Skill 詳情",
+      "overview": "概述",
+      "files": "檔案",
+      "versions": "版本記錄",
+      "security": "安全檢測"
+    },
+    "overview": {
+      "capabilities": "它能做什麼",
+      "example": "使用示例",
+      "exampleHint": "裝好以後，在對話裡直接說需求即可，例如：",
+      "workflow": "工作流程",
+      "notes": "注意事項",
+      "ownerNotes": "IFAI 試用筆記",
+      "empty": "還沒有說明。下面的 SKILL.md 是作者的原文。",
+      "skillMd": "SKILL.md 原文"
+    },
+    "files": {
+      "summary": "{count, plural, other {# 個檔案}} · {size}",
+      "viewerNote": "按包裡的原樣顯示為純文本 · {size}",
+      "notShown": "這裡不顯示這個檔案（圖片或二進位制檔案，或者暫時讀取不到）。下載 Zip 可以檢視。"
+    },
+    "versionStatus": {
+      "current": "當前版本",
+      "published": "已釋出",
+      "deprecated": "已棄用",
+      "withdrawn": "已撤回"
+    },
+    "checks": {
+      "structure": "包結構合規",
+      "secrets": "沒有寫死的金鑰",
+      "sensitive_paths": "不讀取敏感位置",
+      "dangerous_commands": "沒有危險命令",
+      "network": "只訪問宣告過的網站",
+      "prompt_injection": "沒有提示注入跡象",
+      "license": "有開源許可"
+    },
+    "declarations": {
+      "domains": "外聯域名",
+      "fileScope": "讀寫範圍",
+      "tools": "命令列工具",
+      "apiKeys": "API Key",
+      "noDomains": "沒有宣告",
+      "unknown": "沒有說明",
+      "noTools": "不需要",
+      "noKeys": "不需要"
+    },
+    "disclaimer": "安全檢測是對這個版本檔案的自動靜態檢測，不代表 IFAI 為它的功能或安全背書。"
   },
   "saves": {
     "save": "收藏",
