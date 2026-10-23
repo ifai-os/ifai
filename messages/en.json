@@ -248,7 +248,8 @@
       "title": "Use a Skill in three steps",
       "pick": "Pick a Skill and press Install",
       "enable": "Let your AI assistant install it",
-      "ask": "Ask for what you need in the chat"
+      "ask": "Ask for what you need in the chat",
+      "guide": "Read the guide"
     },
     "categoriesLabel": "Categories",
     "allCategories": "All",
@@ -359,10 +360,13 @@
     "fingerprint": {
       "title": "Fingerprint",
       "label": "sha256 of the Zip",
-      "how": "To check a download, run shasum -a 256 {file} (or sha256sum) and compare."
+      "how": "To check a download, run shasum -a 256 {file} (or sha256sum) and compare.",
+      "verify": "How to verify"
     },
     "related": "Related Skills",
     "shuffle": "Show others",
+    "share": "Share",
+    "linkCopied": "Link copied",
     "tabs": {
       "label": "About this Skill",
       "overview": "Overview",
@@ -410,7 +414,45 @@
       "noTools": "None",
       "noKeys": "None"
     },
-    "disclaimer": "The security check is an automatic static check of this version’s files. It does not mean IFAI vouches for what the Skill does or for its safety."
+    "disclaimer": "The security check is an automatic static check of this version’s files. It does not mean IFAI vouches for what the Skill does or for its safety.",
+    "guide": {
+      "title": "How to use Skills",
+      "description": "Install Agent Skills in Claude Code, Codex and other AI assistants: three steps, where each assistant keeps Skills, and how to check a download’s fingerprint.",
+      "intro": "A Skill is a folder with a SKILL.md file in it. Put it in your AI assistant’s Skills directory and the assistant uses it when a task calls for it. Every version listed on IFAI is security-checked and reviewed by IFAI.",
+      "steps": {
+        "pick": "Pick a Skill",
+        "pickBody": "Browse by category or search, then open a Skill to see what it does and what it needs: an API key, network access, other tools.",
+        "install": "Install it in your assistant",
+        "installBody": "On the Skill’s page, choose your assistant, press “{copy}” and paste it to the assistant. It reads the install steps, downloads the Zip, checks its fingerprint and puts it in its Skills directory. Or press “{download}” and unzip it yourself into one of the directories below.",
+        "use": "Ask for what you need",
+        "useBody": "No commands to learn: say what you want done, as usual, and the assistant uses the Skill when it fits. Some assistants need a new session or a setting first; see the notes below."
+      },
+      "hosts": {
+        "title": "Where each assistant keeps Skills",
+        "intro": "Unzip it into a folder named after the Skill’s slug (the line under its name), inside one of these directories, so that SKILL.md ends up at:",
+        "path": "<Skills directory>/<slug>/SKILL.md",
+        "global": "All projects",
+        "project": "One project",
+        "website": "Website",
+        "unknown": "Where its Skills go is not written up here yet; see its documentation."
+      },
+      "verify": {
+        "title": "Check the fingerprint",
+        "body": "Every version has a sha256 fingerprint computed from the Zip itself. It is on the Skill’s page under “{fingerprint}” and in the install steps. Check a download against it, so you know you have the same file IFAI reviewed:",
+        "file": "<slug>-<version>.zip",
+        "mac": "macOS and Linux",
+        "windows": "Windows (PowerShell)",
+        "match": "Install it only if the result is the same as on the page (Windows prints capital letters; that does not matter). If it differs, download it again; if it still differs, do not install it.",
+        "assistant": "The install steps ask your assistant to check the fingerprint as well, and to stop and tell you if it does not match."
+      },
+      "safety": {
+        "title": "What the security check covers",
+        "blocked": "Every version is checked when it is imported. One with a broken package, a hard-coded key, or code that reads sensitive places such as ~/.ssh cannot be published.",
+        "reviewed": "Dangerous commands, network access it did not declare and signs of prompt injection are flagged, and IFAI looks at them before the version is published.",
+        "noScripts": "The install steps only say where the files go, and tell the assistant not to run anything from the package.",
+        "limits": "The check reads the files; it cannot prove a Skill is safe. Before installing, look at the “{security}” tab: the domains it contacts, the files it touches, and the tools and API keys it needs."
+      }
+    }
   },
   "saves": {
     "save": "Save",
@@ -419,12 +461,14 @@
     "signInTitle": "Sign in to save",
     "afterSignIn": "Once you're signed in, it's saved for you.",
     "title": "Saved",
-    "description": "The AI apps you saved.",
-    "signInBody": "Sign in to see the apps you saved.",
+    "description": "The AI apps and Skills you saved.",
+    "signInBody": "Sign in to see the apps and Skills you saved.",
     "emptyTitle": "Nothing saved yet",
-    "emptyBody": "Press Save on an app you like and it will show up here",
+    "emptyBody": "Press Save on an app or Skill you like and it will show up here",
     "browseApps": "Browse AI apps",
+    "browseSkills": "Browse Skills",
     "apps": "Apps",
+    "skills": "Skills",
     "remove": "Remove",
     "removeName": "Remove {name}",
     "failed": "Couldn't remove it. Try again."

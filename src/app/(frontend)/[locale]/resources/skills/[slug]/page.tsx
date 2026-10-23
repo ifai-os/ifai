@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
 import { isLocale } from '@/i18n/config'
+import { authProviders } from '@/lib/auth/providers'
 import { SkillDetailView } from '@/modules/resources/public/components/skill-detail'
 import { getSkill } from '@/modules/resources/public/data'
 import { skillMetadata } from '@/modules/resources/public/metadata'
@@ -27,5 +28,5 @@ export default async function SkillPage({ params }: Props) {
   const skill = await getSkill(slug, locale)
   if (!skill) notFound()
 
-  return <SkillDetailView skill={skill} pinned={false} />
+  return <SkillDetailView skill={skill} pinned={false} signIn={authProviders()} />
 }

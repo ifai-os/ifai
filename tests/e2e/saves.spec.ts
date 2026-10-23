@@ -82,3 +82,69 @@ test.describe('with the sample apps', () => {
     }
   })
 })
+
+// Needs the sample Skills from scripts/seed-skills.ts: CI adds them; preview databases don't have them.
+test.describe('with the sample Skills', () => {
+  test.skip(!process.env.E2E_SAMPLE_SKILLS, 'Run `pnpm payload run scripts/seed-skills.ts` and set E2E_SAMPLE_SKILLS=1.')
+
+  test('a visitor who saves a Skill is asked to sign in, and a delisted Skill has no save', async ({ page }) => {
+    await page.goto('/en/resources/skills/sample-release-notes')
+    const save = page.getByRole('main').getByRole('button', { name: en.saves.save, exact: true })
+    await expect(save).toHaveAttribute('aria-pressed', 'false')
+    await save.click()
+    const dialog = page.getByRole('dialog', { name: en.saves.signInTitle })
+    await expect(dialog).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+
+    await page.goto('/en/resources/skills/sample-delisted-skill')
+    await expect(page.getByRole('heading', { level: 1, name: 'Delisted Sample Skill' })).toBeVisible()
+    await expect(page.getByRole('button', { name: en.saves.save, exact: true })).toHaveCount(0)
+  })
+
+  test('phones keep save and copy in a bar at the bottom', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/en/resources/skills/sample-release-notes')
+    // The header's save is for wide screens; on phones the bar's bookmark is the only one.
+    const save = page.getByRole('button', { name: en.saves.save, exact: true })
+    await expect(save).toHaveCount(1)
+    await expect(page.getByRole('main').getByRole('button', { name: en.saves.save, exact: true })).toHaveCount(0)
+    // One copy button in the install panel, one in the bar.
+    await expect(page.getByRole('button', { name: en.resources.install.copy })).toHaveCount(2)
+    await save.click()
+    await expect(page.getByRole('dialog', { name: en.saves.signInTitle })).toBeVisible()
+  })
+
+  test('a member saves a Skill and finds it under Saved', async ({ page, context, baseURL }) => {
+    test.skip(
+      !process.env.DATABASE_URI || !process.env.BETTER_AUTH_SECRET,
+      'Signs a member in through the database: needs DATABASE_URI and BETTER_AUTH_SECRET, as in CI.',
+    )
+    const member = await createMember(baseURL ?? 'http://localhost:3000')
+    try {
+      await context.addCookies([member.cookie])
+      const main = page.getByRole('main')
+
+      // Back from signing in with the save in the address: it finishes by itself, and the address is cleaned up.
+      await page.goto(`/en/resources/skills/sample-sql-helper?save=skill-${await member.skillId('sample-sql-helper')}`)
+      await expect(main.getByRole('button', { name: en.saves.saved, exact: true })).toHaveAttribute('aria-pressed', 'true')
+      await expect(page).toHaveURL(/\/en\/resources\/skills\/sample-sql-helper$/)
+      await expect(main.getByText('· 1 save')).toBeVisible()
+
+      // Only Skills visitors can see are saved.
+      const delisted = await page.request.post('/api/saves', {
+        data: { type: 'skill', id: await member.skillId('sample-delisted-skill'), saved: true },
+      })
+      expect(delisted.status()).toBe(404)
+
+      await page.goto('/en/me/saves')
+      const saved = page.getByRole('region', { name: new RegExp(`^${en.saves.skills}`) })
+      await expect(saved.getByRole('link')).toHaveText([/SQL Helper/])
+      await saved.getByRole('button', { name: en.saves.removeName.replace('{name}', 'SQL Helper') }).click()
+      await expect(page.getByText(en.saves.emptyTitle)).toBeVisible()
+      await expect(page.getByRole('link', { name: en.saves.browseSkills })).toHaveAttribute('href', '/en/resources')
+    } finally {
+      await member.remove()
+    }
+  })
+})

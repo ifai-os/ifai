@@ -248,7 +248,8 @@
       "title": "三步用上 Skill",
       "pick": "挑選 Skill，點「安裝」",
       "enable": "讓你的 AI 助手裝好它",
-      "ask": "在對話裡直接說出需求"
+      "ask": "在對話裡直接說出需求",
+      "guide": "檢視使用指南"
     },
     "categoriesLabel": "分類",
     "allCategories": "全部",
@@ -359,10 +360,13 @@
     "fingerprint": {
       "title": "內容指紋",
       "label": "Zip 的 sha256",
-      "how": "核對下載的檔案：執行 shasum -a 256 {file}（或 sha256sum），和上面的值對比。"
+      "how": "核對下載的檔案：執行 shasum -a 256 {file}（或 sha256sum），和上面的值對比。",
+      "verify": "如何驗證"
     },
     "related": "相關 Skill",
     "shuffle": "換一換",
+    "share": "分享",
+    "linkCopied": "連結已複製",
     "tabs": {
       "label": "Skill 詳情",
       "overview": "概述",
@@ -410,7 +414,45 @@
       "noTools": "不需要",
       "noKeys": "不需要"
     },
-    "disclaimer": "安全檢測是對這個版本檔案的自動靜態檢測，不代表 IFAI 為它的功能或安全背書。"
+    "disclaimer": "安全檢測是對這個版本檔案的自動靜態檢測，不代表 IFAI 為它的功能或安全背書。",
+    "guide": {
+      "title": "Skill 使用指南",
+      "description": "怎麼把 Agent Skill 裝進 Claude Code、Codex 等 AI 助手：三步用上、各助手的 Skills 目錄、怎麼核對下載檔案的指紋。",
+      "intro": "Skill 是一個帶 SKILL.md 的資料夾。把它放進 AI 助手的 Skills 目錄，助手在需要時就會用上它。IFAI 收錄的每個版本都經過安全檢測和 IFAI 稽核。",
+      "steps": {
+        "pick": "挑選 Skill",
+        "pickBody": "按分類瀏覽或搜尋，開啟詳情頁看它能做什麼、需要什麼：API Key、聯網、要裝的工具。",
+        "install": "裝到你的 AI 助手",
+        "installBody": "在詳情頁選你用的助手，點「{copy}」，貼上給它。它會讀取安裝說明，下載 Zip、核對指紋，放進自己的 Skills 目錄。也可以點「{download}」，自己解壓到下面的目錄。",
+        "use": "在對話裡直接說需求",
+        "useBody": "不用記命令，像平時一樣說要做什麼，助手會在合適的時候用上這個 Skill。有的助手要新開會話或在設定裡啟用，見下面各助手的說明。"
+      },
+      "hosts": {
+        "title": "各 AI 助手的 Skills 目錄",
+        "intro": "把 Zip 解壓成一個以 Skill 的 slug（名字下面那行英文）命名的資料夾，放進下面的某個目錄，讓 SKILL.md 的位置是：",
+        "path": "<Skills 目錄>/<slug>/SKILL.md",
+        "global": "所有專案",
+        "project": "單個專案",
+        "website": "官網",
+        "unknown": "這裡還沒寫它的 Skills 目錄，先看它的官方文件。"
+      },
+      "verify": {
+        "title": "核對內容指紋",
+        "body": "每個版本都有一個由 Zip 本身算出的 sha256 指紋，寫在 Skill 詳情頁的「{fingerprint}」和安裝說明裡。下載後核對一下，確認拿到的和 IFAI 稽核的是同一份檔案：",
+        "file": "<slug>-<版本號>.zip",
+        "mac": "macOS、Linux",
+        "windows": "Windows（PowerShell）",
+        "match": "結果和頁面上的一樣才安裝（Windows 顯示的是大寫字母，不影響）。不一樣就重新下載一次；還是不一樣，就不要安裝。",
+        "assistant": "安裝說明也要求 AI 助手核對指紋，對不上就停下來告訴你。"
+      },
+      "safety": {
+        "title": "安全檢測查什麼",
+        "blocked": "每個版本匯入時都會做靜態檢測：包結構不對、寫死了金鑰、讀取 ~/.ssh 之類敏感位置的，不能釋出。",
+        "reviewed": "危險命令、沒有宣告的外聯、提示注入的跡象會被標出來，IFAI 人工看過才釋出。",
+        "noScripts": "安裝說明只告訴助手把檔案放在哪裡，並要求它不要執行包裡的任何指令碼。",
+        "limits": "檢測只讀檔案，不能保證 Skill 絕對安全。裝之前看一下詳情頁的「{security}」頁籤：它會聯網的域名、讀寫哪些檔案、需要哪些工具和 API Key。"
+      }
+    }
   },
   "saves": {
     "save": "收藏",
@@ -419,12 +461,14 @@
     "signInTitle": "登入後就能收藏",
     "afterSignIn": "登入後會自動幫你完成收藏。",
     "title": "我的收藏",
-    "description": "你收藏的 AI 應用。",
-    "signInBody": "登入後就能看到你收藏的應用。",
+    "description": "你收藏的 AI 應用和 Skill。",
+    "signInBody": "登入後就能看到你收藏的應用和 Skill。",
     "emptyTitle": "還沒有收藏",
-    "emptyBody": "看到喜歡的應用，點一下收藏，就會出現在這裡",
+    "emptyBody": "看到喜歡的應用或 Skill，點一下收藏，就會出現在這裡",
     "browseApps": "逛逛 AI 應用",
+    "browseSkills": "逛逛 Skill",
     "apps": "應用",
+    "skills": "Skill",
     "remove": "取消收藏",
     "removeName": "取消收藏 {name}",
     "failed": "沒能取消收藏，請再試一次。"
