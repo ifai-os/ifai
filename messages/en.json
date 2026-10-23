@@ -24,7 +24,6 @@
     "signOut": "Sign out"
   },
   "home": {
-    "demoBanner": "Demo data · the Skills on this page are samples until the Resources module launches",
     "todayAI": "AI today",
     "dailyMeta": "{count, plural, one {# story} other {# stories}} published today · updated {time}",
     "dailyMetaPast": "Latest stories from {date} · {count, plural, one {# story} other {# stories}}",
@@ -50,14 +49,8 @@
     "heat": "Heat {value}",
     "rank": "Rank {rank}",
     "install": "Install",
-    "rating": "Rated {value}",
     "installs": "{count} installs",
     "moreSources": "{count, plural, =0 {Single source} one {# more outlet reported this} other {# more outlets reported this}}"
-  },
-  "placeholder": {
-    "badge": "Coming soon",
-    "body": "This section is being built and opens in phase one.",
-    "back": "Back to home"
   },
   "auth": {
     "title": "Sign in to IFAI",
@@ -242,6 +235,182 @@
       "browser-extension": "Browser extension",
       "api": "API"
     }
+  },
+  "resources": {
+    "title": "Skills",
+    "resources": "Resources",
+    "description": "Agent Skills you can install in your AI assistant, each version security-checked, with versions you can pin.",
+    "intro": "Give your AI assistant expert skills, from writing code and research to weekly reports. Copy one sentence to install.",
+    "listed": "listed",
+    "newThisWeek": "new this week",
+    "featured": "Pick of the week",
+    "steps": {
+      "title": "Use a Skill in three steps",
+      "pick": "Pick a Skill and press Install",
+      "enable": "Let your AI assistant install it",
+      "ask": "Ask for what you need in the chat"
+    },
+    "categoriesLabel": "Categories",
+    "allCategories": "All",
+    "searchLabel": "Search Skills",
+    "searchPlaceholder": "Search names, descriptions or tags",
+    "searchSubmit": "Search",
+    "clearSearch": "Clear search",
+    "filtersLabel": "Filters",
+    "filters": {
+      "noKey": "No API key",
+      "certified": "IFAI certified only"
+    },
+    "activeFilters": "Active filters",
+    "tagFilter": "Tag: {tag}",
+    "authorFilter": "By {author}",
+    "removeFilter": "Remove filter",
+    "view": {
+      "label": "View",
+      "list": "List view",
+      "grid": "Card view"
+    },
+    "sortLabel": "Sort",
+    "sorts": {
+      "default": "Best match",
+      "rising": "Trending",
+      "installs": "Most installed",
+      "newest": "Newest"
+    },
+    "found": "{count, plural, one {# Skill} other {# Skills}} found for “{q}”",
+    "showing": "{scope} · {count, plural, one {# Skill} other {# Skills}}",
+    "noMatchTitle": "No Skills match “{q}”",
+    "noFilterMatchTitle": "No Skills match these filters",
+    "noMatchBody": "Try a shorter word, remove a filter, or browse a popular tag.",
+    "clearFilters": "Clear filters",
+    "emptyCategoryTitle": "No Skills in this category yet",
+    "emptyCategoryBody": "Look at the other categories, or check back in a few days.",
+    "allSkills": "All Skills",
+    "emptyTitle": "No Skills listed yet",
+    "emptyBody": "The first Skills are being checked and will appear here soon.",
+    "pages": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "hotTags": "Popular tags",
+    "categoryTitle": "{category} Skills",
+    "searchTitle": "“{q}” · Skills",
+    "pageTitle": "{title} · page {page}",
+    "detailTitle": "{name}: {tagline}",
+    "versionTitle": "{name} v{version}",
+    "certified": "IFAI certified",
+    "scan": {
+      "passed": "Security check passed",
+      "reviewed": "Reviewed by IFAI",
+      "when": "v{version} · checked {date}",
+      "reviewedNote": "{count, plural, one {One more check} other {# more checks}} flagged something to look at; IFAI reviewed this version before publishing it."
+    },
+    "needsKey": "Needs API key",
+    "updatedOn": "Updated {date}",
+    "by": "By",
+    "official": "IFAI official",
+    "tags": "Tags",
+    "breadcrumb": "You are here",
+    "pinned": {
+      "current": "This is the fixed link to v{version}, the current version.",
+      "notCurrent": "This is v{version}. The current version is v{current}.",
+      "toCurrent": "Go to the current version"
+    },
+    "withdrawn": "v{version} was withdrawn and can no longer be installed.",
+    "reason": "Reason: {reason}",
+    "deprecated": "v{version} is deprecated. It still installs, but a newer version is recommended.",
+    "delisted": "This Skill was taken down and can no longer be installed.",
+    "install": {
+      "title": "Install in your AI assistant",
+      "hosts": "Your assistant",
+      "compatLine": "{host}: {status}",
+      "instruction": "Read {url} and follow its steps to install this Skill in {host}.",
+      "copy": "Copy install instruction",
+      "copied": "Copied. Paste it to your assistant",
+      "download": "Download Zip",
+      "hint": "Paste the instruction into your assistant: it downloads the Zip, checks its fingerprint and puts it in place. Or unzip the Zip into its Skills folder yourself.",
+      "none": "No version of this Skill can be installed right now.",
+      "withdrawn": "This version was withdrawn and cannot be installed.",
+      "pending": {
+        "scanning": "v{version} is being checked. v{current} below still installs.",
+        "blocked": "v{version} did not pass the security check and cannot be installed. v{current} below still installs."
+      }
+    },
+    "compat": {
+      "verified": "verified by IFAI",
+      "claimed": "works according to the author",
+      "untested": "not tested yet",
+      "failed": "does not work",
+      "needs_recheck": "being re-checked after an update"
+    },
+    "info": {
+      "title": "Information",
+      "version": "Version",
+      "updated": "Updated",
+      "license": "License",
+      "runtime": "Requires",
+      "apiKey": "API key",
+      "size": "Size",
+      "repository": "Source",
+      "noLicense": "None (listed with the author’s written consent)",
+      "needed": "Needed",
+      "notNeeded": "Not needed"
+    },
+    "fingerprint": {
+      "title": "Fingerprint",
+      "label": "sha256 of the Zip",
+      "how": "To check a download, run shasum -a 256 {file} (or sha256sum) and compare."
+    },
+    "related": "Related Skills",
+    "shuffle": "Show others",
+    "tabs": {
+      "label": "About this Skill",
+      "overview": "Overview",
+      "files": "Files",
+      "versions": "Versions",
+      "security": "Security check"
+    },
+    "overview": {
+      "capabilities": "What it does",
+      "example": "Example",
+      "exampleHint": "Once it is installed, just say what you want, for example:",
+      "workflow": "How it works",
+      "notes": "Things to know",
+      "ownerNotes": "IFAI’s notes from trying it",
+      "empty": "No description yet. SKILL.md below is the author’s own text.",
+      "skillMd": "SKILL.md, as the author wrote it"
+    },
+    "files": {
+      "summary": "{count, plural, one {# file} other {# files}} · {size}",
+      "viewerNote": "Plain text, exactly as in the package · {size}",
+      "notShown": "This file is not shown here (an image or binary file, or it could not be read just now). Download the Zip to see it."
+    },
+    "versionStatus": {
+      "current": "Current",
+      "published": "Published",
+      "deprecated": "Deprecated",
+      "withdrawn": "Withdrawn"
+    },
+    "checks": {
+      "structure": "Package structure is valid",
+      "secrets": "No hard-coded keys",
+      "sensitive_paths": "Does not read sensitive locations",
+      "dangerous_commands": "No dangerous commands",
+      "network": "Only talks to the sites it declares",
+      "prompt_injection": "No signs of prompt injection",
+      "license": "Has an open-source license"
+    },
+    "declarations": {
+      "domains": "Network",
+      "fileScope": "Files it touches",
+      "tools": "Command-line tools",
+      "apiKeys": "API keys",
+      "noDomains": "None declared",
+      "unknown": "Not stated",
+      "noTools": "None",
+      "noKeys": "None"
+    },
+    "disclaimer": "The security check is an automatic static check of this version’s files. It does not mean IFAI vouches for what the Skill does or for its safety."
   },
   "saves": {
     "save": "Save",

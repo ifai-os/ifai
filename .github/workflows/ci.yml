@@ -71,8 +71,8 @@ jobs:
         run: pnpm payload migrate
 
       # Stories first, so the apps seed can match the stories that mention the sample apps.
-      - name: Sample stories and apps for the smoke tests
-        run: pnpm payload run scripts/seed-stories.ts && pnpm payload run scripts/seed-apps.ts
+      - name: Sample stories, apps and Skills for the smoke tests
+        run: pnpm payload run scripts/seed-stories.ts && pnpm payload run scripts/seed-apps.ts && pnpm payload run scripts/seed-skills.ts
 
       - name: Build
         run: pnpm build
@@ -85,6 +85,7 @@ jobs:
         env:
           E2E_ADMIN: '1'
           E2E_SAMPLE_APPS: '1'
+          E2E_SAMPLE_SKILLS: '1'
           E2E_SAMPLE_STORIES: '1'
 
       - name: Upload Playwright report
