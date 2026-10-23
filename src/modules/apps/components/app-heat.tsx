@@ -62,9 +62,35 @@ export function HeatStats({ app, heat, showSiteRank }: { app: AppDetail; heat: S
 
 /**
  * The app's heat section (docs/specs/apps.md「页面与路由」): the line over 7 / 30 / 90 days, the
- * three parts that add up to it with what each came from, and its places on the lists.
+ * three parts that add up to it with what each came from, and the Daily stories that mention the
+ * app. Phones also have its places on the lists here; wider screens have them beside the tabs.
  */
-export function HeatSection({ app, heat, showSiteRank }: { app: AppDetail; heat: Scored; showSiteRank: boolean }) {
+export function HeatSection({ app, showSiteRank }: { app: AppDetail; showSiteRank: boolean }) {
+  const t = useTranslations('apps')
+  const { heat } = app
+
+  return (
+    <section aria-labelledby="heat" className="flex flex-col gap-5 md:gap-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h2 id="heat" className="scroll-mt-20 text-h3 font-semibold md:text-title md:font-medium">
+          {t('heat')}
+        </h2>
+        {heat && <span className="text-small text-ink-4">{t('heatOutOf')}</span>}
+      </div>
+
+      {heat && heat.history.length >= 2 && <HeatChart history={heat.history} />}
+
+      <div className="flex flex-wrap gap-x-8 gap-y-7">
+        {heat && <HeatParts heat={heat} showSiteRank={showSiteRank} />}
+        {heat && <HeatPlaces app={app} heat={heat} level={3} className="flex-[1_1_220px] self-start md:hidden" />}
+        {app.mentions.length > 0 && <Mentions app={app} />}
+      </div>
+    </section>
+  )
+}
+
+/** The three scores that add up to the heat, each with what it came from. */
+function HeatParts({ heat, showSiteRank }: { heat: Scored; showSiteRank: boolean }) {
   const t = useTranslations('apps')
   const { latest } = heat
 
@@ -85,6 +111,48 @@ export function HeatSection({ app, heat, showSiteRank }: { app: AppDetail; heat:
     { key: 'mentions', score: latest.mentionScore, max: heatWeights.mentions, note: t('partNotes.mentions', { count: latest.mentions }) },
   ] as const
 
+  return (
+    <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-4">
+      <h3 className="text-title">{t('parts')}</h3>
+      <ul className="flex flex-col gap-4">
+        {parts.map((part) => (
+          <li key={part.key} className="flex flex-col gap-1.5">
+            <span className="flex justify-between gap-3 text-meta">
+              <span>
+                {t(`weights.${part.key}`)} <span className="text-ink-4">· {t('weight', { value: part.max })}</span>
+              </span>
+              <span className="font-medium tabular-nums">
+                {part.score} / {part.max}
+              </span>
+            </span>
+            <span aria-hidden="true" className="h-2 overflow-hidden rounded-tag bg-surface-2">
+              <span className="block h-full bg-ink" style={{ width: `${(part.score / part.max) * 100}%` }} />
+            </span>
+            <span className="text-small text-ink-4">{part.note}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-small text-ink-4">{t('partsSum')}</p>
+      <HowHeatToggle />
+    </div>
+  )
+}
+
+type HeatPlacesProps = {
+  app: AppDetail
+  heat: Scored
+  /** h3 inside the heat section on phones, h2 beside the tabs. */
+  level: 2 | 3
+  id?: string
+  className?: string
+}
+
+/** Where the app is on the overall, category and rising lists, each linking to its list. */
+export function HeatPlaces({ app, heat, level, id, className = '' }: HeatPlacesProps) {
+  const t = useTranslations('apps')
+  const { latest } = heat
+  const Heading = level === 2 ? 'h2' : 'h3'
+
   const places = [
     { key: 'top', label: t('placeTop'), place: latest.rankOverall, href: listHref({}) },
     ...(app.category && latest.rankCategory
@@ -94,58 +162,59 @@ export function HeatSection({ app, heat, showSiteRank }: { app: AppDetail; heat:
   ]
 
   return (
-    <section aria-labelledby="heat" className="flex scroll-mt-20 flex-col gap-5 md:gap-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h2 id="heat" className="text-h3 font-semibold md:text-h2">
-          {t('heat')}
-        </h2>
-        <span className="text-small text-ink-4">{t('heatOutOf')}</span>
-      </div>
+    <div className={`flex min-w-0 flex-col gap-3.5 rounded-hero border border-surface-2 bg-surface p-5 ${className}`}>
+      <Heading id={id} className="text-ui font-medium">
+        {t('places')}
+      </Heading>
+      <ul className="flex flex-col gap-3">
+        {places.map((item) => (
+          <li key={item.key}>
+            <Link href={item.href} className="flex items-baseline justify-between gap-3 hover:text-accent">
+              <span className="min-w-0 truncate text-meta text-ink-2">{item.label}</span>
+              {item.place ? (
+                <span className="text-h3 font-semibold text-accent">#{item.place}</span>
+              ) : (
+                <span className="text-meta text-ink-4">{t('notOnList')}</span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
-      {heat.history.length >= 2 && <HeatChart history={heat.history} />}
+/** 日报里提到它: the latest Daily stories about the app, and how many there were in 30 days. */
+function Mentions({ app }: { app: AppDetail }) {
+  const t = useTranslations('apps')
+  const nav = useTranslations('nav')
+  const categories = useTranslations('categories')
+  const format = useFormatter()
 
-      <div className="flex flex-wrap gap-x-8 gap-y-7">
-        <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-4">
-          <h3 className="text-title">{t('parts')}</h3>
-          <ul className="flex flex-col gap-4">
-            {parts.map((part) => (
-              <li key={part.key} className="flex flex-col gap-1.5">
-                <span className="flex justify-between gap-3 text-meta">
-                  <span>
-                    {t(`weights.${part.key}`)} <span className="text-ink-4">· {t('weight', { value: part.max })}</span>
-                  </span>
-                  <span className="font-medium tabular-nums">
-                    {part.score} / {part.max}
-                  </span>
+  return (
+    <section aria-labelledby="mentions" className="flex min-w-0 flex-[1_1_280px] flex-col gap-3 md:gap-1.5">
+      <h3 id="mentions" className="scroll-mt-20 text-h3 font-semibold md:text-title md:font-medium">
+        {t('mentionsTitle')}
+      </h3>
+      <div className="flex flex-col">
+        <ul className="flex flex-col border-t border-surface-2">
+          {app.mentions.map((mention) => (
+            <li key={mention.slug} className="border-b border-surface-2">
+              <Link href={`/daily/${mention.slug}`} className="group flex flex-col gap-1 py-3">
+                <span lang={mention.title.lang} className="text-body font-medium group-hover:text-accent">
+                  {mention.title.value}
                 </span>
-                <span aria-hidden="true" className="h-2 overflow-hidden rounded-tag bg-surface-2">
-                  <span className="block h-full bg-ink" style={{ width: `${(part.score / part.max) * 100}%` }} />
+                <span className="text-small text-ink-4">
+                  {format.dateTime(new Date(mention.publishedAt), { month: 'long', day: 'numeric' })} · {nav('daily')}
+                  {mention.category && ` · ${categories(mention.category)}`}
                 </span>
-                <span className="text-small text-ink-4">{part.note}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-small text-ink-4">{t('partsSum')}</p>
-          <HowHeatToggle />
-        </div>
-
-        <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-3.5 self-start rounded-hero border border-surface-2 bg-surface p-5">
-          <h3 className="text-ui font-medium">{t('places')}</h3>
-          <ul className="flex flex-col gap-3">
-            {places.map((item) => (
-              <li key={item.key}>
-                <Link href={item.href} className="flex items-baseline justify-between gap-3 hover:text-accent">
-                  <span className="min-w-0 truncate text-meta text-ink-2">{item.label}</span>
-                  {item.place ? (
-                    <span className="text-h3 font-semibold text-accent">#{item.place}</span>
-                  ) : (
-                    <span className="text-meta text-ink-4">{t('notOnList')}</span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        {app.heat && app.heat.latest.mentions > 0 && (
+          <p className="pt-2.5 text-meta text-ink-4">{t('mentionsCount', { count: app.heat.latest.mentions })}</p>
+        )}
       </div>
     </section>
   )

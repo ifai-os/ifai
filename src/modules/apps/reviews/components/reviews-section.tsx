@@ -34,7 +34,8 @@ export function ReviewsSection() {
     <section aria-labelledby="reviews" className="flex flex-col gap-3 md:gap-4">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 id="reviews" className="text-h3 font-semibold md:text-h2">
+          {/* Wider screens have it as a tab, so the heading is left to screen readers there. */}
+          <h2 id="reviews" className="scroll-mt-20 text-h3 font-semibold md:sr-only">
             {t('title')}
           </h2>
           {page && page.summary.count > 0 && <SummaryLine className="text-meta text-ink-4" />}
