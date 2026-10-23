@@ -2,12 +2,13 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-23（结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
+更新于 2026-10-23（日报收藏；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
 
 ## 现在到哪了
 
 - **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。当时首页用的是演示数据、三个入口是「即将上线」占位页，现在都已换成各模块的真实页面（最后的占位页和演示数据在资源第 4 步删掉）。详见 [specs/foundation.md](./specs/foundation.md)。
 - **账号页与删除账号已完成**：账号菜单进「账号」（`/[locale]/me/account`），读者可以自己删除账号，收藏、评价、应用提交和 Skill 投稿一起删，日报订阅不受影响。一天内登录过才能删，否则先重新登录。详见 [specs/foundation.md](./specs/foundation.md)「账号页与删除账号」。
+- **日报收藏已完成**：日报详情页「来源」下面加了「收藏」，复用通用的 `saves` 表（`saveTypes` 加 `story`，不用迁移），只有已发布的新闻能收藏；「我的收藏」最上面多一段日报，撤回或并入的不再显示。手机日报画板列表里每条的收藏没做（一页 30 条，各读一次太重）。详见 [specs/daily.md](./specs/daily.md)「收藏」。
 - **日报规格已确认**：[specs/daily.md](./specs/daily.md)。画布上的日报画板已经按规格改好（画布第 77 版）。
 - **日报第 1 步（基础）已完成**：装好了 Inngest、Vercel AI SDK + OpenRouter、feedsmith（RSS）、cheerio、linkedom + Readability；迁移 `model_receipts_pgvector` 启用 pgvector 并建 `model_receipts` 表；`src/lib/ai` 提供按用途选模型、回执（重试不重复扣费）、每日预算（上海时间，默认 10 美元）、总开关；Inngest 入口 `/api/inngest`，带一个不花钱的 `health-check` 任务（事件 `ifai/health.check`）用来验证连通。真实模型调用已用 `pnpm ai:smoke` 验证过（DeepSeek，一次 0.00004 美元）。
 - **日报第 2 步（信源与采集）已完成**：`sources` 集合（后台「日报 → 信源」，每条有「试抓」按钮，接口 `POST /api/sources/:id/test-fetch`，只预览不入库）；迁移 `daily_sources_raw_items` 建 `sources`、`raw_items`（1536 维向量列 + HNSW 索引，外键随信源级联删除）并导入 16 个信源，其中 Future Tools、The Rundown、Forward Future 三个网页列表信源的选择器是占位值，先停用，站长试抓确认后再启用；三种读取器（RSS / Atom / JSON Feed、网页列表、Hacker News JSON）在 `src/modules/daily/readers/`；Inngest 任务 `daily-collect-due-sources`（每 15 分钟找到期信源，也可发事件 `daily/collect.run` 手动跑）、`daily-fetch-source`（抓一个信源，按判重 / 48 小时 / 首次导入最多 30 条的规则写入 `raw_items`，自动调整间隔，失败原因记在信源上）、`daily-fetch-item-content`（Readability 取原文正文、发布时间和外链）。三个任务都先检查 `COLLECT_ENABLED`。沙盒连不到新闻站点，真实信源还没抓过，要在预览环境验证。
@@ -155,6 +156,7 @@
 - [ ] 资源投稿部署到预览环境后：配好 Resend（`RESEND_API_KEY`、`EMAIL_FROM`），登录后在 `/zh-hans/resources/submit` 投一个真实仓库，看页面上的编号和收到的确认邮件；在后台「Skill 投稿」里把它改成「已拒绝」并写一句说明，收到结果邮件；再导入成 Skill、发布、在「导入为」里选它、改成「已收录」，收到带 Skill 页面链接的邮件。Inngest 后台能看到 `skill-submission-notify` 的运行。
 - [ ] 资源加载骨架部署到预览环境后：在浏览器开发者工具里把网速调成 Slow 3G，在 `/zh-hans/resources` 点分类、排序和下一页，看结果区的骨架（列表和卡片视图各一次，手机宽度也看）；再点进一个 Skill，看详情骨架。
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。
+- [ ] 日报收藏部署到预览环境后：没登录在一条新闻的详情页点「收藏」，看登录对话框，登录回来是否自动收好；账号菜单进「我的收藏」，日报一段在最上面，点标题回到详情，再取消收藏；在后台撤回这条新闻后再收藏一条、撤回，确认「我的收藏」里看不到它。手机宽度看详情页的两个按钮和「我的收藏」。
 - [ ] 删除账号部署到预览环境后：用一个测试账号收藏一个应用、写一条评价、提交一个应用，再从账号菜单进「账号」删除，确认回到「账号已删除」、右上角变回登录图标；后台应用提交里那条没了，用同一个邮箱再登录是空账号。
 - [ ] 隐私政策和用户协议：开好 `hello@ifai.io` 邮箱（或者告诉 Claude 换成别的地址，改 `src/modules/legal/documents.ts`）；正式上线前请懂当地法律的人看一遍两页条文；定了公司主体后补上适用法律和争议解决地点。账号删除的 PR 合并后，隐私政策「你可以做什么」一节加上账号页的说明。
 - [ ] 正式上线后：在 Google Search Console 和 Bing Webmaster Tools 验证 `ifai.io`，提交 `https://ifai.io/sitemap.xml`，过几天看「网页索引」里有没有被排除的地址，「增强功能」里面包屑和结构化数据有没有报错；挑一条新闻、一个应用、一个 Skill 的地址贴到 https://search.google.com/test/rich-results 看一遍。

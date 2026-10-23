@@ -280,6 +280,29 @@ export const getStory = cache(async (slug: string, locale: Locale): Promise<Stor
   }
 })
 
+/**
+ * A member's saved stories, in the order given (newest save first); stories no longer published
+ * (withdrawn or merged) are left out. Read fresh, not from the shared cache, since every member's
+ * list is different.
+ */
+export async function getSavedStories(ids: number[], locale: Locale): Promise<StoryItem[]> {
+  if (ids.length === 0) return []
+  const { docs } = await (await payload()).find({
+    collection: 'stories',
+    where: { and: [published, { id: { in: ids } }] },
+    pagination: false,
+    locale: 'all',
+    depth: 0,
+    select,
+    overrideAccess: false,
+  })
+  const byId = new Map((docs as unknown as RawStory[]).map((doc) => [doc.id, doc]))
+  return ids.flatMap((id) => {
+    const doc = byId.get(id)
+    return doc ? [toItem(doc, locale)] : []
+  })
+}
+
 /** The five hottest events of the last 48 hours, one story each (the newest of its event). */
 export async function hotStories(locale: Locale): Promise<HotStory[]> {
   return onePerEvent(await findHot(), hotShown).map((doc) => toHot(doc, locale))
