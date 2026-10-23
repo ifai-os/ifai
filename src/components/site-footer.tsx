@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/brand/logo'
 import { Link } from '@/i18n/navigation'
 import { feedPath } from '@/modules/daily/public/list-params'
+import { legalHref } from '@/modules/legal/documents'
 
 export function SiteFooter() {
   const t = useTranslations('footer')
@@ -14,6 +15,12 @@ export function SiteFooter() {
           <Logo size={20} />
           <span>{t('copyright', { year: new Date().getFullYear() })}</span>
         </span>
+        <Link href={legalHref.privacy} className="hover:text-ink">
+          {t('privacy')}
+        </Link>
+        <Link href={legalHref.terms} className="hover:text-ink">
+          {t('terms')}
+        </Link>
         <Link href={feedPath} className="hover:text-ink">
           {t('rss')}
         </Link>
