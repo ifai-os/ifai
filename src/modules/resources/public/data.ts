@@ -447,6 +447,48 @@ export async function getInstallHosts(): Promise<AgentHost[]> {
   return findHosts()
 }
 
+/** A host in the install guide: where its Skills go, and the owner's notes in the reader's language. */
+export type GuideHost = {
+  slug: string
+  name: string
+  logo: string | null
+  website: string | null
+  globalDir: string | null
+  projectDir: string | null
+  instructions: InLanguage<string> | null
+}
+
+const findGuideHosts = unstable_cache(
+  async () => {
+    const { docs } = await (await payload()).find({
+      collection: 'agent-hosts',
+      where: { enabled: { equals: true } },
+      sort: 'order',
+      pagination: false,
+      locale: 'all',
+      depth: 1,
+      populate: { media: { url: true } },
+      overrideAccess: false,
+    })
+    return docs as unknown as (Omit<AgentHost, 'instructions'> & { instructions?: Localized<string> })[]
+  },
+  ['skills-guide-hosts'],
+  cacheOptions,
+)
+
+/** The hosts of the install panel for the install guide, in the panel's order. */
+export async function getGuideHosts(locale: Locale): Promise<GuideHost[]> {
+  return (await findGuideHosts()).map((host) => ({
+    slug: host.slug,
+    name: host.name,
+    logo: host.logo && typeof host.logo === 'object' ? host.logo.url || null : null,
+    website: host.website?.trim() || null,
+    globalDir: host.globalDir?.trim() || null,
+    projectDir: host.projectDir?.trim() || null,
+    instructions: inReaderLanguage(host.instructions, locale),
+  }))
+}
+
 function summary(version: RawVersion, locale: Locale): VersionSummary {
   return {
     version: version.version,

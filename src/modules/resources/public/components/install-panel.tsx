@@ -1,12 +1,11 @@
 'use client'
 
-import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 
-import { InitialTile, toneFor } from '@/components/cards/initial-tile'
 import { Icon } from '@/components/icon'
 
 import { copyButtonClass } from './classes'
+import { HostTile } from './host-tile'
 import { CopyInstallButton, useInstall } from './install-state'
 
 type InstallPanelProps = {
@@ -43,11 +42,7 @@ export function InstallPanel({ pending }: InstallPanelProps) {
                 onClick={() => pick(item.slug)}
                 className={`flex min-w-0 flex-col items-center gap-1.5 rounded-tile border bg-bg px-1.5 py-2.5 text-small transition-colors ${on ? 'border-ink font-medium text-ink' : 'border-surface-2 text-ink-2 hover:border-line'}`}
               >
-                {item.logo ? (
-                  <Image src={item.logo} alt="" width={28} height={28} unoptimized className="size-7 rounded-thumb object-contain" />
-                ) : (
-                  <InitialTile label={hostInitials(item.name)} tone={toneFor(item.slug)} size="sm" />
-                )}
+                <HostTile name={item.name} slug={item.slug} logo={item.logo} />
                 <span className="max-w-full truncate">{item.name}</span>
               </button>
             )
@@ -91,12 +86,4 @@ export function InstallPanel({ pending }: InstallPanelProps) {
       <p className="text-small text-ink-4">{t('install.hint')}</p>
     </section>
   )
-}
-
-/** "Claude Code" → "CC", "Codex" → "Co", "Pi" → "Pi". */
-function hostInitials(name: string): string {
-  const words = name.trim().split(/\s+/)
-  if (words.length > 1) return words.map((word) => Array.from(word)[0] ?? '').join('').slice(0, 2).toUpperCase()
-  const letters = Array.from(name.trim())
-  return `${letters[0]?.toUpperCase() ?? '?'}${letters[1] ?? ''}`
 }

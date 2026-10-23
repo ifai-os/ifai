@@ -12,7 +12,7 @@ import { SaveProvider } from '@/modules/saves/components/save-provider'
 import type { SkillDetail, VersionDetail } from '../data'
 import { fileTree, guessLang } from '../files'
 import { installMdUrl, zipPath } from '../install'
-import { fileHref, skillHref, skillsHref, versionHref } from '../list-params'
+import { fileHref, guideHref, skillHref, skillsHref, versionHref } from '../list-params'
 import { ApiKeyBadge, CertifiedBadge, ScanBadgeView } from './badges'
 import { copyButtonClass } from './classes'
 import { DetailTabs } from './detail-tabs'
@@ -260,6 +260,9 @@ export async function SkillDetailView({ skill, pinned, signIn }: SkillDetailView
                 <p className="text-small text-ink-4">{t('fingerprint.label')}</p>
                 <p className="rounded-thumb bg-surface px-3 py-2 font-mono text-small break-all text-ink">sha256:{shown.sha256}</p>
                 <p className="text-small text-ink-3">{t('fingerprint.how', { file: `${skill.slug}-${shown.version}.zip` })}</p>
+                <Link href={`${guideHref}#verify`} className="flex min-h-8 items-center self-start text-meta font-medium text-link hover:underline">
+                  {t('fingerprint.verify')} ›
+                </Link>
               </section>
             )}
 
