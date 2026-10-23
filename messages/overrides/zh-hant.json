@@ -79,6 +79,18 @@
     "signInTitle": "登入後就能寫評價",
     "afterSignIn": "登入後會回到這一頁，接著寫評價。"
   },
+  "appReports": {
+    "kindHints": {
+      "wrong-info": "介紹、定價、平台等寫得不對"
+    },
+    "bodyPlaceholderShutDown": "比如官網打不開了，或者官方公布了停止服務的時間。",
+    "contactHint": "電子郵件或其他聯絡方式，有問題時用來問你，不會公開。",
+    "send": "送出",
+    "sending": "送出中…",
+    "errors": {
+      "failed": "沒送出成功，請再試一次。"
+    }
+  },
   "categories": {
     "industry": "產業動態"
   },

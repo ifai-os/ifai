@@ -142,6 +142,7 @@
     "copied": "Link copied",
     "detailTitle": "{name}: {tagline}",
     "screenshotAlt": "Image from the {name} website",
+    "imageUpdated": "Image updated <time></time>",
     "tags": "Tags",
     "about": "What it is",
     "features": "Key features",
@@ -631,6 +632,41 @@
     },
     "signInTitle": "Sign in to write a review",
     "afterSignIn": "You will come back to this page to write it."
+  },
+  "appReports": {
+    "link": "Something wrong?",
+    "linkLong": "Something wrong? Tell us",
+    "title": "Something wrong with {name}?",
+    "intro": "Tell us what is off, and the site owner will check and fix it.",
+    "kindLegend": "What is the problem?",
+    "kinds": {
+      "wrong-info": "Wrong information",
+      "shut-down": "Shut down",
+      "other": "Something else"
+    },
+    "kindHints": {
+      "wrong-info": "The summary, pricing, platforms or other details are wrong",
+      "shut-down": "The website no longer opens, or the product has closed"
+    },
+    "bodyLabel": "Details",
+    "bodyOptional": "Details (optional)",
+    "bodyPlaceholder": "What is wrong, and what is right? A link to the source helps.",
+    "bodyPlaceholderShutDown": "For example: the website no longer opens, or its makers announced when it closes.",
+    "charCount": "{count} / {max}",
+    "contactLabel": "How to reach you (optional)",
+    "contactHint": "An email address or similar, in case there are questions. Never shown on the site.",
+    "send": "Send",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "done": "Got it, thank you. The site owner will check and fix it.",
+    "errors": {
+      "kind": "Pick what the problem is.",
+      "body": "Say what is wrong first.",
+      "tooLong": "Keep it to {max} characters.",
+      "contactTooLong": "Keep the contact to {max} characters.",
+      "dailyLimit": "You have sent {limit} reports today. Come back tomorrow.",
+      "failed": "That did not go through. Try again."
+    }
   },
   "daily": {
     "title": "Daily",

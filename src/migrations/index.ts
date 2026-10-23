@@ -17,6 +17,7 @@ import * as migration_20261023_042731_skills_stats_prev_week from './20261023_04
 import * as migration_20261023_063112_review_translations from './20261023_063112_review_translations';
 import * as migration_20261023_064437_skill_submissions_notify from './20261023_064437_skill_submissions_notify';
 import * as migration_20261023_070059_daily_email_subscribers from './20261023_070059_daily_email_subscribers';
+import * as migration_20261023_073510_app_reports from './20261023_073510_app_reports';
 
 export const migrations = [
   {
@@ -112,6 +113,11 @@ export const migrations = [
   {
     up: migration_20261023_070059_daily_email_subscribers.up,
     down: migration_20261023_070059_daily_email_subscribers.down,
-    name: '20261023_070059_daily_email_subscribers'
+    name: '20261023_070059_daily_email_subscribers',
+  },
+  {
+    up: migration_20261023_073510_app_reports.up,
+    down: migration_20261023_073510_app_reports.down,
+    name: '20261023_073510_app_reports'
   },
 ];

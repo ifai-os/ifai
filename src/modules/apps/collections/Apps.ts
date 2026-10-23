@@ -1,4 +1,10 @@
-import type { CollectionConfig, FieldAccess, RelationshipFieldSingleValidation, TextFieldSingleValidation } from 'payload'
+import type {
+  CollectionBeforeDeleteHook,
+  CollectionConfig,
+  FieldAccess,
+  RelationshipFieldSingleValidation,
+  TextFieldSingleValidation,
+} from 'payload'
 import { relationship, text } from 'payload/shared'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
@@ -7,6 +13,8 @@ import { refreshAppsAfterChange, refreshAppsAfterDelete } from '../cache'
 import { heatEndpoints } from '../metrics/endpoints'
 import { domainFromUrl, isHttpUrl, reservedAppSlugs } from '../normalize'
 import { draftEndpoints } from '../profile/endpoints'
+import { deleteAppReports } from '../reports/admin'
+import { reportEndpoints } from '../reports/endpoints'
 import { reviewEndpoints } from '../reviews/endpoints'
 import { adminMessage, appsAdminGroup, isAdmin, slugField } from './shared'
 
@@ -37,6 +45,11 @@ const signedIn: FieldAccess = ({ req: { user } }) => Boolean(user)
 /** Written by the profile-draft job and the back-office endpoints only (the Local API skips access). */
 const jobsOnly: FieldAccess = () => false
 
+/** Readers' reports about an app go with it (their `app` is required, so the database would refuse otherwise). */
+const deleteReports: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  await deleteAppReports(req, id)
+}
+
 /**
  * The apps directory (docs/specs/apps.md). Profiles are written per language from the
  * app's own website; the public only ever sees published apps.
@@ -56,6 +69,7 @@ export const Apps: CollectionConfig = {
       beforeListTable: [
         '/modules/apps/admin/heat-status#HeatStatus',
         '/modules/apps/admin/review-reports#ReviewReports',
+        '/modules/apps/admin/reports-notice#ReportsNotice',
         '/modules/apps/admin/import-box#ImportBox',
       ],
     },
@@ -72,9 +86,10 @@ export const Apps: CollectionConfig = {
   },
   hooks: {
     afterChange: [syncHantFromHans(hantFields), refreshAppsAfterChange],
+    beforeDelete: [deleteReports],
     afterDelete: [refreshAppsAfterDelete],
   },
-  endpoints: [...draftEndpoints, ...heatEndpoints, ...reviewEndpoints],
+  endpoints: [...draftEndpoints, ...heatEndpoints, ...reviewEndpoints, ...reportEndpoints],
   fields: [
     {
       name: 'name',
@@ -380,6 +395,20 @@ export const Apps: CollectionConfig = {
               name: 'reviewsPanel',
               type: 'ui',
               admin: { components: { Field: '/modules/apps/admin/reviews-panel#ReviewsPanel' } },
+            },
+          ],
+        },
+        {
+          label: { en: 'Reports', zh: '报错' },
+          description: {
+            en: 'What readers reported with “Something wrong?” on its page. Fix the profile, then mark them done; delist an app that has shut down.',
+            zh: '读者在详情页「信息有误？」里报的问题。改好资料后标记完成；已停运的可以直接下架。',
+          },
+          fields: [
+            {
+              name: 'reportsPanel',
+              type: 'ui',
+              admin: { components: { Field: '/modules/apps/admin/reports-panel#ReportsPanel' } },
             },
           ],
         },
