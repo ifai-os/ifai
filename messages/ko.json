@@ -294,6 +294,15 @@
     "next": "다음",
     "pageOf": "{page} / {pages} 페이지",
     "hotTags": "인기 태그",
+    "risers": {
+      "title": "이번 주 급상승",
+      "new": "새로 등장",
+      "rise": "+{rise}%"
+    },
+    "ranking": {
+      "title": "설치 순위",
+      "all": "전체 순위"
+    },
     "categoryTitle": "{category} · Skills",
     "searchTitle": "「{q}」 · Skills",
     "pageTitle": "{title} · {page} 페이지",

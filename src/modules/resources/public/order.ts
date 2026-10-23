@@ -14,6 +14,8 @@ export type SkillCandidate = {
   certified: boolean
   installs: number
   installs7d: number
+  /** Installs in the seven days before the last seven: 近期飙升 compares the two weeks. */
+  installsPrev7d: number
   /** When its first version was published: 上新. */
   listedAt: string | null
   /** When its current version was published: 更新时间. */
@@ -50,21 +52,59 @@ export function filterSkills<T extends SkillCandidate>(skills: T[], filter: Skil
 
 const time = (iso: string | null) => (iso ? Date.parse(iso) || 0 : 0)
 
+/** Installs in the last 7 days a Skill needs before it can count as rising (docs/specs/resources.md, rule 14). */
+export const risingMinimum = 20
+
+/**
+ * 增幅 (rule 14): how much the last 7 days grew over the 7 before, as a fraction (2 = +200%);
+ * Infinity when the 7 before had none. 0 for a Skill with fewer than 20 installs in the last 7
+ * days, or no more than in the 7 before: it is not rising.
+ */
+export function weeklyRise({ installs7d, installsPrev7d }: Pick<SkillCandidate, 'installs7d' | 'installsPrev7d'>): number {
+  if (installs7d < risingMinimum || installs7d <= installsPrev7d) return 0
+  return installsPrev7d > 0 ? (installs7d - installsPrev7d) / installsPrev7d : Infinity
+}
+
 /**
  * 综合 = certified first, then installs in the last 7 days, then the latest update
- * (docs/specs/resources.md). 近期飙升 orders by the last 7 days until the hourly roll-up also
- * keeps the week before; 安装数 by all-time installs; 最近上新 by when the Skill was first published.
- * Ties go to the more recently updated Skill, then the lower id, so the order never jumps.
+ * (docs/specs/resources.md). 近期飙升 puts the rising Skills first, by how much they grew
+ * (weeklyRise), then the rest by installs in the last 7 days; 安装数 orders by all-time installs;
+ * 最近上新 by when the Skill was first published. Ties go to the more recently updated Skill,
+ * then the lower id, so the order never jumps.
  */
 export function orderSkills<T extends SkillCandidate>(skills: T[], sort: SkillSort): T[] {
   const byUpdate = (a: T, b: T) => time(b.updatedAt) - time(a.updatedAt) || a.id - b.id
   const compare: Record<SkillSort, (a: T, b: T) => number> = {
     default: (a, b) => Number(b.certified) - Number(a.certified) || b.installs7d - a.installs7d || byUpdate(a, b),
-    rising: (a, b) => b.installs7d - a.installs7d || b.installs - a.installs || byUpdate(a, b),
+    // Two Skills new this week both rise by Infinity; Infinity - Infinity is NaN, which falls through to the next test.
+    rising: (a, b) => weeklyRise(b) - weeklyRise(a) || b.installs7d - a.installs7d || b.installs - a.installs || byUpdate(a, b),
     installs: (a, b) => b.installs - a.installs || byUpdate(a, b),
     newest: (a, b) => time(b.listedAt) - time(a.listedAt) || byUpdate(a, b),
   }
   return [...skills].sort(compare[sort])
+}
+
+/** 本周飙升: the `count` fastest rising Skills, or none at all when fewer than `count` are rising (docs/specs/resources.md). */
+export function weeklyRisers<T extends SkillCandidate>(skills: T[], count: number): T[] {
+  const rising = orderSkills(
+    skills.filter((skill) => weeklyRise(skill) > 0),
+    'rising',
+  )
+  return rising.length < count ? [] : rising.slice(0, count)
+}
+
+/** 安装榜: the most installed, leaving out Skills nobody has installed yet. */
+export function mostInstalled<T extends SkillCandidate>(skills: T[], count: number): T[] {
+  return orderSkills(
+    skills.filter((skill) => skill.installs > 0),
+    'installs',
+  ).slice(0, count)
+}
+
+/** The rise shown in 本周飙升, in whole percent; null for a Skill with no installs in the 7 days before (新上榜). */
+export function risePercent(skill: Pick<SkillCandidate, 'installs7d' | 'installsPrev7d'>): number | null {
+  const rise = weeklyRise(skill)
+  return Number.isFinite(rise) ? Math.round(rise * 100) : null
 }
 
 /** Published in the last seven days: 本周新增. */

@@ -294,6 +294,15 @@
     "next": "次へ",
     "pageOf": "{page} / {pages} ページ",
     "hotTags": "人気のタグ",
+    "risers": {
+      "title": "今週の急上昇",
+      "new": "初登場",
+      "rise": "+{rise}%"
+    },
+    "ranking": {
+      "title": "インストール数ランキング",
+      "all": "すべて見る"
+    },
     "categoryTitle": "{category} · Skills",
     "searchTitle": "「{q}」· Skills",
     "pageTitle": "{title} · {page} ページ目",

@@ -577,11 +577,15 @@ export interface Skill {
    */
   ownerNotes?: string | null;
   /**
-   * Rolled up hourly from skill_events. Not edited by hand.
+   * Rolled up hourly from skill_events and saves (skill-stats-rollup). Not edited by hand.
    */
   stats?: {
     installs?: number | null;
     installs7d?: number | null;
+    /**
+     * For the Trending sort and the week’s risers.
+     */
+    installsPrev7d?: number | null;
     saves?: number | null;
   };
   updatedAt: string;
@@ -1174,6 +1178,7 @@ export interface SkillsSelect<T extends boolean = true> {
     | {
         installs?: T;
         installs7d?: T;
+        installsPrev7d?: T;
         saves?: T;
       };
   updatedAt?: T;

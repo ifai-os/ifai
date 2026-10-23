@@ -36,6 +36,7 @@ type SampleSkill = Pick<Skill, 'slug' | 'category'> &
     tags: string[]
     installs: number
     installs7d: number
+    installsPrev7d: number
     texts: { en: Texts & { name: string } } & Partial<Record<'zh-Hans' | 'ja' | 'ko', Texts>>
     versions: SampleVersion[]
   }
@@ -56,6 +57,7 @@ const samples: SampleSkill[] = [
     tags: ['release-notes', 'git'],
     installs: 1280,
     installs7d: 96,
+    installsPrev7d: 120,
     texts: {
       en: {
         name: 'Release Notes Writer',
@@ -107,6 +109,7 @@ const samples: SampleSkill[] = [
     tags: ['sql'],
     installs: 300,
     installs7d: 140,
+    installsPrev7d: 40,
     texts: {
       en: { name: 'SQL Helper', tagline: 'Sample Skill: explains slow queries and suggests indexes' },
       'zh-Hans': { name: 'SQL 助手', tagline: '示例 Skill：解释慢查询并给出索引建议' },
@@ -121,6 +124,7 @@ const samples: SampleSkill[] = [
     tags: [],
     installs: 12,
     installs7d: 0,
+    installsPrev7d: 0,
     texts: { en: { name: 'Delisted Sample Skill', tagline: 'Published, then taken down; its page says why' } },
     versions: [{ version: '1.0.0', changelog: 'First release.' }],
   },
@@ -132,6 +136,7 @@ const samples: SampleSkill[] = [
     tags: [],
     installs: 0,
     installs7d: 0,
+    installsPrev7d: 0,
     texts: { en: { name: 'Draft Sample Skill', tagline: 'Not published; never listed' } },
     versions: [],
   },
@@ -249,7 +254,7 @@ async function seedSkill(payload: Payload, sample: SampleSkill, tagIds: Map<stri
   await payload.update({
     collection: 'skills',
     id: skill.id,
-    data: { stats: { installs: sample.installs, installs7d: sample.installs7d, saves: 0 } },
+    data: { stats: { installs: sample.installs, installs7d: sample.installs7d, installsPrev7d: sample.installsPrev7d, saves: 0 } },
     depth: 0,
   })
   if (sample.delist) {

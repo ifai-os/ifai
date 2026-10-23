@@ -9,8 +9,12 @@ import {
   filterSkills,
   hotTags,
   isNewThisWeek,
+  mostInstalled,
   orderSkills,
   pickFeatured,
+  risePercent,
+  weeklyRise,
+  weeklyRisers,
   type SkillCandidate,
   type SkillFilter,
 } from '@/modules/resources/public/order'
@@ -69,6 +73,7 @@ const skill = (id: number, fields: Partial<SkillCandidate> = {}): SkillCandidate
   certified: false,
   installs: 0,
   installs7d: 0,
+  installsPrev7d: 0,
   listedAt: '2026-10-01T00:00:00Z',
   updatedAt: '2026-10-01T00:00:00Z',
   ...fields,
@@ -103,6 +108,31 @@ describe('filtering and ordering the list', () => {
   it('breaks ties by the latest update, then the lower id, so the order never jumps', () => {
     expect(orderSkills(skills, 'installs').map((s) => s.id)).toEqual([1, 3, 2])
     expect(orderSkills([skill(5), skill(4)], 'installs').map((s) => s.id)).toEqual([4, 5])
+  })
+
+  it('puts the rising Skills first in 近期飙升, by how much they grew, then the rest by the last 7 days', () => {
+    const tripled = skill(1, { installs: 500, installs7d: 300, installsPrev7d: 100 })
+    const fromFew = skill(2, { installs: 30, installs7d: 25, installsPrev7d: 5 })
+    const fromNone = skill(3, { installs: 20, installs7d: 20, installsPrev7d: 0 })
+    const falling = skill(4, { installs: 900, installs7d: 50, installsPrev7d: 200 })
+    const tooFew = skill(5, { installs: 19, installs7d: 19, installsPrev7d: 1 })
+    expect([tripled, fromFew, fromNone, falling, tooFew].map(weeklyRise)).toEqual([2, 4, Infinity, 0, 0])
+    expect(orderSkills([falling, tooFew, tripled, fromFew, fromNone], 'rising').map((s) => s.id)).toEqual([3, 2, 1, 4, 5])
+  })
+
+  it('shows 本周飙升 only with three rising Skills, and 安装榜 from the ones installed at all', () => {
+    const list = [
+      skill(1, { installs: 500, installs7d: 300, installsPrev7d: 100 }),
+      skill(2, { installs: 900, installs7d: 50, installsPrev7d: 200 }),
+      skill(3, { installs: 20, installs7d: 20, installsPrev7d: 0 }),
+      skill(4, { installs: 40, installs7d: 30, installsPrev7d: 20 }),
+      skill(5),
+    ]
+    expect(weeklyRisers(list, 3).map((s) => s.id)).toEqual([3, 1, 4])
+    expect(weeklyRisers(list.slice(0, 3), 3)).toEqual([])
+    expect(mostInstalled(list, 5).map((s) => s.id)).toEqual([2, 1, 4, 3])
+    expect(list.map(risePercent)).toEqual([200, 0, null, 50, 0])
+    expect(risePercent({ installs7d: 40, installsPrev7d: 30 })).toBe(33)
   })
 
   it('counts Skills first published in the last seven days as new this week', () => {

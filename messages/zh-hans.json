@@ -294,6 +294,15 @@
     "next": "下一页",
     "pageOf": "第 {page} / {pages} 页",
     "hotTags": "热门标签",
+    "risers": {
+      "title": "本周飙升",
+      "new": "新上榜",
+      "rise": "+{rise}%"
+    },
+    "ranking": {
+      "title": "安装榜",
+      "all": "完整榜单"
+    },
     "categoryTitle": "{category} · Skills",
     "searchTitle": "「{q}」· Skills",
     "pageTitle": "{title} · 第 {page} 页",
