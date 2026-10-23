@@ -21,9 +21,20 @@
 | next-intl 五语言路由；简 → 繁转换脚本 | `src/i18n/`、`src/proxy.ts`、`scripts/i18n-hant.ts` |
 | 设计令牌写成 Tailwind 主题；导航栏和卡片组件 | `globals.css`、`src/components/` |
 | 空状态与加载状态：列表 / 卡片骨架（300 ms 后显示，10 s 后改为重试）、空状态、加载失败、断网提示（恢复后自动刷新）、全站错误页、404 | `src/components/states/`、`src/components/button.tsx`、`[locale]/error.tsx`、`[locale]/not-found.tsx` |
+| 站点地图与 robots.txt（见下） | `src/lib/sitemap.ts`、`src/lib/robots.ts`、`src/app/sitemap.xml/`、`src/app/sitemaps/`、`src/app/robots.ts`、各模块的 `sitemap.ts` |
 | AGENTS.md、GitHub Actions、Vercel 预览环境 | `AGENTS.md`、`.github/workflows/`、`vercel.json`、`docs/setup.md` |
 
 首页目前用 `src/modules/home/demo-data.ts` 里的示例数据，页面顶部有「演示数据」提示；日报、应用、资源三个入口是「即将上线」占位页。
+
+## 站点地图与 robots.txt
+
+技术方案第 9 节：sitemap 和页面 `<head>` 里的 canonical / hreflang 用同一套语言映射（`src/lib/seo.ts`），只列已发布、可索引的规范地址。
+
+- `/sitemap.xml` 是索引，列出四段：`pages`（首页、三个模块的列表和分类、资源的使用指南和发布指南、已生成的海报）、`daily`（已发布新闻）、`apps`（已发布应用）、`skills`（已发布 Skill 的主页）。每段一个文件 `/sitemaps/<段>-<序号>.xml`，超过 9000 个页面（× 5 种语言 = 45,000 个地址，低于 50,000 的上限）自动拆成下一个文件。
+- 每个页面的五种语言各占一条 `<url>`，每条都带完整的 hreflang（五种语言 + `x-default` 指英文），和页面 `<head>` 一致。`lastmod` 只写知道的：新闻是更正时间或发布时间，应用和 Skill 是更新时间，海报是生成或改动时间，列表页不写。
+- 不列：搜索、筛选、排序、翻页、应用的其他榜单、Skill 固定版本和文件页、下架的 Skill（页面还在但不进 sitemap）、撤回或待审的新闻、草稿、个人页、登录页、管理订阅页。
+- 数据跟着各模块自己的缓存标签走（`daily`、`apps`、`skills`），发布、撤回、下架后随页面一起刷新；CDN 缓存 10 分钟。
+- `robots.txt`：只拦不是页面的地址（`/admin`、`/api/`、应用的「打开网站」跳转 `/*/apps/*/visit`，爬虫点它会算进应用热度）。noindex 的页面不拦，否则爬虫读不到 noindex。Vercel 预览环境整站 `Disallow: /`。
 
 ## 约定
 

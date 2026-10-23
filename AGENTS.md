@@ -57,6 +57,7 @@ src/
     shanghai-day.ts        上海时间的自然日（预算和海报按它算）
     email/layout.ts        邮件版式（登录邮件、投稿邮件共用；纯文本版一起生成）
     visitor.ts             访客哈希（IP + 浏览器标识，盐每天换）：应用点击、Skill 安装计数、评价举报共用
+    seo.ts                 canonical 与 hreflang（alternatesFor）；sitemap.ts、robots.ts：站点地图和 robots.txt（见 foundation.md）
     same-origin.ts         isCrossSite()：写接口只接受本站页面发来的请求（收藏、评价、投稿）
     auth/                  Better Auth 服务端配置、客户端、表结构、邮件
     db/url.ts              数据库连接串（DATABASE_URI，预览环境回退到 DATABASE_URL）

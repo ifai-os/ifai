@@ -1,0 +1,41 @@
+import config from '@payload-config'
+import { unstable_cache } from 'next/cache'
+import { getPayload } from 'payload'
+
+import type { SitemapPage } from '@/lib/sitemap'
+
+import { appsCacheTag } from './cache'
+import { getCategories } from './data'
+import { listHref } from './list-params'
+
+const findApps = unstable_cache(
+  async () => {
+    const { docs } = await (await getPayload({ config })).find({
+      collection: 'apps',
+      where: { status: { equals: 'published' } },
+      sort: '-listedAt',
+      pagination: false,
+      depth: 0,
+      select: { slug: true, updatedAt: true },
+      overrideAccess: false,
+    })
+    return docs.map((app) => ({ slug: app.slug, updatedAt: app.updatedAt }))
+  },
+  ['apps-sitemap'],
+  { tags: [appsCacheTag], revalidate: 3600 },
+)
+
+/**
+ * The apps pages in the sitemap: the list, categories that have apps, and every published
+ * app. Searches and the other boards stay out (they are views of the same apps).
+ */
+export async function appsSitemap(): Promise<{ pages: SitemapPage[]; apps: SitemapPage[] }> {
+  const [{ categories }, apps] = await Promise.all([getCategories('en'), findApps()])
+  return {
+    pages: [
+      { path: listHref({}) },
+      ...categories.filter((category) => category.count > 0).map((category) => ({ path: listHref({ category: category.slug }) })),
+    ],
+    apps: apps.map((app) => ({ path: `/apps/${app.slug}` as const, lastModified: app.updatedAt })),
+  }
+}
