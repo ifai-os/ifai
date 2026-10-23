@@ -22,7 +22,8 @@
     "account": "帳號選單",
     "saves": "我的收藏",
     "accountPage": "帳號",
-    "signOut": "登出"
+    "signOut": "登出",
+    "search": "搜尋"
   },
   "home": {
     "todayAI": "今天的 AI",
@@ -94,6 +95,37 @@
     "body": "連結可能有誤，或者頁面已經移走。",
     "back": "返回首頁",
     "daily": "看今天的日報"
+  },
+  "search": {
+    "title": "搜尋",
+    "queryTitle": "搜尋：{q}",
+    "label": "搜尋 IFAI",
+    "placeholder": "搜尋日報、應用和 Skills",
+    "submit": "搜尋",
+    "clear": "清除搜尋",
+    "intro": "日報新聞、應用和 Skills，一次查遍。",
+    "typesLabel": "結果型別",
+    "tabs": {
+      "all": "全部",
+      "daily": "日報",
+      "apps": "應用",
+      "skills": "Skills"
+    },
+    "kind": {
+      "daily": "日報",
+      "apps": "應用",
+      "skills": "Skill"
+    },
+    "found": "找到 {count} 個與「{q}」相關的結果",
+    "seeAll": "檢視全部 {count} 條",
+    "noMatchTitle": "沒有找到「{q}」相關內容",
+    "noMatchBody": "也可以試試更短的關鍵詞，或者換成英文。",
+    "noMatchKind": "{kind}裡沒有「{q}」相關內容，看看其他標籤。",
+    "popular": "熱門",
+    "pages": "翻頁",
+    "previous": "上一頁",
+    "next": "下一頁",
+    "pageOf": "第 {page} / {pages} 頁"
   },
   "legal": {
     "updated": "最後更新：{date}",
