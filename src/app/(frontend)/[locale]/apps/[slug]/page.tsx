@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { isLocale } from '@/i18n/config'
 import { authProviders } from '@/lib/auth/providers'
+import { JsonLd } from '@/lib/structured-data'
 import { AppDetailView } from '@/modules/apps/components/app-detail'
 import { getApp } from '@/modules/apps/data'
 import { appMetadata } from '@/modules/apps/metadata'
+import { appJsonLd } from '@/modules/apps/structured-data'
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
 
@@ -27,6 +29,12 @@ export default async function AppPage({ params }: Props) {
   setRequestLocale(locale)
   const app = await getApp(slug, locale)
   if (!app) notFound()
+  const t = await getTranslations()
 
-  return <AppDetailView app={app} signIn={authProviders()} />
+  return (
+    <>
+      <JsonLd data={appJsonLd(app, locale, { home: t('metadata.title'), apps: t('nav.apps') })} />
+      <AppDetailView app={app} signIn={authProviders()} />
+    </>
+  )
 }

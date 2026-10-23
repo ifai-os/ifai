@@ -10,6 +10,7 @@ import { isLocale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
 import { alternatesFor } from '@/lib/seo'
+import { JsonLd, siteJsonLd } from '@/lib/structured-data'
 import { AppTile } from '@/modules/apps/components/app-tile'
 import { getHomeApps } from '@/modules/apps/data'
 import { SubscribeBox } from '@/modules/daily/email/components/subscribe-box'
@@ -50,6 +51,7 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-10 px-4 pt-6 pb-16">
+      <JsonLd data={siteJsonLd(locale, t('metadata.description'))} />
       <section className="flex flex-wrap gap-4">
         <div className="flex min-w-0 flex-[2_1_560px] flex-col gap-5 rounded-hero border border-surface-2 bg-surface px-6 py-7 sm:px-8">
           <TodayHeadlines stories={stories} serverToday={dayKey(new Date(), serverTimeZone)} />

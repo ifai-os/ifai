@@ -57,7 +57,8 @@ src/
     shanghai-day.ts        上海时间的自然日（预算和海报按它算）
     email/layout.ts        邮件版式（登录邮件、投稿邮件共用；纯文本版一起生成）
     visitor.ts             访客哈希（IP + 浏览器标识，盐每天换）：应用点击、Skill 安装计数、评价举报共用
-    seo.ts                 canonical 与 hreflang（alternatesFor）；sitemap.ts、robots.ts：站点地图和 robots.txt（见 foundation.md）
+    structured-data.tsx    JSON-LD（<JsonLd>、面包屑、站点信息）；各模块的 structured-data.ts 用它（见 foundation.md）
+    seo.ts                 canonical 与 hreflang（alternatesFor）、分享卡片（shareCard）；sitemap.ts、robots.ts：站点地图和 robots.txt（见 foundation.md）
     same-origin.ts         isCrossSite()：写接口只接受本站页面发来的请求（收藏、评价、投稿）
     field-error.ts         rejectField()：集合钩子拒绝保存时用它（说明写进字段和 message）；isFieldError() 按形状判断字段错误
     auth/                  Better Auth 服务端配置、客户端、表结构、邮件
