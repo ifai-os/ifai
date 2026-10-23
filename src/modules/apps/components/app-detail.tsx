@@ -12,6 +12,8 @@ import { SaveProvider } from '@/modules/saves/components/save-provider'
 
 import type { AppDetail } from '../data'
 import { listHref } from '../list-params'
+import { ReviewsProvider } from '../reviews/components/reviews-provider'
+import { ReviewsSection, ReviewSummary } from '../reviews/components/reviews-section'
 import { showTrancoRank } from '../settings'
 import { HeatSection, HeatStats } from './app-heat'
 import { AppTile } from './app-tile'
@@ -26,11 +28,11 @@ const outline = 'border border-line bg-bg hover:border-ink-4'
 
 type AppDetailViewProps = {
   app: AppDetail
-  /** The sign-in methods, for the dialog a visitor gets on pressing save. */
+  /** The sign-in methods, for the dialog a visitor gets on pressing save or「写评价」. */
   signIn: AuthProviders
 }
 
-/** An app's page: header and facts, its heat figures, then what it is, features, heat, daily mentions, FAQ and alternatives. */
+/** An app's page: header and facts, its heat figures, then what it is, features, heat, daily mentions, FAQ, reviews and alternatives. */
 export function AppDetailView({ app, signIn }: AppDetailViewProps) {
   const t = useTranslations('apps')
   const nav = useTranslations('nav')
@@ -53,266 +55,271 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
 
   return (
     <SaveProvider target={{ type: 'app', id: app.id }} signIn={signIn}>
-      <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-7 px-4 pt-5 pb-12 md:pb-24">
-        <nav aria-label={t('breadcrumb')} className="text-meta text-ink-4">
-          <ol className="flex flex-wrap items-center gap-2">
-            <li className="flex items-center gap-2">
-              <Link href="/apps" className="hover:text-ink">
-                {t('title')}
-              </Link>
-              <span aria-hidden="true">/</span>
-            </li>
-            {app.category && (
+      <ReviewsProvider app={{ id: app.id, name: app.name }} signIn={signIn}>
+        <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-7 px-4 pt-5 pb-12 md:pb-24">
+          <nav aria-label={t('breadcrumb')} className="text-meta text-ink-4">
+            <ol className="flex flex-wrap items-center gap-2">
               <li className="flex items-center gap-2">
-                <Link href={listHref({ category: app.category.slug })} className="hover:text-ink">
-                  {app.category.name}
+                <Link href="/apps" className="hover:text-ink">
+                  {t('title')}
                 </Link>
                 <span aria-hidden="true">/</span>
               </li>
-            )}
-            <li aria-current="page" className="min-w-0 truncate text-ink">
-              {app.name}
-            </li>
-          </ol>
-        </nav>
-
-        <section className="flex flex-wrap items-stretch gap-x-10 gap-y-7">
-          <div className="flex max-w-190 min-w-0 flex-[999_1_460px] flex-col gap-3.5 md:gap-4">
-            <div className="flex items-center gap-3.5 md:gap-4">
-              <AppTile name={app.name} slug={app.slug} logo={app.logo} size="2xl" />
-              <div className="flex min-w-0 flex-col gap-1 md:gap-1.5">
-                <h1 className="text-h2 wrap-anywhere md:text-h1">{app.name}</h1>
-                <p className="text-meta text-ink-4">
-                  {app.developer}
-                  {app.developer && app.category && ' · '}
-                  {app.category && (
-                    <Link href={listHref({ category: app.category.slug })} className="hover:text-ink">
-                      {app.category.name}
-                    </Link>
-                  )}
-                  {/* Phones show the count on the save button in the bottom bar. */}
-                  {(app.developer || app.category) && <SaveCount className="hidden md:inline" />}
-                </p>
-              </div>
-              {/* Phones share from here; the bottom bar keeps save and the website. */}
-              <ShareButton
-                title={app.name}
-                iconOnly
-                className="ml-auto flex size-11 flex-none items-center justify-center text-ink md:hidden"
-                labels={shareLabels}
-              />
-            </div>
-
-            {app.tagline && (
-              <p lang={app.tagline.lang} className="max-w-160 text-body text-ink-2">
-                {app.tagline.value}
-              </p>
-            )}
-
-            {facts.length > 0 && (
-              <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-tile border border-surface-2 bg-surface-2 md:flex md:flex-col md:gap-0 md:overflow-visible md:rounded-none md:border-x-0 md:border-b-0 md:bg-transparent">
-                {facts.map((fact, index) => (
-                  <div
-                    key={fact.key}
-                    className={`flex flex-col gap-0.5 bg-bg px-3.5 py-3 md:grid md:grid-cols-[96px_minmax(0,1fr)] md:gap-4 md:border-b md:border-surface-2 md:px-0 md:py-2.5 ${
-                      facts.length % 2 === 1 && index === facts.length - 1 ? 'col-span-2' : ''
-                    }`}
-                  >
-                    <dt className="text-small text-ink-4 md:text-meta">{t(`facts.${fact.key}`)}</dt>
-                    <dd className="text-ui font-medium md:text-meta md:font-normal">{fact.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-
-            {app.tags && (
-              <ul lang={app.tags.lang} aria-label={t('tags')} className="flex flex-wrap gap-2">
-                {app.tags.value.map((tag) => (
-                  <li key={tag}>
-                    <Link
-                      href={listHref({ q: tag })}
-                      rel="nofollow"
-                      className="flex h-6.5 items-center rounded-pill border border-surface-2 bg-surface px-2.5 text-small text-ink-2 hover:border-line hover:text-ink"
-                    >
-                      {tag}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="hidden flex-wrap gap-2 pt-1 md:flex">
-              {app.website && (
-                <OpenSiteLink slug={app.slug} className={buttonClass('primary')}>
-                  <Icon name="external" size={15} strokeWidth={2} />
-                  {t('openSite')}
-                </OpenSiteLink>
+              {app.category && (
+                <li className="flex items-center gap-2">
+                  <Link href={listHref({ category: app.category.slug })} className="hover:text-ink">
+                    {app.category.name}
+                  </Link>
+                  <span aria-hidden="true">/</span>
+                </li>
               )}
-              <SaveButton className={`${buttonBase} ${outline}`} />
-              <ShareButton title={app.name} className={buttonClass('secondary')} labels={shareLabels} />
-            </div>
-          </div>
+              <li aria-current="page" className="min-w-0 truncate text-ink">
+                {app.name}
+              </li>
+            </ol>
+          </nav>
 
-          {app.screenshot && (
-            <figure className="hidden min-w-0 flex-[1_1_380px] flex-col rounded-hero border border-surface-2 bg-surface p-4 md:flex md:max-w-130">
-              <div className="overflow-hidden rounded-tile border border-line bg-bg">
-                <div aria-hidden="true" className="flex h-7 items-center gap-1.5 border-b border-surface-2 px-3">
-                  <span className="size-2 rounded-pill bg-line" />
-                  <span className="size-2 rounded-pill bg-line" />
-                  <span className="size-2 rounded-pill bg-line" />
-                  <span className="ml-3 h-3.5 flex-1 rounded-pill bg-surface" />
+          <section className="flex flex-wrap items-stretch gap-x-10 gap-y-7">
+            <div className="flex max-w-190 min-w-0 flex-[999_1_460px] flex-col gap-3.5 md:gap-4">
+              <div className="flex items-center gap-3.5 md:gap-4">
+                <AppTile name={app.name} slug={app.slug} logo={app.logo} size="2xl" />
+                <div className="flex min-w-0 flex-col gap-1 md:gap-1.5">
+                  <h1 className="text-h2 wrap-anywhere md:text-h1">{app.name}</h1>
+                  <p className="text-meta text-ink-4">
+                    {app.developer}
+                    {app.developer && app.category && ' · '}
+                    {app.category && (
+                      <Link href={listHref({ category: app.category.slug })} className="hover:text-ink">
+                        {app.category.name}
+                      </Link>
+                    )}
+                    {/* Phones show the count on the save button in the bottom bar, and the reviews further down. */}
+                    {(app.developer || app.category) && <SaveCount className="hidden md:inline" />}
+                    {(app.developer || app.category) && <ReviewSummary className="hidden md:inline" />}
+                  </p>
                 </div>
-                <Image
-                  src={app.screenshot.url}
-                  alt={t('screenshotAlt', { name: app.name })}
-                  width={app.screenshot.width ?? 1200}
-                  height={app.screenshot.height ?? 630}
-                  unoptimized
-                  className="block h-auto w-full"
+                {/* Phones share from here; the bottom bar keeps save and the website. */}
+                <ShareButton
+                  title={app.name}
+                  iconOnly
+                  className="ml-auto flex size-11 flex-none items-center justify-center text-ink md:hidden"
+                  labels={shareLabels}
                 />
               </div>
-            </figure>
-          )}
-        </section>
 
-        {app.heat && <HeatStats app={app} heat={app.heat} showSiteRank={showSiteRank} />}
+              {app.tagline && (
+                <p lang={app.tagline.lang} className="max-w-160 text-body text-ink-2">
+                  {app.tagline.value}
+                </p>
+              )}
 
-        <div className="flex w-full max-w-190 flex-col gap-8 md:gap-10">
-          {app.description && (
-            <Section id="about" title={t('about')}>
-              <p lang={app.description.lang} className="text-body whitespace-pre-line md:text-body-article">
-                {app.description.value}
-              </p>
-            </Section>
-          )}
-
-          {app.features && (
-            <Section id="features" title={t('features')}>
-              <ol
-                lang={app.features.lang}
-                className="flex flex-col md:grid md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] md:gap-3"
-              >
-                {app.features.value.map((feature, index) => (
-                  <li
-                    key={feature.id ?? index}
-                    className="grid grid-cols-[28px_minmax(0,1fr)] gap-2.5 border-t border-surface-2 py-3 md:flex md:flex-col md:rounded-card md:border md:p-4"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="flex size-7 items-center justify-center rounded-thumb bg-surface text-meta font-semibold text-ink-2 md:hidden"
+              {facts.length > 0 && (
+                <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-tile border border-surface-2 bg-surface-2 md:flex md:flex-col md:gap-0 md:overflow-visible md:rounded-none md:border-x-0 md:border-b-0 md:bg-transparent">
+                  {facts.map((fact, index) => (
+                    <div
+                      key={fact.key}
+                      className={`flex flex-col gap-0.5 bg-bg px-3.5 py-3 md:grid md:grid-cols-[96px_minmax(0,1fr)] md:gap-4 md:border-b md:border-surface-2 md:px-0 md:py-2.5 ${
+                        facts.length % 2 === 1 && index === facts.length - 1 ? 'col-span-2' : ''
+                      }`}
                     >
-                      {index + 1}
-                    </span>
-                    <span className="flex flex-col gap-0.5 md:gap-1.5">
-                      <span className="text-body font-medium">{feature.title}</span>
-                      {feature.detail && (
-                        <span className="text-ui text-ink-2 md:text-meta md:text-ink-3">{feature.detail}</span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </Section>
-          )}
+                      <dt className="text-small text-ink-4 md:text-meta">{t(`facts.${fact.key}`)}</dt>
+                      <dd className="text-ui font-medium md:text-meta md:font-normal">{fact.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
 
-          {app.heat && <HeatSection app={app} heat={app.heat} showSiteRank={showSiteRank} />}
-
-          {app.mentions.length > 0 && (
-            <Section id="mentions" title={t('mentionsTitle')}>
-              <div className="flex flex-col">
-                <ul className="flex flex-col border-t border-surface-2">
-                  {app.mentions.map((mention) => (
-                    <li key={mention.slug} className="border-b border-surface-2">
-                      <Link href={`/daily/${mention.slug}`} className="group flex flex-col gap-1 py-3">
-                        <span lang={mention.title.lang} className="text-body font-medium group-hover:text-accent">
-                          {mention.title.value}
-                        </span>
-                        <span className="text-small text-ink-4">
-                          {format.dateTime(new Date(mention.publishedAt), { month: 'long', day: 'numeric' })} · {nav('daily')}
-                          {mention.category && ` · ${categories(mention.category)}`}
-                        </span>
+              {app.tags && (
+                <ul lang={app.tags.lang} aria-label={t('tags')} className="flex flex-wrap gap-2">
+                  {app.tags.value.map((tag) => (
+                    <li key={tag}>
+                      <Link
+                        href={listHref({ q: tag })}
+                        rel="nofollow"
+                        className="flex h-6.5 items-center rounded-pill border border-surface-2 bg-surface px-2.5 text-small text-ink-2 hover:border-line hover:text-ink"
+                      >
+                        {tag}
                       </Link>
                     </li>
                   ))}
                 </ul>
-                {app.heat && app.heat.latest.mentions > 0 && (
-                  <p className="pt-2.5 text-meta text-ink-4">{t('mentionsCount', { count: app.heat.latest.mentions })}</p>
+              )}
+
+              <div className="hidden flex-wrap gap-2 pt-1 md:flex">
+                {app.website && (
+                  <OpenSiteLink slug={app.slug} className={buttonClass('primary')}>
+                    <Icon name="external" size={15} strokeWidth={2} />
+                    {t('openSite')}
+                  </OpenSiteLink>
                 )}
+                <SaveButton className={`${buttonBase} ${outline}`} />
+                <ShareButton title={app.name} className={buttonClass('secondary')} labels={shareLabels} />
               </div>
-            </Section>
-          )}
+            </div>
 
-          {app.faqs && (
-            <Section id="faqs" title={t('faqs')}>
-              <div lang={app.faqs.lang} className="flex flex-col border-t border-surface-2">
-                {app.faqs.value.map((faq, index) => (
-                  <details key={faq.id ?? index} open={index === 0} className="group border-b border-surface-2">
-                    <summary className="flex min-h-13 cursor-pointer list-none items-center justify-between gap-3 py-3 text-body font-medium [&::-webkit-details-marker]:hidden">
-                      {faq.question}
-                      <span aria-hidden="true" className="flex-none text-title text-ink-4">
-                        <span className="group-open:hidden">+</span>
-                        <span className="hidden group-open:inline">−</span>
-                      </span>
-                    </summary>
-                    <p className="pb-4 text-body whitespace-pre-line text-ink-2">{faq.answer}</p>
-                  </details>
-                ))}
-              </div>
-            </Section>
-          )}
+            {app.screenshot && (
+              <figure className="hidden min-w-0 flex-[1_1_380px] flex-col rounded-hero border border-surface-2 bg-surface p-4 md:flex md:max-w-130">
+                <div className="overflow-hidden rounded-tile border border-line bg-bg">
+                  <div aria-hidden="true" className="flex h-7 items-center gap-1.5 border-b border-surface-2 px-3">
+                    <span className="size-2 rounded-pill bg-line" />
+                    <span className="size-2 rounded-pill bg-line" />
+                    <span className="size-2 rounded-pill bg-line" />
+                    <span className="ml-3 h-3.5 flex-1 rounded-pill bg-surface" />
+                  </div>
+                  <Image
+                    src={app.screenshot.url}
+                    alt={t('screenshotAlt', { name: app.name })}
+                    width={app.screenshot.width ?? 1200}
+                    height={app.screenshot.height ?? 630}
+                    unoptimized
+                    className="block h-auto w-full"
+                  />
+                </div>
+              </figure>
+            )}
+          </section>
 
-          {app.alternatives.length > 0 && (
-            <Section id="alternatives" title={t('alternatives')}>
-              <ul className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] md:gap-3 md:overflow-visible md:px-0 md:pb-0">
-                {app.alternatives.map((alternative) => (
-                  <li key={alternative.id} className="flex w-34 flex-none md:w-auto">
-                    <Link
-                      href={`/apps/${alternative.slug}`}
-                      className="group flex w-full flex-col gap-2 rounded-card border border-surface-2 p-3.5 md:gap-2.5 md:bg-surface md:p-4"
+          {app.heat && <HeatStats app={app} heat={app.heat} showSiteRank={showSiteRank} />}
+
+          <div className="flex w-full max-w-190 flex-col gap-8 md:gap-10">
+            {app.description && (
+              <Section id="about" title={t('about')}>
+                <p lang={app.description.lang} className="text-body whitespace-pre-line md:text-body-article">
+                  {app.description.value}
+                </p>
+              </Section>
+            )}
+
+            {app.features && (
+              <Section id="features" title={t('features')}>
+                <ol
+                  lang={app.features.lang}
+                  className="flex flex-col md:grid md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] md:gap-3"
+                >
+                  {app.features.value.map((feature, index) => (
+                    <li
+                      key={feature.id ?? index}
+                      className="grid grid-cols-[28px_minmax(0,1fr)] gap-2.5 border-t border-surface-2 py-3 md:flex md:flex-col md:rounded-card md:border md:p-4"
                     >
-                      <span className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2.5">
-                        <AppTile name={alternative.name} slug={alternative.slug} logo={alternative.logo} size="md" />
-                        <span className="flex min-w-0 flex-col gap-0.5">
-                          <span className="truncate text-body font-semibold group-hover:text-accent md:font-medium">
-                            {alternative.name}
-                          </span>
-                          <span className="hidden text-small text-ink-4 md:block">
-                            {[alternative.category?.name, alternative.pricing && t(`pricing.${alternative.pricing}`)]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </span>
-                        </span>
+                      <span
+                        aria-hidden="true"
+                        className="flex size-7 items-center justify-center rounded-thumb bg-surface text-meta font-semibold text-ink-2 md:hidden"
+                      >
+                        {index + 1}
                       </span>
-                      {alternative.tagline && (
-                        <span
-                          lang={alternative.tagline.lang}
-                          className="line-clamp-2 min-h-9 text-small text-ink-2 md:min-h-0 md:text-meta md:text-ink-3"
-                        >
-                          {alternative.tagline.value}
+                      <span className="flex flex-col gap-0.5 md:gap-1.5">
+                        <span className="text-body font-medium">{feature.title}</span>
+                        {feature.detail && (
+                          <span className="text-ui text-ink-2 md:text-meta md:text-ink-3">{feature.detail}</span>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </Section>
+            )}
+
+            {app.heat && <HeatSection app={app} heat={app.heat} showSiteRank={showSiteRank} />}
+
+            {app.mentions.length > 0 && (
+              <Section id="mentions" title={t('mentionsTitle')}>
+                <div className="flex flex-col">
+                  <ul className="flex flex-col border-t border-surface-2">
+                    {app.mentions.map((mention) => (
+                      <li key={mention.slug} className="border-b border-surface-2">
+                        <Link href={`/daily/${mention.slug}`} className="group flex flex-col gap-1 py-3">
+                          <span lang={mention.title.lang} className="text-body font-medium group-hover:text-accent">
+                            {mention.title.value}
+                          </span>
+                          <span className="text-small text-ink-4">
+                            {format.dateTime(new Date(mention.publishedAt), { month: 'long', day: 'numeric' })} · {nav('daily')}
+                            {mention.category && ` · ${categories(mention.category)}`}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  {app.heat && app.heat.latest.mentions > 0 && (
+                    <p className="pt-2.5 text-meta text-ink-4">{t('mentionsCount', { count: app.heat.latest.mentions })}</p>
+                  )}
+                </div>
+              </Section>
+            )}
+
+            {app.faqs && (
+              <Section id="faqs" title={t('faqs')}>
+                <div lang={app.faqs.lang} className="flex flex-col border-t border-surface-2">
+                  {app.faqs.value.map((faq, index) => (
+                    <details key={faq.id ?? index} open={index === 0} className="group border-b border-surface-2">
+                      <summary className="flex min-h-13 cursor-pointer list-none items-center justify-between gap-3 py-3 text-body font-medium [&::-webkit-details-marker]:hidden">
+                        {faq.question}
+                        <span aria-hidden="true" className="flex-none text-title text-ink-4">
+                          <span className="group-open:hidden">+</span>
+                          <span className="hidden group-open:inline">−</span>
                         </span>
-                      )}
-                      {alternative.heat && (
-                        <span className="mt-auto text-small text-ink-4">{card('heat', { value: alternative.heat.heat })}</span>
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Section>
+                      </summary>
+                      <p className="pb-4 text-body whitespace-pre-line text-ink-2">{faq.answer}</p>
+                    </details>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            <ReviewsSection />
+
+            {app.alternatives.length > 0 && (
+              <Section id="alternatives" title={t('alternatives')}>
+                <ul className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] md:gap-3 md:overflow-visible md:px-0 md:pb-0">
+                  {app.alternatives.map((alternative) => (
+                    <li key={alternative.id} className="flex w-34 flex-none md:w-auto">
+                      <Link
+                        href={`/apps/${alternative.slug}`}
+                        className="group flex w-full flex-col gap-2 rounded-card border border-surface-2 p-3.5 md:gap-2.5 md:bg-surface md:p-4"
+                      >
+                        <span className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2.5">
+                          <AppTile name={alternative.name} slug={alternative.slug} logo={alternative.logo} size="md" />
+                          <span className="flex min-w-0 flex-col gap-0.5">
+                            <span className="truncate text-body font-semibold group-hover:text-accent md:font-medium">
+                              {alternative.name}
+                            </span>
+                            <span className="hidden text-small text-ink-4 md:block">
+                              {[alternative.category?.name, alternative.pricing && t(`pricing.${alternative.pricing}`)]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </span>
+                          </span>
+                        </span>
+                        {alternative.tagline && (
+                          <span
+                            lang={alternative.tagline.lang}
+                            className="line-clamp-2 min-h-9 text-small text-ink-2 md:min-h-0 md:text-meta md:text-ink-3"
+                          >
+                            {alternative.tagline.value}
+                          </span>
+                        )}
+                        {alternative.heat && (
+                          <span className="mt-auto text-small text-ink-4">{card('heat', { value: alternative.heat.heat })}</span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
+          </div>
+        </main>
+
+        {/* Phones: save and the website stay in reach while reading. */}
+        <div className="sticky bottom-0 z-10 flex gap-2.5 border-t border-line bg-bg px-4 pt-2.5 pb-3.5 md:hidden">
+          <SaveButton withCount className={`${barButton} ${outline} ${app.website ? '' : 'flex-1'}`} />
+          {app.website && (
+            <OpenSiteLink slug={app.slug} className={`${barButton} flex-1 bg-ink text-white hover:bg-ink-2`}>
+              {t('openSite')}
+              <Icon name="external" size={16} />
+            </OpenSiteLink>
           )}
         </div>
-      </main>
-
-      {/* Phones: save and the website stay in reach while reading. */}
-      <div className="sticky bottom-0 z-10 flex gap-2.5 border-t border-line bg-bg px-4 pt-2.5 pb-3.5 md:hidden">
-        <SaveButton withCount className={`${barButton} ${outline} ${app.website ? '' : 'flex-1'}`} />
-        {app.website && (
-          <OpenSiteLink slug={app.slug} className={`${barButton} flex-1 bg-ink text-white hover:bg-ink-2`}>
-            {t('openSite')}
-            <Icon name="external" size={16} />
-          </OpenSiteLink>
-        )}
-      </div>
+      </ReviewsProvider>
     </SaveProvider>
   )
 }

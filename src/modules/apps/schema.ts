@@ -10,11 +10,15 @@ import {
   uniqueIndex,
 } from '@payloadcms/db-postgres/drizzle/pg-core'
 
+import { authUsers } from '@/lib/auth/schema'
+
+import { reportReasons, reviewStatuses } from './reviews/rules'
+
 /**
- * The apps module's own tables (docs/specs/apps.md「数据」「热度」). Written by the visit route
- * and the daily heat job, so they are Drizzle tables rather than Payload collections;
- * registered in payload.config.ts so migrations create them. `app_id` points at the `apps`
- * collection, `story_id` at `stories`.
+ * The apps module's own tables (docs/specs/apps.md「数据」「热度」). Written by the visit route,
+ * the daily heat job and readers' reviews, so they are Drizzle tables rather than Payload
+ * collections; registered in payload.config.ts so migrations create them. `app_id` points at
+ * the `apps` collection, `story_id` at `stories`.
  */
 
 /**
@@ -132,9 +136,68 @@ export const appHeatRuns = pgTable('app_heat_runs', {
   error: text('error'),
 })
 
+/**
+ * A member's review of an app (docs/specs/apps.md「评价」): stars and their own words, shown at
+ * once, no moderation first. One per member and app; editing changes it in place and sets
+ * `edited_at`. `lang` is the language the text is in (src/lib/i18n/detect.ts). The site owner can
+ * hide one; a hidden review shows only to its author. Deleting the member deletes their reviews.
+ */
+export const appReviews = pgTable(
+  'app_reviews',
+  {
+    id: serial('id').primaryKey(),
+    appId: integer('app_id').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    /** 1–5 stars. */
+    rating: smallint('rating').notNull(),
+    body: text('body').notNull(),
+    lang: text('lang').notNull(),
+    status: text('status', { enum: reviewStatuses }).default('shown').notNull(),
+    /** When the author last changed the stars or the text. */
+    editedAt: timestamp('edited_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex('app_reviews_app_user_idx').on(table.appId, table.userId),
+    index('app_reviews_app_status_idx').on(table.appId, table.status, table.id),
+    index('app_reviews_user_created_idx').on(table.userId, table.createdAt),
+  ],
+)
+
+/**
+ * A reader's「举报」of a review: a member by id (`u:…`), a visitor by that day's visitor hash
+ * (`v:…`, src/lib/visitor.ts), once per reporter and review. `resolved_at` is set when the site
+ * owner hides the review or keeps it.
+ */
+export const appReviewReports = pgTable(
+  'app_review_reports',
+  {
+    id: serial('id').primaryKey(),
+    reviewId: integer('review_id')
+      .notNull()
+      .references(() => appReviews.id, { onDelete: 'cascade' }),
+    reporter: text('reporter').notNull(),
+    reason: text('reason', { enum: reportReasons }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex('app_review_reports_review_reporter_idx').on(table.reviewId, table.reporter),
+    index('app_review_reports_resolved_idx').on(table.resolvedAt),
+  ],
+)
+
 export const appsTables = {
   app_clicks: appClicks,
   app_mentions: appMentions,
   app_metrics_daily: appMetricsDaily,
   app_heat_runs: appHeatRuns,
+  app_reviews: appReviews,
+  app_review_reports: appReviewReports,
 }
