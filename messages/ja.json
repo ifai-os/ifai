@@ -461,6 +461,83 @@
         "noScripts": "インストール手順はファイルの置き場所を伝えるだけで、パッケージ内のスクリプトは実行しないようアシスタントに求めています。",
         "limits": "チェックはファイルを読むだけで、Skill の安全を保証するものではありません。インストールの前に「{security}」タブで、接続先のドメイン、触れるファイル、必要なツールと API キーを確認してください。"
       }
+    },
+    "submit": {
+      "title": "Skill を公開する",
+      "description": "GitHub にある Skill を IFAI に送ってください。取り込み、チェック、審査を経て掲載し、結果をメールでお知らせします。",
+      "intro": "GitHub にある Skill を送ってください。取り込んでセキュリティチェックを行い、内容を確認したうえで、問題なければ IFAI に掲載します。掲載の可否にかかわらず、結果はメールでお知らせします。",
+      "button": "Skill を公開",
+      "card": {
+        "title": "便利な Skill を作りましたか？",
+        "body": "IFAI で公開しましょう。審査に通れば掲載され、特に優れたものには認証バッジとホームページの紹介枠が付きます。",
+        "link": "公開ガイド"
+      },
+      "before": {
+        "title": "送る前に",
+        "repo": "Skill は公開の GitHub リポジトリにあり、そのフォルダに名前と説明から始まる SKILL.md があること。1 つのリポジトリに複数の Skill がある場合は、その Skill のフォルダのアドレス（…/tree/main/skills/your-skill）を送ってください。",
+        "license": "MIT や Apache-2.0 など、明確なオープンソースライセンスがリポジトリか SKILL.md に書かれていること。ない場合は、まず書面での許可をお願いします。",
+        "safe": "ファイルにキーやパスワードを含めず、~/.ssh などの場所を読まないこと。実行するスクリプトやアクセスするサイトは SKILL.md に明記してください。",
+        "languages": "何ができるか、どう使うかを書いてください。言語は問いません。5 つの言語の紹介文は IFAI が用意します。"
+      },
+      "after": {
+        "title": "送ったあとの流れ",
+        "number": "送信するとすぐに受付番号が表示され、メールでも届きます。",
+        "review": "リポジトリを取り込み、セキュリティチェックと内容の確認を行います。通常 2 営業日以内に対応します。",
+        "result": "掲載の可否にかかわらずメールでお知らせします。掲載した場合は、そのページへのリンクを添えます。",
+        "certified": "実際に試して便利だった Skill には IFAI 認証が付き、ホームページで紹介することもあります。"
+      },
+      "form": {
+        "title": "Skill を送る",
+        "signIn": "Skill を送るにはログインしてください。審査結果はメールでお知らせします。",
+        "repository": "GitHub のアドレス",
+        "repositoryHint": "リポジトリ、または SKILL.md があるフォルダのアドレス。",
+        "repositoryPlaceholder": "https://github.com/you/your-skill",
+        "note": "何をする Skill か（ひとこと）",
+        "notePlaceholder": "マージされた PR からリリースノートを作る",
+        "count": "{count} / {max}",
+        "email": "連絡先メールアドレス",
+        "emailHint": "審査結果のお知らせにのみ使います。",
+        "send": "送信",
+        "sending": "送信中…",
+        "errors": {
+          "repository": "GitHub のアドレスを入力してください（例：https://github.com/you/your-skill）。",
+          "note": "何をする Skill か、ひとことで書いてください（{max} 文字以内）。",
+          "email": "メールを受け取れるアドレスを入力してください。",
+          "tooMany": "今日はすでに {max} 件送っています。残りは明日送ってください。",
+          "signIn": "ログインが切れました。もう一度ログインしてから送ってください。",
+          "failed": "送信できませんでした。少し待ってからもう一度お試しください。"
+        }
+      },
+      "done": {
+        "title": "送信しました",
+        "number": "受付番号 {code}",
+        "body": "2 営業日以内に審査し、結果を {email} にお送りします",
+        "steps": {
+          "sent": "送信済み",
+          "review": "審査中",
+          "reviewBy": "{date}までに完了予定",
+          "live": "掲載",
+          "liveBody": "通過すると Skills 一覧に掲載されます"
+        },
+        "again": "もう 1 つ送る",
+        "back": "Skills に戻る"
+      },
+      "email": {
+        "receivedSubject": "Skill を受け付けました（{code}）",
+        "receivedHeading": "Skill を受け付けました",
+        "receivedBody": "{repository} をお送りいただきありがとうございます。通常 2 営業日以内に対応し、結果をメールでお知らせします。",
+        "acceptedSubject": "お送りいただいた Skill を IFAI に掲載しました（{code}）",
+        "acceptedHeading": "Skill を掲載しました",
+        "acceptedBody": "{repository} は審査に通り、IFAI に掲載されました。共有いただきありがとうございます。",
+        "acceptedButton": "IFAI で見る",
+        "rejectedSubject": "お送りいただいた Skill について（{code}）",
+        "rejectedHeading": "今回は掲載を見送りました",
+        "rejectedBody": "{repository} を確認しましたが、今回は IFAI への掲載を見送りました。お送りいただきありがとうございました。",
+        "reply": "IFAI チームより：",
+        "findings": "セキュリティチェックで見つかった問題：",
+        "findingsMore": "…ほか {count} 件",
+        "footer": "受付番号 {code}"
+      }
     }
   },
   "saves": {

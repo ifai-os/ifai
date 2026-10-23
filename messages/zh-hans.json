@@ -461,6 +461,83 @@
         "noScripts": "安装说明只告诉助手把文件放在哪里，并要求它不要运行包里的任何脚本。",
         "limits": "检测只读文件，不能保证 Skill 绝对安全。装之前看一下详情页的「{security}」页签：它会联网的域名、读写哪些文件、需要哪些工具和 API Key。"
       }
+    },
+    "submit": {
+      "title": "发布 Skill",
+      "description": "把 GitHub 上的 Skill 发给 IFAI：我们导入、检测、审核，通过就上架，结果发邮件告诉你。",
+      "intro": "把 GitHub 上的 Skill 发给我们：导入后跑安全检测、人工看一遍，通过就在 IFAI 上架。收不收录，都会发邮件告诉你。",
+      "button": "发布 Skill",
+      "card": {
+        "title": "做了好用的 Skill？",
+        "body": "发布到 IFAI，审核通过就上架；好用的还会获得认证标识和首页推荐位。",
+        "link": "发布指南"
+      },
+      "before": {
+        "title": "发布前先看",
+        "repo": "Skill 放在公开的 GitHub 仓库里，所在目录有 SKILL.md，开头写着名字和说明。一个仓库里有好几个 Skill 时，填那一个 Skill 的目录地址（…/tree/main/skills/your-skill）。",
+        "license": "有明确的开源许可，比如 MIT、Apache-2.0，写在仓库或 SKILL.md 里。没有许可的，我们会先请你书面同意。",
+        "safe": "文件里不放密钥和密码，不读 ~/.ssh 这类位置；要运行哪些脚本、要访问哪些网站，在 SKILL.md 里写清楚。",
+        "languages": "用什么语言写都行，写清楚它能做什么、怎么用；五种语言的介绍由我们来写。"
+      },
+      "after": {
+        "title": "之后会怎样",
+        "number": "提交后马上拿到投稿编号，邮件里也有。",
+        "review": "我们导入仓库、跑安全检测、人工看一遍，一般在两个工作日内处理完。",
+        "result": "收不收录都会发邮件告诉你；收录的，邮件里有它的页面。",
+        "certified": "我们试用过、觉得好用的，会加上 IFAI 认证，也可能上首页推荐。"
+      },
+      "form": {
+        "title": "填写投稿",
+        "signIn": "登录后才能投稿，审核结果会发到你的邮箱。",
+        "repository": "GitHub 地址",
+        "repositoryHint": "仓库地址，或 SKILL.md 所在目录的地址。",
+        "repositoryPlaceholder": "https://github.com/you/your-skill",
+        "note": "一句话说明它做什么",
+        "notePlaceholder": "把合并的 PR 整理成发布说明",
+        "count": "{count} / {max}",
+        "email": "联系邮箱",
+        "emailHint": "只用来通知审核结果。",
+        "send": "提交",
+        "sending": "提交中…",
+        "errors": {
+          "repository": "请填 GitHub 地址，比如 https://github.com/you/your-skill。",
+          "note": "请用一句话说明这个 Skill 做什么（不超过 {max} 字）。",
+          "email": "请填一个能收到邮件的地址。",
+          "tooMany": "今天已经投了 {max} 个，剩下的明天再投吧。",
+          "signIn": "登录已失效，请重新登录后再提交。",
+          "failed": "没有提交成功，请稍后再试。"
+        }
+      },
+      "done": {
+        "title": "提交成功",
+        "number": "投稿编号 {code}",
+        "body": "2 个工作日内审核，结果会发到 {email}",
+        "steps": {
+          "sent": "已提交",
+          "review": "审核中",
+          "reviewBy": "预计 {date}前完成",
+          "live": "上线",
+          "liveBody": "通过后出现在 Skills 列表"
+        },
+        "again": "再投一个",
+        "back": "回到 Skills"
+      },
+      "email": {
+        "receivedSubject": "已收到你的 Skill 投稿（{code}）",
+        "receivedHeading": "已收到你的投稿",
+        "receivedBody": "谢谢你投稿 {repository}。我们一般在两个工作日内处理，结果会发邮件告诉你。",
+        "acceptedSubject": "你的 Skill 已收录到 IFAI（{code}）",
+        "acceptedHeading": "你的 Skill 已收录",
+        "acceptedBody": "{repository} 通过了审核，已收录到 IFAI。谢谢你的分享。",
+        "acceptedButton": "在 IFAI 上查看",
+        "rejectedSubject": "关于你投稿的 Skill（{code}）",
+        "rejectedHeading": "这次没有收录",
+        "rejectedBody": "我们看过了 {repository}，这次没有收录到 IFAI。谢谢你的投稿。",
+        "reply": "IFAI 团队的说明：",
+        "findings": "安全检测发现的问题：",
+        "findingsMore": "……另有 {count} 处",
+        "footer": "投稿编号 {code}"
+      }
     }
   },
   "saves": {

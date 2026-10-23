@@ -11,11 +11,13 @@ describe('parseRepositoryUrl', () => {
     expect(parseRepositoryUrl('https://github.com/o/r/blob/main/dir/SKILL.md')).toEqual({ owner: 'o', repo: 'r', ref: 'main', subdir: 'dir/SKILL.md' })
   })
 
-  it('rejects other hosts and incomplete addresses', () => {
+  it('rejects other hosts, incomplete addresses and broken escapes', () => {
     expect(parseRepositoryUrl('https://gitlab.com/o/r')).toBeNull()
     expect(parseRepositoryUrl('https://github.com/onlyowner')).toBeNull()
     expect(parseRepositoryUrl('github.com/o/r')).toBeNull()
     expect(parseRepositoryUrl('https://github.com/o/r/pulls')).toBeNull()
+    expect(parseRepositoryUrl('https://github.com/o/r/tree/main/%zz')).toBeNull()
+    expect(parseRepositoryUrl('https://github.com/o/r/tree/%E0%A4%A/x')).toBeNull()
   })
 })
 

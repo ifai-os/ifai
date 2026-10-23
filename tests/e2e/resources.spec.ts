@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 
 import type enMessages from '../../messages/en.json'
+import { createMember } from './member'
 
 type Messages = typeof enMessages
 
@@ -39,6 +40,80 @@ test('the install guide gives the steps, the directories and how to check a down
   await expect(hosts.getByText('~/.claude/skills/')).toBeVisible()
   const verify = page.getByRole('region', { name: en.resources.guide.verify.title })
   await expect(verify.getByText(`shasum -a 256 ${en.resources.guide.verify.file}`)).toBeVisible()
+})
+
+test('the submissions API takes members from IFAI’s own pages only', async ({ request }) => {
+  const submission = { repository: 'https://github.com/acme/smoke-skill', note: 'Writes release notes', email: 'dev@example.com', locale: 'en' }
+  const visitor = await request.post('/api/resources/submissions', { data: submission })
+  expect(visitor.status()).toBe(401)
+  expect(visitor.headers()['cache-control']).toBe('private, no-store')
+  const fromElsewhere = await request.post('/api/resources/submissions', { data: submission, headers: { 'sec-fetch-site': 'cross-site' } })
+  expect(fromElsewhere.status()).toBe(403)
+  const wrong = await request.post('/api/resources/submissions', { data: { ...submission, repository: 'https://gitlab.com/acme/x', email: 'nope' } })
+  expect(wrong.status()).toBe(400)
+  expect(await wrong.json()).toEqual({ error: 'invalid', fields: ['repository', 'email'] })
+})
+
+test('the publishing guide asks a visitor to sign in before sending a Skill', async ({ page }) => {
+  const response = await page.goto('/en/resources/submit')
+  expect(response?.status()).toBe(200)
+  await expect(page.getByRole('heading', { level: 1, name: en.resources.submit.title })).toBeVisible()
+  await expect(page.getByRole('region', { name: en.resources.submit.before.title })).toBeVisible()
+  const form = page.getByRole('region', { name: en.resources.submit.form.title })
+  await expect(form.getByText(en.resources.submit.form.signIn)).toBeVisible()
+  await expect(form.getByLabel(en.resources.submit.form.repository)).toHaveCount(0)
+})
+
+test('a member sends a Skill and gets its number', async ({ page, context, baseURL }) => {
+  test.skip(
+    !process.env.DATABASE_URI || !process.env.BETTER_AUTH_SECRET,
+    'Signs members in through the database: needs DATABASE_URI and BETTER_AUTH_SECRET, as in CI.',
+  )
+  const f = en.resources.submit.form
+  const member = await createMember(baseURL ?? 'http://localhost:3000')
+  try {
+    await context.addCookies([member.cookie])
+    await page.goto('/en/resources/submit')
+    const form = page.getByRole('region', { name: f.title })
+    await expect(form.getByLabel(f.email)).toHaveValue(/^smoke-.+@example\.com$/)
+
+    // Checked before sending: the first wrong field gets the focus.
+    await form.getByRole('button', { name: f.send }).click()
+    await expect(form.getByText(f.errors.repository)).toBeVisible()
+    await expect(form.getByLabel(f.repository)).toBeFocused()
+
+    // Pasted from the address bar, as people do.
+    await form.getByLabel(f.repository).fill('github.com/acme/smoke-skill?tab=readme-ov-file')
+    await form.getByLabel(f.note).fill('Writes release notes from merged pull requests')
+    await form.getByRole('button', { name: f.send }).click()
+
+    // 「提交成功」 takes the form's place and names the section.
+    const sent = page.getByRole('region', { name: en.resources.submit.done.title })
+    await expect(sent.getByRole('heading', { name: en.resources.submit.done.title })).toBeFocused()
+    await expect(sent.getByText('acme/smoke-skill', { exact: true })).toBeVisible()
+    await expect(sent.getByRole('listitem').filter({ hasText: en.resources.submit.done.steps.review })).toHaveAttribute('aria-current', 'step')
+    const number = (await sent.getByText(/^Submission number S-\d{4}-\d{2,}$/).textContent())?.replace('Submission number ', '')
+
+    // The same repository again while it waits: the same submission.
+    const again = await page.request.post('/api/resources/submissions', {
+      data: { repository: 'https://github.com/acme/smoke-skill', note: 'Again', email: 'dev@example.com', locale: 'en' },
+    })
+    expect(again.status()).toBe(200)
+    expect((await again.json()).code).toBe(number)
+
+    await sent.getByRole('button', { name: en.resources.submit.done.again }).click()
+    await expect(form.getByLabel(f.repository)).toHaveValue('')
+    await expect(form.getByLabel(f.repository)).toBeFocused()
+  } finally {
+    await member.remove()
+  }
+})
+
+test('the list leads to the publishing guide from the top and the side', async ({ page }) => {
+  await page.goto('/en/resources')
+  await expect(page.getByRole('main').getByRole('link', { name: en.resources.submit.button })).toHaveAttribute('href', '/en/resources/submit')
+  const card = page.getByRole('region', { name: en.resources.submit.card.title })
+  await expect(card.getByRole('link', { name: `${en.resources.submit.card.link} ›` })).toHaveAttribute('href', '/en/resources/submit')
 })
 
 // Needs the sample Skills from scripts/seed-skills.ts: CI adds them; preview databases don't have them.

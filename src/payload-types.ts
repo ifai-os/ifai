@@ -790,11 +790,23 @@ export interface SkillSubmission {
    * Set automatically.
    */
   code?: string | null;
+  /**
+   * Saving "Listed" or "Not listed" emails the submitter, with your note to them.
+   */
   status: 'pending' | 'accepted' | 'rejected';
   /**
-   * The Skill created from this submission.
+   * The Skill imported from this submission. Listed: its page is in the email. Not listed after a blocked scan: the email lists what the scan found.
    */
   skill?: (number | null) | Skill;
+  /**
+   * The language of the page it was sent from.
+   */
+  locale?: ('en' | 'zh-Hans' | 'zh-Hant' | 'ja' | 'ko') | null;
+  /**
+   * The status of the last email the submitter got. When it differs from the status, saving sends the email again.
+   */
+  notifiedStatus?: ('pending' | 'accepted' | 'rejected') | null;
+  notifiedAt?: string | null;
   repository: string;
   note?: string | null;
   email: string;
@@ -802,6 +814,10 @@ export interface SkillSubmission {
    * Site account id (Better Auth).
    */
   submitterId?: string | null;
+  /**
+   * Goes into the result email in your words, e.g. why it was not listed. Write it in the submitter’s language.
+   */
+  reply?: string | null;
   /**
    * Internal. Not shown to the submitter.
    */
@@ -1295,10 +1311,14 @@ export interface SkillSubmissionsSelect<T extends boolean = true> {
   code?: T;
   status?: T;
   skill?: T;
+  locale?: T;
+  notifiedStatus?: T;
+  notifiedAt?: T;
   repository?: T;
   note?: T;
   email?: T;
   submitterId?: T;
+  reply?: T;
   adminNote?: T;
   updatedAt?: T;
   createdAt?: T;

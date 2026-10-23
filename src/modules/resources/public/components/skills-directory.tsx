@@ -9,7 +9,7 @@ import type { Locale } from '@/i18n/config'
 import { getPathname, Link } from '@/i18n/navigation'
 
 import { getSkillsOverview, getTag, listSkills } from '../data'
-import { guideHref, isFiltered, skillHref, skillSorts, skillsHref, type SkillListParams } from '../list-params'
+import { guideHref, isFiltered, skillHref, skillSorts, skillsHref, submitHref, type SkillListParams } from '../list-params'
 import { SkillItem } from './skill-item'
 import { SkillTile } from './skill-tile'
 import { ViewSwitch } from './view-switch'
@@ -22,8 +22,9 @@ const chipOff = 'border-line bg-bg text-ink-2 hover:border-ink-4'
 
 /**
  * The Skills list (docs/specs/resources.md「页面与路由」, board「IFAI 资源 · Skills」): heading
- * with real counts, 本周精选, 三步用上 Skill, then categories, sorts, filters and search, one page
- * of Skills as a list or a grid, and the hot tags beside it. Every choice lives in the address.
+ * with real counts and「发布 Skill」, 本周精选, 三步用上 Skill, then categories, sorts, filters and
+ * search, one page of Skills as a list or a grid, and beside it the install ranking, the hot tags
+ * and the way in for sending a Skill. Every choice lives in the address.
  */
 export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) {
   const t = await getTranslations('resources')
@@ -51,14 +52,20 @@ export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) 
             <h1 className="text-h2 md:text-h1">{t('title')}</h1>
             <p className="max-w-160 text-ui text-ink-3">{t('intro')}</p>
           </div>
-          <p className="flex gap-5 text-meta text-ink-4">
-            <span>
-              <b className="text-title font-semibold text-ink tabular-nums">{format.number(overview.total)}</b> {t('listed')}
-            </span>
-            <span>
-              <b className="text-title font-semibold text-ink tabular-nums">+{format.number(overview.newThisWeek)}</b> {t('newThisWeek')}
-            </span>
-          </p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <p className="flex gap-5 text-meta text-ink-4">
+              <span>
+                <b className="text-title font-semibold text-ink tabular-nums">{format.number(overview.total)}</b> {t('listed')}
+              </span>
+              <span>
+                <b className="text-title font-semibold text-ink tabular-nums">+{format.number(overview.newThisWeek)}</b> {t('newThisWeek')}
+              </span>
+            </p>
+            <ButtonLink href={submitHref}>
+              <Icon name="plus" size={16} />
+              {t('submit.button')}
+            </ButtonLink>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-4">
@@ -299,58 +306,65 @@ export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) 
           )}
         </div>
 
-        {(overview.mostInstalled.length > 0 || overview.hotTags.length > 0) && (
-          <aside className="flex flex-col gap-7 md:w-side md:flex-none">
-            {overview.mostInstalled.length > 0 && (
-              <section aria-labelledby="ranking" className="flex flex-col">
-                <div className="flex items-baseline justify-between gap-3 pb-1.5">
-                  <h2 id="ranking" className="text-title font-semibold">
-                    {t('ranking.title')}
-                  </h2>
-                  <Link href={skillsHref({ sort: 'installs' })} className="flex-none text-meta text-ink-4 hover:text-ink">
-                    {t('ranking.all')}
-                  </Link>
-                </div>
-                <ol className="flex flex-col">
-                  {overview.mostInstalled.map((skill, index) => (
-                    <li key={skill.id}>
-                      <Link href={skillHref(skill.slug)} className="group flex min-h-10 items-center gap-2.5 text-ui">
-                        <span aria-hidden="true" className={`w-4 flex-none font-semibold tabular-nums ${index < 3 ? 'text-accent' : 'text-ink-4'}`}>
-                          {index + 1}
-                        </span>
-                        <span lang={skill.name.lang} className="min-w-0 flex-1 truncate group-hover:text-accent">
-                          {skill.name.value}
-                        </span>
-                        <span className="flex-none text-meta text-ink-4 tabular-nums">{format.number(skill.installs, { notation: 'compact' })}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            )}
-            {overview.hotTags.length > 0 && (
-              <section aria-labelledby="hot-tags" className="flex flex-col gap-3">
-                <h2 id="hot-tags" className="text-title font-semibold">
-                  {t('hotTags')}
+        <aside className="flex flex-col gap-7 md:w-side md:flex-none">
+          {overview.mostInstalled.length > 0 && (
+            <section aria-labelledby="ranking" className="flex flex-col">
+              <div className="flex items-baseline justify-between gap-3 pb-1.5">
+                <h2 id="ranking" className="text-title font-semibold">
+                  {t('ranking.title')}
                 </h2>
-                <ul className="flex flex-wrap gap-2">
-                  {overview.hotTags.map((hot) => (
-                    <li key={hot.slug}>
-                      <Link
-                        href={skillsHref({ tag: hot.slug })}
-                        aria-current={hot.slug === params.tag ? 'true' : undefined}
-                        lang={hot.name.lang}
-                        className="flex h-7 items-center rounded-pill border border-surface-2 bg-surface px-3 text-meta text-ink-2 hover:border-line hover:text-ink aria-[current]:border-ink aria-[current]:text-ink"
-                      >
-                        {hot.name.value}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </aside>
-        )}
+                <Link href={skillsHref({ sort: 'installs' })} className="flex-none text-meta text-ink-4 hover:text-ink">
+                  {t('ranking.all')}
+                </Link>
+              </div>
+              <ol className="flex flex-col">
+                {overview.mostInstalled.map((skill, index) => (
+                  <li key={skill.id}>
+                    <Link href={skillHref(skill.slug)} className="group flex min-h-10 items-center gap-2.5 text-ui">
+                      <span aria-hidden="true" className={`w-4 flex-none font-semibold tabular-nums ${index < 3 ? 'text-accent' : 'text-ink-4'}`}>
+                        {index + 1}
+                      </span>
+                      <span lang={skill.name.lang} className="min-w-0 flex-1 truncate group-hover:text-accent">
+                        {skill.name.value}
+                      </span>
+                      <span className="flex-none text-meta text-ink-4 tabular-nums">{format.number(skill.installs, { notation: 'compact' })}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+          {overview.hotTags.length > 0 && (
+            <section aria-labelledby="hot-tags" className="flex flex-col gap-3">
+              <h2 id="hot-tags" className="text-title font-semibold">
+                {t('hotTags')}
+              </h2>
+              <ul className="flex flex-wrap gap-2">
+                {overview.hotTags.map((hot) => (
+                  <li key={hot.slug}>
+                    <Link
+                      href={skillsHref({ tag: hot.slug })}
+                      aria-current={hot.slug === params.tag ? 'true' : undefined}
+                      lang={hot.name.lang}
+                      className="flex h-7 items-center rounded-pill border border-surface-2 bg-surface px-3 text-meta text-ink-2 hover:border-line hover:text-ink aria-[current]:border-ink aria-[current]:text-ink"
+                    >
+                      {hot.name.value}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          <section aria-labelledby="submit-card" className="flex flex-col gap-1.5 rounded-card border border-surface-2 bg-surface p-4">
+            <h2 id="submit-card" className="text-title font-semibold">
+              {t('submit.card.title')}
+            </h2>
+            <p className="text-meta text-ink-3">{t('submit.card.body')}</p>
+            <Link href={submitHref} className="flex min-h-8 items-center self-start text-meta font-medium text-link hover:underline">
+              {t('submit.card.link')} ›
+            </Link>
+          </section>
+        </aside>
       </div>
     </main>
   )

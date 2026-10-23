@@ -5,6 +5,7 @@ import { siteUrl } from '@/lib/site-url'
 import { describeFunctions } from '../describe/jobs'
 import { describeEvent } from '../describe/state'
 import { statsFunctions } from '../stats/jobs'
+import { submitFunctions } from '../submit/jobs'
 import { runImport } from './import'
 
 /**
@@ -31,4 +32,4 @@ export const importSkill = inngest.createFunction(
   },
 )
 
-export const resourcesFunctions = [importSkill, ...describeFunctions, ...statsFunctions]
+export const resourcesFunctions = [importSkill, ...describeFunctions, ...statsFunctions, ...submitFunctions]

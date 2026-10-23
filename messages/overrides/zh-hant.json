@@ -95,5 +95,71 @@
       "report": "報導"
     },
     "outlets": "{count, plural, other {# 家報導}}"
+  },
+  "resources": {
+    "emptyBody": "第一批 Skill 正在檢測和審核，很快會出現在這裡。",
+    "scan": {
+      "reviewedNote": "另有 {count} 項檢測有提示，IFAI 人工複核後才發布了這個版本。"
+    },
+    "versionStatus": {
+      "published": "已發布"
+    },
+    "guide": {
+      "intro": "Skill 是一個帶 SKILL.md 的資料夾。把它放進 AI 助手的 Skills 目錄，助手在需要時就會用上它。IFAI 收錄的每個版本都經過安全檢測和 IFAI 審核。",
+      "verify": {
+        "body": "每個版本都有一個由 Zip 本身算出的 sha256 指紋，寫在 Skill 詳情頁的「{fingerprint}」和安裝說明裡。下載後核對一下，確認拿到的和 IFAI 審核的是同一份檔案："
+      },
+      "safety": {
+        "blocked": "每個版本匯入時都會做靜態檢測：包結構不對、寫死了金鑰、讀取 ~/.ssh 之類敏感位置的，不能發布。",
+        "reviewed": "危險命令、沒有宣告的外聯、提示注入的跡象會被標出來，IFAI 人工看過才發布。",
+        "noScripts": "安裝說明只告訴助手把檔案放在哪裡，並要求它不要執行包裡的任何腳本。"
+      }
+    },
+    "submit": {
+      "title": "發布 Skill",
+      "description": "把 GitHub 上的 Skill 發給 IFAI：我們匯入、檢測、審核，通過就上架，結果寄信告訴你。",
+      "intro": "把 GitHub 上的 Skill 發給我們：匯入後跑安全檢測、人工看一遍，通過就在 IFAI 上架。收不收錄，都會寄信告訴你。",
+      "button": "發布 Skill",
+      "card": {
+        "body": "發布到 IFAI，審核通過就上架；好用的還會獲得認證標識和首頁推薦位。",
+        "link": "發布指南"
+      },
+      "before": {
+        "title": "發布前先看",
+        "repo": "Skill 放在公開的 GitHub 儲存庫裡，所在目錄有 SKILL.md，開頭寫著名字和說明。一個儲存庫裡有好幾個 Skill 時，填那一個 Skill 的目錄網址（…/tree/main/skills/your-skill）。",
+        "safe": "檔案裡不放金鑰和密碼，不讀 ~/.ssh 這類位置；要執行哪些腳本、要連到哪些網站，在 SKILL.md 裡寫清楚。",
+        "license": "有明確的開源許可，比如 MIT、Apache-2.0，寫在儲存庫或 SKILL.md 裡。沒有許可的，我們會先請你書面同意。"
+      },
+      "after": {
+        "number": "提交後馬上拿到投稿編號，信裡也有。",
+        "result": "收不收錄都會寄信告訴你；收錄的，信裡有它的頁面。",
+        "review": "我們匯入儲存庫、跑安全檢測、人工看一遍，一般在兩個工作日內處理完。"
+      },
+      "form": {
+        "signIn": "登入後才能投稿，審核結果會寄到你的信箱。",
+        "repository": "GitHub 網址",
+        "repositoryHint": "儲存庫網址，或 SKILL.md 所在目錄的網址。",
+        "notePlaceholder": "把合併的 PR 整理成發布說明",
+        "email": "聯絡信箱",
+        "emailHint": "只用來通知審核結果。",
+        "errors": {
+          "repository": "請填 GitHub 網址，比如 https://github.com/you/your-skill。",
+          "email": "請填一個能收信的電子郵件地址。"
+        }
+      },
+      "done": {
+        "body": "2 個工作日內審核，結果會寄到 {email}",
+        "steps": {
+          "review": "審核中"
+        }
+      },
+      "email": {
+        "receivedBody": "謝謝你投稿 {repository}。我們一般在兩個工作日內處理，結果會寄信告訴你。",
+        "acceptedBody": "{repository} 通過了審核，已收錄到 IFAI。謝謝你的分享。"
+      }
+    },
+    "info": {
+      "repository": "來源儲存庫"
+    }
   }
 }
