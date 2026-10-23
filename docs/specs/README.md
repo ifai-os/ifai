@@ -6,7 +6,7 @@
 |---|---|
 | [foundation.md](./foundation.md) — 第 1–2 周地基 | 已实现 |
 | [daily.md](./daily.md) — 日报 | 已确认，实现顺序 6 步已完成，待预览环境验收 |
-| [daily-email.md](./daily-email.md) — 日报 · 邮件订阅 | 草稿，待确认 |
+| [daily-email.md](./daily-email.md) — 日报 · 邮件订阅 | 已确认，待实现 |
 | [apps.md](./apps.md) — 应用 | 已确认，实现中（第 1–3 步完成） |
 | [resources.md](./resources.md) — 资源（Agent Skills） | 已确认，实现中（第 3 步完成） |
 
