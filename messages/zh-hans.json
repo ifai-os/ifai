@@ -700,6 +700,64 @@
     "earlier": "上一期",
     "later": "下一期"
   },
+  "subscribe": {
+    "title": "每天早上 8 点，把 AI 日报发到你的邮箱",
+    "note": "按你选择的语言，在你所在时区的早上 8 点发送，随时可以退订",
+    "email": "你的邮箱地址",
+    "submit": "订阅",
+    "done": "订阅成功，明早 8 点见",
+    "invalid": "请输入有效的邮箱地址",
+    "suggest": "是不是 <fix>{domain}</fix>？",
+    "failed": "没有订阅上，请稍后再试"
+  },
+  "subscription": {
+    "title": "管理订阅",
+    "address": "订阅邮箱",
+    "statusLabel": "状态",
+    "status": {
+      "subscribed": "已订阅",
+      "unsubscribed": "已退订",
+      "stopped": "已停发"
+    },
+    "stopped": {
+      "bounce": "发到这个邮箱的邮件被退回了，所以停发了。",
+      "complaint": "日报在这个邮箱里被标成了垃圾邮件，所以停发了。",
+      "owner": "这个邮箱已经停发。"
+    },
+    "next": "下一封：{time}（{zone}）",
+    "settings": "邮件设置",
+    "language": "语言",
+    "timeZone": "时区",
+    "timeZoneHint": "每天在这个时区的早上 8 点发送。",
+    "save": "保存",
+    "saved": "已保存",
+    "unsubscribe": "退订",
+    "unsubscribed": "已退订，不会再收到日报邮件。",
+    "resubscribe": "重新订阅",
+    "resubscribed": "已重新订阅。",
+    "invalidTitle": "链接已失效",
+    "invalidBody": "链接可能不完整，或者这份订阅已经删除了。",
+    "failed": "没有保存上，请稍后再试"
+  },
+  "dailyEmail": {
+    "senderName": "IFAI 日报",
+    "welcome": {
+      "subject": "欢迎订阅 IFAI 日报",
+      "preheader": "第一封会在 {time} 送到。",
+      "heading": "订阅成功",
+      "schedule": "每天早上 8 点（{zone}），我们会把过去 24 小时的 AI 大事发到这个邮箱。",
+      "first": "第一封会在 {time} 送到。",
+      "change": "想换语言或时区，点下面的「管理订阅」；每封邮件底部也有这个链接。",
+      "manage": "管理订阅",
+      "notYou": "不是你订阅的？",
+      "unsubscribe": "一键退订"
+    },
+    "footer": {
+      "why": "你收到这封邮件，是因为在 IFAI 订阅了日报。",
+      "manage": "管理订阅",
+      "unsubscribe": "退订"
+    }
+  },
   "categories": {
     "product": "产品更新",
     "industry": "行业动态",

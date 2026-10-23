@@ -8,6 +8,8 @@ import { Link } from '@/i18n/navigation'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
 
 import type { StoryCategory } from '../../categories'
+import { SubscribeBox } from '../../email/components/subscribe-box'
+import { subscribingOpen } from '../../email/delivery'
 import { hotStories, hottestStory, latestPoster, listStories, mentionedApps, sourceCount } from '../data'
 import { listHref } from '../list-params'
 import { CategoryNav } from './category-nav'
@@ -29,7 +31,8 @@ type DailyListProps = {
  * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): header with today's hottest story
  * and the latest「每日 AI 大事」poster (first page of every story only), categories, stories by
  * day and earlier pages, and beside them the apps in today's news and the hottest events of the
- * last 48 hours.
+ * last 48 hours. The email subscribe box sits under the poster on wide screens (in the poster's
+ * place when there is none) and after the stories on phones and tablets.
  */
 export async function DailyList({ locale, category, page }: DailyListProps) {
   const front = !category && page === 1
@@ -46,6 +49,7 @@ export async function DailyList({ locale, category, page }: DailyListProps) {
   // Past the last page: answer 404 rather than an empty list under a new address.
   if (page > 1 && result.stories.length === 0) notFound()
 
+  const subscribe = subscribingOpen()
   const serverToday = dayKey(new Date(), serverTimeZone)
   const latest = result.stories[0]?.publishedAt ?? null
   const pill =
@@ -76,10 +80,21 @@ export async function DailyList({ locale, category, page }: DailyListProps) {
           </div>
         </header>
         {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
-        {poster && (
+        {poster ? (
           <div className="flex flex-col gap-4 md:grow md:basis-54">
             <PosterCard poster={poster} locale={locale} />
+            {subscribe && (
+              <div className="hidden lg:block">
+                <SubscribeBox variant="column" />
+              </div>
+            )}
           </div>
+        ) : (
+          subscribe && (
+            <div className="hidden lg:block lg:w-side lg:flex-none">
+              <SubscribeBox variant="column" />
+            </div>
+          )
         )}
       </div>
 
@@ -112,6 +127,12 @@ export async function DailyList({ locale, category, page }: DailyListProps) {
                 </Link>
               )}
             </nav>
+          )}
+
+          {subscribe && (
+            <div className="lg:hidden">
+              <SubscribeBox variant="card" />
+            </div>
           )}
         </div>
 
