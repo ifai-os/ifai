@@ -8,7 +8,7 @@
     "signOut": "登出"
   },
   "home": {
-    "demoBanner": "示範資料 · 接入真實資料前，本頁顯示的都是範例內容",
+    "demoBanner": "示範資料 · 本頁的 Skill 還是範例內容，資源模組上線後換成真實資料",
     "dailyMeta": "今天已發布 {count, plural, other {# 則}} · 最近更新 {time}",
     "dailyMetaPast": "最近一期 {date} · {count, plural, other {# 則}}",
     "dailyEmpty": "第一批新聞正在審核，很快會出現在這裡。"
@@ -52,13 +52,15 @@
     },
     "platforms": {
       "browser-extension": "瀏覽器擴充功能"
+    },
+    "intro": "按熱度排序。熱度綜合網站排名、站內點擊與收藏、日報提及，反映關注度，不代表實際使用者數。",
+    "howBody": "每天按下面三項加權算一次，滿分 100；「7 天變化」是和一週前相比。網站排名來自 Tranco 公開榜單；站內點擊同一訪客每天只算一次，不含爬蟲。熱度反映關注度，不代表實際使用者數。",
+    "weights": {
+      "engagement": "站內點擊與收藏"
     }
   },
   "categories": {
-    "industry": "產業動態",
-    "assistant": "AI 助理",
-    "search": "搜尋與研究",
-    "coding": "程式開發"
+    "industry": "產業動態"
   },
   "daily": {
     "groupCount": "{count, plural, other {# 則}}",

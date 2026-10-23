@@ -14,17 +14,17 @@ type Props = {
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { locale } = await params
-  const { q, page } = readListParams(await searchParams)
+  const { q, page, board } = readListParams(await searchParams)
   if (!isLocale(locale) || !page) return {}
-  return listMetadata({ locale, category: null, q, page })
+  return listMetadata({ locale, category: null, q, page, board })
 }
 
 export default async function AppsPage({ params, searchParams }: Props) {
   const { locale } = await params
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
-  const { q, page } = readListParams(await searchParams)
+  const { q, page, board, sort } = readListParams(await searchParams)
   if (!page) notFound()
 
-  return <AppsDirectory locale={locale} category={null} q={q} page={page} />
+  return <AppsDirectory locale={locale} category={null} q={q} page={page} board={board} sort={sort} />
 }
