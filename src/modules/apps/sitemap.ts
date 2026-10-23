@@ -6,7 +6,7 @@ import type { SitemapPage } from '@/lib/sitemap'
 
 import { appsCacheTag } from './cache'
 import { getCategories } from './data'
-import { listHref } from './list-params'
+import { listHref, submitHref } from './list-params'
 
 const findApps = unstable_cache(
   async () => {
@@ -26,8 +26,8 @@ const findApps = unstable_cache(
 )
 
 /**
- * The apps pages in the sitemap: the list, categories that have apps, and every published
- * app. Searches and the other boards stay out (they are views of the same apps).
+ * The apps pages in the sitemap: the list, categories that have apps, the submit page and
+ * every published app. Searches and the other boards stay out (they are views of the same apps).
  */
 export async function appsSitemap(): Promise<{ pages: SitemapPage[]; apps: SitemapPage[] }> {
   const [{ categories }, apps] = await Promise.all([getCategories('en'), findApps()])
@@ -35,6 +35,7 @@ export async function appsSitemap(): Promise<{ pages: SitemapPage[]; apps: Sitem
     pages: [
       { path: listHref({}) },
       ...categories.filter((category) => category.count > 0).map((category) => ({ path: listHref({ category: category.slug }) })),
+      { path: submitHref() },
     ],
     apps: apps.map((app) => ({ path: `/apps/${app.slug}` as const, lastModified: app.updatedAt })),
   }

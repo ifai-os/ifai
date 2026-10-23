@@ -1,8 +1,10 @@
 import { useTranslations } from 'next-intl'
 
 import { Icon } from '@/components/icon'
+import { Link } from '@/i18n/navigation'
 
 import { heatWeights } from '../heat'
+import { submitHref } from '../list-params'
 
 const parts = ['rank', 'engagement', 'mentions'] as const
 
@@ -28,7 +30,7 @@ function HowHeatBody() {
   )
 }
 
-/** 「热度怎么算」beside the list on wider screens. */
+/** 「热度怎么算」beside the list on wider screens, with the way to submit an app at its foot. */
 export function HowHeatCard() {
   const t = useTranslations('apps')
 
@@ -41,6 +43,9 @@ export function HowHeatCard() {
         {t('howTitle')}
       </h2>
       <HowHeatBody />
+      <Link href={submitHref()} className="flex min-h-8 items-center self-start text-meta text-link hover:underline">
+        {t('submitLink')} ›
+      </Link>
     </section>
   )
 }

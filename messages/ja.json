@@ -121,8 +121,9 @@
     "allCategories": "すべて",
     "found": "{count, plural, other {「{q}」に一致するアプリが#件あります}}",
     "noMatchTitle": "「{q}」に一致するアプリはありません",
-    "noMatchBody": "短いキーワードや英語で試してください。",
+    "noMatchBody": "別のキーワードで試すか、このアプリを提出してください。",
     "searchEverywhere": "すべてのカテゴリで検索",
+    "submitApp": "アプリを提出",
     "emptyCategoryTitle": "このカテゴリにはまだアプリがありません",
     "emptyCategoryBody": "ほかのカテゴリを見るか、数日後にまた確認してください。",
     "allApps": "すべてのアプリを見る",
@@ -186,6 +187,11 @@
       "rank": "サイト順位",
       "engagement": "クリックと保存",
       "mentions": "デイリーでの言及"
+    },
+    "submitLink": "アプリを提出・更新する",
+    "submitCard": {
+      "title": "AIアプリを作りましたか？",
+      "body": "提出から2営業日以内に審査し、承認されるとここに表示されます。"
     },
     "emptyRisingTitle": "いま急上昇しているアプリはありません",
     "emptyRisingBody": "急上昇には、注目度が30以上で、この1週間に上がったアプリが入ります。",
@@ -667,6 +673,81 @@
       "contactTooLong": "連絡先は{max}文字以内で書いてください。",
       "dailyLimit": "今日はすでに{limit}件報告しました。また明日どうぞ。",
       "failed": "送信できませんでした。もう一度お試しください。"
+    }
+  },
+  "appSubmissions": {
+    "title": "アプリを提出",
+    "description": "AIアプリを作りましたか？公式サイトをIFAIに送ってください。2営業日以内に審査し、結果をメールでお知らせします。",
+    "intro": "AIアプリの公式サイトと名前を送ってください。2営業日以内に審査し、承認されるとアプリ一覧に掲載されます。結果はメールでお知らせします。掲載済みのアプリの情報が違う場合は、そのページの「情報の誤りを報告」からお知らせください。",
+    "form": {
+      "title": "アプリの情報",
+      "signIn": "アプリを提出するにはログインしてください。審査結果はメールでお知らせします。",
+      "website": "公式サイトのURL",
+      "websiteHint": "アプリ自身の公式サイト。アプリストアやまとめサイトのページではなく。",
+      "websitePlaceholder": "https://your-app.com",
+      "name": "アプリ名",
+      "category": "カテゴリ（任意）",
+      "categoryNone": "わからない",
+      "note": "何をするアプリか、ひとことで（任意）",
+      "notePlaceholder": "文書からスライドを作る",
+      "count": "{count} / {max}",
+      "email": "連絡先メールアドレス",
+      "emailHint": "審査結果のお知らせにのみ使います。",
+      "send": "提出する",
+      "sending": "提出中…",
+      "listed": "<link>{name}</link> はすでに掲載されています。ページの情報が違う場合は、そのページの「情報の誤りを報告」からお知らせください。",
+      "errors": {
+        "website": "アプリの公式サイトのURLを入力してください（例：https://your-app.com）。",
+        "name": "アプリ名を入力してください（{max}文字以内）。",
+        "note": "{max}文字以内で書いてください。",
+        "email": "メールを受け取れるアドレスを入力してください。",
+        "tooMany": "今日はすでに{max}件提出しています。残りは明日提出してください。",
+        "signIn": "ログインが切れました。もう一度ログインしてから提出してください。",
+        "failed": "提出できませんでした。少し待ってからもう一度お試しください。"
+      }
+    },
+    "done": {
+      "title": "提出しました",
+      "body": "2営業日以内に審査し、結果を {email} にお送りします",
+      "number": "受付番号 {code}",
+      "steps": {
+        "sent": "提出済み",
+        "review": "審査中",
+        "reviewBy": "{date}までに完了予定",
+        "live": "掲載",
+        "liveBody": "承認されるとアプリ一覧に掲載されます"
+      },
+      "mine": "提出したアプリを見る",
+      "again": "もう1つ提出する"
+    },
+    "mine": {
+      "title": "提出したアプリ",
+      "sentOn": "<time></time>に提出",
+      "status": {
+        "pending": "審査中",
+        "accepted": "掲載済み",
+        "duplicate": "すでに掲載",
+        "rejected": "見送り"
+      },
+      "view": "{name} を見る",
+      "reply": "IFAIチームより："
+    },
+    "email": {
+      "receivedSubject": "アプリの提出を受け付けました（{code}）",
+      "receivedHeading": "提出を受け付けました",
+      "receivedBody": "{name} をご提出いただきありがとうございます。通常2営業日以内に審査し、結果をメールでお知らせします。",
+      "acceptedSubject": "{name} をIFAIに掲載しました（{code}）",
+      "acceptedHeading": "{name} を掲載しました",
+      "acceptedBody": "{name} は審査に通り、IFAIのアプリ一覧に掲載されました。ご提出いただきありがとうございました。",
+      "duplicateSubject": "ご提出いただいたアプリについて（{code}）",
+      "duplicateHeading": "すでに掲載されています",
+      "duplicateBody": "{name} はすでにIFAIのアプリ一覧に掲載されているため、今回は重ねて掲載しません。ページの情報が違う場合は、そのページの「情報の誤りを報告」からお知らせください。",
+      "rejectedSubject": "ご提出いただいたアプリについて（{code}）",
+      "rejectedHeading": "今回は掲載を見送りました",
+      "rejectedBody": "{name} を確認しましたが、今回はIFAIへの掲載を見送りました。ご提出いただきありがとうございました。",
+      "button": "IFAIで見る",
+      "reply": "IFAIチームより：",
+      "footer": "受付番号 {code}"
     }
   },
   "daily": {

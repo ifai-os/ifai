@@ -121,8 +121,9 @@
     "allCategories": "全部",
     "found": "{count, plural, other {找到 # 个与「{q}」相关的应用}}",
     "noMatchTitle": "没有找到与「{q}」相关的应用",
-    "noMatchBody": "试试更短的关键词，或者换成英文。",
+    "noMatchBody": "换个关键词试试，或者提交这个应用。",
     "searchEverywhere": "在全部分类里搜索",
+    "submitApp": "提交应用",
     "emptyCategoryTitle": "这个分类下暂时没有应用",
     "emptyCategoryBody": "看看其他分类，或者过几天再来。",
     "allApps": "查看全部应用",
@@ -186,6 +187,11 @@
       "rank": "网站排名",
       "engagement": "站内点击与收藏",
       "mentions": "日报提及"
+    },
+    "submitLink": "提交或更新你的应用",
+    "submitCard": {
+      "title": "做了一个 AI 应用？",
+      "body": "提交后 2 个工作日内审核，通过后会出现在这里。"
     },
     "emptyRisingTitle": "现在没有飙升的应用",
     "emptyRisingBody": "飙升榜只收热度不低于 30、近一周上升的应用。",
@@ -667,6 +673,81 @@
       "contactTooLong": "联系方式最多 {max} 个字。",
       "dailyLimit": "今天已经报了 {limit} 次，明天再来吧。",
       "failed": "没提交成功，请再试一次。"
+    }
+  },
+  "appSubmissions": {
+    "title": "提交应用",
+    "description": "做了一个 AI 应用？把官网发给 IFAI，2 个工作日内审核，结果发邮件告诉你。",
+    "intro": "把 AI 应用的官网和名称发给我们，2 个工作日内审核，通过后会出现在应用列表里，结果发邮件告诉你。已经收录的应用资料不对，到它的页面点「信息有误？」告诉我们。",
+    "form": {
+      "title": "填写应用信息",
+      "signIn": "登录后才能提交，审核结果会发到你的邮箱。",
+      "website": "官网网址",
+      "websiteHint": "应用自己的官网，不是应用商店或导航站里的页面。",
+      "websitePlaceholder": "https://your-app.com",
+      "name": "应用名称",
+      "category": "分类（选填）",
+      "categoryNone": "不确定",
+      "note": "一句话说明它做什么（选填）",
+      "notePlaceholder": "把文档变成演示文稿",
+      "count": "{count} / {max}",
+      "email": "联系邮箱",
+      "emailHint": "只用来通知审核结果。",
+      "send": "提交",
+      "sending": "提交中…",
+      "listed": "<link>{name}</link> 已经收录了。页面上的资料不对的话，在那里点「信息有误？」告诉我们。",
+      "errors": {
+        "website": "请填应用的官网网址，比如 https://your-app.com。",
+        "name": "请填应用名称（不超过 {max} 字）。",
+        "note": "不超过 {max} 字。",
+        "email": "请填一个能收到邮件的地址。",
+        "tooMany": "今天已经提交了 {max} 个，剩下的明天再提交吧。",
+        "signIn": "登录已失效，请重新登录后再提交。",
+        "failed": "没有提交成功，请稍后再试。"
+      }
+    },
+    "done": {
+      "title": "提交成功",
+      "body": "2 个工作日内审核，结果发到 {email}",
+      "number": "编号 {code}",
+      "steps": {
+        "sent": "已提交",
+        "review": "审核中",
+        "reviewBy": "预计 {date}前完成",
+        "live": "上线",
+        "liveBody": "通过后出现在应用列表"
+      },
+      "mine": "查看我的提交",
+      "again": "再提交一个"
+    },
+    "mine": {
+      "title": "我的提交",
+      "sentOn": "<time></time>提交",
+      "status": {
+        "pending": "审核中",
+        "accepted": "已收录",
+        "duplicate": "已经收录过",
+        "rejected": "未收录"
+      },
+      "view": "查看 {name}",
+      "reply": "IFAI 团队的说明："
+    },
+    "email": {
+      "receivedSubject": "已收到你提交的应用（{code}）",
+      "receivedHeading": "已收到你的提交",
+      "receivedBody": "谢谢你提交 {name}。我们一般在 2 个工作日内审核，结果会发邮件告诉你。",
+      "acceptedSubject": "{name} 已收录到 IFAI（{code}）",
+      "acceptedHeading": "{name} 已收录",
+      "acceptedBody": "{name} 通过了审核，已经出现在 IFAI 的应用列表里。谢谢你的提交。",
+      "duplicateSubject": "关于你提交的应用（{code}）",
+      "duplicateHeading": "这个应用已经收录了",
+      "duplicateBody": "{name} 已经在 IFAI 的应用列表里了，这次不重复收录。页面上的资料不对的话，在那里点「信息有误？」告诉我们。",
+      "rejectedSubject": "关于你提交的应用（{code}）",
+      "rejectedHeading": "这次没有收录",
+      "rejectedBody": "我们看过了 {name}，这次没有收录到 IFAI。谢谢你的提交。",
+      "button": "在 IFAI 上查看",
+      "reply": "IFAI 团队的说明：",
+      "footer": "提交编号 {code}"
     }
   },
   "daily": {

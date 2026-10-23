@@ -121,8 +121,9 @@
     "allCategories": "全部",
     "found": "{count, plural, other {找到 # 個與「{q}」相關的應用}}",
     "noMatchTitle": "找不到與「{q}」相關的應用",
-    "noMatchBody": "試試更短的關鍵字，或者換成英文。",
+    "noMatchBody": "換個關鍵字試試，或提交這個應用。",
     "searchEverywhere": "在全部分類裡搜尋",
+    "submitApp": "提交應用",
     "emptyCategoryTitle": "這個分類下暫時沒有應用",
     "emptyCategoryBody": "看看其他分類，或者過幾天再來。",
     "allApps": "檢視全部應用",
@@ -186,6 +187,11 @@
       "rank": "網站排名",
       "engagement": "站內點擊與收藏",
       "mentions": "日報提及"
+    },
+    "submitLink": "提交或更新你的應用",
+    "submitCard": {
+      "title": "做了一個 AI 應用？",
+      "body": "提交後 2 個工作天內審核，通過後會出現在這裡。"
     },
     "emptyRisingTitle": "現在沒有飆升的應用",
     "emptyRisingBody": "飆升榜只收熱度不低於 30、近一週上升的應用。",
@@ -667,6 +673,81 @@
       "contactTooLong": "聯絡方式最多 {max} 個字。",
       "dailyLimit": "今天已經報了 {limit} 次，明天再來吧。",
       "failed": "沒送出成功，請再試一次。"
+    }
+  },
+  "appSubmissions": {
+    "title": "提交應用",
+    "description": "做了一個 AI 應用？把官網發給 IFAI，2 個工作天內審核，結果寄信告訴你。",
+    "intro": "把 AI 應用的官網和名稱發給我們，2 個工作天內審核，通過後會出現在應用列表裡，結果寄信告訴你。已經收錄的應用資料不對，到它的頁面點「資訊有誤？」告訴我們。",
+    "form": {
+      "title": "填寫應用資訊",
+      "signIn": "登入後才能提交，審核結果會寄到你的信箱。",
+      "website": "官網網址",
+      "websiteHint": "應用自己的官網，不是應用程式商店或網站目錄裡的頁面。",
+      "websitePlaceholder": "https://your-app.com",
+      "name": "應用名稱",
+      "category": "分類（選填）",
+      "categoryNone": "不確定",
+      "note": "一句話說明它做什麼（選填）",
+      "notePlaceholder": "把文件變成簡報",
+      "count": "{count} / {max}",
+      "email": "聯絡信箱",
+      "emailHint": "只用來通知審核結果。",
+      "send": "提交",
+      "sending": "提交中…",
+      "listed": "<link>{name}</link> 已經收錄了。頁面上的資料不對的話，在那裡點「資訊有誤？」告訴我們。",
+      "errors": {
+        "website": "請填應用的官網網址，比如 https://your-app.com。",
+        "name": "請填應用名稱（不超過 {max} 字）。",
+        "note": "不超過 {max} 字。",
+        "email": "請填一個能收信的電子郵件地址。",
+        "tooMany": "今天已經提交了 {max} 個，剩下的明天再提交吧。",
+        "signIn": "登入已失效，請重新登入後再提交。",
+        "failed": "沒有提交成功，請稍後再試。"
+      }
+    },
+    "done": {
+      "title": "提交成功",
+      "body": "2 個工作天內審核，結果會寄到 {email}",
+      "number": "編號 {code}",
+      "steps": {
+        "sent": "已提交",
+        "review": "審核中",
+        "reviewBy": "預計 {date}前完成",
+        "live": "上線",
+        "liveBody": "通過後出現在應用列表"
+      },
+      "mine": "檢視我的提交",
+      "again": "再提交一個"
+    },
+    "mine": {
+      "title": "我的提交",
+      "sentOn": "<time></time>提交",
+      "status": {
+        "pending": "審核中",
+        "accepted": "已收錄",
+        "duplicate": "已經收錄過",
+        "rejected": "未收錄"
+      },
+      "view": "檢視 {name}",
+      "reply": "IFAI 團隊的說明："
+    },
+    "email": {
+      "receivedSubject": "已收到你提交的應用（{code}）",
+      "receivedHeading": "已收到你的提交",
+      "receivedBody": "謝謝你提交 {name}。我們一般在 2 個工作天內審核，結果會寄信告訴你。",
+      "acceptedSubject": "{name} 已收錄到 IFAI（{code}）",
+      "acceptedHeading": "{name} 已收錄",
+      "acceptedBody": "{name} 通過了審核，已經出現在 IFAI 的應用列表裡。謝謝你的提交。",
+      "duplicateSubject": "關於你提交的應用（{code}）",
+      "duplicateHeading": "這個應用已經收錄了",
+      "duplicateBody": "{name} 已經在 IFAI 的應用列表裡了，這次不重複收錄。頁面上的資料不對的話，在那裡點「資訊有誤？」告訴我們。",
+      "rejectedSubject": "關於你提交的應用（{code}）",
+      "rejectedHeading": "這次沒有收錄",
+      "rejectedBody": "我們看過了 {name}，這次沒有收錄到 IFAI。謝謝你的提交。",
+      "button": "在 IFAI 上檢視",
+      "reply": "IFAI 團隊的說明：",
+      "footer": "提交編號 {code}"
     }
   },
   "daily": {

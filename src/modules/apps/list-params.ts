@@ -42,3 +42,8 @@ export function listHref({ category, q, page, board = 'top', sort }: ListHref): 
   const search = query.toString()
   return search ? `${path}?${search}` : path
 }
+
+/** 提交应用 (docs/specs/apps.md 5e); `name` fills in the app's name, as a search with no match does. */
+export function submitHref(name?: string): `/${string}` {
+  return name ? `/apps/submit?${new URLSearchParams({ name })}` : '/apps/submit'
+}

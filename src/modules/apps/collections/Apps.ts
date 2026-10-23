@@ -16,6 +16,7 @@ import { draftEndpoints } from '../profile/endpoints'
 import { deleteAppReports } from '../reports/admin'
 import { reportEndpoints } from '../reports/endpoints'
 import { reviewEndpoints } from '../reviews/endpoints'
+import { acceptOnPublish } from '../submissions/admin'
 import { adminMessage, appsAdminGroup, isAdmin, slugField } from './shared'
 
 /** Localized fields whose zh-Hant value is converted from zh-Hans. */
@@ -70,6 +71,7 @@ export const Apps: CollectionConfig = {
         '/modules/apps/admin/heat-status#HeatStatus',
         '/modules/apps/admin/review-reports#ReviewReports',
         '/modules/apps/admin/reports-notice#ReportsNotice',
+        '/modules/apps/admin/submissions-notice#SubmissionsNotice',
         '/modules/apps/admin/import-box#ImportBox',
       ],
     },
@@ -85,7 +87,7 @@ export const Apps: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    afterChange: [syncHantFromHans(hantFields), refreshAppsAfterChange],
+    afterChange: [syncHantFromHans(hantFields), refreshAppsAfterChange, acceptOnPublish],
     beforeDelete: [deleteReports],
     afterDelete: [refreshAppsAfterDelete],
   },

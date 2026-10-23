@@ -19,6 +19,7 @@ import * as migration_20261023_064437_skill_submissions_notify from './20261023_
 import * as migration_20261023_070059_daily_email_subscribers from './20261023_070059_daily_email_subscribers';
 import * as migration_20261023_073510_app_reports from './20261023_073510_app_reports';
 import * as migration_20261023_082050_daily_email_sends from './20261023_082050_daily_email_sends';
+import * as migration_20261023_084701_app_submissions from './20261023_084701_app_submissions';
 
 export const migrations = [
   {
@@ -124,6 +125,11 @@ export const migrations = [
   {
     up: migration_20261023_082050_daily_email_sends.up,
     down: migration_20261023_082050_daily_email_sends.down,
-    name: '20261023_082050_daily_email_sends'
+    name: '20261023_082050_daily_email_sends',
+  },
+  {
+    up: migration_20261023_084701_app_submissions.up,
+    down: migration_20261023_084701_app_submissions.down,
+    name: '20261023_084701_app_submissions'
   },
 ];

@@ -32,6 +32,11 @@ export const auth = betterAuth({
   trustedOrigins: [siteUrl(), ...vercelOrigins],
   database: pool,
 
+  // Every page reads the session once (the account button), so the default limit of 100 requests
+  // per address would soon show readers who share one address (an office, a mobile carrier) as
+  // signed out. Signing in and the email link keep their own, stricter limits.
+  rateLimit: { customRules: { '/get-session': false } },
+
   // Members sign in with Google, GitHub or an email link — no passwords.
   emailAndPassword: { enabled: false },
   socialProviders: {

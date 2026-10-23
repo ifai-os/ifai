@@ -72,6 +72,7 @@ export interface Config {
     'app-categories': AppCategory;
     apps: App;
     'app-reports': AppReport;
+    'app-submissions': AppSubmission;
     sources: Source;
     stories: Story;
     posters: Poster;
@@ -93,6 +94,7 @@ export interface Config {
     'app-categories': AppCategoriesSelect<false> | AppCategoriesSelect<true>;
     apps: AppsSelect<false> | AppsSelect<true>;
     'app-reports': AppReportsSelect<false> | AppReportsSelect<true>;
+    'app-submissions': AppSubmissionsSelect<false> | AppSubmissionsSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     stories: StoriesSelect<false> | StoriesSelect<true>;
     posters: PostersSelect<false> | PostersSelect<true>;
@@ -336,6 +338,62 @@ export interface AppReport {
   reporter: string;
   status: 'open' | 'resolved';
   resolvedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Apps that members submitted. Open one and use Handling on the right: list it (makes a draft) or mark it a duplicate; to turn one down, set Not listed and write the note to the submitter. Each result is emailed to them.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "app-submissions".
+ */
+export interface AppSubmission {
+  id: number;
+  /**
+   * Set automatically.
+   */
+  code?: string | null;
+  /**
+   * Saving a new status emails the submitter. Listed and Already listed need a published app below; Not listed needs the note to the submitter.
+   */
+  status: 'pending' | 'accepted' | 'duplicate' | 'rejected';
+  /**
+   * The draft made from this submission, or the app it repeats. Once a linked draft is published, the submission becomes Listed by itself.
+   */
+  app?: (number | null) | App;
+  /**
+   * The language of the page it was sent from.
+   */
+  locale?: ('en' | 'zh-Hans' | 'zh-Hant' | 'ja' | 'ko') | null;
+  /**
+   * The status of the last email the submitter got. When it differs from the status, saving sends the email again.
+   */
+  notifiedStatus?: ('pending' | 'accepted' | 'duplicate' | 'rejected') | null;
+  notifiedAt?: string | null;
+  name: string;
+  website: string;
+  /**
+   * Taken from the website.
+   */
+  domain?: string | null;
+  /**
+   * The submitter’s pick; optional.
+   */
+  category?: (number | null) | AppCategory;
+  note?: string | null;
+  email: string;
+  /**
+   * Site account id (Better Auth).
+   */
+  submitterId?: string | null;
+  /**
+   * Goes into the result email in your words, e.g. why it was not listed, and shows under「我的提交」. Write it in the email language.
+   */
+  reply?: string | null;
+  /**
+   * Internal. Not shown to the submitter.
+   */
+  adminNote?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -920,6 +978,10 @@ export interface PayloadLockedDocument {
         value: number | AppReport;
       } | null)
     | ({
+        relationTo: 'app-submissions';
+        value: number | AppSubmission;
+      } | null)
+    | ({
         relationTo: 'sources';
         value: number | Source;
       } | null)
@@ -1130,6 +1192,29 @@ export interface AppReportsSelect<T extends boolean = true> {
   reporter?: T;
   status?: T;
   resolvedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "app-submissions_select".
+ */
+export interface AppSubmissionsSelect<T extends boolean = true> {
+  code?: T;
+  status?: T;
+  app?: T;
+  locale?: T;
+  notifiedStatus?: T;
+  notifiedAt?: T;
+  name?: T;
+  website?: T;
+  domain?: T;
+  category?: T;
+  note?: T;
+  email?: T;
+  submitterId?: T;
+  reply?: T;
+  adminNote?: T;
   updatedAt?: T;
   createdAt?: T;
 }

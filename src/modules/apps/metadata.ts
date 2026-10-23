@@ -6,7 +6,7 @@ import { alternatesFor } from '@/lib/seo'
 
 import type { Board } from './boards'
 import { getApp, type CategoryItem } from './data'
-import { listHref } from './list-params'
+import { listHref, submitHref } from './list-params'
 
 const descriptionLength = 160
 
@@ -52,4 +52,10 @@ export async function appMetadata(slug: string, locale: Locale): Promise<Metadat
     description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
     alternates: alternatesFor(`/apps/${app.slug}`, locale),
   }
+}
+
+/** 提交应用 (docs/specs/apps.md 5e): the form's prefilled name stays out of the canonical address. */
+export async function submitMetadata(locale: Locale): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: 'appSubmissions' })
+  return { title: t('title'), description: t('description'), alternates: alternatesFor(submitHref(), locale) }
 }
