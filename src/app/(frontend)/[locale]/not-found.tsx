@@ -1,10 +1,16 @@
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
+import { defaultLocale, isLocale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
+import { SearchBox } from '@/modules/search/components/search-box'
 
-/** 404 from the「空状态与加载状态」board: the big number is decoration, the two links are the most common ways out. */
+/**
+ * 404 from the「空状态与加载状态」board: the big number is decoration; the search box and the two
+ * links are the most common ways out.
+ */
 export default function NotFound() {
   const t = useTranslations('notFound')
+  const locale = useLocale()
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-read flex-col items-center gap-3.5 px-4 pt-20 pb-24 text-center">
@@ -15,6 +21,7 @@ export default function NotFound() {
         <h1 className="text-title font-semibold">{t('title')}</h1>
         <p className="text-meta text-ink-4">{t('body')}</p>
       </div>
+      <SearchBox locale={isLocale(locale) ? locale : defaultLocale} className="max-w-75" />
       <div className="flex flex-wrap justify-center gap-4 text-ui font-medium">
         <Link href="/" className="flex min-h-11 items-center text-link">
           {t('back')}

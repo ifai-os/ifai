@@ -21,7 +21,8 @@
     "signIn": "로그인",
     "account": "계정 메뉴",
     "saves": "저장한 항목",
-    "signOut": "로그아웃"
+    "signOut": "로그아웃",
+    "search": "검색"
   },
   "home": {
     "todayAI": "오늘의 AI",
@@ -90,6 +91,37 @@
     "body": "링크가 잘못되었거나 페이지가 이동했을 수 있어요.",
     "back": "홈으로 돌아가기",
     "daily": "오늘의 데일리 보기"
+  },
+  "search": {
+    "title": "검색",
+    "queryTitle": "검색: {q}",
+    "label": "IFAI 검색",
+    "placeholder": "데일리, 앱, Skills 검색",
+    "submit": "검색",
+    "clear": "검색어 지우기",
+    "intro": "데일리 뉴스, 앱, Skills를 한 번에 검색해요.",
+    "typesLabel": "결과 종류",
+    "tabs": {
+      "all": "전체",
+      "daily": "데일리",
+      "apps": "앱",
+      "skills": "Skills"
+    },
+    "kind": {
+      "daily": "데일리",
+      "apps": "앱",
+      "skills": "Skill"
+    },
+    "found": "‘{q}’ 검색 결과 {count}개",
+    "seeAll": "{count}개 모두 보기",
+    "noMatchTitle": "‘{q}’ 검색 결과가 없어요",
+    "noMatchBody": "더 짧은 검색어나 영어로도 검색해 보세요.",
+    "noMatchKind": "{kind}에는 ‘{q}’ 검색 결과가 없어요. 다른 탭을 확인해 보세요.",
+    "popular": "인기",
+    "pages": "페이지",
+    "previous": "이전",
+    "next": "다음",
+    "pageOf": "{page} / {pages} 페이지"
   },
   "states": {
     "loadingList": "목록을 불러오는 중",

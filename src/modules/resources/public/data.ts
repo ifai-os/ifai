@@ -5,6 +5,7 @@ import { cache } from 'react'
 
 import type { Locale } from '@/i18n/config'
 import { inAnyLanguage, inReaderLanguage, type InLanguage, type Localized } from '@/lib/i18n/localized'
+import { namesFirst } from '@/modules/search/rank'
 import type { AgentHost, Skill, SkillVersion } from '@/payload-types'
 
 import { skillCategories, type SkillCategory } from '../categories'
@@ -221,7 +222,12 @@ const loadCatalog = unstable_cache(
 
 type Catalog = Awaited<ReturnType<typeof loadCatalog>>
 
-type Entry = SkillCandidate & { featured: boolean; item: (locale: Locale) => SkillListItem }
+type Entry = SkillCandidate & {
+  featured: boolean
+  /** Its slug and its name in every language, for the site search's ordering. */
+  names: string[]
+  item: (locale: Locale) => SkillListItem
+}
 
 const isCheckKey = (key: string): key is CheckKey => (CHECK_KEYS as string[]).includes(key)
 
@@ -295,6 +301,7 @@ function entries(catalog: Catalog): Entry[] {
         needsApiKey: Boolean(skill.needsApiKey),
         certified: Boolean(skill.certified),
         featured: Boolean(skill.featured),
+        names: [skill.slug, ...Object.values(skill.name ?? {}).filter((name) => typeof name === 'string')],
         installs: skill.stats?.installs ?? 0,
         installs7d: skill.stats?.installs7d ?? 0,
         installsPrev7d: skill.stats?.installsPrev7d ?? 0,
@@ -322,6 +329,27 @@ export async function listSkills(params: Omit<SkillListParams, 'page'> & { page:
     page: params.page,
     pages: Math.ceil(ordered.length / skillsPerPage),
   }
+}
+
+/**
+ * The site search's Skills (docs/specs/search.md): the list's own search, the ones named exactly
+ * so first, then in the list's default order; `offset` and `limit` pick the page shown.
+ */
+export async function searchSkills({
+  locale,
+  q,
+  offset,
+  limit,
+}: {
+  locale: Locale
+  q: string
+  offset: number
+  limit: number
+}): Promise<{ skills: SkillListItem[]; total: number }> {
+  const { entries: all } = await getEntries()
+  const filter = { category: null, q, tag: '', author: '', noKey: false, certified: false }
+  const ordered = namesFirst(orderSkills(filterSkills(all, filter), 'default'), q, (entry) => entry.names)
+  return { skills: ordered.slice(offset, offset + limit).map((entry) => entry.item(locale)), total: ordered.length }
 }
 
 /** The list's header and side column: counts, 本周精选, 本周飙升, 安装榜 and 热门标签. */

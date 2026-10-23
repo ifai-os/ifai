@@ -21,7 +21,8 @@
     "signIn": "Sign in",
     "account": "Account menu",
     "saves": "Saved",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "search": "Search"
   },
   "home": {
     "todayAI": "AI today",
@@ -90,6 +91,37 @@
     "body": "The link may be broken, or the page may have moved.",
     "back": "Back to home",
     "daily": "See today's Daily"
+  },
+  "search": {
+    "title": "Search",
+    "queryTitle": "Search: {q}",
+    "label": "Search IFAI",
+    "placeholder": "Search the Daily, apps and Skills",
+    "submit": "Search",
+    "clear": "Clear search",
+    "intro": "News from the Daily, apps and Skills, all in one search.",
+    "typesLabel": "Result types",
+    "tabs": {
+      "all": "All",
+      "daily": "Daily",
+      "apps": "Apps",
+      "skills": "Skills"
+    },
+    "kind": {
+      "daily": "Daily",
+      "apps": "App",
+      "skills": "Skill"
+    },
+    "found": "{count, plural, one {# result} other {# results}} for “{q}”",
+    "seeAll": "See all {count}",
+    "noMatchTitle": "Nothing found for “{q}”",
+    "noMatchBody": "Try a shorter keyword, or search in English.",
+    "noMatchKind": "No {kind} results for “{q}”. See what the other tabs found.",
+    "popular": "Popular",
+    "pages": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}"
   },
   "states": {
     "loadingList": "Loading list",

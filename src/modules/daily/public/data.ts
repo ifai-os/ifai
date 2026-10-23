@@ -263,6 +263,36 @@ export async function listStories({ locale, ...args }: ListArgs & { locale: Loca
   return { stories: result.docs.map((doc) => toItem(doc, locale)), total: result.total, page: args.page, pages: result.pages }
 }
 
+/**
+ * The site search's stories (docs/specs/search.md): published stories whose title or summary
+ * contains the search in any language, newest first. Not cached: every search is its own query.
+ */
+export async function searchStories({
+  locale,
+  q,
+  page,
+  limit,
+}: {
+  locale: Locale
+  q: string
+  page: number
+  limit: number
+}): Promise<StoryPage> {
+  const result = await (await payload()).find({
+    collection: 'stories',
+    where: { and: [published, { or: [{ title: { like: q } }, { summary: { like: q } }] }] },
+    sort: '-publishedAt',
+    page,
+    limit,
+    locale: 'all',
+    depth: 0,
+    select,
+    overrideAccess: false,
+  })
+  const docs = result.docs as unknown as RawStory[]
+  return { stories: docs.map((doc) => toItem(doc, locale)), total: result.totalDocs, page, pages: result.totalPages }
+}
+
 /** The newest published stories, for the home page and the feeds. */
 export async function latestStories(locale: Locale, limit: number): Promise<StoryItem[]> {
   return (await findLatest(limit)).map((doc) => toItem(doc, locale))
