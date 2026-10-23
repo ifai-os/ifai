@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-23（全站搜索；线上配置进展；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
+更新于 2026-10-23（Vercel 变量标 Sensitive 的影响；全站搜索；线上配置进展；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
 
 ## 现在到哪了
 
@@ -135,7 +135,7 @@
 - [ ] 删除临时的 `bootstrap` 分支和两个「Temporary bootstrap」草稿 release。
 - [ ] 按 `docs/setup.md` 开账号、配 Vercel。
 - [x] 在 GitHub 仓库 Settings → Secrets and variables → Actions 填 `VERCEL_TOKEN`、`NEON_API_KEY`、`NEON_PROJECT_ID`，见 setup.md 第 3 步；Vercel 的环境变量不要勾 Sensitive。2026-10-23 已填（Neon 新建了项目 `ifai`，us-east-1；本机开发用的 `dev` 分支还没建，见 setup.md 第 2 步第 2 条），PR 会部署预览环境。`ifai.io` 接到 Vercel 之前，Resend 回调和第三方登录的回调都收不到。
-- [x] Vercel 项目 → Settings → Environment Variables，给 **Preview** 填 `PAYLOAD_SECRET`、`BETTER_AUTH_SECRET`（各一个和生产不同的随机字符串）和 `NEXT_PUBLIC_SITE_PHASE` = `1`，其余按 setup.md 第 3 步第 4 条的表。2026-10-23 已填，PR #43、#46 的「Deploy to preview」都通过了。
+- [x] Vercel 项目 → Settings → Environment Variables，给 **Preview** 填 `PAYLOAD_SECRET`、`BETTER_AUTH_SECRET`（各一个和生产不同的随机字符串）和 `NEXT_PUBLIC_SITE_PHASE` = `1`，其余按 setup.md 第 3 步第 4 条的表。2026-10-23 已填，PR #43、#46 的「Deploy to preview」都通过了。这两个密钥标了 Sensitive，不用改：构建日志里 Better Auth 的密钥警告说的是 `vercel pull` 写的占位符，不是真值，见 setup.md 第 3 步第 6 条。
 - [x] 预览环境开着 Vercel 的访问保护，冒烟测试要靠 GitHub secret `VERCEL_AUTOMATION_BYPASS_SECRET` 才进得去（setup.md 第 3 步第 5 条；没有它时「Preview smoke tests」跳过）。2026-10-23 已加；在这之前跑的 PR，要在 Actions 里把那次 Deploy 整个重跑（Re-run all jobs），冒烟测试才会跑。
 - [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，装 Vercel 集成），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。先在 Inngest 控制台跑通 `ifai/health.check`。2026-10-23：Inngest 的 Vercel 集成已装。
 - [ ] 邮件订阅：开好 `news@ifai.io` 邮箱，按 setup.md 第 7 步在 Resend 验证 `ifai.io`（SPF、DKIM，再加一条 DMARC `p=none`），Vercel 生产和预览都填 `DAILY_EMAIL_FROM` = `news@ifai.io`；在 Resend 加回调端点，把签名密钥填到生产的 `RESEND_WEBHOOK_SECRET`（第 7 步第 6 条）。2026-10-23：Resend 已验证 `ifai.io`（DNS 记录加在 Cloudflare，`ifai.io` 原有的飞书邮箱 MX 记录没动；打开和点击追踪是关着的，保持这样），Vercel 生产和预览都已填 `DAILY_EMAIL_FROM` = `news@ifai.io`；还差回调端点和 `RESEND_WEBHOOK_SECRET`，要等生产部署打开、`ifai.io` 接到 Vercel 之后。生产的 `DAILY_EMAIL_ENABLED` 等预览验过再打开。免费版每天 100 封、和登录邮件共用，订阅者到 80 人左右时换 Pro（后台订阅者列表上方会提示）。
