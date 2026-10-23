@@ -89,3 +89,6 @@ export function versionHref(slug: string, version: string): `/${string}` {
 export function fileHref(slug: string, version: string, path: string): `/${string}` {
   return `/resources/skills/${slug}/v/${version}/files/${path.split('/').map(encodeURIComponent).join('/')}`
 }
+
+/** The install guide; `#verify` is its fingerprint section. */
+export const guideHref = '/resources/guide'

@@ -30,6 +30,17 @@ test('unknown Skills, versions and pages answer 404', async ({ page, request }) 
   }
 })
 
+test('the install guide gives the steps, the directories and how to check a download', async ({ page }) => {
+  const response = await page.goto('/en/resources/guide')
+  expect(response?.status()).toBe(200)
+  await expect(page.getByRole('heading', { level: 1, name: en.resources.guide.title })).toBeVisible()
+  const hosts = page.getByRole('region', { name: en.resources.guide.hosts.title })
+  await expect(hosts.getByRole('heading', { level: 3, name: 'Claude Code' })).toBeVisible()
+  await expect(hosts.getByText('~/.claude/skills/')).toBeVisible()
+  const verify = page.getByRole('region', { name: en.resources.guide.verify.title })
+  await expect(verify.getByText(`shasum -a 256 ${en.resources.guide.verify.file}`)).toBeVisible()
+})
+
 // Needs the sample Skills from scripts/seed-skills.ts: CI adds them; preview databases don't have them.
 test.describe('with the sample Skills', () => {
   test.skip(!process.env.E2E_SAMPLE_SKILLS, 'Run `pnpm payload run scripts/seed-skills.ts` and set E2E_SAMPLE_SKILLS=1.')
@@ -150,6 +161,21 @@ test.describe('with the sample Skills', () => {
       headers: { 'sec-fetch-site': 'cross-site' },
     })
     expect(fromElsewhere.status()).toBe(403)
+  })
+
+  test('the guide shows install notes in the reader’s language, and the pages link to it', async ({ page }) => {
+    const zh = load('zh-hans')
+    await page.goto('/zh-hans/resources/guide')
+    await expect(page.getByText('示例说明：放好文件夹后，新开一个会话。')).toHaveAttribute('lang', 'zh-Hans')
+    // Japanese has no note of its own: the English one shows, marked as English.
+    await page.goto('/ja/resources/guide')
+    await expect(page.getByText('Sample note: start a new session after adding the folder.')).toHaveAttribute('lang', 'en')
+
+    await page.goto('/zh-hans/resources')
+    await page.getByRole('link', { name: `${zh.resources.steps.guide} ›` }).click()
+    await expect(page).toHaveURL(/\/zh-hans\/resources\/guide$/)
+    await page.goto('/en/resources/skills/sample-release-notes')
+    await expect(page.getByRole('link', { name: `${en.resources.fingerprint.verify} ›` })).toHaveAttribute('href', '/en/resources/guide#verify')
   })
 
   test('the home page shows the newest Skills', async ({ page }) => {

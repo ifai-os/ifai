@@ -5,7 +5,7 @@ import type { Locale } from '@/i18n/config'
 import { alternatesFor } from '@/lib/seo'
 
 import { getSkill } from './data'
-import { isFiltered, skillHref, skillsHref, type SkillListParams } from './list-params'
+import { guideHref, isFiltered, skillHref, skillsHref, type SkillListParams } from './list-params'
 
 const descriptionLength = 160
 
@@ -44,4 +44,10 @@ export async function skillMetadata(slug: string, locale: Locale, version?: stri
   const description = skill.tagline ? Array.from(skill.tagline.value).slice(0, descriptionLength).join('') : undefined
   if (version) return { title, description, robots: { index: false, follow: true } }
   return { title, description, alternates: alternatesFor(skillHref(skill.slug), locale) }
+}
+
+/** The install guide: one page per language, in search engines. */
+export async function guideMetadata(locale: Locale): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: 'resources' })
+  return { title: t('guide.title'), description: t('guide.description'), alternates: alternatesFor(guideHref, locale) }
 }
