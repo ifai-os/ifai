@@ -62,10 +62,14 @@ export function textLength(value: string): number {
   return [...value].length
 }
 
+/** One line of text: invisible characters go, runs of white space (line breaks too) fold to one space. */
+export function cleanLine(value: string): string {
+  return value.replace(invisible, '').replace(/\s+/gu, ' ').trim()
+}
+
 /** A member's name as reviews show it: one line, at most `maxName` characters; '' when they have none. */
 export function cleanName(value: string): string {
-  const line = value.replace(invisible, '').replace(/\s+/gu, ' ').trim()
-  return [...line].slice(0, reviewRules.maxName).join('')
+  return [...cleanLine(value)].slice(0, reviewRules.maxName).join('')
 }
 
 export type ReviewInput = { app: number; rating: number; body: string; locale: Locale }

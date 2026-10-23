@@ -143,6 +143,7 @@
     "copied": "リンクをコピーしました",
     "detailTitle": "{name}：{tagline}",
     "screenshotAlt": "{name} 公式サイトの画像",
+    "imageUpdated": "画像の更新日 <time></time>",
     "tags": "タグ",
     "about": "どんなアプリか",
     "features": "主な機能",
@@ -632,6 +633,41 @@
     },
     "signInTitle": "ログインしてレビューを書く",
     "afterSignIn": "ログインするとこのページに戻り、続けてレビューを書けます。"
+  },
+  "appReports": {
+    "link": "情報の誤りを報告",
+    "linkLong": "情報に誤りがあればお知らせください",
+    "title": "{name} の情報に誤りがありますか？",
+    "intro": "どこが違うか教えてください。サイト運営者が確認して直します。",
+    "kindLegend": "どんな問題ですか？",
+    "kinds": {
+      "wrong-info": "情報の誤り",
+      "shut-down": "サービス終了",
+      "other": "その他"
+    },
+    "kindHints": {
+      "wrong-info": "紹介、料金、対応環境などが違う",
+      "shut-down": "サイトが開かない、またはサービスが終了した"
+    },
+    "bodyLabel": "詳しい内容",
+    "bodyOptional": "詳しい内容（任意）",
+    "bodyPlaceholder": "どこが違い、正しくは何ですか？出典のリンクがあると助かります。",
+    "bodyPlaceholderShutDown": "例：公式サイトが開かない、サービス終了のお知らせが出ている、など。",
+    "charCount": "{count} / {max}",
+    "contactLabel": "連絡先（任意）",
+    "contactHint": "メールアドレスなど。確認したいことがあるときだけ使い、サイトには表示しません。",
+    "send": "送信する",
+    "sending": "送信中…",
+    "cancel": "キャンセル",
+    "done": "受け付けました。ありがとうございます。サイト運営者が確認して直します。",
+    "errors": {
+      "kind": "問題の種類を選んでください。",
+      "body": "どこが違うか書いてください。",
+      "tooLong": "{max}文字以内で書いてください。",
+      "contactTooLong": "連絡先は{max}文字以内で書いてください。",
+      "dailyLimit": "今日はすでに{limit}件報告しました。また明日どうぞ。",
+      "failed": "送信できませんでした。もう一度お試しください。"
+    }
   },
   "daily": {
     "title": "デイリー",
