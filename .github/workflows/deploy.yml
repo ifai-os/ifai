@@ -36,6 +36,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       ready: ${{ steps.check.outputs.ready }}
+      smoke: ${{ steps.check.outputs.smoke }}
     steps:
       - id: check
         env:
@@ -44,7 +45,16 @@ jobs:
           NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
           IS_PR: ${{ github.event_name == 'pull_request' }}
           PRODUCTION_DEPLOY: ${{ vars.PRODUCTION_DEPLOY }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          PREVIEW_UNPROTECTED: ${{ vars.PREVIEW_UNPROTECTED }}
         run: |
+          # Previews sit behind Vercel Deployment Protection, so the smoke tests need the bypass secret,
+          # unless the repository variable PREVIEW_UNPROTECTED says protection is off.
+          if [ -n "$BYPASS" ] || [ "$PREVIEW_UNPROTECTED" = true ]; then
+            echo "smoke=true" >> "$GITHUB_OUTPUT"
+          elif [ "$IS_PR" = true ]; then
+            echo "::notice::Skipping preview smoke tests: VERCEL_AUTOMATION_BYPASS_SECRET is not set (see docs/setup.md step 3)."
+          fi
           # Production stays off until the repository variable PRODUCTION_DEPLOY is set to true.
           if [ "$IS_PR" != true ] && [ "$PRODUCTION_DEPLOY" != true ]; then
             echo "::notice::Not deploying to production: repository variable PRODUCTION_DEPLOY is not true (see docs/setup.md step 3)."
@@ -141,8 +151,8 @@ jobs:
   # The same Playwright smoke tests as CI, against the preview that was just deployed.
   smoke:
     name: Preview smoke tests
-    needs: deploy
-    if: github.event_name == 'pull_request'
+    needs: [config, deploy]
+    if: github.event_name == 'pull_request' && needs.config.outputs.smoke == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
