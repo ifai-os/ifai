@@ -27,20 +27,37 @@ pnpm dev                 # http://localhost:3000
 3. 在 Connect 面板选分支，复制**带连接池**的连接串（主机名里有 `-pooler`）：
    - `dev` 分支 → 本地 `.env` 的 `DATABASE_URI`
    - `main` 分支 → Vercel Production 环境的 `DATABASE_URI`
-4. pgvector 不用手动开：迁移 `model_receipts_pgvector` 会执行 `CREATE EXTENSION IF NOT EXISTS vector`（Neon 支持）。
+4. 预览库不用手动建：每个 PR 由 GitHub Actions 从 `main` 分支复制出 `preview/pr-<编号>`，PR 关闭后删除（见第 3 步）。免费版每个项目最多 10 个分支，同时开着的 PR 别太多；关掉的 PR 如果分支没删掉（例如那次运行失败了），在 Neon 控制台 → Branches 里手动删。
+5. pgvector 不用手动开：迁移 `model_receipts_pgvector` 会执行 `CREATE EXTENSION IF NOT EXISTS vector`（Neon 支持）。
 
 ## 3. Vercel（部署与预览环境）
 
-1. 在 Vercel 导入 GitHub 仓库 `ifai-os/ifai`（仓库是私有的，需要允许 Vercel 的 GitHub App 访问 `ifai-os` 组织下的这个仓库）。
-2. 框架会识别为 Next.js。构建命令已写在 `vercel.json`：`pnpm run ci`，即先执行数据库迁移、再构建。所以每次部署都会自动把迁移应用到对应环境的数据库。
-3. 添加 Neon 集成：Vercel 项目 → Integrations → Neon，连接到上面的 Neon 项目，并打开「为每个预览部署创建数据库分支」。之后每个 PR 的预览环境都有自己的数据库分支，变量名是 `DATABASE_URL`，代码会自动读取。
-4. 环境变量（Settings → Environment Variables）：
+部署不走 Vercel 的 Git 集成：Vercel Hobby 不能导入私有组织下的仓库，所以由 GitHub Actions（`.github/workflows/deploy.yml`）用 Vercel CLI 构建并部署。
+
+- 推送到 `main` → 部署生产环境。
+- 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
+- PR 关闭或合并 → 删掉它的 Neon 分支。
+
+1. Vercel 项目已经建好：团队 `ifai1` 下的 `ifai`，没有连接 Git。不要再导入仓库，也不要在 Vercel 里装 Neon 集成（预览库由 GitHub Actions 建，见下面第 3 条）。
+2. 构建命令写在 `vercel.json`：`pnpm run ci`，即先执行数据库迁移、再构建。构建在 GitHub Actions 的机器上跑，所以迁移也是从那里连 Neon 执行的：生产连 `main` 分支，预览连自己的 `preview/pr-<编号>` 分支，不会碰生产库。
+3. 在 GitHub 仓库 Settings → Secrets and variables → Actions → **Secrets** 里添加：
+
+| Secret | 从哪里拿 |
+|---|---|
+| `VERCEL_TOKEN` | Vercel 右上头像 → Account Settings → Tokens → Create，Scope 选团队 `ifai1`。 |
+| `NEON_API_KEY` | Neon 控制台 → Account settings → API keys → Create new API key（也可以建只限这个项目的 Project API key）。 |
+| `NEON_PROJECT_ID` | Neon 项目 → Settings → General 里的 Project ID（形如 `cool-name-123456`）。 |
+| `VERCEL_AUTOMATION_BYPASS_SECRET` | 见第 5 条，预览开着访问保护时才需要。 |
+
+   Vercel 的团队 ID 和项目 ID 已经写在 workflow 里（不是密钥）；换项目时在同一页的 **Variables** 里加 `VERCEL_ORG_ID`、`VERCEL_PROJECT_ID` 覆盖。没填 `VERCEL_TOKEN`（PR 还要两个 Neon 的）之前，Deploy 会提示缺哪个 secret 并跳过，不会报错。
+
+4. 环境变量（Vercel 项目 → Settings → Environment Variables）：
 
 | 变量 | Production | Preview | 说明 |
 |---|---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://<域名>` | 不填 | 预览环境自动使用 Vercel 分配的地址 |
 | `NEXT_PUBLIC_SITE_PHASE` | `1` | `1` | 想在预览里看后面的模块时改成 2 或 3 |
-| `DATABASE_URI` | Neon `main` 分支 | **不填** | 预览用 Neon 集成注入的 `DATABASE_URL`；在这里填了会覆盖它，导致预览连到生产库 |
+| `DATABASE_URI` | Neon `main` 分支 | **不填** | 预览的连接串由 GitHub Actions 按 PR 建的 Neon 分支传入 |
 | `PAYLOAD_SECRET` | 随机字符串 | 另一个随机字符串 | |
 | `BETTER_AUTH_SECRET` | 随机字符串 | 另一个随机字符串 | |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | 见第 5 步 | 不填 | 预览地址不固定，第三方登录只在生产和本地可用 |
@@ -60,6 +77,8 @@ pnpm dev                 # http://localhost:3000
 | `APPS_NEW_SINCE` | 首批应用导入完后填上线那天，如 `2026-11-01` | 同生产 | 上海日期。这天之前收录的应用不进「新上架」榜和「本周新上架」，免得首批导入占满一个月；不填不限 |
 
 5. 预览环境默认开着 Vercel 的访问保护。要让 GitHub Actions 对预览环境跑冒烟测试：Settings → Deployment Protection → Protection Bypass for Automation 生成一个密钥，把它加到 GitHub 仓库的 Settings → Secrets → Actions，名字叫 `VERCEL_AUTOMATION_BYPASS_SECRET`。
+6. 这些环境变量**不要勾 Sensitive**。构建在 GitHub Actions 上跑，要用 `vercel pull` 把变量取下来；标成 Sensitive 的变量取下来是空的，构建时的迁移会连不上数据库。改了环境变量要重新部署才生效：生产在 Actions → Deploy 里重跑 `main` 最近一次，预览往 PR 推一个提交或重跑它的 Deploy。Vercel 控制台的 Redeploy 也可以。
+7. 正式域名：`ifai.io` 现在在 Cloudflare 上指向别的服务。接到 Vercel 之前（Vercel 项目 → Settings → Domains 添加，再按提示改 Cloudflare 的 DNS），生产只能用 Vercel 分配的 `*.vercel.app` 地址访问，依赖正式域名的回调都收不到：Resend 的退信和投诉回调（第 7 步）、Google 和 GitHub 登录的回调地址（第 5、6 步）。
 
 ## 4. Cloudflare R2（图片与文件）
 
@@ -144,7 +163,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 
 ## 10. 第一次上线检查
 
-1. 推送到 `main` → Vercel 构建（日志里能看到迁移执行）。
+1. 推送到 `main` → GitHub Actions 的 Deploy 运行（Build 步骤的日志里能看到迁移执行），完成后摘要里有部署地址。
 2. 打开 `https://<域名>/admin` 创建管理员。只给自己建账号，用强密码。
 3. 依次打开 `/en`、`/zh-hans`、`/zh-hant`、`/ja`、`/ko`，确认导航和语言切换正常。
 4. 用 Google、GitHub、邮箱各登录一次。
