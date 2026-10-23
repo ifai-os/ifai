@@ -87,6 +87,8 @@ test('Payload admin is reachable', async ({ page }) => {
 test('model usage is for signed-in admins only', async ({ page }) => {
   test.skip(!process.env.E2E_ADMIN, 'Needs a database; set E2E_ADMIN=1 where one is available.')
   await page.goto('/admin/model-usage')
-  await expect(page).toHaveURL(/\/admin\/login\?redirect=%2Fmodel-usage/)
+  // The login page, which sends on to creating the first admin while there is none (CI, a new preview database).
+  await expect(page).toHaveURL(/\/admin\/(login\?redirect=%2Fmodel-usage|create-first-user)/)
   await expect(page.locator('form')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Model usage|模型用量/ })).toHaveCount(0)
 })
