@@ -149,8 +149,11 @@ export async function importSkillVersion(
 
   // A Skill with no description yet gets one drafted from this version (docs/specs/resources.md「后台」1);
   // later versions leave the reviewed text alone, the owner re-drafts from the version page.
-  const draftRequested = !skill.tagline?.trim() && !skill.capabilities?.length
-  if (draftRequested) await requestDescribe(payload, created.id, { mode: 'fill', now: deps.now?.() })
+  // Asking for it is a plain write; should even that fail, the import still stands and the owner drafts by hand.
+  const draftRequested =
+    !skill.tagline?.trim() && !skill.capabilities?.length
+      ? await requestDescribe(payload, created.id, { mode: 'fill', now: deps.now?.() }).then(Boolean, () => false)
+      : false
 
   return { outcome: 'created', versionId: created.id, version, commit, scanStatus: created.scanStatus, draftRequested }
 }

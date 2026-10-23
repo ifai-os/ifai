@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createAi } from '@/lib/ai/client'
 import { createMemoryReceiptStore } from '@/lib/ai/memory-store'
-import { checkDeclarations, descriptionText, extractDeclarations, fitDescription, hostOf, writeDescription } from '@/modules/resources/describe/draft'
+import { checkDeclarations, descriptionText, extractDeclarations, fitDescription, hostOf, textData, writeDescription } from '@/modules/resources/describe/draft'
 import { describeMaterial, materialText, ThinMaterialError, type Material } from '@/modules/resources/describe/material'
 import { infoOf } from '@/modules/resources/describe/state'
 import { describeFactsPrompt, describeWritePrompt, type Declarations, type WrittenDescription } from '@/modules/resources/prompts/describe'
@@ -103,6 +103,33 @@ describe('fitting the draft to the collection', () => {
     expect(fitted.example).toBe('Extract the tables from report.pdf')
     expect(fitted.notes).toBe('Needs python3.')
     expect(descriptionText(fitted)).toContain('Runs scripts/extract.py')
+  })
+})
+
+describe('what a draft writes on the Skill', () => {
+  const fitted = fitDescription({
+    name: 'PDF ツール',
+    tagline: 'PDF から文字を取り出す',
+    capabilities: [{ title: '文字抽出', detail: 'pdftotext で読む。' }],
+    example: '',
+    workflow: [],
+    notes: '',
+  })
+
+  it('fills only empty fields in fill mode, replaces the text in rewrite mode, and never replaces the display name', () => {
+    const owner = { name: 'Owner name', tagline: 'Owner tagline', capabilities: [], example: 'Owner example' }
+    expect(textData(fitted, owner, 'fill', 'PDF Tools')).toEqual({ capabilities: [{ title: '文字抽出', detail: 'pdftotext で読む。' }] })
+    expect(textData(fitted, owner, 'rewrite', 'PDF Tools')).toEqual({
+      tagline: 'PDF から文字を取り出す',
+      capabilities: [{ title: '文字抽出', detail: 'pdftotext で読む。' }],
+    })
+  })
+
+  it('gives a language without a display name one, since the field is required', () => {
+    expect(textData(fitted, {}, 'fill', 'PDF Tools').name).toBe('PDF ツール')
+    expect(textData({ ...fitted, name: '' }, {}, 'fill', 'PDF Tools').name).toBe('PDF Tools')
+    const nothing = fitDescription({ name: '', tagline: '', capabilities: [], example: '', workflow: [], notes: '' })
+    expect(textData(nothing, {}, 'fill', 'PDF Tools')).toEqual({})
   })
 })
 

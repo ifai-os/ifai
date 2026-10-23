@@ -122,7 +122,10 @@ export async function gatherMaterial(versionId: number, deps: DescribeDeps = {})
   try {
     skill = await payload.findByID({ collection: 'skills', id: skillIdOf(version), depth: 0 })
   } catch {
-    return { status: 'skipped', reason: 'the version has no Skill' }
+    // Without a Skill there is nothing to write to; stop the sweep from queueing it again.
+    const reason: DraftReason = { code: 'error', detail: 'The version has no Skill' }
+    await markFailed(versionId, reason, deps)
+    return { status: 'failed', reason }
   }
   try {
     return { status: 'ready', material: describeMaterial(version, skill) }
@@ -297,16 +300,22 @@ export type SaveOutcome =
 
 const empty = (value: unknown) => (Array.isArray(value) ? value.length === 0 : !String(value ?? '').trim())
 
-/** The text fields one language's draft writes on the Skill, by mode: all of them, or only the empty ones. */
-function textData(fitted: FittedDescription, current: Skill, mode: DraftMode): Partial<Skill> {
+/**
+ * The text fields one language's draft writes on the Skill, by mode: all of them, or only the
+ * empty ones. The display name is only ever filled in, never replaced. It is required in every
+ * language, so text written to a language without a name brings one: the draft's, else `fallbackName`.
+ */
+export function textData(fitted: FittedDescription, current: Partial<Skill>, mode: DraftMode, fallbackName: string): Partial<Skill> {
   const data: Partial<Skill> = {}
   const text = { tagline: fitted.tagline, capabilities: fitted.capabilities, example: fitted.example, workflow: fitted.workflow, notes: fitted.notes }
   for (const [key, value] of Object.entries(text) as [keyof typeof text, (typeof text)[keyof typeof text]][]) {
     if (empty(value)) continue
     if (mode === 'rewrite' || empty(current[key])) Object.assign(data, { [key]: value })
   }
-  // The display name is only ever filled in, never replaced: the owner chose it, or English carries it.
-  if (fitted.name && empty(current.name)) data.name = fitted.name
+  if (empty(current.name)) {
+    const name = fitted.name || (Object.keys(data).length ? fallbackName : '')
+    if (name) data.name = name
+  }
   return data
 }
 
@@ -344,11 +353,13 @@ export async function saveDescription(
 
   // zh-Hans first so its hook writes zh-Hant. Each language is read without fallback, so an
   // English text never counts as a filled-in Japanese one.
+  const english = await payload.findByID({ collection: 'skills', id: skillId, locale: 'en', fallbackLocale: false, depth: 0 })
+  const fallbackName = english.name?.trim() || fitted.en.name || material.slug
   const wrote: string[] = []
   for (const key of describeLocaleKeys) {
     const locale = describeLocales[key]
     const current = await payload.findByID({ collection: 'skills', id: skillId, locale, fallbackLocale: false, depth: 0 })
-    const data = textData(fitted[key], current, mode)
+    const data = textData(fitted[key], current, mode, fallbackName)
     if (locale === 'en') {
       if (checked.apiKeys.length && !current.needsApiKey) data.needsApiKey = true
       if (checked.tools.length && empty(current.runtime)) data.runtime = checked.tools.slice(0, 8)
