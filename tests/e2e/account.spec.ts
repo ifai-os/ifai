@@ -7,6 +7,7 @@ import type enMessages from '../../messages/en.json'
 import { createMember } from './member'
 
 const en = JSON.parse(readFileSync(new URL('../../messages/en.json', import.meta.url), 'utf8')) as typeof enMessages
+const nowhere = 2_000_000_000
 
 test('the account page asks a visitor to sign in and stays out of search', async ({ page }) => {
   const response = await page.goto('/en/me/account')
@@ -25,8 +26,9 @@ test.describe('a signed-in member', () => {
   test('deletes their account, and their saves, reviews and submissions go with it', async ({ page, context, baseURL }) => {
     const member = await createMember(baseURL ?? 'http://localhost:3000')
     try {
-      await member.query(`insert into saves (user_id, target_type, target_id) values ($1, 'app', 1)`, [member.id])
-      await member.query(`insert into app_reviews (app_id, user_id, rating, body, lang) values (1, $1, 5, 'Gone soon', 'en')`, [member.id])
+      // On an app id no sample app has, so tests running alongside never see this save or review.
+      await member.query(`insert into saves (user_id, target_type, target_id) values ($1, 'app', $2)`, [member.id, nowhere])
+      await member.query(`insert into app_reviews (app_id, user_id, rating, body, lang) values ($2, $1, 5, 'Gone soon', 'en')`, [member.id, nowhere])
       await member.query(`insert into app_submissions (name, website, email, submitter_id) values ('Gone', 'https://gone.example', $1, $2)`, [
         member.email,
         member.id,
