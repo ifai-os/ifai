@@ -80,6 +80,7 @@ tests/unit/                Vitest
 tests/e2e/                 Playwright 冒烟测试
 docs/specs/                各模块规格
 docs/setup.md              账号、环境变量和部署
+docs/apps/                 应用首批导入清单（后台「批量添加应用」直接贴）
 ```
 
 新模块的代码放在 `src/modules/<模块>/`（集合、数据访问、组件），页面放在 `src/app/(frontend)/[locale]/<模块>/`，页面文件只做组装。

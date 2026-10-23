@@ -1,0 +1,270 @@
+# IFAI 应用首批导入清单（2026-10-23 整理，共 247 个）
+# 用法：后台「应用」列表上方「批量添加应用」，整份粘贴即可。# 开头的行和空行会被跳过，已收录的应用按域名跳过。
+# 建议先贴 first-batch-try.txt 里的 10 个看草稿质量，再贴这一份；那 10 个会显示为「已收录」。
+# 来源：toolify.ai 在开发环境打不开，按它的分类榜单人工挑选，只取名称和官网网址。
+# 网址按已知的官网整理。开发环境也打不开这些网站，没有逐个打开核对；草稿抓不到官网的，会在右栏写明原因。
+# 没收：成人陪聊、换脸、绕过 AI 检测的改写工具；今年已停服或不再接新用户的（Sora、Firebase Studio、Phind、Relay.app、Reve、LOVO、Roo Code 等）。
+# 分组只是方便查看。导入后分类由草稿判断，发布前可以改。
+
+# AI 助手（25）
+ChatGPT, https://chatgpt.com
+Claude, https://claude.ai
+Gemini, https://gemini.google.com
+Microsoft Copilot, https://copilot.microsoft.com
+Grok, https://grok.com
+DeepSeek, https://www.deepseek.com
+Meta AI, https://www.meta.ai
+Le Chat, https://chat.mistral.ai
+Poe, https://poe.com
+Character.AI, https://character.ai
+Qwen Chat, https://chat.qwen.ai
+Kimi, https://www.kimi.com
+Doubao, https://www.doubao.com
+Z.ai, https://chat.z.ai
+Manus, https://manus.im
+Genspark, https://www.genspark.ai
+Monica, https://monica.im
+Merlin, https://www.getmerlin.in
+Sider, https://sider.ai
+Wrtn, https://wrtn.ai
+ChatHub, https://chathub.gg
+TypingMind, https://www.typingmind.com
+Jan, https://jan.ai
+Duck.ai, https://duck.ai
+Lumo, https://lumo.proton.me
+
+# 搜索与研究（26）
+Perplexity, https://www.perplexity.ai
+You.com, https://you.com
+Felo, https://felo.ai
+Kagi, https://kagi.com
+iAsk, https://iask.ai
+NotebookLM, https://notebooklm.google
+Consensus, https://consensus.app
+Elicit, https://elicit.com
+Scite, https://scite.ai
+Semantic Scholar, https://www.semanticscholar.org
+SciSpace, https://scispace.com
+ResearchRabbit, https://www.researchrabbit.ai
+Connected Papers, https://www.connectedpapers.com
+Litmaps, https://www.litmaps.com
+Scholarcy, https://www.scholarcy.com
+Undermind, https://www.undermind.ai
+OpenEvidence, https://www.openevidence.com
+Liner, https://liner.com
+ChatPDF, https://www.chatpdf.com
+AskYourPDF, https://askyourpdf.com
+PDF.ai, https://pdf.ai
+Humata, https://www.humata.ai
+Recall, https://www.getrecall.ai
+Glean, https://www.glean.com
+Wolfram|Alpha, https://www.wolframalpha.com
+Khanmigo, https://www.khanmigo.ai
+
+# 编程（33）
+Cursor, https://cursor.com
+GitHub Copilot, https://github.com/features/copilot
+Claude Code, https://claude.com/product/claude-code
+Codex, https://developers.openai.com/codex
+Google Antigravity, https://antigravity.google
+Jules, https://jules.google
+Google AI Studio, https://aistudio.google.com
+Kiro, https://kiro.dev
+Replit, https://replit.com
+Bolt, https://bolt.new
+Lovable, https://lovable.dev
+v0, https://v0.app
+Base44, https://base44.com
+Devin, https://devin.ai
+Augment Code, https://www.augmentcode.com
+Amp, https://ampcode.com
+Cline, https://cline.bot
+Aider, https://aider.chat
+Continue, https://www.continue.dev
+Tabnine, https://www.tabnine.com
+Qodo, https://www.qodo.ai
+CodeRabbit, https://www.coderabbit.ai
+JetBrains AI, https://www.jetbrains.com/ai
+Zed, https://zed.dev
+Warp, https://www.warp.dev
+Trae, https://www.trae.ai
+Factory, https://factory.ai
+Blackbox AI, https://www.blackbox.ai
+Dify, https://dify.ai
+Ollama, https://ollama.com
+LM Studio, https://lmstudio.ai
+Hugging Face, https://huggingface.co
+OpenRouter, https://openrouter.ai
+
+# 图像与设计（35）
+Midjourney, https://www.midjourney.com
+Adobe Firefly, https://firefly.adobe.com
+Leonardo.Ai, https://leonardo.ai
+Ideogram, https://ideogram.ai
+Canva, https://www.canva.com
+Krea, https://www.krea.ai
+Recraft, https://www.recraft.ai
+Freepik, https://www.freepik.com/ai
+Dreamina, https://dreamina.capcut.com
+OpenArt, https://openart.ai
+getimg.ai, https://getimg.ai
+NightCafe, https://nightcafe.studio
+Tensor.Art, https://tensor.art
+ImagineArt, https://www.imagine.art
+Craiyon, https://www.craiyon.com
+Artbreeder, https://www.artbreeder.com
+Photoroom, https://www.photoroom.com
+remove.bg, https://www.remove.bg
+Picsart, https://picsart.com
+Fotor, https://www.fotor.com
+Pixlr, https://pixlr.com
+PicWish, https://picwish.com
+Remini, https://remini.ai
+Topaz Labs, https://www.topazlabs.com
+Vectorizer.AI, https://vectorizer.ai
+Stitch, https://stitch.withgoogle.com
+Figma Make, https://www.figma.com/make
+Framer, https://www.framer.com
+Looka, https://looka.com
+Kittl, https://www.kittl.com
+Napkin AI, https://www.napkin.ai
+Lovart, https://www.lovart.ai
+Meshy, https://www.meshy.ai
+Tripo AI, https://www.tripo3d.ai
+Spline, https://spline.design
+
+# 视频与动画（35）
+Runway, https://runwayml.com
+Pika, https://pika.art
+Luma Dream Machine, https://lumalabs.ai/dream-machine
+Kling AI, https://klingai.com
+Hailuo AI, https://hailuoai.video
+Google Flow, https://labs.google/fx/tools/flow
+Vidu, https://www.vidu.com
+PixVerse, https://pixverse.ai
+Wan, https://wan.video
+Higgsfield, https://higgsfield.ai
+Hedra, https://www.hedra.com
+Viggle, https://viggle.ai
+LTX Studio, https://ltx.studio
+HeyGen, https://www.heygen.com
+Synthesia, https://www.synthesia.io
+D-ID, https://www.d-id.com
+Colossyan, https://www.colossyan.com
+Tavus, https://www.tavus.io
+CapCut, https://www.capcut.com
+Descript, https://www.descript.com
+Captions, https://www.captions.ai
+OpusClip, https://www.opus.pro
+Submagic, https://www.submagic.co
+Vizard, https://vizard.ai
+VEED, https://www.veed.io
+invideo AI, https://invideo.io
+Pictory, https://pictory.ai
+Fliki, https://fliki.ai
+Kapwing, https://www.kapwing.com
+Wondershare Filmora, https://filmora.wondershare.com
+Clipchamp, https://clipchamp.com
+Rask AI, https://www.rask.ai
+Creatify, https://creatify.ai
+Vidnoz, https://www.vidnoz.com
+Cascadeur, https://cascadeur.com
+
+# 音乐与音频（29）
+Suno, https://suno.com
+Udio, https://www.udio.com
+Mureka, https://www.mureka.ai
+AIVA, https://www.aiva.ai
+SOUNDRAW, https://soundraw.io
+Soundful, https://soundful.com
+Beatoven.ai, https://www.beatoven.ai
+Mubert, https://mubert.com
+Loudly, https://www.loudly.com
+ElevenLabs, https://elevenlabs.io
+Murf AI, https://murf.ai
+Speechify, https://speechify.com
+Resemble AI, https://www.resemble.ai
+Fish Audio, https://fish.audio
+NaturalReader, https://www.naturalreaders.com
+TTSMaker, https://ttsmaker.com
+Hume AI, https://www.hume.ai
+Voicemod, https://www.voicemod.net
+Voice.ai, https://voice.ai
+Kits AI, https://www.kits.ai
+Moises, https://moises.ai
+LALAL.AI, https://www.lalal.ai
+LANDR, https://www.landr.com
+Adobe Podcast, https://podcast.adobe.com
+Krisp, https://krisp.ai
+Podcastle, https://podcastle.ai
+Cleanvoice, https://cleanvoice.ai
+Auphonic, https://auphonic.com
+TurboScribe, https://turboscribe.ai
+
+# 写作与文案（29）
+Grammarly, https://www.grammarly.com
+QuillBot, https://quillbot.com
+DeepL, https://www.deepl.com
+Immersive Translate, https://immersivetranslate.com
+Papago, https://papago.naver.com
+Wordtune, https://www.wordtune.com
+LanguageTool, https://languagetool.org
+ProWritingAid, https://prowritingaid.com
+Hemingway Editor, https://hemingwayapp.com
+Jasper, https://www.jasper.ai
+Copy.ai, https://www.copy.ai
+Writesonic, https://writesonic.com
+Rytr, https://rytr.me
+Anyword, https://www.anyword.com
+Writer, https://writer.com
+HyperWrite, https://www.hyperwriteai.com
+Sudowrite, https://www.sudowrite.com
+Novelcrafter, https://www.novelcrafter.com
+Squibler, https://www.squibler.io
+Jenni AI, https://jenni.ai
+Paperpal, https://paperpal.com
+Writefull, https://www.writefull.com
+Frase, https://www.frase.io
+Surfer, https://surferseo.com
+Koala AI, https://koala.sh
+Hypotenuse AI, https://www.hypotenuse.ai
+GPTZero, https://gptzero.me
+Originality.ai, https://originality.ai
+Lavender, https://www.lavender.ai
+
+# 办公效率（35）
+Notion, https://www.notion.com
+Gamma, https://gamma.app
+Beautiful.ai, https://www.beautiful.ai
+Pitch, https://pitch.com
+Presentations.AI, https://www.presentations.ai
+Plus AI, https://plusai.com
+SlidesAI, https://www.slidesai.io
+Otter.ai, https://otter.ai
+Fireflies.ai, https://fireflies.ai
+Fathom, https://fathom.video
+tl;dv, https://tldv.io
+Read AI, https://www.read.ai
+Granola, https://www.granola.ai
+Notta, https://www.notta.ai
+Motion, https://www.usemotion.com
+Reclaim, https://reclaim.ai
+Taskade, https://www.taskade.com
+ClickUp, https://clickup.com
+Tana, https://tana.inc
+Miro, https://miro.com
+Whimsical, https://whimsical.com
+Mapify, https://mapify.so
+Shortwave, https://www.shortwave.com
+Fyxer, https://www.fyxer.com
+Zapier, https://zapier.com
+Make, https://www.make.com
+n8n, https://n8n.io
+Lindy, https://www.lindy.ai
+Gumloop, https://www.gumloop.com
+Coze, https://www.coze.com
+Julius AI, https://julius.ai
+UPDF, https://updf.com
+Wispr Flow, https://wisprflow.ai
+Raycast, https://www.raycast.com
+Dia, https://www.diabrowser.com
