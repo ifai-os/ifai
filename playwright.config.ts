@@ -17,7 +17,8 @@ export default defineConfig({
   use: {
     baseURL,
     locale: 'en-US',
-    trace: 'retain-on-failure',
+    // A trace records request headers, so it would carry the bypass secret into the uploaded report.
+    trace: bypass ? 'off' : 'retain-on-failure',
     // The header goes on every request. Asking Vercel to set the bypass cookie instead would answer
     // the first request with a 307, which breaks the tests that check a status without following redirects.
     extraHTTPHeaders: bypass ? { 'x-vercel-protection-bypass': bypass } : undefined,
