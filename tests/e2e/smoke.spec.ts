@@ -83,3 +83,10 @@ test('Payload admin is reachable', async ({ page }) => {
   expect(response?.status()).toBeLessThan(400)
   await expect(page.locator('form')).toBeVisible()
 })
+
+test('model usage is for signed-in admins only', async ({ page }) => {
+  test.skip(!process.env.E2E_ADMIN, 'Needs a database; set E2E_ADMIN=1 where one is available.')
+  await page.goto('/admin/model-usage')
+  await expect(page).toHaveURL(/\/admin\/login\?redirect=%2Fmodel-usage/)
+  await expect(page.locator('form')).toBeVisible()
+})

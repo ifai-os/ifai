@@ -60,8 +60,12 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: ' · IFAI 后台' },
     components: {
-      // The daily review queue, next to the collection links.
-      afterNavLinks: ['/modules/daily/admin/review/links#ReviewNavLink'],
+      // The daily review queue and model usage, next to the collection links.
+      afterNavLinks: ['/modules/daily/admin/review/links#ReviewNavLink', '/admin/model-usage/nav-link#ModelUsageNavLink'],
+      views: {
+        // Spend, budget, switches and failed calls across modules (docs/specs/foundation.md「后台 · 模型用量」).
+        modelUsage: { Component: '/admin/model-usage/view#ModelUsageView', path: '/model-usage', exact: true },
+      },
     },
   },
   // Admin UI language (the back office is for the site owner).

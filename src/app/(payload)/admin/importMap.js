@@ -17,6 +17,8 @@ import { SubscriberOverview as SubscriberOverview_923ce44b0718105cb9207626c55c70
 import { ImportButton as ImportButton_732f6da2a57c9425424227b664ca593e } from '../../../modules/resources/admin/import-button'
 import { DescribePanel as DescribePanel_62e1fd9685e86a291070552a381d803d } from '../../../modules/resources/admin/describe-panel'
 import { ReviewNavLink as ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../../../modules/daily/admin/review/links'
+import { ModelUsageNavLink as ModelUsageNavLink_e8dd740ddf39723610754fc9fa3ab578 } from '../../../admin/model-usage/nav-link'
+import { ModelUsageView as ModelUsageView_304a9f7c53a4c3ddf1679b524418e932 } from '../../../admin/model-usage/view'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -41,6 +43,8 @@ export const importMap = {
   "/modules/resources/admin/import-button#ImportButton": ImportButton_732f6da2a57c9425424227b664ca593e,
   "/modules/resources/admin/describe-panel#DescribePanel": DescribePanel_62e1fd9685e86a291070552a381d803d,
   "/modules/daily/admin/review/links#ReviewNavLink": ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1,
+  "/admin/model-usage/nav-link#ModelUsageNavLink": ModelUsageNavLink_e8dd740ddf39723610754fc9fa3ab578,
+  "/admin/model-usage/view#ModelUsageView": ModelUsageView_304a9f7c53a4c3ddf1679b524418e932,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }
