@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "Loading list",
     "loadingCards": "Loading cards",
+    "loadingPage": "Loading page",
     "failedTitle": "Couldn't load this",
     "retry": "Try again",
     "errorTitle": "Something went wrong",
