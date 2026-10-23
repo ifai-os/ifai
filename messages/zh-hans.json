@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "正在加载列表",
     "loadingCards": "正在加载卡片",
+    "loadingPage": "正在加载页面",
     "failedTitle": "加载失败",
     "retry": "点此重试",
     "errorTitle": "页面出错了",
@@ -142,6 +143,7 @@
     "copied": "链接已复制",
     "detailTitle": "{name}：{tagline}",
     "screenshotAlt": "{name} 官网图片",
+    "imageUpdated": "图片更新于 <time></time>",
     "tags": "标签",
     "about": "它是什么",
     "features": "核心功能",
@@ -631,6 +633,41 @@
     },
     "signInTitle": "登录后就能写评价",
     "afterSignIn": "登录后会回到这一页，接着写评价。"
+  },
+  "appReports": {
+    "link": "信息有误？",
+    "linkLong": "信息有误？告诉我们",
+    "title": "{name} 的信息有误？",
+    "intro": "告诉我们哪里不对，站长核对后会改。",
+    "kindLegend": "是什么问题？",
+    "kinds": {
+      "wrong-info": "资料有误",
+      "shut-down": "已停运",
+      "other": "其他"
+    },
+    "kindHints": {
+      "wrong-info": "介绍、定价、平台等写得不对",
+      "shut-down": "网站打不开了，或者产品已经停止服务"
+    },
+    "bodyLabel": "具体说明",
+    "bodyOptional": "具体说明（选填）",
+    "bodyPlaceholder": "哪里不对，正确的是什么？附上来源链接更好。",
+    "bodyPlaceholderShutDown": "比如官网打不开了，或者官方公布了停止服务的时间。",
+    "charCount": "{count} / {max}",
+    "contactLabel": "联系方式（选填）",
+    "contactHint": "邮箱或其他联系方式，有问题时用来问你，不会公开。",
+    "send": "提交",
+    "sending": "提交中…",
+    "cancel": "取消",
+    "done": "收到了，谢谢。站长核对后会改。",
+    "errors": {
+      "kind": "先选一下是什么问题。",
+      "body": "写一下哪里不对。",
+      "tooLong": "最多 {max} 个字。",
+      "contactTooLong": "联系方式最多 {max} 个字。",
+      "dailyLimit": "今天已经报了 {limit} 次，明天再来吧。",
+      "failed": "没提交成功，请再试一次。"
+    }
   },
   "daily": {
     "title": "日报",

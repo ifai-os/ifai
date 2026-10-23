@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import { buttonBase, buttonClass } from '@/components/button'
 import { Icon } from '@/components/icon'
+import { LocalTime } from '@/components/local-time'
 import { ShareButton } from '@/components/share-button'
 import { getPathname, Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
@@ -12,6 +13,7 @@ import { SaveProvider } from '@/modules/saves/components/save-provider'
 
 import type { AppDetail } from '../data'
 import { listHref } from '../list-params'
+import { ReportButton } from '../reports/components/report-button'
 import { ReviewsProvider } from '../reviews/components/reviews-provider'
 import { ReviewsSection, ReviewSummary } from '../reviews/components/reviews-section'
 import { showTrancoRank } from '../settings'
@@ -32,7 +34,10 @@ type AppDetailViewProps = {
   signIn: AuthProviders
 }
 
-/** An app's page: header and facts, its heat figures, then what it is, features, heat, daily mentions, FAQ, reviews and alternatives. */
+/**
+ * An app's page: header and facts, its heat figures, then what it is, features, heat, daily
+ * mentions, FAQ, reviews and alternatives, and「信息有误？」.
+ */
 export function AppDetailView({ app, signIn }: AppDetailViewProps) {
   const t = useTranslations('apps')
   const nav = useTranslations('nav')
@@ -52,6 +57,8 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
   }
 
   const shareLabels = { share: t('share'), copied: t('copied') }
+  const reportApp = { id: app.id, name: app.name }
+  const reportLink = 'text-ink-4 hover:text-ink hover:underline'
 
   return (
     <SaveProvider target={{ type: 'app', id: app.id }} signIn={signIn}>
@@ -158,7 +165,7 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
             </div>
 
             {app.screenshot && (
-              <figure className="hidden min-w-0 flex-[1_1_380px] flex-col rounded-hero border border-surface-2 bg-surface p-4 md:flex md:max-w-130">
+              <figure className="hidden min-w-0 flex-[1_1_380px] flex-col gap-3 rounded-hero border border-surface-2 bg-surface p-4 md:flex md:max-w-130">
                 <div className="overflow-hidden rounded-tile border border-line bg-bg">
                   <div aria-hidden="true" className="flex h-7 items-center gap-1.5 border-b border-surface-2 px-3">
                     <span className="size-2 rounded-pill bg-line" />
@@ -175,6 +182,11 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
                     className="block h-auto w-full"
                   />
                 </div>
+                {/* Desktop's way to「信息有误？」; phones and pages without an image have it at the foot. */}
+                <figcaption className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-small text-ink-4">
+                  <span>{app.screenshotUpdatedAt && t.rich('imageUpdated', { time: () => <LocalTime iso={app.screenshotUpdatedAt as string} style="date" /> })}</span>
+                  <ReportButton app={reportApp} className={reportLink} />
+                </figcaption>
               </figure>
             )}
           </section>
@@ -307,6 +319,12 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
               </Section>
             )}
           </div>
+
+          <ReportButton
+            app={reportApp}
+            long
+            className={`flex min-h-11 items-center self-center text-meta md:self-start ${reportLink} ${app.screenshot ? 'md:hidden' : ''}`}
+          />
         </main>
 
         {/* Phones: save and the website stay in reach while reading. */}

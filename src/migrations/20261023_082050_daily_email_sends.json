@@ -4381,6 +4381,181 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.app_reports": {
+      "name": "app_reports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "app_id": {
+          "name": "app_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "enum_app_reports_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact": {
+          "name": "contact",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "page_locale": {
+          "name": "page_locale",
+          "type": "enum_app_reports_page_locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reporter": {
+          "name": "reporter",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "enum_app_reports_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "app_reports_app_idx": {
+          "name": "app_reports_app_idx",
+          "columns": [
+            {
+              "expression": "app_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "app_reports_reporter_idx": {
+          "name": "app_reports_reporter_idx",
+          "columns": [
+            {
+              "expression": "reporter",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "app_reports_status_idx": {
+          "name": "app_reports_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "app_reports_updated_at_idx": {
+          "name": "app_reports_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "app_reports_created_at_idx": {
+          "name": "app_reports_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "app_reports_app_id_apps_id_fk": {
+          "name": "app_reports_app_id_apps_id_fk",
+          "tableFrom": "app_reports",
+          "tableTo": "apps",
+          "columnsFrom": [
+            "app_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.sources": {
       "name": "sources",
       "schema": "",
@@ -8939,6 +9114,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "app_reports_id": {
+          "name": "app_reports_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "sources_id": {
           "name": "sources_id",
           "type": "integer",
@@ -9090,6 +9271,21 @@
           "columns": [
             {
               "expression": "apps_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payload_locked_documents_rels_app_reports_id_idx": {
+          "name": "payload_locked_documents_rels_app_reports_id_idx",
+          "columns": [
+            {
+              "expression": "app_reports_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -9295,6 +9491,19 @@
           "tableTo": "apps",
           "columnsFrom": [
             "apps_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_app_reports_fk": {
+          "name": "payload_locked_documents_rels_app_reports_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "app_reports",
+          "columnsFrom": [
+            "app_reports_id"
           ],
           "columnsTo": [
             "id"
@@ -9776,6 +9985,34 @@
         "open-source"
       ]
     },
+    "public.enum_app_reports_kind": {
+      "name": "enum_app_reports_kind",
+      "schema": "public",
+      "values": [
+        "wrong-info",
+        "shut-down",
+        "other"
+      ]
+    },
+    "public.enum_app_reports_page_locale": {
+      "name": "enum_app_reports_page_locale",
+      "schema": "public",
+      "values": [
+        "en",
+        "zh-Hans",
+        "zh-Hant",
+        "ja",
+        "ko"
+      ]
+    },
+    "public.enum_app_reports_status": {
+      "name": "enum_app_reports_status",
+      "schema": "public",
+      "values": [
+        "open",
+        "resolved"
+      ]
+    },
     "public.enum_sources_type": {
       "name": "enum_sources_type",
       "schema": "public",
@@ -10043,6 +10280,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "c6383634-b935-4960-baa6-8a58d23e7fb0",
+  "id": "908e70d0-dc8a-48b5-81d3-7810d008c57e",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

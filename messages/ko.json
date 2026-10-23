@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "목록을 불러오는 중",
     "loadingCards": "카드를 불러오는 중",
+    "loadingPage": "페이지를 불러오는 중",
     "failedTitle": "불러오지 못했어요",
     "retry": "다시 시도",
     "errorTitle": "문제가 발생했어요",
@@ -142,6 +143,7 @@
     "copied": "링크를 복사했어요",
     "detailTitle": "{name}: {tagline}",
     "screenshotAlt": "{name} 공식 사이트 이미지",
+    "imageUpdated": "이미지 업데이트 <time></time>",
     "tags": "태그",
     "about": "어떤 앱인가요",
     "features": "주요 기능",
@@ -631,6 +633,41 @@
     },
     "signInTitle": "로그인하고 리뷰 쓰기",
     "afterSignIn": "로그인하면 이 페이지로 돌아와 이어서 리뷰를 쓸 수 있어요."
+  },
+  "appReports": {
+    "link": "정보 오류 신고",
+    "linkLong": "정보가 잘못됐나요? 알려 주세요",
+    "title": "{name} 정보가 잘못됐나요?",
+    "intro": "어디가 틀렸는지 알려 주세요. 사이트 운영자가 확인하고 고칠게요.",
+    "kindLegend": "어떤 문제인가요?",
+    "kinds": {
+      "wrong-info": "정보 오류",
+      "shut-down": "서비스 종료",
+      "other": "기타"
+    },
+    "kindHints": {
+      "wrong-info": "소개, 요금, 플랫폼 등이 틀려요",
+      "shut-down": "사이트가 열리지 않거나 서비스가 종료됐어요"
+    },
+    "bodyLabel": "자세한 내용",
+    "bodyOptional": "자세한 내용(선택)",
+    "bodyPlaceholder": "어디가 틀렸고, 맞는 내용은 무엇인가요? 출처 링크가 있으면 더 좋아요.",
+    "bodyPlaceholderShutDown": "예: 공식 사이트가 열리지 않거나, 서비스 종료 공지가 올라왔어요.",
+    "charCount": "{count} / {max}",
+    "contactLabel": "연락처(선택)",
+    "contactHint": "이메일 등. 확인할 것이 있을 때만 쓰고, 사이트에 공개하지 않아요.",
+    "send": "보내기",
+    "sending": "보내는 중…",
+    "cancel": "취소",
+    "done": "접수했어요. 고마워요. 사이트 운영자가 확인하고 고칠게요.",
+    "errors": {
+      "kind": "어떤 문제인지 골라 주세요.",
+      "body": "어디가 틀렸는지 적어 주세요.",
+      "tooLong": "{max}자 이내로 써 주세요.",
+      "contactTooLong": "연락처는 {max}자 이내로 써 주세요.",
+      "dailyLimit": "오늘 이미 {limit}번 신고했어요. 내일 다시 해 주세요.",
+      "failed": "보내지 못했어요. 다시 시도해 주세요."
+    }
   },
   "daily": {
     "title": "데일리",

@@ -94,6 +94,7 @@
   "states": {
     "loadingList": "正在載入列表",
     "loadingCards": "正在載入卡片",
+    "loadingPage": "正在載入頁面",
     "failedTitle": "載入失敗",
     "retry": "點此重試",
     "errorTitle": "頁面出錯了",
@@ -142,6 +143,7 @@
     "copied": "連結已複製",
     "detailTitle": "{name}：{tagline}",
     "screenshotAlt": "{name} 官網圖片",
+    "imageUpdated": "圖片更新於 <time></time>",
     "tags": "標籤",
     "about": "它是什麼",
     "features": "核心功能",
@@ -631,6 +633,41 @@
     },
     "signInTitle": "登入後就能寫評價",
     "afterSignIn": "登入後會回到這一頁，接著寫評價。"
+  },
+  "appReports": {
+    "link": "資訊有誤？",
+    "linkLong": "資訊有誤？告訴我們",
+    "title": "{name} 的資訊有誤？",
+    "intro": "告訴我們哪裡不對，站長核對後會改。",
+    "kindLegend": "是什麼問題？",
+    "kinds": {
+      "wrong-info": "資料有誤",
+      "shut-down": "已停運",
+      "other": "其他"
+    },
+    "kindHints": {
+      "wrong-info": "介紹、定價、平台等寫得不對",
+      "shut-down": "網站打不開了，或者產品已經停止服務"
+    },
+    "bodyLabel": "具體說明",
+    "bodyOptional": "具體說明（選填）",
+    "bodyPlaceholder": "哪裡不對，正確的是什麼？附上來源連結更好。",
+    "bodyPlaceholderShutDown": "比如官網打不開了，或者官方公布了停止服務的時間。",
+    "charCount": "{count} / {max}",
+    "contactLabel": "聯絡方式（選填）",
+    "contactHint": "電子郵件或其他聯絡方式，有問題時用來問你，不會公開。",
+    "send": "送出",
+    "sending": "送出中…",
+    "cancel": "取消",
+    "done": "收到了，謝謝。站長核對後會改。",
+    "errors": {
+      "kind": "先選一下是什麼問題。",
+      "body": "寫一下哪裡不對。",
+      "tooLong": "最多 {max} 個字。",
+      "contactTooLong": "聯絡方式最多 {max} 個字。",
+      "dailyLimit": "今天已經報了 {limit} 次，明天再來吧。",
+      "failed": "沒送出成功，請再試一次。"
+    }
   },
   "daily": {
     "title": "日報",
