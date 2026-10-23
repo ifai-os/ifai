@@ -9,6 +9,12 @@ async function xml(request: APIRequestContext, path: string): Promise<string> {
 
 test('robots.txt blocks only what is not a page and points at the sitemap', async ({ request }) => {
   const response = await request.get('/robots.txt')
+  if (process.env.E2E_PREVIEW) {
+    // Vercel previews keep every crawler out (src/lib/robots.ts).
+    expect(response.status()).toBe(200)
+    expect(await response.text()).toMatch(/Disallow: \/\s*$/m)
+    return
+  }
   expect(response.status()).toBe(200)
   const text = await response.text()
   expect(text).toContain('Disallow: /admin')
