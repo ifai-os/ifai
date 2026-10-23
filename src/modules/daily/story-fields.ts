@@ -7,3 +7,7 @@ export type StoryStatus = (typeof storyStatuses)[number]
 /** The original announcement comes first; reports and discussion threads follow. */
 export const sourceRoles = ['original', 'report', 'discussion'] as const
 export type SourceRole = (typeof sourceRoles)[number]
+
+/** How an event's heat moved over the last 6 hours: "new" when it had none then (docs/specs/daily.md「流程」10). */
+export const heatTrends = ['rising', 'new'] as const
+export type HeatTrend = (typeof heatTrends)[number]

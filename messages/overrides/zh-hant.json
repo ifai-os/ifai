@@ -71,6 +71,7 @@
     "publishedAt": "首次發布",
     "roles": {
       "report": "報導"
-    }
+    },
+    "outlets": "{count, plural, other {# 家報導}}"
   }
 }

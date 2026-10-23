@@ -193,6 +193,15 @@
     "correctedAt": "최근 업데이트",
     "corrected": "정정",
     "tryIt": "직접 해 보기",
+    "hottest": "오늘의 화제",
+    "hotTitle": "48시간 인기 소식",
+    "hotBy": "사건별",
+    "outlets": "{count, plural, other {#곳 보도}}",
+    "trend": {
+      "rising": "상승",
+      "new": "신규"
+    },
+    "appsToday": "오늘 소식에 나온 앱",
     "sources": "출처",
     "roles": {
       "original": "원문",

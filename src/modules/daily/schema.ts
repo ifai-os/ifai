@@ -69,7 +69,7 @@ export const rawItems = pgTable(
 /**
  * One happening, grouped from one or more reports (docs/specs/daily.md「流程」6). The
  * representative report is the first one that created the event; the writing step reads
- * every member. `heat` is filled in by the heat step (6).
+ * every member. `heat` and `heat_before` come from the heat job (./heat/heat.ts).
  */
 export const events = pgTable(
   'events',
@@ -83,7 +83,10 @@ export const events = pgTable(
     category: text('category', { enum: storyCategories }).notNull(),
     firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull(),
     lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull(),
+    /** 0–100: each independent source of the last 48 hours once, halving every 24 hours. */
     heat: real('heat').default(0).notNull(),
+    /** The heat 6 hours before `heat_updated_at`, from what was known then; above it means rising. */
+    heatBefore: real('heat_before').default(0).notNull(),
     heatUpdatedAt: timestamp('heat_updated_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -108,12 +111,42 @@ export const eventItems = pgTable(
     relation: text('relation', { enum: eventRelations }).notNull(),
     /** For "same": this report has details the representative lacks. */
     newInformation: boolean('new_information').default(false).notNull(),
+    /** For "same": the earlier report it was judged the same happening as, so its publisher joins the right story's sources. */
+    matchedItemId: integer('matched_item_id').references(() => rawItems.id, { onDelete: 'set null' }),
     addedAt: timestamp('added_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     // A roundup attaches to every event it mentions; a report attaches to one event (enforced in code).
     uniqueIndex('event_items_event_item_idx').on(table.eventId, table.itemId),
     index('event_items_item_idx').on(table.itemId),
+  ],
+)
+
+/**
+ * Popularity evidence from hot_signal sources (Hacker News): one row per report and source,
+ * refreshed on every fetch of that source. It is kept for links another source found first
+ * too, which are not stored again as raw items, so the thread still counts towards the
+ * event's heat and joins the story's sources as a discussion.
+ */
+export const hotSignals = pgTable(
+  'hot_signals',
+  {
+    id: serial('id').primaryKey(),
+    itemId: integer('item_id')
+      .notNull()
+      .references(() => rawItems.id, { onDelete: 'cascade' }),
+    sourceId: integer('source_id').notNull(),
+    points: integer('points').default(0).notNull(),
+    comments: integer('comments').default(0).notNull(),
+    discussionUrl: text('discussion_url'),
+    /** When the hot source posted it (Hacker News submission time). */
+    postedAt: timestamp('posted_at', { withTimezone: true }).notNull(),
+    firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('hot_signals_item_source_idx').on(table.itemId, table.sourceId),
+    index('hot_signals_posted_idx').on(table.postedAt),
   ],
 )
 
@@ -174,4 +207,4 @@ export const itemAnalyses = pgTable(
   ],
 )
 
-export const dailyTables = { raw_items: rawItems, events, event_items: eventItems, item_analyses: itemAnalyses }
+export const dailyTables = { raw_items: rawItems, events, event_items: eventItems, item_analyses: itemAnalyses, hot_signals: hotSignals }

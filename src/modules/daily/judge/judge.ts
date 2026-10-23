@@ -20,6 +20,8 @@ import { EMBEDDING_DIMENSIONS } from '@/lib/ai/purposes'
 import { getDb } from '@/lib/db/drizzle'
 import type { Source } from '@/payload-types'
 
+import { refreshHeat } from '../heat/heat'
+import { syncEventSources } from '../heat/sources'
 import { groupPrompt, prefilterPrompt, scorePrompt, structurePrompt, type GroupReport, type Material } from '../prompts'
 import { excerpt } from '../prompts/version'
 import {
@@ -293,7 +295,14 @@ export async function groupStep(itemId: number, deps: JudgeDeps = {}): Promise<S
     .orderBy(desc(similarity))
     .limit(GROUP_CANDIDATES)
 
-  let decision: { eventId: number; relation: 'same' | 'follow_up'; newInformation: boolean; reason: string } | null = null
+  let decision: {
+    eventId: number
+    relation: 'same' | 'follow_up'
+    newInformation: boolean
+    /** For "same": the earlier report it is the same happening as. */
+    matchedItemId: number | null
+    reason: string
+  } | null = null
   if (candidates.length) {
     const sourceNames = await namesOf(payload, [...new Set(candidates.map((c) => c.sourceId))])
     const report: GroupReport = {
@@ -331,6 +340,7 @@ export async function groupStep(itemId: number, deps: JudgeDeps = {}): Promise<S
         eventId: picked.eventId,
         relation: same ? 'same' : 'follow_up',
         newInformation: same ? relation.newInformation : true,
+        matchedItemId: same ? same.id : null,
         reason: relation.reason,
       }
     }
@@ -346,7 +356,7 @@ export async function groupStep(itemId: number, deps: JudgeDeps = {}): Promise<S
     relation = decision.relation
     await db
       .insert(eventItems)
-      .values({ eventId, itemId, relation, newInformation: decision.newInformation })
+      .values({ eventId, itemId, relation, newInformation: decision.newInformation, matchedItemId: decision.matchedItemId })
       .onConflictDoNothing()
     await db
       .update(events)
@@ -355,7 +365,7 @@ export async function groupStep(itemId: number, deps: JudgeDeps = {}): Promise<S
     outcome = relation === 'same' ? 'merged' : 'queued'
     outcomeReason =
       relation === 'same'
-        ? `Same happening as report ${candidates.find((c) => c.eventId === eventId)?.id}: ${decision.reason}`
+        ? `Same happening as report ${decision.matchedItemId}: ${decision.reason}`
         : `Follow-up of event ${eventId}: ${decision.reason}`
   } else {
     const [created] = await db
@@ -383,6 +393,10 @@ export async function groupStep(itemId: number, deps: JudgeDeps = {}): Promise<S
     outcomeReason,
     promptVersions: { ...analysis.promptVersions, ...(candidates.length && { group: groupPrompt.version }) },
   })
+  // Another publisher of a written story joins its sources now, and the event's heat moves
+  // now rather than at the next hourly run.
+  if (decision?.relation === 'same') await syncEventSources([eventId])
+  await refreshHeat([eventId], now)
   return { status: 'done', stage: 'grouped', outcome }
 }
 
