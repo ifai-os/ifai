@@ -10,16 +10,12 @@ import {
   ReceiptExhaustedError,
   ReceiptInFlightError,
 } from './errors'
+import { dailyBudgetUsd, MAX_ATTEMPTS, STALE_AFTER_MS } from './limits'
 import { modelFor, type EmbeddingPurpose, type Purpose, type TextPurpose } from './purposes'
 import { hashInput, type Receipt, type ReceiptStore, type ReceiptUsage } from './receipts'
 import { EXTERNAL_DATA_RULE } from './untrusted'
 
-/** Default daily budget in US dollars (Shanghai day), matching the review dashboard. */
-export const DEFAULT_DAILY_BUDGET_USD = 10
-/** A pending receipt older than this is treated as a crashed run and may be retried. */
-const STALE_AFTER_MS = 10 * 60 * 1000
-/** A call that keeps failing stops after this many paid attempts and waits for a person. */
-const MAX_ATTEMPTS = 3
+export { DEFAULT_DAILY_BUDGET_USD } from './limits'
 
 export type AiDeps = {
   store: ReceiptStore
@@ -80,10 +76,7 @@ function message(error: unknown): string {
 export function createAi({ store, languageModel, embeddingModel, env = process.env, now = () => new Date() }: AiDeps) {
   const enabled = () => modelCallsEnabled(env)
 
-  const budgetUsd = () => {
-    const value = Number(env.AI_DAILY_BUDGET_USD)
-    return env.AI_DAILY_BUDGET_USD?.trim() && Number.isFinite(value) && value >= 0 ? value : DEFAULT_DAILY_BUDGET_USD
-  }
+  const budgetUsd = () => dailyBudgetUsd(env)
 
   async function usageToday(): Promise<UsageToday> {
     const spent = await store.spentSince(shanghaiDayStart(now()))
