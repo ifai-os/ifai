@@ -4,7 +4,8 @@ import type { Payload } from 'payload'
 import { getDb } from '@/lib/db/drizzle'
 import type { Subscriber } from '@/payload-types'
 
-import { sendEmail } from './delivery'
+import { ResendError, sendEmail } from './delivery'
+import { recordFailure, recordQuota } from './resend-state'
 import { ATTEMPTS_PER_HOUR, planSubscribe, welcomeAllowed, type SubscribeRequest } from './rules'
 import { subscribeAttempts } from './schema'
 import { buildWelcomeEmail } from './welcome'
@@ -90,9 +91,16 @@ export async function markWelcomed(subscriberId: number, now: Date): Promise<voi
 /** Sends the welcome email and remembers it. Runs after the response, so the page never waits on Resend. */
 export async function sendWelcome(subscriber: Subscriber, now: Date): Promise<void> {
   try {
-    await sendEmail(await buildWelcomeEmail(subscriber, now))
+    const { quota } = await sendEmail(await buildWelcomeEmail(subscriber, now))
     await markWelcomed(subscriber.id, now)
+    await recordQuota(quota, now).catch((error: unknown) => console.error('[daily-email] Could not record the quota:', error))
   } catch (error) {
     console.error(`[daily-email] Welcome email to subscriber ${subscriber.id} failed:`, error)
+    // For the subscriber list's「最近一次失败的原因」(a used-up quota shows up here first).
+    if (error instanceof ResendError) {
+      await Promise.all([recordQuota(error.quota, now), recordFailure(error.message, now)]).catch((recordError: unknown) =>
+        console.error('[daily-email] Could not record the refusal:', recordError),
+      )
+    }
   }
 }

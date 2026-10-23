@@ -41,6 +41,16 @@ export function subscriptionLinks(subscriberId: number, locale: Locale): Subscri
   }
 }
 
+/**
+ * The same links for an email that goes to no subscriber (the back office's preview and test
+ * email): the manage page without a token, which says the link is not valid and offers the box.
+ */
+export function previewLinks(locale: Locale): SubscriptionLinks {
+  const origin = siteUrl()
+  const manage = `${origin}${managePath(locale)}`
+  return { manage, unsubscribe: manage, oneClick: manage, site: `${origin}${localizePath(locale, '/')}` }
+}
+
 /** Headers that give mail clients a one-click「退订」button (Gmail and Yahoo require them for bulk mail). */
 export function unsubscribeHeaders(links: SubscriptionLinks): Record<string, string> {
   return {

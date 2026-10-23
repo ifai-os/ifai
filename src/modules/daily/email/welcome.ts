@@ -1,36 +1,11 @@
-import { createTranslator } from 'next-intl'
-
-import { messagesFileName, type Locale } from '@/i18n/config'
-import { siteUrl } from '@/lib/site-url'
 import type { Subscriber } from '@/payload-types'
 
-import { dailyEmailFrom, type OutgoingEmail } from './delivery'
+import { emailFooter, emailLogo, emailTranslator } from './compose'
+import type { OutgoingEmail } from './delivery'
 import { sendTimeLabel, zoneName } from './format'
-import { emailColors, emailHtml, escapeHtml, footerText, type EmailFooter } from './layout'
-import { subscriptionLinks, unsubscribeHeaders, type SubscriptionLinks } from './links'
+import { emailColors, emailHtml, escapeHtml, footerText } from './layout'
+import { subscriptionLinks, unsubscribeHeaders } from './links'
 import { nextSendAt } from './schedule'
-
-export type EmailMessages = Awaited<ReturnType<typeof emailTranslator>>
-
-/** The email texts in the subscriber's language (messages/*.json, `dailyEmail`). */
-export async function emailTranslator(locale: Locale) {
-  const messages = (await import(`../../../../messages/${messagesFileName(locale)}.json`)).default
-  return createTranslator({ locale, messages, namespace: 'dailyEmail' })
-}
-
-/** The footer every daily email carries. */
-export function emailFooter(t: EmailMessages, links: SubscriptionLinks): EmailFooter {
-  return {
-    why: t('footer.why'),
-    manage: { label: t('footer.manage'), href: links.manage },
-    unsubscribe: { label: t('footer.unsubscribe'), href: links.unsubscribe },
-    site: { name: 'IFAI', href: links.site },
-    sender: dailyEmailFrom(),
-  }
-}
-
-/** The IFAI tile as a PNG on the site itself. */
-export const emailLogo = () => `${siteUrl()}/icon-192.png`
 
 type WelcomeTo = Pick<Subscriber, 'id' | 'email' | 'locale' | 'timeZone'>
 
@@ -98,5 +73,7 @@ export async function buildWelcomeEmail(subscriber: WelcomeTo, now: Date): Promi
     text,
     headers: unsubscribeHeaders(links),
     kind: 'daily_welcome',
+    // A bounce of the welcome email stops the subscription at once (rule 3).
+    tags: { subscriber: String(subscriber.id) },
   }
 }

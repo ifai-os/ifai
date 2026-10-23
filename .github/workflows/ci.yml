@@ -43,6 +43,8 @@ jobs:
       NEXT_TELEMETRY_DISABLED: '1'
       # The subscribe boxes and endpoints, for the smoke tests. Without Resend the emails only go to the server log.
       DAILY_EMAIL_ENABLED: 'true'
+      # Signs the smoke tests' fake Resend webhooks (base64 of a made-up string).
+      RESEND_WEBHOOK_SECRET: whsec_Y2ktb25seS13ZWJob29rLXNlY3JldC1ub3QtdXNlZC1hbnl3aGVyZQ==
 
     steps:
       - uses: actions/checkout@v5

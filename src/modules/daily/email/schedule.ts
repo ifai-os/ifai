@@ -64,3 +64,29 @@ export function nextSendAt(now: Date, timeZone: string): Date {
     timeZone,
   )
 }
+
+/** A run that missed 8:00 still sends until 11:00 there; after that the day is skipped (rule 5). */
+export const lastSendHour = 11
+
+/** YYYY-MM-DD of a wall-clock date. */
+export function isoDate({ year, month, day }: { year: number; month: number; day: number }): string {
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+export type DueDay = {
+  /** The subscriber's calendar date the email is for. */
+  localDate: string
+  /** 8:00 that morning: only those who subscribed before it get that day's email. */
+  sendAt: Date
+}
+
+/**
+ * The morning a zone is in at `now`, while it is between 8:00 and 11:00 there; null otherwise.
+ * The job runs at minutes 0, 15, 30 and 45 (UTC), and every zone's offset is a multiple of 15
+ * minutes, so each zone's first run in the window is its 8:00.
+ */
+export function dueDay(timeZone: string, now: Date): DueDay | null {
+  const wall = wallTime(now, timeZone)
+  if (wall.hour < sendHour || wall.hour >= lastSendHour) return null
+  return { localDate: isoDate(wall), sendAt: zonedInstant(wall, sendHour, 0, timeZone) }
+}

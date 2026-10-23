@@ -15,7 +15,7 @@ import type { RawStory } from '../public/story-item'
 import { ReviewError } from '../review/actions'
 import { refreshDailyCache } from '../review/cache'
 import { hansOf, type Payload, type StoryAll } from '../review/load'
-import { addCheck, arrangementProblem, autoPick, dayBounds, posterState, type PosterCandidate } from './rules'
+import { addCheck, arrangementProblem, autoPick, candidateOf, dayBounds, posterState, type StoryFacts } from './rules'
 import { entryOf, originalSource, posterVersion, readSnapshot, type PosterSnapshot } from './snapshot'
 import type { DeskStory, PosterDesk } from './types'
 
@@ -24,20 +24,6 @@ export type PosterDeps = {
   /** Renders every language once; defaults to the real images (fonts from Google Fonts). */
   render?: (snapshot: PosterSnapshot) => Promise<void>
   refresh?: () => Promise<void>
-}
-
-/** What the rules need of a story; a hook's document has these whatever its locale. */
-type StoryFacts = Pick<Story, 'id' | 'eventId' | 'heat' | 'score' | 'publishedAt' | 'createdAt' | 'sources'>
-
-function candidateOf(story: StoryFacts): PosterCandidate {
-  return {
-    id: story.id,
-    eventId: story.eventId,
-    heat: story.heat ?? 0,
-    score: story.score ?? null,
-    publishedAt: story.publishedAt ?? story.createdAt,
-    source: originalSource(story),
-  }
 }
 
 function deskStory(story: StoryAll): DeskStory {

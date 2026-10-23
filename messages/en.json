@@ -751,6 +751,12 @@
       "notYou": "Didn't sign up for this?",
       "unsubscribe": "Unsubscribe with one click"
     },
+    "digest": {
+      "subject": "{count, plural, offset:1 =1 {{title}} one {{title} + # more AI story} other {{title} + # more AI stories}}",
+      "intro": "The past 24 hours · {count, plural, one {# story} other {# stories}}",
+      "top": "Top story",
+      "all": "See every story on the site"
+    },
     "footer": {
       "why": "You're receiving this because you subscribed to the IFAI Daily.",
       "manage": "Manage subscription",
