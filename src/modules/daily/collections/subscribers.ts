@@ -1,7 +1,6 @@
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { eq } from '@payloadcms/db-postgres/drizzle'
 import {
-  ValidationError,
   type Access,
   type CollectionAfterDeleteHook,
   type CollectionBeforeChangeHook,
@@ -10,6 +9,7 @@ import {
 } from 'payload'
 
 import { localeNames, locales } from '@/i18n/config'
+import { rejectField } from '@/lib/field-error'
 import { isTimeZone } from '@/lib/local-time'
 
 import { subscriberEndpoints } from '../email/endpoints'
@@ -42,18 +42,13 @@ const ownerChanges: CollectionBeforeChangeHook = ({ data, originalDoc, operation
     return { ...data, stopReason: null }
   }
   // On the status field, in the admin's language.
-  throw new ValidationError({
-    collection: 'subscribers',
-    errors: [
-      {
-        path: 'status',
-        message:
-          req.i18n?.language === 'en'
-            ? 'The owner can only stop sending, or undo their own stop. Readers unsubscribe and resubscribe from the links in the emails.'
-            : '站长只能停发，或者撤销自己的停发。退订和重新订阅由读者用邮件里的链接操作。',
-      },
-    ],
-  })
+  rejectField(
+    'subscribers',
+    'status',
+    req.i18n?.language === 'en'
+      ? 'The owner can only stop sending, or undo their own stop. Readers unsubscribe and resubscribe from the links in the emails.'
+      : '站长只能停发，或者撤销自己的停发。退订和重新订阅由读者用邮件里的链接操作。',
+  )
 }
 
 /** Rule 10: the morning emails of a deleted subscription stay in the numbers, without who they went to. */

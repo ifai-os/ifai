@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-23（画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
+更新于 2026-10-23（后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
 
 ## 现在到哪了
 
@@ -172,7 +172,7 @@
 - 沙盒里有 PostgreSQL 16：`service postgresql start`，建库 `ifai`，在 `.env` 里填本地的 `DATABASE_URI`，就能跑迁移和 `pnpm build`。
 - 本机重新跑示例数据脚本之后，先删掉 `.next/cache/fetch-cache` 再 `pnpm build`：数据缓存会跨构建保留，首页这类构建时预渲染的页面会用上旧数据，冒烟测试跟着失败。CI 每次都是新环境，不受影响。
 - 沙盒里的 DNS 查询全部失败（ENOTFOUND），订阅接口的收信服务器检查在这里一律当作「查询出错」不拦；冒烟测试里「域名收不了信」那条在查不到 `gmail.com` 的地方自动跳过，CI 上照常跑。
-- 生产构建（Turbopack）里页面和接口各有一份 `payload` 模块，Payload 实例却是共用的（谁先启动用谁的）。先打开过后台页面时，接口里 `instanceof ValidationError` 认不出钩子抛的错误：后台保存被拒时只显示错误的 `message`，字段下面的提示没有了。所以钩子拒绝保存时把说明也写进 `message`（`src/modules/apps/collections/AppSubmissions.ts` 的 `reject`），判断错误类型看形状、不用 `instanceof`（`src/modules/apps/submissions/data.ts` 的 `isTakenCode`）。资源的 `collections/guards.ts`、`submit/submit.ts` 和日报订阅者的钩子还是老写法，后台提示会变成英文的「The following field is invalid: …」，改的时候照着做。
+- 生产构建（Turbopack）里页面和接口各有一份 `payload` 模块，Payload 实例却是共用的（谁先启动用谁的）。先打开过后台页面时，接口里 `instanceof ValidationError` 认不出钩子抛的错误：后台保存被拒时只显示错误的 `message`，字段下面的提示没有了。所以钩子拒绝保存一律用 `src/lib/field-error.ts` 的 `rejectField`（把说明也写进 `message`），判断是不是某个字段的错误用 `isFieldError`（看形状、不用 `instanceof`）。应用提交、资源（`collections/guards.ts`、`submit/submit.ts`）和日报订阅者都已改用它们；新写的钩子不要直接 `throw new ValidationError`。
 - ESLint 10 的 peer 依赖警告是已知情况，见 AGENTS.md。
 
 ## 设计稿

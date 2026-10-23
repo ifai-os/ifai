@@ -1,7 +1,8 @@
-import { ValidationError, type Payload } from 'payload'
+import type { Payload } from 'payload'
 
 import { defaultLocale, isLocale } from '@/i18n/config'
 import { emailDeliveryConfigured } from '@/lib/auth/providers'
+import { isFieldError } from '@/lib/field-error'
 
 import type { SkillSubmission } from '@/payload-types'
 
@@ -13,9 +14,7 @@ import { submissionRules, type SubmissionInput } from './rules'
 export type SubmitOutcome = { ok: true; code: string; email: string; submittedAt: string } | { ok: false; error: 'daily-limit' }
 
 /** Two submissions in the same instant can pick the same number; the unique index turns one away. */
-function isTakenCode(error: unknown): boolean {
-  return error instanceof ValidationError && error.data.errors.some((problem) => problem.path === 'code')
-}
+const isTakenCode = (error: unknown) => isFieldError(error, 'code')
 
 /**
  * A member sends a Skill (POST /api/resources/submissions). The same repository sent again while
