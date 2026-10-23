@@ -150,6 +150,10 @@
     "features": "Key features",
     "faqs": "FAQ",
     "alternatives": "Alternatives",
+    "tabs": {
+      "label": "About this app",
+      "overview": "Overview"
+    },
     "intro": "Ranked by Heat: site rank, clicks and saves on IFAI, and mentions in the Daily. Heat shows attention, not a user count.",
     "updated": "Heat updates once a day · last updated <time></time>",
     "updatedPending": "Heat updates once a day; the first numbers arrive with the next update.",

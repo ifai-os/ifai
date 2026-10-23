@@ -123,7 +123,10 @@ export function ReviewsProvider({ app, signIn, children }: ReviewsProviderProps)
     const returned = url.searchParams.get(pendingParam) === pendingValue
     if (returned) {
       url.searchParams.delete(pendingParam)
+      // To the reviews, where theirs will show; on wider screens this opens the reviews tab.
+      url.hash = 'reviews'
       window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
     }
     if (signedIn && (returned || wanted.current)) {
       wanted.current = false

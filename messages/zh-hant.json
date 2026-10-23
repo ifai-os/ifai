@@ -150,6 +150,10 @@
     "features": "核心功能",
     "faqs": "常見問題",
     "alternatives": "替代品",
+    "tabs": {
+      "label": "應用詳情",
+      "overview": "概覽"
+    },
     "intro": "按熱度排序。熱度綜合網站排名、站內點擊與收藏、日報提及，反映關注度，不代表實際使用者數。",
     "updated": "熱度每天更新一次 · 最近更新 <time></time>",
     "updatedPending": "熱度每天更新一次，下一次更新後顯示。",

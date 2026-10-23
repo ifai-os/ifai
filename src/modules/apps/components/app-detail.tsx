@@ -17,8 +17,9 @@ import { ReportButton } from '../reports/components/report-button'
 import { ReviewsProvider } from '../reviews/components/reviews-provider'
 import { ReviewsSection, ReviewSummary } from '../reviews/components/reviews-section'
 import { showTrancoRank } from '../settings'
-import { HeatSection, HeatStats } from './app-heat'
+import { HeatPlaces, HeatSection, HeatStats } from './app-heat'
 import { AppTile } from './app-tile'
+import { DetailTabs, type DetailPart, type DetailTab, type DetailTabId } from './detail-tabs'
 
 type FactKey = 'developer' | 'pricing' | 'platforms' | 'listedAt'
 
@@ -28,6 +29,15 @@ const barButton =
 // Outlined like a secondary button; the save button colors its own text.
 const outline = 'border border-line bg-bg hover:border-ink-4'
 
+const tabOrder: DetailTabId[] = ['overview', 'heat', 'reviews', 'alternatives']
+/** The headings in each tab, so an address like #faqs opens the right one. */
+const tabAnchors: Record<DetailTabId, string[]> = {
+  overview: ['about', 'features', 'faqs'],
+  heat: ['heat', 'mentions'],
+  reviews: ['reviews'],
+  alternatives: ['alternatives'],
+}
+
 type AppDetailViewProps = {
   app: AppDetail
   /** The sign-in methods, for the dialog a visitor gets on pressing save or「写评价」. */
@@ -35,14 +45,13 @@ type AppDetailViewProps = {
 }
 
 /**
- * An app's page: header and facts, its heat figures, then what it is, features, heat, daily
- * mentions, FAQ, reviews and alternatives, and「信息有误？」.
+ * An app's page: header and facts, its heat figures, then what it is, features, heat with the
+ * Daily stories about it, FAQ, reviews and alternatives, and「信息有误？」. Wider screens put
+ * these in four tabs, with the app's places on the lists beside them (docs/specs/apps.md「第 6 步」).
  */
 export function AppDetailView({ app, signIn }: AppDetailViewProps) {
   const t = useTranslations('apps')
-  const nav = useTranslations('nav')
-  const card = useTranslations('card')
-  const categories = useTranslations('categories')
+  const reviews = useTranslations('reviews')
   const format = useFormatter()
   const showSiteRank = showTrancoRank()
 
@@ -55,6 +64,24 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
   if (app.listedAt) {
     facts.push({ key: 'listedAt', value: format.dateTime(new Date(app.listedAt), { year: 'numeric', month: 'long' }) })
   }
+
+  // On phones the parts follow one another in this order; wider screens put them in tabs.
+  const parts: DetailPart[] = []
+  if (app.description || app.features) parts.push({ tab: 'overview', content: <Overview app={app} /> })
+  if (app.heat || app.mentions.length > 0) parts.push({ tab: 'heat', content: <HeatSection app={app} showSiteRank={showSiteRank} /> })
+  if (app.faqs) parts.push({ tab: 'overview', content: <Faqs faqs={app.faqs} /> })
+  parts.push({ tab: 'reviews', content: <ReviewsSection /> })
+  if (app.alternatives.length > 0) parts.push({ tab: 'alternatives', content: <Alternatives alternatives={app.alternatives} /> })
+
+  const labels: Record<DetailTabId, string> = {
+    overview: t('tabs.overview'),
+    heat: t('heat'),
+    reviews: reviews('title'),
+    alternatives: t('alternatives'),
+  }
+  const tabs: DetailTab[] = tabOrder
+    .filter((id) => parts.some((part) => part.tab === id))
+    .map((id) => ({ id, label: labels[id], anchors: tabAnchors[id] }))
 
   const shareLabels = { share: t('share'), copied: t('copied') }
   const reportApp = { id: app.id, name: app.name }
@@ -193,130 +220,14 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
 
           {app.heat && <HeatStats app={app} heat={app.heat} showSiteRank={showSiteRank} />}
 
-          <div className="flex w-full max-w-190 flex-col gap-8 md:gap-10">
-            {app.description && (
-              <Section id="about" title={t('about')}>
-                <p lang={app.description.lang} className="text-body whitespace-pre-line md:text-body-article">
-                  {app.description.value}
-                </p>
-              </Section>
-            )}
-
-            {app.features && (
-              <Section id="features" title={t('features')}>
-                <ol
-                  lang={app.features.lang}
-                  className="flex flex-col md:grid md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] md:gap-3"
-                >
-                  {app.features.value.map((feature, index) => (
-                    <li
-                      key={feature.id ?? index}
-                      className="grid grid-cols-[28px_minmax(0,1fr)] gap-2.5 border-t border-surface-2 py-3 md:flex md:flex-col md:rounded-card md:border md:p-4"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="flex size-7 items-center justify-center rounded-thumb bg-surface text-meta font-semibold text-ink-2 md:hidden"
-                      >
-                        {index + 1}
-                      </span>
-                      <span className="flex flex-col gap-0.5 md:gap-1.5">
-                        <span className="text-body font-medium">{feature.title}</span>
-                        {feature.detail && (
-                          <span className="text-ui text-ink-2 md:text-meta md:text-ink-3">{feature.detail}</span>
-                        )}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </Section>
-            )}
-
-            {app.heat && <HeatSection app={app} heat={app.heat} showSiteRank={showSiteRank} />}
-
-            {app.mentions.length > 0 && (
-              <Section id="mentions" title={t('mentionsTitle')}>
-                <div className="flex flex-col">
-                  <ul className="flex flex-col border-t border-surface-2">
-                    {app.mentions.map((mention) => (
-                      <li key={mention.slug} className="border-b border-surface-2">
-                        <Link href={`/daily/${mention.slug}`} className="group flex flex-col gap-1 py-3">
-                          <span lang={mention.title.lang} className="text-body font-medium group-hover:text-accent">
-                            {mention.title.value}
-                          </span>
-                          <span className="text-small text-ink-4">
-                            {format.dateTime(new Date(mention.publishedAt), { month: 'long', day: 'numeric' })} · {nav('daily')}
-                            {mention.category && ` · ${categories(mention.category)}`}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                  {app.heat && app.heat.latest.mentions > 0 && (
-                    <p className="pt-2.5 text-meta text-ink-4">{t('mentionsCount', { count: app.heat.latest.mentions })}</p>
-                  )}
-                </div>
-              </Section>
-            )}
-
-            {app.faqs && (
-              <Section id="faqs" title={t('faqs')}>
-                <div lang={app.faqs.lang} className="flex flex-col border-t border-surface-2">
-                  {app.faqs.value.map((faq, index) => (
-                    <details key={faq.id ?? index} open={index === 0} className="group border-b border-surface-2">
-                      <summary className="flex min-h-13 cursor-pointer list-none items-center justify-between gap-3 py-3 text-body font-medium [&::-webkit-details-marker]:hidden">
-                        {faq.question}
-                        <span aria-hidden="true" className="flex-none text-title text-ink-4">
-                          <span className="group-open:hidden">+</span>
-                          <span className="hidden group-open:inline">−</span>
-                        </span>
-                      </summary>
-                      <p className="pb-4 text-body whitespace-pre-line text-ink-2">{faq.answer}</p>
-                    </details>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            <ReviewsSection />
-
-            {app.alternatives.length > 0 && (
-              <Section id="alternatives" title={t('alternatives')}>
-                <ul className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] md:gap-3 md:overflow-visible md:px-0 md:pb-0">
-                  {app.alternatives.map((alternative) => (
-                    <li key={alternative.id} className="flex w-34 flex-none md:w-auto">
-                      <Link
-                        href={`/apps/${alternative.slug}`}
-                        className="group flex w-full flex-col gap-2 rounded-card border border-surface-2 p-3.5 md:gap-2.5 md:bg-surface md:p-4"
-                      >
-                        <span className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2.5">
-                          <AppTile name={alternative.name} slug={alternative.slug} logo={alternative.logo} size="md" />
-                          <span className="flex min-w-0 flex-col gap-0.5">
-                            <span className="truncate text-body font-semibold group-hover:text-accent md:font-medium">
-                              {alternative.name}
-                            </span>
-                            <span className="hidden text-small text-ink-4 md:block">
-                              {[alternative.category?.name, alternative.pricing && t(`pricing.${alternative.pricing}`)]
-                                .filter(Boolean)
-                                .join(' · ')}
-                            </span>
-                          </span>
-                        </span>
-                        {alternative.tagline && (
-                          <span
-                            lang={alternative.tagline.lang}
-                            className="line-clamp-2 min-h-9 text-small text-ink-2 md:min-h-0 md:text-meta md:text-ink-3"
-                          >
-                            {alternative.tagline.value}
-                          </span>
-                        )}
-                        {alternative.heat && (
-                          <span className="mt-auto text-small text-ink-4">{card('heat', { value: alternative.heat.heat })}</span>
-                        )}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </Section>
+          <div className="flex flex-col gap-x-12 gap-y-8 md:flex-row md:flex-wrap md:items-start">
+            <div className="w-full max-w-190 min-w-0 md:w-auto md:flex-[999_1_560px]">
+              <DetailTabs label={t('tabs.label')} tabs={tabs} parts={parts} />
+            </div>
+            {app.heat && (
+              <aside aria-labelledby="places" className="hidden min-w-0 md:block md:max-w-side md:flex-[1_1_260px]">
+                <HeatPlaces app={app} heat={app.heat} level={2} id="places" />
+              </aside>
             )}
           </div>
 
@@ -342,10 +253,130 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
   )
 }
 
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+/** 它是什么 and 核心功能: the first part of 概览. */
+function Overview({ app }: { app: AppDetail }) {
+  const t = useTranslations('apps')
+  return (
+    <>
+      {app.description && (
+        <Section id="about" title={t('about')}>
+          <p lang={app.description.lang} className="text-body whitespace-pre-line md:text-body-article">
+            {app.description.value}
+          </p>
+        </Section>
+      )}
+      {app.features && (
+        <Section id="features" title={t('features')}>
+          <ol
+            lang={app.features.lang}
+            className="flex flex-col md:grid md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] md:gap-3"
+          >
+            {app.features.value.map((feature, index) => (
+              <li
+                key={feature.id ?? index}
+                className="grid grid-cols-[28px_minmax(0,1fr)] gap-2.5 border-t border-surface-2 py-3 md:flex md:flex-col md:rounded-card md:border md:p-4"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex size-7 items-center justify-center rounded-thumb bg-surface text-meta font-semibold text-ink-2 md:hidden"
+                >
+                  {index + 1}
+                </span>
+                <span className="flex flex-col gap-0.5 md:gap-1.5">
+                  <span className="text-body font-medium">{feature.title}</span>
+                  {feature.detail && (
+                    <span className="text-ui text-ink-2 md:text-meta md:text-ink-3">{feature.detail}</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Section>
+      )}
+    </>
+  )
+}
+
+/** 常见问题, the first one open: the rest of 概览, after the heat on phones. */
+function Faqs({ faqs }: { faqs: NonNullable<AppDetail['faqs']> }) {
+  const t = useTranslations('apps')
+  return (
+    <Section id="faqs" title={t('faqs')}>
+      <div lang={faqs.lang} className="flex flex-col border-t border-surface-2">
+        {faqs.value.map((faq, index) => (
+          <details key={faq.id ?? index} open={index === 0} className="group border-b border-surface-2">
+            <summary className="flex min-h-13 cursor-pointer list-none items-center justify-between gap-3 py-3 text-body font-medium [&::-webkit-details-marker]:hidden">
+              {faq.question}
+              <span aria-hidden="true" className="flex-none text-title text-ink-4">
+                <span className="group-open:hidden">+</span>
+                <span className="hidden group-open:inline">−</span>
+              </span>
+            </summary>
+            <p className="pb-4 text-body whitespace-pre-line text-ink-2">{faq.answer}</p>
+          </details>
+        ))}
+      </div>
+    </Section>
+  )
+}
+
+/** Picked alternatives, or the hottest others in the category, with their heat. */
+function Alternatives({ alternatives }: { alternatives: AppDetail['alternatives'] }) {
+  const t = useTranslations('apps')
+  const card = useTranslations('card')
+  return (
+    <Section id="alternatives" title={t('alternatives')} named>
+      <ul className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] md:gap-3 md:overflow-visible md:px-0 md:pb-0">
+        {alternatives.map((alternative) => (
+          <li key={alternative.id} className="flex w-34 flex-none md:w-auto">
+            <Link
+              href={`/apps/${alternative.slug}`}
+              className="group flex w-full flex-col gap-2 rounded-card border border-surface-2 p-3.5 md:gap-2.5 md:bg-surface md:p-4"
+            >
+              <span className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2.5">
+                <AppTile name={alternative.name} slug={alternative.slug} logo={alternative.logo} size="md" />
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="truncate text-body font-semibold group-hover:text-accent md:font-medium">
+                    {alternative.name}
+                  </span>
+                  <span className="hidden text-small text-ink-4 md:block">
+                    {[alternative.category?.name, alternative.pricing && t(`pricing.${alternative.pricing}`)]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                </span>
+              </span>
+              {alternative.tagline && (
+                <span
+                  lang={alternative.tagline.lang}
+                  className="line-clamp-2 min-h-9 text-small text-ink-2 md:min-h-0 md:text-meta md:text-ink-3"
+                >
+                  {alternative.tagline.value}
+                </span>
+              )}
+              {alternative.heat && (
+                <span className="mt-auto text-small text-ink-4">{card('heat', { value: alternative.heat.heat })}</span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  )
+}
+
+type SectionProps = {
+  id: string
+  title: string
+  /** Its tab has the same name, so wider screens leave the heading to screen readers. */
+  named?: boolean
+  children: ReactNode
+}
+
+function Section({ id, title, named = false, children }: SectionProps) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3 md:gap-4">
-      <h2 id={id} className="text-h3 font-semibold md:text-h2">
+      <h2 id={id} className={`scroll-mt-20 text-h3 font-semibold ${named ? 'md:sr-only' : 'md:text-h2'}`}>
         {title}
       </h2>
       {children}
