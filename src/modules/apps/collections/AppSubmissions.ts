@@ -1,5 +1,4 @@
 import {
-  ValidationError,
   type CollectionAfterChangeHook,
   type CollectionBeforeChangeHook,
   type CollectionConfig,
@@ -8,6 +7,7 @@ import {
 } from 'payload'
 import { text } from 'payload/shared'
 
+import { rejectField } from '@/lib/field-error'
 import { keepingRequest } from '@/lib/i18n/hant-sync'
 import { inngest } from '@/lib/inngest/client'
 import { isEmailAddress, normalizeEmail } from '@/modules/daily/email/address'
@@ -24,17 +24,9 @@ function relationId(value: unknown): number | undefined {
   return undefined
 }
 
-/**
- * Stop a save with a message on one field, in the admin language. The message is the error's own
- * too: the production build loads `payload` once for pages and once for routes, and when the
- * back office page started Payload, the REST route does not see a ValidationError here and keeps
- * only the message, so the toast still says what to do.
- */
+/** Stop a save with a message on one field, in the admin language. */
 function reject(req: PayloadRequest, path: string, message: { en: string; zh: string }): never {
-  const text = adminMessage(req, message)
-  const error = new ValidationError({ collection: 'app-submissions', errors: [{ path, message: text }] })
-  error.message = text
-  throw error
+  rejectField('app-submissions', path, adminMessage(req, message))
 }
 
 /**
