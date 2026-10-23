@@ -111,6 +111,8 @@ export type AppDetail = AppListItem & {
   faqs: InLanguage<NonNullable<App['faqs']>> | null
   tags: InLanguage<string[]> | null
   screenshot: AppImage | null
+  /** When the website image was last saved to the media library. */
+  screenshotUpdatedAt: string | null
   /** Its figures on the latest scored day and up to 90 days before; null until the heat job has scored it. */
   heat: { latest: AppHeatFigures; history: HeatPoint[] } | null
   /** The newest published daily stories about it. */
@@ -162,7 +164,7 @@ const listSelect = {
 // Populated documents only bring what the cards show.
 const populate = {
   'app-categories': { slug: true },
-  media: { url: true, width: true, height: true, sizes: true },
+  media: { url: true, width: true, height: true, sizes: true, updatedAt: true },
   apps: { slug: true },
 } as const
 
@@ -454,6 +456,7 @@ export const getApp = cache(async (slug: string, locale: Locale): Promise<AppDet
     faqs: inReaderLanguage(doc.faqs, locale),
     tags: inReaderLanguage(doc.tags, locale),
     screenshot: imageOf(doc.screenshot, 'card'),
+    screenshotUpdatedAt: typeof doc.screenshot === 'object' ? (doc.screenshot?.updatedAt ?? null) : null,
     heat: heat?.latest ? { latest: heat.latest, history: heat.history } : null,
     mentions: mentions.map((mention) => ({
       slug: mention.slug,

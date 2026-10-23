@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     'app-categories': AppCategory;
     apps: App;
+    'app-reports': AppReport;
     sources: Source;
     stories: Story;
     posters: Poster;
@@ -90,6 +91,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     'app-categories': AppCategoriesSelect<false> | AppCategoriesSelect<true>;
     apps: AppsSelect<false> | AppsSelect<true>;
+    'app-reports': AppReportsSelect<false> | AppReportsSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     stories: StoriesSelect<false> | StoriesSelect<true>;
     posters: PostersSelect<false> | PostersSelect<true>;
@@ -307,6 +309,31 @@ export interface App {
    * Optional. Empty → the top apps of the same category by heat.
    */
   alternatives?: (number | App)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What readers reported with “Something wrong?” on an app’s page. Easier to deal with from the app’s Reports tab: mark them done, or delist an app that has shut down.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "app-reports".
+ */
+export interface AppReport {
+  id: number;
+  app: number | App;
+  kind: 'wrong-info' | 'shut-down' | 'other';
+  body?: string | null;
+  /**
+   * Optional; never shown on the site.
+   */
+  contact?: string | null;
+  /**
+   * The language of the page they reported from.
+   */
+  pageLocale?: ('en' | 'zh-Hans' | 'zh-Hant' | 'ja' | 'ko') | null;
+  reporter: string;
+  status: 'open' | 'resolved';
+  resolvedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -866,6 +893,10 @@ export interface PayloadLockedDocument {
         value: number | App;
       } | null)
     | ({
+        relationTo: 'app-reports';
+        value: number | AppReport;
+      } | null)
+    | ({
         relationTo: 'sources';
         value: number | Source;
       } | null)
@@ -1056,6 +1087,22 @@ export interface AppsSelect<T extends boolean = true> {
   logo?: T;
   screenshot?: T;
   alternatives?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "app-reports_select".
+ */
+export interface AppReportsSelect<T extends boolean = true> {
+  app?: T;
+  kind?: T;
+  body?: T;
+  contact?: T;
+  pageLocale?: T;
+  reporter?: T;
+  status?: T;
+  resolvedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
