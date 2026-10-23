@@ -8,6 +8,7 @@
 | [daily.md](./daily.md) — 日报 | 已确认，实现顺序 6 步已完成，待预览环境验收 |
 | [daily-email.md](./daily-email.md) — 日报 · 邮件订阅 | 已确认，第 1–2 步（订阅与退订、发送）已完成，下一步预览环境验收后打开生产开关 |
 | [apps.md](./apps.md) — 应用 | 已确认，实现中（第 1–3 步完成） |
+| [legal.md](./legal.md) — 隐私政策与用户协议 | 已实现（条文待专业评审） |
 | [resources.md](./resources.md) — 资源（Agent Skills） | 已确认，实现中（第 3 步完成） |
 
 ## 模板

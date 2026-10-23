@@ -2,12 +2,13 @@
 
 import { useLocale, useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 
 import { localizePath, type Locale } from '@/i18n/config'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth/client'
 import type { AuthProviders } from '@/lib/auth/providers'
+import { legalHref } from '@/modules/legal/documents'
 
 type Status = 'idle' | 'sending' | 'sent' | 'invalid' | 'failed'
 
@@ -164,7 +165,23 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false }
           {t('failed')}
         </p>
       )}
+
+      <p className="text-center text-small text-ink-4">
+        {t.rich('agree', {
+          terms: (chunks) => legalLink(legalHref.terms, chunks),
+          privacy: (chunks) => legalLink(legalHref.privacy, chunks),
+        })}
+      </p>
     </div>
+  )
+}
+
+/** In a new tab, so a half-filled dialog stays where it was (docs/specs/legal.md). */
+function legalLink(href: `/${string}`, chunks: ReactNode) {
+  return (
+    <Link href={href} target="_blank" className="text-link hover:underline">
+      {chunks}
+    </Link>
   )
 }
 

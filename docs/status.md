@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-23（账号页与删除账号；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
+更新于 2026-10-23（账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
 
 ## 现在到哪了
 
@@ -53,9 +53,10 @@
 - **资源第 5 步之四（发布指南与投稿）已完成**：`/[locale]/resources/submit`（页面没有画板，版式跟使用指南）：发布前先看、之后会怎样、投稿表单。表单要登录（访客看到登录表单，登录后回到这一页），填 GitHub 地址、一句话说明（最多 200 字）、联系邮箱（默认账号邮箱）；从地址栏复制的地址和指向 SKILL.md 的链接都会整理成导入用的地址。接口 `POST /api/resources/submissions`：只收本站页面的请求，每人每个上海日 5 个，同一仓库还在待处理时返回原来的编号。成功后表单换成「空状态与加载状态」画板的「提交成功」：仓库和编号，已提交 → 审核中（预计完成日，上海的两个工作日之后）→ 上线。列表右上加「发布 Skill」按钮，右栏最后加投稿卡片。邮件三种（收到、已收录附 Skill 页面、没收录附「给投稿人的说明」和检测拦截的文件与行号），按投稿时页面的语言写，版式在 `src/lib/email/layout.ts`（登录邮件也改用它）；投稿保存后状态和「已通知投稿人」不同就发事件 `skill/submission-notify`，任务 `skill-submission-notify` 发信并记下，Inngest 当时没收到的每小时第 37 分钟补发。后台投稿加了邮件语言、已通知投稿人、邮件发送时间、给投稿人的说明；改成「已收录」前必须在「导入为」选好已发布的 Skill；编号改成按那天已有的最大号往后排（原来按条数，删掉一条以后会撞号）。迁移 `skill_submissions_notify`（迁移前的投稿算已通知）。代码在 `src/modules/resources/submit/`。本地库上实跑了编号、同仓库不重复、每天 5 个、「已收录」的检查和三种邮件。「转为 Skill」没做，见 resources.md「第 5 步的做法」。
 - **资源第 5 步之五（加载骨架）已完成**，资源第 1–5 步至此全部完成。列表没有用 `loading.tsx`（它会让 `?page=0`、超过最后一页这些地址返回 200）：分类、排序、筛选、标签、作者、搜索、翻页这些列表里的链接改在页面里切换（`components/list-navigation.tsx`），页面不动，过 300 毫秒结果区换成骨架（列表和卡片两种视图都按真实条目的形状，`skill-list-skeleton.tsx`），10 秒还没到换成「加载失败」和重试。详情页是静态生成的，加了 `[slug]/loading.tsx`（`skill-detail-skeleton.tsx`，按页面自己的栅格），不存在的 Skill 仍然返回 404；它在点进 Skill 而页面还没到的时候显示，网速正常时一闪而过或看不到。两个骨架都是客户端组件，原因见「已知问题」。冒烟测试拦住列表请求看骨架、加载失败和重试，再用限速看详情骨架。
 - **站点地图与 robots.txt 已完成**（技术方案第 9 节的 sitemap 部分）：`/sitemap.xml` 是索引，分 `pages`、`daily`、`apps`、`skills` 四段，每段超过 9000 个页面自动拆文件；每个页面的五种语言各一条，带和页面 `<head>` 一样的 hreflang 和 `x-default`。只列已发布、可索引的规范地址，跟着各模块的缓存标签刷新。`robots.txt` 只拦 `/admin`、`/api/` 和应用的「打开网站」跳转，预览环境整站不让抓。做法写在 foundation.md「站点地图与 robots.txt」。本地库上用示例数据把 sitemap 里的 155 个地址全部请求过一遍，都是 200，抽查的 canonical 和 sitemap 一致。
+- **隐私政策和用户协议已完成**（[specs/legal.md](./specs/legal.md)）：`/[locale]/privacy`、`/[locale]/terms`，五种语言，进站点地图；条文放在 `messages/*.json` 的 `legal`，生效日期、各节顺序和联系邮箱 `hello@ifai.io` 在 `src/modules/legal/documents.ts`。页脚加了两个链接，登录页和登录对话框表单下面写「继续即表示你同意《用户协议》和《隐私政策》」（新标签页打开）。条文按现有代码核对过收集了什么、交给谁、留多久；以后新增收集或接入统计、报错工具，先改这两页再上线。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块；其中「提交成功」资源投稿做成了共用的 `src/components/states/submitted.tsx`，应用的提交表单直接用。`LoadingState` 可以传 `skeleton` 换成按页面形状画的骨架，一行字的占位用 `SkeletonLine`。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
-- **部署改由 GitHub Actions 做**（`.github/workflows/deploy.yml`）：Vercel Hobby 不能导入私有组织仓库，所以 Vercel 项目 `ifai1/ifai` 不连 Git，`main` 用 Vercel CLI 部署生产；每个 PR 先由 `neondatabase/create-branch-action` 建 Neon 分支 `preview/pr-<编号>`，连接串作为 `DATABASE_URI` 传给构建（迁移）和预览运行时，部署完对预览地址跑冒烟测试（原来挂在 `deployment_status` 上的 `preview-smoke.yml` 删掉了），PR 关闭时删分支。Vercel 的 Neon 集成不再用。缺 secret 时 Deploy 跳过、不报错。
+- **部署改由 GitHub Actions 做**（`.github/workflows/deploy.yml`）：Vercel Hobby 不能导入私有组织仓库，所以 Vercel 项目 `ifai1/ifai` 不连 Git，`main` 用 Vercel CLI 部署生产；每个 PR 先由 `neondatabase/create-branch-action` 建 Neon 分支 `preview/pr-<编号>`，连接串作为 `DATABASE_URI` 传给构建（迁移）和预览运行时，部署完对预览地址跑冒烟测试（原来挂在 `deployment_status` 上的 `preview-smoke.yml` 删掉了），PR 关闭时删分支。Vercel 的 Neon 集成不再用。缺 secret 时 Deploy 跳过、不报错。生产部署先关着（站长说暂不用生产），仓库变量 `PRODUCTION_DEPLOY=true` 后才部署。
 
 ## 分期
 
@@ -154,6 +155,7 @@
 - [ ] 资源加载骨架部署到预览环境后：在浏览器开发者工具里把网速调成 Slow 3G，在 `/zh-hans/resources` 点分类、排序和下一页，看结果区的骨架（列表和卡片视图各一次，手机宽度也看）；再点进一个 Skill，看详情骨架。
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。
 - [ ] 删除账号部署到预览环境后：用一个测试账号收藏一个应用、写一条评价、提交一个应用，再从账号菜单进「账号」删除，确认回到「账号已删除」、右上角变回登录图标；后台应用提交里那条没了，用同一个邮箱再登录是空账号。
+- [ ] 隐私政策和用户协议：开好 `hello@ifai.io` 邮箱（或者告诉 Claude 换成别的地址，改 `src/modules/legal/documents.ts`）；正式上线前请懂当地法律的人看一遍两页条文；定了公司主体后补上适用法律和争议解决地点。
 - [ ] 正式上线后：在 Google Search Console 和 Bing Webmaster Tools 验证 `ifai.io`，提交 `https://ifai.io/sitemap.xml`，过几天看「网页索引」里有没有被排除的地址。
 - [ ] 以后再定：商业化方式；排行第一批参赛模型和题库（第三期前）。
 
