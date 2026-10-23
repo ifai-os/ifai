@@ -36,6 +36,20 @@ for (const { path, lang, messages } of homes) {
   })
 }
 
+for (const { path, lang, messages } of homes) {
+  test(`privacy policy and terms open from the footer in ${lang}`, async ({ page }) => {
+    await page.goto(path)
+    const footer = page.locator('footer')
+    await footer.getByRole('link', { name: messages.footer.privacy }).click()
+    await expect(page).toHaveURL(`${path}/privacy`)
+    await expect(page.getByRole('heading', { level: 1, name: messages.legal.privacy.title })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: messages.legal.privacy.sections.collect.title })).toBeVisible()
+    await footer.getByRole('link', { name: messages.footer.terms }).click()
+    await expect(page).toHaveURL(`${path}/terms`)
+    await expect(page.getByRole('heading', { level: 1, name: messages.legal.terms.title })).toBeVisible()
+  })
+}
+
 test('the root redirects to a locale', async ({ page }) => {
   await page.goto('/')
   await expect(page).toHaveURL(/\/(en|zh-hans|zh-hant|ja|ko)$/)
