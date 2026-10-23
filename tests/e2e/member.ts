@@ -8,7 +8,7 @@ import pg from 'pg'
  * Needs DATABASE_URI and BETTER_AUTH_SECRET, the same ones the server uses; CI sets both.
  * `remove()` deletes the member, and with it their sessions, saves, reviews (and their translations), and Skill and app submissions.
  */
-export async function createMember(baseURL: string, name = 'Smoke test member') {
+export async function createMember(baseURL: string, name = 'Smoke test member', { signedInHoursAgo = 0 } = {}) {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URI })
   await client.connect()
   const id = randomUUID()
@@ -18,14 +18,16 @@ export async function createMember(baseURL: string, name = 'Smoke test member') 
     name,
     `smoke-${id}@example.com`,
   ])
-  await client.query(`insert into auth_sessions (id, token, user_id, expires_at) values ($1, $2, $3, now() + interval '1 hour')`, [
-    randomUUID(),
-    token,
-    id,
-  ])
+  // `created_at` is when they signed in: deleting the account wants a sign-in from the last day.
+  await client.query(
+    `insert into auth_sessions (id, token, user_id, expires_at, created_at) values ($1, $2, $3, now() + interval '1 hour', now() - make_interval(hours => $4))`,
+    [randomUUID(), token, id, signedInHoursAgo],
+  )
   const signature = createHmac('sha256', process.env.BETTER_AUTH_SECRET ?? '').update(token).digest('base64')
 
   return {
+    id,
+    email: `smoke-${id}@example.com`,
     cookie: {
       name: 'better-auth.session_token',
       value: encodeURIComponent(`${token}.${signature}`),
@@ -59,6 +61,8 @@ export async function createMember(baseURL: string, name = 'Smoke test member') 
         [reviewId, JSON.stringify(texts)],
       )
     },
+    /** Runs a query on the test database, for setting up rows and checking what is left. */
+    query: client.query.bind(client) as pg.Client['query'],
     async remove() {
       // Submissions keep the account id as text, not a foreign key, so they go first.
       await client.query('delete from skill_submissions where submitter_id = $1', [id])
