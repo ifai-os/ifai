@@ -8,7 +8,6 @@
     "signOut": "登出"
   },
   "home": {
-    "demoBanner": "示範資料 · 本頁的 Skill 還是範例內容，資源模組上線後換成真實資料",
     "dailyMeta": "今天已發布 {count, plural, other {# 則}} · 最近更新 {time}",
     "dailyMetaPast": "最近一期 {date} · {count, plural, other {# 則}}",
     "dailyEmpty": "第一批新聞正在審核，很快會出現在這裡。"
@@ -19,9 +18,6 @@
   },
   "card": {
     "moreSources": "{count, plural, =0 {單一來源} other {另有 # 家報導}}"
-  },
-  "placeholder": {
-    "body": "這個單元正在建置，第一期上線。"
   },
   "auth": {
     "title": "登入 IFAI",

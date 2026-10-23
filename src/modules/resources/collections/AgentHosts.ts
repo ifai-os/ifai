@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
+import { refreshSkillsAfterChange, refreshSkillsAfterDelete } from '../public/cache'
 import { isAdmin, resourcesAdminGroup, slugField, urlValidation } from './shared'
 
 /**
@@ -32,7 +33,8 @@ export const AgentHosts: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    afterChange: [syncHantFromHans(['instructions'])],
+    afterChange: [syncHantFromHans(['instructions']), refreshSkillsAfterChange],
+    afterDelete: [refreshSkillsAfterDelete],
   },
   fields: [
     {

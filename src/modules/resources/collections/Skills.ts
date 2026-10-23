@@ -6,6 +6,7 @@ import { inngest } from '@/lib/inngest/client'
 import { skillCategories, skillCategoryLabels } from '../categories'
 import { isValidRef, parseRepositoryUrl } from '../import/github'
 import { isValidVersion, normalizeVersion } from '../normalize'
+import { refreshSkillsAfterChange, refreshSkillsAfterDelete } from '../public/cache'
 import { isSystemWrite, peek, reject, relationId } from './guards'
 import { adminMessage, isAdmin, resourcesAdminGroup, slugField, urlValidation } from './shared'
 
@@ -78,7 +79,8 @@ export const Skills: CollectionConfig = {
   },
   hooks: {
     beforeChange: [guardSkill],
-    afterChange: [syncHantFromHans(hantFields)],
+    afterChange: [syncHantFromHans(hantFields), refreshSkillsAfterChange],
+    afterDelete: [refreshSkillsAfterDelete],
   },
   // Every save is kept, so changes to the display fields have a record (docs/specs/resources.md, «数据»).
   versions: { maxPerDoc: 100 },

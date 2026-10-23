@@ -5,6 +5,7 @@ import type {
   CollectionConfig,
   SelectFieldSingleValidation,
   TextFieldSingleValidation,
+  Where,
 } from 'payload'
 import { text } from 'payload/shared'
 
@@ -14,6 +15,7 @@ import type { Skill, SkillVersion } from '@/payload-types'
 import { describeEndpoints } from '../describe/endpoints'
 import { compareVersions, isSha256, isValidVersion, normalizeSha256, normalizeVersion } from '../normalize'
 import { inspectPackage, type ImportContext } from '../package/inspect'
+import { refreshSkillsAfterChange, refreshSkillsAfterDelete } from '../public/cache'
 import { FROZEN_STATUSES, isSystemWrite, peek, reject, relationId, systemUpdate } from './guards'
 import { adminMessage, isAdmin, jobsOnly, resourcesAdminGroup, signedIn } from './shared'
 
@@ -248,7 +250,13 @@ export const SkillVersions: CollectionConfig = {
     filesRequiredOnCreate: false,
   },
   access: {
-    read: ({ req: { user } }) => (user ? true : { status: { in: ['published', 'deprecated', 'withdrawn'] } }),
+    // A withdrawn version's page stays readable (it says why), but its Zip is no longer served;
+    // nor is any Zip of a delisted Skill, even through the file's own address.
+    read: ({ req: { user }, isReadingStaticFile }): Where | true => {
+      if (user) return true
+      if (isReadingStaticFile) return { and: [{ status: { in: ['published', 'deprecated'] } }, { 'skill.status': { equals: 'published' } }] }
+      return { status: { in: ['published', 'deprecated', 'withdrawn'] } }
+    },
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
@@ -256,7 +264,8 @@ export const SkillVersions: CollectionConfig = {
   hooks: {
     beforeValidate: [inspectUpload],
     beforeChange: [guardVersion],
-    afterChange: [promoteSkill, syncHantFromHans(['changelog'])],
+    afterChange: [promoteSkill, syncHantFromHans(['changelog']), refreshSkillsAfterChange],
+    afterDelete: [refreshSkillsAfterDelete],
   },
   endpoints: describeEndpoints,
   fields: [

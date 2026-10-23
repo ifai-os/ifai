@@ -24,7 +24,6 @@
     "signOut": "ログアウト"
   },
   "home": {
-    "demoBanner": "デモデータ · このページのスキルはサンプルです。リソースの公開後に実データに切り替わります",
     "todayAI": "今日のAI",
     "dailyMeta": "今日は{count}件公開 · 最終更新 {time}",
     "dailyMetaPast": "最新のニュースは{date} · {count}件",
@@ -50,14 +49,8 @@
     "heat": "注目度 {value}",
     "rank": "{rank}位",
     "install": "インストール",
-    "rating": "評価 {value}",
     "installs": "{count}回インストール",
     "moreSources": "{count, plural, =0 {単独の情報源} other {ほか#社が報道}}"
-  },
-  "placeholder": {
-    "badge": "近日公開",
-    "body": "このセクションは準備中です。第1期で公開します。",
-    "back": "ホームに戻る"
   },
   "auth": {
     "title": "IFAIにログイン",
@@ -242,6 +235,182 @@
       "browser-extension": "ブラウザ拡張機能",
       "api": "API"
     }
+  },
+  "resources": {
+    "title": "Skills",
+    "resources": "リソース",
+    "description": "AI アシスタントに入れて使える Agent Skills。各バージョンはセキュリティチェック済みで、固定リンクがあります。",
+    "intro": "AI アシスタントに専門スキルを。コーディングや調べもの、週報づくりまで、一文をコピーするだけでインストールできます。",
+    "listed": "件掲載",
+    "newThisWeek": "今週の新着",
+    "featured": "今週のおすすめ",
+    "steps": {
+      "title": "3 ステップで Skill を使う",
+      "pick": "Skill を選んで「インストール」を押す",
+      "enable": "AI アシスタントにインストールしてもらう",
+      "ask": "チャットでやりたいことを伝える"
+    },
+    "categoriesLabel": "カテゴリ",
+    "allCategories": "すべて",
+    "searchLabel": "Skill を検索",
+    "searchPlaceholder": "名前・説明・タグで検索",
+    "searchSubmit": "検索",
+    "clearSearch": "検索をクリア",
+    "filtersLabel": "絞り込み",
+    "filters": {
+      "noKey": "API キー不要",
+      "certified": "IFAI 認証のみ"
+    },
+    "activeFilters": "適用中の絞り込み",
+    "tagFilter": "タグ：{tag}",
+    "authorFilter": "作者：{author}",
+    "removeFilter": "この絞り込みを外す",
+    "view": {
+      "label": "表示方法",
+      "list": "リスト表示",
+      "grid": "カード表示"
+    },
+    "sortLabel": "並べ替え",
+    "sorts": {
+      "default": "総合",
+      "rising": "急上昇",
+      "installs": "インストール数",
+      "newest": "新着"
+    },
+    "found": "{count, plural, other {「{q}」に関する Skill が # 件見つかりました}}",
+    "showing": "{scope} · {count, plural, other {# 件の Skill}}",
+    "noMatchTitle": "「{q}」に関する Skill は見つかりませんでした",
+    "noFilterMatchTitle": "この条件に合う Skill はありません",
+    "noMatchBody": "短いキーワードにするか、絞り込みを外すか、人気のタグを見てみてください。",
+    "clearFilters": "絞り込みをクリア",
+    "emptyCategoryTitle": "このカテゴリにはまだ Skill がありません",
+    "emptyCategoryBody": "ほかのカテゴリを見るか、数日後にまたどうぞ。",
+    "allSkills": "すべての Skill を見る",
+    "emptyTitle": "まだ Skill が掲載されていません",
+    "emptyBody": "最初の Skill をチェック・審査中です。まもなくここに表示されます。",
+    "pages": "ページ",
+    "previous": "前へ",
+    "next": "次へ",
+    "pageOf": "{page} / {pages} ページ",
+    "hotTags": "人気のタグ",
+    "categoryTitle": "{category} · Skills",
+    "searchTitle": "「{q}」· Skills",
+    "pageTitle": "{title} · {page} ページ目",
+    "detailTitle": "{name}：{tagline}",
+    "versionTitle": "{name} v{version}",
+    "certified": "IFAI 認証",
+    "scan": {
+      "passed": "セキュリティチェック通過",
+      "reviewed": "IFAI が確認済み",
+      "when": "v{version} · {date} にチェック",
+      "reviewedNote": "ほかに {count} 項目で確認が必要な点があり、IFAI が確認したうえでこのバージョンを公開しました。"
+    },
+    "needsKey": "API キーが必要",
+    "updatedOn": "{date} 更新",
+    "by": "作者",
+    "official": "IFAI 公式",
+    "tags": "タグ",
+    "breadcrumb": "現在の位置",
+    "pinned": {
+      "current": "v{version} の固定リンクです。これが現在のバージョンです。",
+      "notCurrent": "これは v{version} です。現在のバージョンは v{current} です。",
+      "toCurrent": "現在のバージョンを見る"
+    },
+    "withdrawn": "v{version} は取り下げられたため、インストールできません。",
+    "reason": "理由：{reason}",
+    "deprecated": "v{version} は非推奨です。インストールはできますが、新しいバージョンをおすすめします。",
+    "delisted": "この Skill は掲載を終了したため、インストールできません。",
+    "install": {
+      "title": "AI アシスタントにインストール",
+      "hosts": "使っているアシスタント",
+      "compatLine": "{host}：{status}",
+      "instruction": "{url} を読み、その手順に従ってこの Skill を {host} にインストールしてください。",
+      "copy": "インストール指示をコピー",
+      "copied": "コピーしました。AI に貼り付けてください",
+      "download": "Zip をダウンロード",
+      "hint": "この一文をアシスタントに貼り付けると、Zip のダウンロード、指紋の確認、配置まで自分で行います。Zip を Skills フォルダに自分で展開することもできます。",
+      "none": "この Skill には現在インストールできるバージョンがありません。",
+      "withdrawn": "このバージョンは取り下げられたため、インストールできません。",
+      "pending": {
+        "scanning": "v{version} はチェック中です。下でインストールされるのは v{current} です。",
+        "blocked": "v{version} はセキュリティチェックを通過しなかったため、インストールできません。下でインストールされるのは v{current} です。"
+      }
+    },
+    "compat": {
+      "verified": "IFAI が動作確認済み",
+      "claimed": "作者によると動作",
+      "untested": "未テスト",
+      "failed": "非対応",
+      "needs_recheck": "更新後の再確認待ち"
+    },
+    "info": {
+      "title": "情報",
+      "version": "バージョン",
+      "updated": "更新日",
+      "license": "ライセンス",
+      "runtime": "必要な環境",
+      "apiKey": "API キー",
+      "size": "サイズ",
+      "repository": "ソース",
+      "noLicense": "なし（作者の書面による同意のうえ掲載）",
+      "needed": "必要",
+      "notNeeded": "不要"
+    },
+    "fingerprint": {
+      "title": "指紋",
+      "label": "Zip の sha256",
+      "how": "ダウンロードしたファイルは shasum -a 256 {file}（または sha256sum）を実行して照合できます。"
+    },
+    "related": "関連 Skill",
+    "shuffle": "ほかを見る",
+    "tabs": {
+      "label": "Skill の詳細",
+      "overview": "概要",
+      "files": "ファイル",
+      "versions": "バージョン履歴",
+      "security": "セキュリティチェック"
+    },
+    "overview": {
+      "capabilities": "できること",
+      "example": "使用例",
+      "exampleHint": "インストール後は、チャットでやりたいことを伝えるだけです。例：",
+      "workflow": "動き方",
+      "notes": "注意事項",
+      "ownerNotes": "IFAI の試用メモ",
+      "empty": "まだ説明がありません。下の SKILL.md は作者の原文です。",
+      "skillMd": "SKILL.md（作者の原文）"
+    },
+    "files": {
+      "summary": "{count, plural, other {# 個のファイル}} · {size}",
+      "viewerNote": "パッケージの内容をそのままテキストで表示 · {size}",
+      "notShown": "このファイルはここでは表示しません（画像やバイナリ、または一時的に読み込めません）。Zip をダウンロードして確認してください。"
+    },
+    "versionStatus": {
+      "current": "現在のバージョン",
+      "published": "公開中",
+      "deprecated": "非推奨",
+      "withdrawn": "取り下げ"
+    },
+    "checks": {
+      "structure": "パッケージ構成が正しい",
+      "secrets": "キーが書き込まれていない",
+      "sensitive_paths": "機密性の高い場所を読まない",
+      "dangerous_commands": "危険なコマンドがない",
+      "network": "宣言したサイトにだけアクセス",
+      "prompt_injection": "プロンプトインジェクションの兆候がない",
+      "license": "オープンソースライセンスがある"
+    },
+    "declarations": {
+      "domains": "通信先",
+      "fileScope": "読み書きする範囲",
+      "tools": "コマンドラインツール",
+      "apiKeys": "API キー",
+      "noDomains": "宣言なし",
+      "unknown": "記載なし",
+      "noTools": "不要",
+      "noKeys": "不要"
+    },
+    "disclaimer": "セキュリティチェックは、このバージョンのファイルを自動で静的に調べた結果です。IFAI がこの Skill の機能や安全性を保証するものではありません。"
   },
   "saves": {
     "save": "保存",
