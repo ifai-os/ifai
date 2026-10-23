@@ -4,9 +4,9 @@ import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
 import { storyCategories } from '../categories'
 import { reviewEndpoints } from '../review/endpoints'
-import { sourceRoles, storyStatuses, type SourceRole, type StoryStatus } from '../story-fields'
+import { heatTrends, sourceRoles, storyStatuses, type HeatTrend, type SourceRole, type StoryStatus } from '../story-fields'
 
-export { sourceRoles, storyStatuses, type SourceRole, type StoryStatus } from '../story-fields'
+export { heatTrends, sourceRoles, storyStatuses, type HeatTrend, type SourceRole, type StoryStatus } from '../story-fields'
 
 const signedIn = ({ req: { user } }: { req: { user: unknown } }) => Boolean(user)
 
@@ -30,6 +30,11 @@ const roleLabels: Record<SourceRole, { en: string; zh: string }> = {
   original: { en: 'Original', zh: '原文' },
   report: { en: 'Report', zh: '报道' },
   discussion: { en: 'Discussion', zh: '讨论' },
+}
+
+const trendLabels: Record<HeatTrend, { en: string; zh: string }> = {
+  rising: { en: 'Rising', zh: '上升' },
+  new: { en: 'New', zh: '新' },
 }
 
 const readOnly = { readOnly: true, position: 'sidebar' } as const
@@ -164,7 +169,27 @@ export const Stories: CollectionConfig = {
       admin: readOnly,
     },
     { name: 'score', type: 'number', label: { en: 'AI score', zh: 'AI 评分' }, admin: readOnly },
-    { name: 'heat', type: 'number', label: { en: 'Heat', zh: '热度' }, admin: readOnly },
+    {
+      name: 'heat',
+      type: 'number',
+      label: { en: 'Heat', zh: '热度' },
+      admin: { ...readOnly, description: { en: "0–100, the event's heat; refreshed every hour.", zh: '0–100，所属事件的热度，每小时更新。' } },
+    },
+    {
+      name: 'heatTrend',
+      type: 'select',
+      label: { en: 'Heat trend', zh: '热度走势' },
+      options: heatTrends.map((value) => ({ value, label: trendLabels[value] })),
+      admin: { ...readOnly, description: { en: 'Compared with 6 hours earlier.', zh: '和 6 小时前比较。' } },
+    },
+    {
+      // Addresses of the event's reports and discussion threads already offered to the source
+      // list (../heat/sources.ts), so one the editor removed is not added back.
+      name: 'sourcesSeen',
+      type: 'json',
+      label: { en: 'Sources already considered', zh: '已同步过的来源' },
+      admin: { hidden: true },
+    },
     {
       name: 'flags',
       type: 'json',

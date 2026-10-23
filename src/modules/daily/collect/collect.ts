@@ -3,6 +3,7 @@ import { and, eq, gte, inArray, sql } from '@payloadcms/db-postgres/drizzle'
 import { getDb } from '@/lib/db/drizzle'
 
 import { extractArticle } from '../extract'
+import { recordHotSignals } from '../heat/signals'
 import { MAX_AGE_MS, triage } from '../intake'
 import { rawItems } from '../schema'
 import type { FoundItem } from '../types'
@@ -17,6 +18,8 @@ export type CollectResult = {
   archived: number
   /** Ids of the fresh rows, whose article bodies are fetched next. */
   freshIds: number[]
+  /** For a hot_signal source: links we have whose points, comments or thread were recorded. */
+  signals?: number
   error?: string
 }
 
@@ -66,6 +69,10 @@ export async function collectSource(sourceId: number): Promise<CollectResult> {
     }
   }
 
+  // Popularity evidence counts for links any source found, not only for the new ones (heat rules).
+  let signals: number | undefined
+  if (!error && source.use === 'hot_signal' && found.length) signals = await recordHotSignals(db, sourceId, found, now)
+
   const [recent] = await db
     .select({ count: sql<string>`count(*)` })
     .from(rawItems)
@@ -77,7 +84,7 @@ export async function collectSource(sourceId: number): Promise<CollectResult> {
     data: afterFetch({ source, now, found: found.length, itemsLast7Days: Number(recent?.count ?? 0), error }),
   })
 
-  return { sourceId, name: source.name, found: found.length, fresh: freshIds.length, archived, freshIds, error }
+  return { sourceId, name: source.name, found: found.length, fresh: freshIds.length, archived, freshIds, ...(signals !== undefined && { signals }), error }
 }
 
 function toRow(item: FoundItem, sourceId: number, now: Date, status: 'fresh' | 'archived') {

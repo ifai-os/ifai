@@ -55,6 +55,21 @@ function handle(run: (req: PayloadRequest, body: Body) => Promise<unknown>): End
 
 const reviewActions = ['edit', 'publish', 'correct', 'reject', 'later', 'withdraw', 'merge', 'keep-separate', 'rewrite', 'assist'] as const
 
+export type StoryChange = 'published' | 'corrected' | 'withdrawn' | 'merged'
+
+/**
+ * `daily/story.changed` { storyId, change }: a story went on or off the site, or its text or
+ * sources changed, so other modules can follow at once (the apps pages match stories to apps).
+ * The editor's action has already succeeded; a failed send only delays them to their own run.
+ */
+async function announce(storyId: number, change: StoryChange): Promise<void> {
+  try {
+    await inngest.send({ name: 'daily/story.changed', data: { storyId, change } })
+  } catch (error) {
+    console.warn('daily/story.changed not sent:', error instanceof Error ? error.message : error)
+  }
+}
+
 /**
  * The review screen's API on the stories collection (all need a signed-in admin):
  *   GET  /api/stories/review-queue                 the queue, today's published and the summary cards
@@ -63,6 +78,7 @@ const reviewActions = ['edit', 'publish', 'correct', 'reject', 'later', 'withdra
  *   POST /api/stories/:id/review/<action>           edit | publish | correct | reject | later | withdraw |
  *                                                   merge { into } | keep-separate | rewrite { locales? } | assist { kind, avoid? }
  * Every POST may carry `edits` (title, summary, tryIt, category, sources in zh-Hans), saved first.
+ * Publishing, correcting, withdrawing and merging also send `daily/story.changed`.
  */
 export const reviewEndpoints: Endpoint[] = [
   { path: '/review-queue', method: 'get', handler: handle(() => loadReviewQueue()) },
@@ -89,22 +105,33 @@ export const reviewEndpoints: Endpoint[] = [
         case 'edit':
           await saveEdits(id, edits)
           return loadReviewDetail(id)
-        case 'publish':
-          return publishStory(id, edits)
-        case 'correct':
-          return correctStory(id, edits)
+        case 'publish': {
+          const detail = await publishStory(id, edits)
+          await announce(id, 'published')
+          return detail
+        }
+        case 'correct': {
+          const detail = await correctStory(id, edits)
+          await announce(id, 'corrected')
+          return detail
+        }
         case 'reject':
           return rejectStory(id)
         case 'later':
           return laterStory(id, edits)
-        case 'withdraw':
-          return withdrawStory(id)
+        case 'withdraw': {
+          const detail = await withdrawStory(id)
+          await announce(id, 'withdrawn')
+          return detail
+        }
         case 'keep-separate':
           return keepSeparate(id)
         case 'merge': {
           const into = Number(body.into)
           if (!Number.isInteger(into)) throw new ReviewError('bad_request', 400, { issues: ['into'] })
-          return mergeStory(id, into, edits)
+          const result = await mergeStory(id, into, edits)
+          await announce(result.target.id, 'merged')
+          return result
         }
         case 'rewrite': {
           await rewriteLocales(id, parseLocales(body.locales))

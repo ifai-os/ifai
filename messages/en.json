@@ -263,6 +263,15 @@
     "correctedAt": "Updated",
     "corrected": "Corrected",
     "tryIt": "Try it",
+    "hottest": "Hottest today",
+    "hotTitle": "Hot in the last 48 hours",
+    "hotBy": "By story",
+    "outlets": "{count, plural, one {# outlet} other {# outlets}}",
+    "trend": {
+      "rising": "Rising",
+      "new": "New"
+    },
+    "appsToday": "Apps in today's news",
     "sources": "Sources",
     "roles": {
       "original": "Original",

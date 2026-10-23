@@ -263,6 +263,15 @@
     "correctedAt": "最終更新",
     "corrected": "訂正",
     "tryIt": "試してみる",
+    "hottest": "今日の注目",
+    "hotTitle": "48時間の注目ニュース",
+    "hotBy": "出来事ごと",
+    "outlets": "{count, plural, other {#社が報道}}",
+    "trend": {
+      "rising": "上昇",
+      "new": "新着"
+    },
+    "appsToday": "今日のニュースに登場したアプリ",
     "sources": "情報源",
     "roles": {
       "original": "原文",

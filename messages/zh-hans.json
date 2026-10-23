@@ -263,6 +263,15 @@
     "correctedAt": "最后更新",
     "corrected": "更正于",
     "tryIt": "试一试",
+    "hottest": "今日最热",
+    "hotTitle": "48 小时热门",
+    "hotBy": "按事件",
+    "outlets": "{count, plural, other {# 家报道}}",
+    "trend": {
+      "rising": "上升",
+      "new": "新"
+    },
+    "appsToday": "今天提到的应用",
     "sources": "来源",
     "roles": {
       "original": "原文",

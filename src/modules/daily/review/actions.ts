@@ -12,6 +12,8 @@ import type { Ai } from '@/lib/ai/client'
 import { getDb } from '@/lib/db/drizzle'
 
 import { storyCategories } from '../categories'
+import { refreshHeat } from '../heat/heat'
+import { syncEventSources } from '../heat/sources'
 import { sourceRoles } from '../story-fields'
 import { assistPrompt, cleanSuggestion, type AssistKind } from '../prompts/assist'
 import { rewritePrompt } from '../prompts/rewrite'
@@ -273,12 +275,18 @@ export async function mergeStory(id: number, into: number, edits: Edits | undefi
   const itemId = story.representativeItemId
   if (story.eventId !== target.eventId) {
     await db.delete(eventItems).where(and(eq(eventItems.itemId, itemId), eq(eventItems.eventId, story.eventId)))
-    await db.insert(eventItems).values({ eventId: target.eventId, itemId, relation: 'same', newInformation: true }).onConflictDoNothing()
+    await db
+      .insert(eventItems)
+      .values({ eventId: target.eventId, itemId, relation: 'same', newInformation: true, matchedItemId: target.representativeItemId })
+      .onConflictDoNothing()
     const [left] = await db.select({ n: count() }).from(eventItems).where(eq(eventItems.eventId, story.eventId))
     if (Number(left?.n ?? 0) === 0) await db.delete(events).where(eq(events.id, story.eventId))
     await db.update(events).set({ lastSeenAt: sql`greatest(${events.lastSeenAt}, ${now})`, updatedAt: now }).where(eq(events.id, target.eventId))
   } else {
-    await db.update(eventItems).set({ relation: 'same', newInformation: true }).where(and(eq(eventItems.itemId, itemId), eq(eventItems.eventId, story.eventId)))
+    await db
+      .update(eventItems)
+      .set({ relation: 'same', newInformation: true, matchedItemId: target.representativeItemId })
+      .where(and(eq(eventItems.itemId, itemId), eq(eventItems.eventId, story.eventId)))
   }
   await db
     .update(itemAnalyses)
@@ -294,6 +302,10 @@ export async function mergeStory(id: number, into: number, edits: Edits | undefi
     await patch(payload, target.id, { sources })
   }
   await patch(payload, id, { status: 'merged', mergedInto: target.id, laterAt: null })
+  // The report now counts towards the target's heat; checking the sources now also keeps an
+  // editor's later removal of it from coming back.
+  await syncEventSources([target.eventId])
+  await refreshHeat([target.eventId, story.eventId], now)
   await (deps.refresh ?? refreshDailyCache)()
   const after = await mustLoad(payload, target.id)
   return { target: { id: target.id, title: hansOf(after).title, moreReports: moreReportsOf(after) } }

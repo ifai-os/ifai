@@ -6,11 +6,14 @@ import { describe, expect, it } from 'vitest'
 import { inAnyLanguage } from '@/lib/i18n/localized'
 import { dateOfKey, dayKey, groupByDay, readerTimeZone, relativeDay } from '@/lib/local-time'
 import { DailyFeed } from '@/modules/daily/public/components/daily-feed'
+import { HotList } from '@/modules/daily/public/components/hot-list'
+import { HottestCard } from '@/modules/daily/public/components/hottest-card'
+import { MentionedApps } from '@/modules/daily/public/components/mentioned-apps'
 import { StoryDetailView } from '@/modules/daily/public/components/story-detail'
 import { TodayHeadlines } from '@/modules/daily/public/components/today-headlines'
 import { listHref, readPage, storyHref } from '@/modules/daily/public/list-params'
 import { renderFeed } from '@/modules/daily/public/rss'
-import { toItem, type RawStory, type StoryDetail, type StoryItem } from '@/modules/daily/public/story-item'
+import { onePerEvent, toHot, toItem, type HotStory, type RawStory, type StoryDetail, type StoryItem } from '@/modules/daily/public/story-item'
 
 import en from '../../../messages/en.json'
 
@@ -129,6 +132,12 @@ describe('a story in the reader’s language', () => {
     expect(item.publishedAt).toBe('2026-10-22T09:42:00.000Z')
   })
 
+  it('counts the outlets of a hot story without the discussion threads', () => {
+    const hot = toHot({ ...raw, heat: 71.3, heatTrend: 'rising' } as RawStory, 'en')
+    expect(hot).toMatchObject({ eventId: 1, heat: 71.3, trend: 'rising', outlets: 3 })
+    expect(toHot({ ...raw, sources: [] } as RawStory, 'en')).toMatchObject({ heat: 0, trend: null, outlets: 1 })
+  })
+
   it('shows a title in any language rather than none', () => {
     expect(inAnyLanguage({ 'zh-Hans': '只有中文' }, 'ja')).toEqual({ value: '只有中文', lang: 'zh-Hans' })
     expect(inAnyLanguage({ en: ' ' }, 'ja')).toBeNull()
@@ -155,6 +164,64 @@ describe('the daily feed', () => {
     expect(html).toContain(`${en.daily.tryIt}</span> Open the app.`)
     expect(html).toContain('lang="zh-Hans"')
     expect(html).toContain('href="/en/daily/story-2"')
+  })
+})
+
+describe('the hottest events', () => {
+  const hot = (overrides: Partial<HotStory> & Pick<HotStory, 'id' | 'eventId'>): HotStory => ({
+    ...story({ id: overrides.id, publishedAt: '2026-10-22T09:00:00Z' }),
+    heat: 50,
+    trend: null,
+    outlets: 1,
+    ...overrides,
+  })
+
+  it('keeps the first story of each event', () => {
+    const stories = [hot({ id: 1, eventId: 7 }), hot({ id: 2, eventId: 7 }), hot({ id: 3, eventId: 8 }), hot({ id: 4, eventId: 9 })]
+    expect(onePerEvent(stories, 2).map((item) => item.id)).toEqual([1, 3])
+  })
+
+  it('ranks them with the outlets and the rising and new marks', () => {
+    const html = render(
+      <HotList
+        stories={[
+          hot({ id: 1, eventId: 1, outlets: 7, trend: 'rising' }),
+          hot({ id: 2, eventId: 2, outlets: 1, trend: 'new' }),
+          hot({ id: 3, eventId: 3, outlets: 4 }),
+          hot({ id: 4, eventId: 4, outlets: 2 }),
+        ]}
+      />,
+    )
+    expect(html).toContain(`>${en.daily.hotTitle}</h2>`)
+    expect(html).toContain('7 outlets')
+    expect(html).toContain('1 outlet<')
+    expect(html).toContain(`>${en.daily.trend.rising}</span>`)
+    expect(html).toContain(`>${en.daily.trend.new}</span>`)
+    expect(html).toContain('href="/en/daily/story-3"')
+    // The first three ranks stand out.
+    expect(html.match(/tabular-nums text-accent/g)).toHaveLength(3)
+  })
+
+  it("leads with today's hottest story, the whole card a link to it", () => {
+    const html = render(<HottestCard story={hot({ id: 5, eventId: 5, moreReports: 6 })} category="Product" />)
+    expect(html).toContain(`${en.daily.hottest} · Product · 6 more outlets reported this`)
+    expect(html).toContain('href="/en/daily/story-5"')
+    expect(html).toContain('What happened, in one line.')
+  })
+})
+
+describe('apps in today’s news', () => {
+  const app = (id: number, mentionedAt: string) => ({ id, slug: `app-${id}`, name: `App ${id}`, logo: null, mentionedAt })
+
+  it('shows the apps of the server’s today, linked to their pages', () => {
+    const html = render(<MentionedApps apps={[app(1, '2026-10-22T09:00:00Z'), app(2, '2026-10-21T23:00:00Z')]} serverToday="2026-10-22" />)
+    expect(html).toContain(`>${en.daily.appsToday.replace("'", '&#x27;')}</h2>`)
+    expect(html).toContain('href="/en/apps/app-1"')
+    expect(html).not.toContain('App 2')
+  })
+
+  it('shows nothing when no story of today names an app', () => {
+    expect(render(<MentionedApps apps={[app(2, '2026-10-21T23:00:00Z')]} serverToday="2026-10-22" />)).toBe('')
   })
 })
 

@@ -4,6 +4,9 @@ import { ai as defaultAi } from '@/lib/ai'
 import { getDb } from '@/lib/db/drizzle'
 import type { Source, Story } from '@/payload-types'
 
+import { storedHeat } from '../heat/heat'
+import { trendOf } from '../heat/rules'
+import { syncEventSources } from '../heat/sources'
 import type { JudgeDeps } from '../judge/judge'
 import { writePrompt, writtenLocales, type WriteReport, type WrittenLocaleKey } from '../prompts/write'
 import { hansHash } from '../review/rules'
@@ -84,6 +87,7 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
   // The other languages remember which simplified Chinese they were written from (review rules).
   const basedOn = hansHash(output.zhHans)
   const category = analysis.structure?.category ?? 'industry'
+  const heat = await storedHeat(analysis.eventId)
 
   const story = await payload.create({
     collection: 'stories',
@@ -97,6 +101,8 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
       representativeItemId: itemId,
       sources: storySources(reports.all, reports.self),
       score: analysis.scoreAverage,
+      heat: heat?.heat ?? 0,
+      heatTrend: heat ? trendOf(heat.heat, heat.before) : null,
       flags: analysis.flags ?? [],
       verification,
       localeStatus: {
@@ -112,6 +118,8 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
     if (key === 'zhHans') continue
     await payload.update({ collection: 'stories', id: story.id, locale: writtenLocales[key], data: output[key] })
   }
+  // Reports that joined while the model was writing, and Hacker News threads about them.
+  await syncEventSources([analysis.eventId])
   return { status: 'written', storyId: story.id, slug, verified: verification.ok }
 }
 

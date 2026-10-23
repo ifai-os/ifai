@@ -1,15 +1,20 @@
 import config from '@payload-config'
+import { and, desc, gte, isNull } from '@payloadcms/db-postgres/drizzle'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { cache } from 'react'
 
 import type { Locale } from '@/i18n/config'
+import { getDb } from '@/lib/db/drizzle'
+import { appsCacheTag } from '@/modules/apps/cache'
+import { appMentions } from '@/modules/apps/schema'
+import type { Media } from '@/payload-types'
 
 import type { StoryCategory } from '../categories'
 import { DAILY_CACHE_TAG } from '../review/cache'
-import { sourcesOf, toItem, type RawStory, type StoryDetail, type StoryItem } from './story-item'
+import { onePerEvent, sourcesOf, toHot, toItem, type HotStory, type RawStory, type StoryDetail, type StoryItem } from './story-item'
 
-export type { StoryDetail, StoryItem, StorySource } from './story-item'
+export type { HotStory, StoryDetail, StoryItem, StorySource } from './story-item'
 export { isStoryCategory } from './story-item'
 
 /**
@@ -23,6 +28,11 @@ export { isStoryCategory } from './story-item'
 export const storiesPerPage = 30
 export const feedLength = 50
 export const developmentsShown = 10
+export const hotShown = 5
+/** The hottest story of "today" was published within this long. */
+const hottestWithinMs = 24 * 3_600_000
+/** Apps mentioned in stories of the last 48 hours: today in any time zone. */
+const mentionsWithinMs = 48 * 3_600_000
 
 export type StoryPage = { stories: StoryItem[]; total: number; page: number; pages: number }
 
@@ -122,6 +132,86 @@ const findDevelopments = unstable_cache(
   cacheOptions,
 )
 
+// Stories of every event with heat (the heat job keeps it to the last 48 hours), hottest first.
+const findHot = unstable_cache(
+  async () => {
+    const { docs } = await (await payload()).find({
+      collection: 'stories',
+      where: { and: [published, { heat: { greater_than: 0 } }] },
+      sort: ['-heat', '-publishedAt'],
+      limit: 40,
+      locale: 'all',
+      depth: 0,
+      select: { ...select, heat: true, heatTrend: true },
+      overrideAccess: false,
+    })
+    return docs as unknown as RawStory[]
+  },
+  ['daily-hot'],
+  cacheOptions,
+)
+
+export type MentionedApp = {
+  id: number
+  slug: string
+  name: string
+  logo: { url: string; width: number | null; height: number | null } | null
+  /** When the newest published story about it went up; the page keeps the reader's today. */
+  mentionedAt: string
+}
+
+// The apps pages' matches of published stories to published apps (src/modules/apps/metrics/mentions.ts).
+const findMentionedApps = unstable_cache(
+  async (): Promise<MentionedApp[]> => {
+    const { payload: client, db } = await getDb()
+    const rows = await db
+      .select({ appId: appMentions.appId, storyId: appMentions.storyId, publishedAt: appMentions.publishedAt })
+      .from(appMentions)
+      .where(and(isNull(appMentions.removedAt), gte(appMentions.publishedAt, new Date(Date.now() - mentionsWithinMs))))
+      .orderBy(desc(appMentions.publishedAt))
+      .limit(200)
+    if (!rows.length) return []
+    const [stories, apps] = await Promise.all([
+      client.find({
+        collection: 'stories',
+        where: { and: [published, { id: { in: [...new Set(rows.map((row) => row.storyId))] } }] },
+        pagination: false,
+        depth: 0,
+        select: { slug: true },
+        overrideAccess: false,
+      }),
+      client.find({
+        collection: 'apps',
+        where: { and: [published, { id: { in: [...new Set(rows.map((row) => row.appId))] } }] },
+        pagination: false,
+        depth: 1,
+        select: { name: true, slug: true, logo: true },
+        populate: { media: { url: true, width: true, height: true, sizes: true } },
+        overrideAccess: false,
+      }),
+    ])
+    const live = new Set(stories.docs.map((doc) => doc.id))
+    const byId = new Map(apps.docs.map((doc) => [doc.id, doc]))
+    const result: MentionedApp[] = []
+    for (const row of rows) {
+      const app = byId.get(row.appId)
+      if (!app || !live.has(row.storyId) || result.some((item) => item.id === app.id)) continue
+      result.push({ id: app.id, slug: app.slug, name: app.name, logo: logoOf(app.logo), mentionedAt: row.publishedAt.toISOString() })
+    }
+    return result
+  },
+  ['daily-mentioned-apps'],
+  { tags: [DAILY_CACHE_TAG, appsCacheTag], revalidate: 3600 },
+)
+
+function logoOf(media: number | Media | null | undefined): MentionedApp['logo'] {
+  if (!media || typeof media !== 'object') return null
+  const thumb = media.sizes?.thumb
+  const url = thumb?.url || media.url
+  if (!url) return null
+  return { url, width: (thumb?.url ? thumb.width : media.width) ?? null, height: (thumb?.url ? thumb.height : media.height) ?? null }
+}
+
 const countSources = unstable_cache(
   async () => (await (await payload()).count({ collection: 'sources', where: { enabled: { equals: true } } })).totalDocs,
   ['daily-sources-count'],
@@ -150,6 +240,23 @@ export const getStory = cache(async (slug: string, locale: Locale): Promise<Stor
     developments: developments.map((other) => toItem(other, locale)),
   }
 })
+
+/** The five hottest events of the last 48 hours, one story each (the newest of its event). */
+export async function hotStories(locale: Locale): Promise<HotStory[]> {
+  return onePerEvent(await findHot(), hotShown).map((doc) => toHot(doc, locale))
+}
+
+/**「今日最热」: the hottest story published in the last 24 hours; null when none has heat. */
+export async function hottestStory(locale: Locale, now = new Date()): Promise<HotStory | null> {
+  const since = now.getTime() - hottestWithinMs
+  const doc = (await findHot()).find((story) => story.publishedAt && new Date(story.publishedAt).getTime() >= since)
+  return doc ? toHot(doc, locale) : null
+}
+
+/** Published apps that published stories of the last 48 hours are about, newest mention first. */
+export async function mentionedApps(): Promise<MentionedApp[]> {
+  return findMentionedApps()
+}
 
 /** How many sources the pipeline reads, for the list page's introduction. */
 export async function sourceCount(): Promise<number> {

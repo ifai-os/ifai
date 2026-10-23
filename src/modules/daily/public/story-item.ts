@@ -3,7 +3,7 @@ import { inAnyLanguage, inReaderLanguage, type InLanguage, type Localized } from
 import type { Story } from '@/payload-types'
 
 import { storyCategories, type StoryCategory } from '../categories'
-import type { SourceRole } from '../story-fields'
+import type { HeatTrend, SourceRole } from '../story-fields'
 
 /** What the pages show of a story, in the reader's language (no Payload code: components and tests import this). */
 
@@ -23,6 +23,16 @@ export type StoryItem = {
   moreReports: number
   /** Publisher of the original announcement (or of the first report). */
   originalName: string | null
+}
+
+/** A story in「48 小时热门」and「今日最热」: its event's heat and how many outlets reported it. */
+export type HotStory = StoryItem & {
+  eventId: number
+  /** 0–100, the event's heat (src/modules/daily/heat/rules.ts). */
+  heat: number
+  trend: HeatTrend | null
+  /** Outlets that reported it, the original publisher included; discussion threads do not count. */
+  outlets: number
 }
 
 export type StoryDetail = StoryItem & {
@@ -61,4 +71,27 @@ export function toItem(doc: RawStory, locale: Locale): StoryItem {
     moreReports: sources.filter((source) => source.role === 'report').length,
     originalName: (sources.find((source) => source.role === 'original') ?? sources[0])?.name ?? null,
   }
+}
+
+export function toHot(doc: RawStory, locale: Locale): HotStory {
+  return {
+    ...toItem(doc, locale),
+    eventId: doc.eventId,
+    heat: doc.heat ?? 0,
+    trend: doc.heatTrend ?? null,
+    outlets: Math.max(1, sourcesOf(doc).filter((source) => source.role !== 'discussion').length),
+  }
+}
+
+/** The hottest story of each event, hottest first: stories come sorted by heat, then newest first. */
+export function onePerEvent<T extends { eventId: number }>(stories: readonly T[], limit: number): T[] {
+  const seen = new Set<number>()
+  const result: T[] = []
+  for (const story of stories) {
+    if (seen.has(story.eventId)) continue
+    seen.add(story.eventId)
+    result.push(story)
+    if (result.length === limit) break
+  }
+  return result
 }

@@ -384,7 +384,23 @@ export interface Story {
   eventId: number;
   representativeItemId: number;
   score?: number | null;
+  /**
+   * 0–100, the event's heat; refreshed every hour.
+   */
   heat?: number | null;
+  /**
+   * Compared with 6 hours earlier.
+   */
+  heatTrend?: ('rising' | 'new') | null;
+  sourcesSeen?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * promotional, tutorial, score_gap
    */
@@ -1038,6 +1054,8 @@ export interface StoriesSelect<T extends boolean = true> {
   representativeItemId?: T;
   score?: T;
   heat?: T;
+  heatTrend?: T;
+  sourcesSeen?: T;
   flags?: T;
   verification?: T;
   localeStatus?: T;

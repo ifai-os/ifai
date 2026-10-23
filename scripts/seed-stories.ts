@@ -7,14 +7,18 @@
  *   pnpm payload run scripts/seed-stories.ts
  */
 import config from '@payload-config'
+import type { PostgresAdapter } from '@payloadcms/db-postgres'
+import { sql } from '@payloadcms/db-postgres/drizzle'
 import { getPayload } from 'payload'
 
 import type { Story } from '../src/payload-types'
 import { databaseUrl } from '../src/lib/db/url'
+import { appMentions } from '../src/modules/apps/schema'
 
 type Text = Pick<Story, 'title' | 'summary'> & Partial<Pick<Story, 'tryIt'>>
 
-type SampleStory = Pick<Story, 'slug' | 'category' | 'status' | 'eventId' | 'representativeItemId' | 'sources'> & {
+type SampleStory = Pick<Story, 'slug' | 'category' | 'status' | 'eventId' | 'representativeItemId' | 'sources' | 'heat'> &
+  Partial<Pick<Story, 'heatTrend'>> & {
   publishedAt: string | null
   correctedAt?: string
   /** English is required; zh-Hant comes from zh-Hans; a missing language falls back to English. */
@@ -33,6 +37,9 @@ const sampleStories: SampleStory[] = [
     eventId: 900001,
     representativeItemId: 900001,
     publishedAt: minutesAgo(1),
+    // The hottest event: today's hottest story and first in the last 48 hours, marked new.
+    heat: 72,
+    heatTrend: 'new',
     sources: [
       { name: 'Lumen Labs', role: 'original', url: 'https://lumen-chat.example/blog/shared-workspaces', publishedAt: minutesAgo(90) },
       { name: 'Sample Tech News', role: 'report', url: 'https://news.example/lumen-workspaces', publishedAt: minutesAgo(60) },
@@ -70,6 +77,8 @@ const sampleStories: SampleStory[] = [
     eventId: 900002,
     representativeItemId: 900002,
     publishedAt: minutesAgo(120),
+    heat: 45,
+    heatTrend: 'rising',
     sources: [{ name: 'Kite Studio', role: 'original', url: 'https://kitecode.example/blog/open-weights', publishedAt: minutesAgo(200) }],
     text: {
       en: {
@@ -94,6 +103,7 @@ const sampleStories: SampleStory[] = [
     eventId: 900003,
     representativeItemId: 900003,
     publishedAt: '2026-10-20T08:15:00.000Z',
+    heat: 30,
     correctedAt: '2026-10-20T10:00:00.000Z',
     sources: [
       { name: 'Orbit Research', role: 'original', url: 'https://orbit-notes.example/research/benchmark', publishedAt: '2026-10-20T07:00:00.000Z' },
@@ -118,6 +128,9 @@ const sampleStories: SampleStory[] = [
     eventId: 900001,
     representativeItemId: 900004,
     publishedAt: '2026-10-19T22:30:00.000Z',
+    // Same event, same heat: the hot list shows the event once, by its newest story.
+    heat: 72,
+    heatTrend: 'new',
     sources: [{ name: 'Lumen Labs', role: 'original', url: 'https://lumen-chat.example/blog/workspaces-preview', publishedAt: '2026-10-19T20:00:00.000Z' }],
     text: {
       en: {
@@ -137,6 +150,7 @@ const sampleStories: SampleStory[] = [
     eventId: 900005,
     representativeItemId: 900005,
     publishedAt: null,
+    heat: 20,
     sources: [{ name: 'Sample Tech News', role: 'original', url: 'https://news.example/pending', publishedAt: null }],
     text: {
       en: { title: 'Sample pending story: never shown on the site', summary: 'Awaiting review.' },
@@ -150,6 +164,7 @@ const sampleStories: SampleStory[] = [
     eventId: 900006,
     representativeItemId: 900006,
     publishedAt: '2026-10-18T09:00:00.000Z',
+    heat: 50,
     sources: [{ name: 'Sample Tech News', role: 'original', url: 'https://news.example/withdrawn', publishedAt: null }],
     text: {
       en: { title: 'Sample withdrawn story: never shown on the site', summary: 'Withdrawn by the editor.' },
@@ -190,5 +205,40 @@ for (const story of sampleStories) {
   }
 }
 
+// 「今天提到的应用」on the daily list: the apps job's matches. Written here when scripts/seed-apps.ts ran
+// first; run after these stories, seed-apps.ts matches them itself.
+const sampleMentions = [
+  { app: 'lumen-chat', story: 'sample-lumen-chat-adds-shared-workspaces', matched: 'lumen-chat.example' },
+  { app: 'kitecode', story: 'sample-kitecode-opens-its-model-weights', matched: 'kitecode.example' },
+]
+const [apps, stories] = await Promise.all([
+  payload.find({ collection: 'apps', where: { slug: { in: sampleMentions.map((m) => m.app) } }, depth: 0, pagination: false }),
+  payload.find({ collection: 'stories', where: { slug: { in: sampleMentions.map((m) => m.story) } }, depth: 0, pagination: false }),
+])
+const db = (payload.db as unknown as PostgresAdapter).drizzle
+let mentions = 0
+for (const mention of sampleMentions) {
+  const app = apps.docs.find((doc) => doc.slug === mention.app)
+  const story = stories.docs.find((doc) => doc.slug === mention.story)
+  if (!app || !story?.publishedAt) continue
+  const row = {
+    appId: app.id,
+    storyId: story.id,
+    eventId: story.eventId,
+    basis: 'domain' as const,
+    matched: mention.matched,
+    publishedAt: new Date(story.publishedAt),
+  }
+  await db
+    .insert(appMentions)
+    .values(row)
+    .onConflictDoUpdate({
+      target: [appMentions.appId, appMentions.storyId],
+      set: { ...row, removedAt: sql`null` },
+    })
+  mentions++
+}
+
 console.log(`Sample stories ready: ${sampleStories.map((story) => `${story.slug} (${story.status})`).join(', ')}`)
+console.log(mentions ? `Sample app mentions ready: ${mentions}` : 'No sample apps yet: scripts/seed-apps.ts adds them and matches these stories for「今天提到的应用」.')
 process.exit(0)
