@@ -86,6 +86,13 @@ export function AccountButton() {
           >
             {t('saves')}
           </Link>
+          <Link
+            href="/me/account"
+            onClick={() => setOpen(false)}
+            className="flex h-10 items-center rounded-thumb px-2.5 text-ui text-ink hover:bg-surface"
+          >
+            {t('accountPage')}
+          </Link>
           <button
             type="button"
             onClick={signOut}

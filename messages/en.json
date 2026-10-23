@@ -21,6 +21,7 @@
     "signIn": "Sign in",
     "account": "Account menu",
     "saves": "Saved",
+    "accountPage": "Account",
     "signOut": "Sign out"
   },
   "home": {
@@ -72,7 +73,8 @@
     "failed": "Something went wrong. Try again in a moment.",
     "unavailable": "Sign-in isn't set up in this environment yet.",
     "signedInAs": "Signed in as {email}",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "agree": "By continuing, you agree to the <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
   },
   "email": {
     "subject": "Your IFAI sign-in link",
@@ -83,13 +85,113 @@
   },
   "footer": {
     "copyright": "© {year} IFAI",
-    "rss": "RSS"
+    "rss": "RSS",
+    "privacy": "Privacy",
+    "terms": "Terms"
   },
   "notFound": {
     "title": "Page not found",
     "body": "The link may be broken, or the page may have moved.",
     "back": "Back to home",
     "daily": "See today's Daily"
+  },
+  "legal": {
+    "updated": "Last updated: {date}",
+    "englishPrevails": "This page is available in five languages. If the versions differ, the English version applies.",
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "What IFAI collects, why, who processes it, how long we keep it and how to have it deleted.",
+      "intro": "IFAI (ifai.io) is an AI news, apps and resources site. This policy explains what we collect when you use the site, why we collect it, who helps us process it, how long we keep it and what you can do about it. We only collect what the site needs to work.",
+      "sections": {
+        "collect": {
+          "title": "What we collect",
+          "body": "When you sign in:\n- Your email address, name and profile picture. If you sign in with Google or GitHub, they give us these; with an email link, we only have your email.\n- Your interface language.\n- Sign-in sessions, with the IP address and browser they came from, so you stay signed in and we can spot misuse.\n\nWhat you add yourself:\n- Reviews of apps. They are public and show your account name.\n- Saves. Only you can see them.\n- Problem reports about an app, with an optional way to contact you.\n- App and Skill submissions, with the contact email you give.\n\nIf you subscribe to the Daily by email: your email address, language and time zone, and whether each email was delivered, bounced or marked as spam.\n\nWhen anyone visits: to count clicks and installs and to limit abuse, we combine your IP address and browser into a one-way code that changes every day. We do not store the IP address itself, and codes from different days cannot be linked to each other. Our hosting provider also keeps short-lived technical logs."
+        },
+        "cookies": {
+          "title": "Cookies",
+          "body": "We use two kinds of cookies, both needed for the site to work:\n- IFAI_LOCALE remembers the language you picked, for one year.\n- A sign-in cookie keeps you signed in.\n\nWe do not use advertising cookies, analytics cookies or cross-site tracking."
+        },
+        "use": {
+          "title": "How we use it",
+          "body": "- To run the site: sign you in, show your saves and reviews, and remember your settings.\n- To send email you asked for: sign-in links, the Daily, and the outcome of your submissions.\n- To rank apps and Skills by clicks, saves and installs.\n- To keep the site safe: rate limits, spam and abuse checks, and handling reports.\n- To translate reviews into other languages with a machine translation model, marked as machine translated.\n\nWe do not sell your information and do not use it for advertising."
+        },
+        "share": {
+          "title": "Who processes it",
+          "body": "We use these services to run IFAI. They process data for us under their own security and privacy terms:\n- Vercel: hosting.\n- Neon: the database.\n- Cloudflare R2: file storage.\n- Resend: sending email.\n- Inngest: background jobs.\n- OpenRouter and the model providers it routes to: translating reviews and drafting site content. Only the text being processed is sent.\n- Google and GitHub, if you choose to sign in with them.\n\nThese providers may process data in the United States and other countries. We share information with others only when the law requires it."
+        },
+        "keep": {
+          "title": "How long we keep it",
+          "body": "- Account information stays until your account is deleted.\n- Sign-in sessions expire on their own; sign-in links work once and expire after 10 minutes.\n- If you unsubscribe from the Daily, your subscription is deleted after 30 days. If emails bounced or were marked as spam, we keep only the address and the reason, so we never email it again.\n- Rate-limit records are deleted after 24 hours, and email delivery callbacks after 7 days.\n- Reviews, reports and submissions stay until you or we delete them, or your account is deleted."
+        },
+        "choices": {
+          "title": "Your choices",
+          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews and remove saves at any time.\n- You can delete your account yourself: sign in and open Account from the account menu. Your saves, reviews, reports and submissions are deleted with it.\n- You can ask us to show you, correct or delete the information we hold about you by writing to {email}, and to delete your account if you can't sign in. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
+        },
+        "children": {
+          "title": "Children",
+          "body": "IFAI is not meant for children under 16. If you believe a child has given us personal information, write to us and we will delete it."
+        },
+        "changes": {
+          "title": "Changes",
+          "body": "When we change what we collect or how we use it, we update this page and the date at the top first. For significant changes we also put a notice on the site."
+        },
+        "contact": {
+          "title": "Contact",
+          "body": "Questions about privacy, or requests about your information:"
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms of Use",
+      "description": "The rules for using IFAI: accounts, what you post, Skills, and the limits of what we promise.",
+      "intro": "These terms apply when you use IFAI (ifai.io). By using the site or signing in, you agree to them. If you do not agree, please do not use the site.",
+      "sections": {
+        "account": {
+          "title": "Your account",
+          "body": "One person, one account. Keep access to your email account and your Google or GitHub account safe: anyone who can open them can sign in as you. You are responsible for what is done with your account."
+        },
+        "content": {
+          "title": "Content on IFAI",
+          "body": "Daily stories are short summaries we write, with links to the original sources. App information, ratings and heat scores are our own compilation and estimate. They are not endorsements, and we are not paid for rankings.\n\nWe check our content, but it can still be wrong or out of date, and some of it is drafted or translated with AI. When we find a mistake we correct it and keep a record. Check important details with the original source."
+        },
+        "skills": {
+          "title": "Skills and other files",
+          "body": "Skills on IFAI are files written by third parties. We run a static security check on every version, but a passed check is not a guarantee that a Skill is safe or works. IFAI never runs Skills on its servers.\n\nRead what a Skill does before you install it. You install and run it at your own risk. Each Skill keeps its author's license, and you must follow it."
+        },
+        "yours": {
+          "title": "What you post",
+          "body": "You keep the rights to the reviews, reports and submissions you post. You let us show them on IFAI, translate them, and use them to run and improve the site, for as long as they stay on the site.\n\nWhat you post must be honest and your own. Do not post anything illegal, infringing, hateful, harassing, misleading or promotional, or other people's private information. We may hide or delete content that breaks these rules."
+        },
+        "conduct": {
+          "title": "Using the site",
+          "body": "- Do not disrupt the site or try to get around rate limits, security checks or access controls.\n- Do not scrape the site in a way that slows it down, or submit in bulk with automated tools.\n- Do not use fake accounts, impersonate others, or manipulate ratings, saves or installs."
+        },
+        "ours": {
+          "title": "Our content",
+          "body": "The site's design, the IFAI name and logo, and the text we write belong to IFAI. You may share links and short quotes with credit. The RSS feed is for personal reading; link back to the story when you quote it. App names, logos and trademarks belong to their owners."
+        },
+        "copyright": {
+          "title": "Copyright complaints",
+          "body": "If you believe something on IFAI infringes your rights, write to {email} with a link to it, what you own, and how to reach you. We review every complaint and remove content that infringes."
+        },
+        "liability": {
+          "title": "Disclaimers and liability",
+          "body": "IFAI is provided as it is, without guarantees that it will be accurate, complete or always available. To the extent the law allows, we are not liable for indirect losses, or for losses caused by relying on site content, third-party apps or Skills you install. Nothing in these terms limits rights you have under the law that cannot be limited."
+        },
+        "ending": {
+          "title": "Ending use",
+          "body": "You can stop using IFAI at any time and delete your account on the Account page. We may suspend or close an account that breaks these terms."
+        },
+        "changes": {
+          "title": "Changes",
+          "body": "We may update these terms as the site changes. We update this page and the date at the top first, and give notice on the site for significant changes. Continuing to use IFAI after a change means you accept it."
+        },
+        "contact": {
+          "title": "Contact",
+          "body": "Questions about these terms:"
+        }
+      }
+    }
   },
   "states": {
     "loadingList": "Loading list",
@@ -570,6 +672,26 @@
     "remove": "Remove",
     "removeName": "Remove {name}",
     "failed": "Couldn't remove it. Try again."
+  },
+  "account": {
+    "title": "Account",
+    "description": "Your IFAI account, and deleting it.",
+    "signInBody": "Sign in to see or delete your account.",
+    "email": "Signed in as",
+    "deleteTitle": "Delete account",
+    "deleteBody": "Deleting your account also deletes your saves, the app reviews you wrote, the reports you sent, and the apps and Skills you submitted. This can't be undone. Apps and Skills already listed on IFAI stay.",
+    "deleteKeeps": "The daily email is separate from your account, so deleting it doesn't unsubscribe you. To stop the emails, use the unsubscribe link at the bottom of any email.",
+    "deleteButton": "Delete account",
+    "confirmTitle": "Delete your account for good?",
+    "confirmBody": "This can't be undone. If you sign in again with the same email later, you'll start with a new, empty account.",
+    "confirm": "Delete for good",
+    "cancel": "Cancel",
+    "deleting": "Deleting…",
+    "failed": "We couldn't delete your account. Please try again in a moment.",
+    "signInAgain": "You signed in more than a day ago. To make sure it's you, sign out, sign in again, then delete your account.",
+    "signInAgainButton": "Sign out and sign in again",
+    "deleted": "Your account has been deleted. Thanks for using IFAI.",
+    "home": "Back to the home page"
   },
   "reviews": {
     "title": "Reviews",

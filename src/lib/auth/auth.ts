@@ -62,6 +62,17 @@ export const auth = betterAuth({
       trustLevel: { type: 'number', required: false, defaultValue: 0, input: false, fieldName: 'trust_level' },
       uiLocale: { type: 'string', required: false, fieldName: 'ui_locale' },
     },
+    // The「账号」page (docs/specs/foundation.md). With no passwords, a sign-in within `freshAge`
+    // stands for the member; older sessions are asked to sign in again. Their submissions go
+    // first: if that fails, the account stays and they can try again.
+    deleteUser: {
+      enabled: true,
+      beforeDelete: async (user) => {
+        const [{ getDb }, { deleteMemberData }] = await Promise.all([import('@/lib/db/drizzle'), import('./delete-member')])
+        const { payload } = await getDb()
+        await deleteMemberData(payload, user.id)
+      },
+    },
   },
   session: {
     modelName: 'auth_sessions',
@@ -74,6 +85,8 @@ export const auth = betterAuth({
     },
     // Short-lived signed cookie so most requests skip the session lookup.
     cookieCache: { enabled: true, maxAge: 5 * 60 },
+    // Deleting the account needs a sign-in from the last day (Better Auth's default, kept on purpose).
+    freshAge: 24 * 60 * 60,
   },
   account: {
     modelName: 'auth_accounts',
