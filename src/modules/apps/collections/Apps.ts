@@ -7,6 +7,7 @@ import { refreshAppsAfterChange, refreshAppsAfterDelete } from '../cache'
 import { heatEndpoints } from '../metrics/endpoints'
 import { domainFromUrl, isHttpUrl, reservedAppSlugs } from '../normalize'
 import { draftEndpoints } from '../profile/endpoints'
+import { reviewEndpoints } from '../reviews/endpoints'
 import { adminMessage, appsAdminGroup, isAdmin, slugField } from './shared'
 
 /** Localized fields whose zh-Hant value is converted from zh-Hans. */
@@ -51,7 +52,13 @@ export const Apps: CollectionConfig = {
     group: appsAdminGroup,
     defaultColumns: ['name', 'primaryCategory', 'pricing', 'status', 'draftStatus', 'updatedAt'],
     listSearchableFields: ['name', 'slug', 'domain'],
-    components: { beforeListTable: ['/modules/apps/admin/heat-status#HeatStatus', '/modules/apps/admin/import-box#ImportBox'] },
+    components: {
+      beforeListTable: [
+        '/modules/apps/admin/heat-status#HeatStatus',
+        '/modules/apps/admin/review-reports#ReviewReports',
+        '/modules/apps/admin/import-box#ImportBox',
+      ],
+    },
     description: {
       en: 'Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately.',
       zh: '繁体中文由简体自动转换（OpenCC），不用手改；英语、日语、韩语分别填写。',
@@ -67,7 +74,7 @@ export const Apps: CollectionConfig = {
     afterChange: [syncHantFromHans(hantFields), refreshAppsAfterChange],
     afterDelete: [refreshAppsAfterDelete],
   },
-  endpoints: [...draftEndpoints, ...heatEndpoints],
+  endpoints: [...draftEndpoints, ...heatEndpoints, ...reviewEndpoints],
   fields: [
     {
       name: 'name',
@@ -359,6 +366,20 @@ export const Apps: CollectionConfig = {
               name: 'heatPanel',
               type: 'ui',
               admin: { components: { Field: '/modules/apps/admin/heat-panel#HeatPanel' } },
+            },
+          ],
+        },
+        {
+          label: { en: 'Reviews', zh: '评价' },
+          description: {
+            en: 'Readers’ reviews go live at once. Hide one that breaks the rules; reported ones are marked.',
+            zh: '读者的评价直接发布。违规的可以隐藏；被举报的会标出来。',
+          },
+          fields: [
+            {
+              name: 'reviewsPanel',
+              type: 'ui',
+              admin: { components: { Field: '/modules/apps/admin/reviews-panel#ReviewsPanel' } },
             },
           ],
         },

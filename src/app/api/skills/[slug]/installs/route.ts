@@ -1,10 +1,10 @@
 import { type NextRequest, userAgent } from 'next/server'
 
+import { isCrossSite } from '@/lib/same-origin'
 import { clientIp } from '@/lib/visitor'
 import { isValidVersion } from '@/modules/resources/normalize'
 import { isInstallable } from '@/modules/resources/public/data'
 import { readHost, recordInstall } from '@/modules/resources/public/installs'
-import { isCrossSite } from '@/modules/saves/target'
 
 const noStore = { 'cache-control': 'no-store' }
 

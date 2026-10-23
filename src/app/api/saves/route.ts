@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { auth } from '@/lib/auth/auth'
+import { isCrossSite } from '@/lib/same-origin'
 import { isSaveable, saveState, setSaved } from '@/modules/saves/data'
-import { isCrossSite, parseSaveTarget } from '@/modules/saves/target'
+import { parseSaveTarget } from '@/modules/saves/target'
 
 // Per member and always current: never rendered ahead or kept by the browser or a CDN.
 export const dynamic = 'force-dynamic'
