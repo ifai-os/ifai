@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from 'node:crypto'
+import { createHmac, randomBytes, randomUUID } from 'node:crypto'
 import { resolveMx } from 'node:dns/promises'
 import { readFileSync } from 'node:fs'
 
@@ -121,7 +121,10 @@ test.describe('daily email subscription, with the database', () => {
   })
 
   test.afterAll(async () => {
-    if (created.length) await db.query('delete from subscribers where email = any($1)', [created])
+    if (created.length) {
+      await db.query('delete from email_sends where subscriber_id in (select id from subscribers where email = any($1))', [created])
+      await db.query('delete from subscribers where email = any($1)', [created])
+    }
     await db.end()
   })
 
@@ -244,5 +247,74 @@ test.describe('daily email subscription, with the database', () => {
     await page.goto('/en/daily/subscription?token=1.not-a-signature')
     await expect(page.getByRole('heading', { level: 1, name: en.subscription.invalidTitle })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: en.subscribe.title })).toBeVisible()
+  })
+
+  test('the back office’s numbers, preview and test email are for admins only', async ({ request }) => {
+    expect((await request.get('/api/subscribers/overview')).status()).toBe(401)
+    expect((await request.get('/api/subscribers/preview?locale=ja')).status()).toBe(401)
+    expect((await request.post('/api/subscribers/test-email', { data: { locale: 'ja' } })).status()).toBe(401)
+  })
+
+  // Resend's delivery webhooks, signed the way Svix signs them with the server's RESEND_WEBHOOK_SECRET (CI sets a placeholder).
+  const webhook = (event: object, id = `msg_${randomUUID()}`) => {
+    const body = JSON.stringify(event)
+    const timestamp = String(Math.floor(Date.now() / 1000))
+    const key = Buffer.from((process.env.RESEND_WEBHOOK_SECRET ?? '').replace(/^whsec_/, ''), 'base64')
+    const signature = createHmac('sha256', key).update(`${id}.${timestamp}.${body}`).digest('base64')
+    return {
+      data: body,
+      headers: { 'content-type': 'application/json', 'svix-id': id, 'svix-timestamp': timestamp, 'svix-signature': `v1,${signature}` },
+    }
+  }
+  // The server runs outside Vercel: its emails carry env "development".
+  const emailEvent = (type: string, to: string, tags: Record<string, string>, data: object = {}) => ({
+    type,
+    created_at: new Date().toISOString(),
+    data: { email_id: `e2e-${randomUUID()}`, to: [to], created_at: new Date().toISOString(), tags: { env: 'development', ...tags }, ...data },
+  })
+
+  test('the webhook takes only requests Resend signed', async ({ request }) => {
+    test.skip(!process.env.RESEND_WEBHOOK_SECRET, 'Needs RESEND_WEBHOOK_SECRET, the same as the server.')
+    const signed = webhook({ type: 'email.delivered', data: {} })
+    expect((await request.post('/api/subscriptions/webhook', { data: signed.data, headers: { 'content-type': 'application/json' } })).status()).toBe(401)
+    expect((await request.post('/api/subscriptions/webhook', { data: `${signed.data} `, headers: signed.headers })).status()).toBe(401)
+    const late = { ...signed.headers, 'svix-timestamp': String(Math.floor(Date.now() / 1000) - 600) }
+    expect((await request.post('/api/subscriptions/webhook', { data: signed.data, headers: late })).status()).toBe(401)
+    expect((await request.post('/api/subscriptions/webhook', signed)).status()).toBe(200)
+  })
+
+  test('a bounced welcome email stops the address, once, and only this deployment’s', async ({ request }) => {
+    test.skip(!process.env.RESEND_WEBHOOK_SECRET, 'Needs RESEND_WEBHOOK_SECRET, the same as the server.')
+    const { email, id } = await insert()
+    const bounced = (env?: string) =>
+      emailEvent('email.bounced', email, { kind: 'daily_welcome', subscriber: String(id), ...(env && { env }) }, { bounce: { type: 'Permanent', message: 'No such user' } })
+
+    const elsewhere = await request.post('/api/subscriptions/webhook', webhook(bounced('production')))
+    expect(await elsewhere.json()).toEqual({ result: 'ignored' })
+    expect((await row(email))?.status).toBe('subscribed')
+
+    const signed = webhook(bounced())
+    expect(await (await request.post('/api/subscriptions/webhook', signed)).json()).toEqual({ result: 'applied' })
+    expect(await row(email)).toMatchObject({ status: 'stopped', stop_reason: 'bounce' })
+    // Resend delivering the same event again.
+    expect(await (await request.post('/api/subscriptions/webhook', signed)).json()).toEqual({ result: 'duplicate' })
+  })
+
+  test('a delivered morning email moves its row forward, never back', async ({ request }) => {
+    test.skip(!process.env.RESEND_WEBHOOK_SECRET, 'Needs RESEND_WEBHOOK_SECRET, the same as the server.')
+    const { email, id } = await insert()
+    const { rows } = await db.query<{ id: number }>(
+      `insert into email_sends (subscriber_id, local_date, locale, status, story_count, sent_at) values ($1, current_date, 'en', 'sent', 3, now()) returning id`,
+      [id],
+    )
+    const tags = { kind: 'daily', subscriber: String(id), send: String(rows[0].id) }
+    const send = async () => (await db.query<{ status: string; resend_id: string | null }>('select status, resend_id from email_sends where id = $1', [rows[0].id])).rows[0]
+
+    const delivered = emailEvent('email.delivered', email, tags)
+    expect(await (await request.post('/api/subscriptions/webhook', webhook(delivered))).json()).toEqual({ result: 'applied' })
+    expect(await send()).toEqual({ status: 'delivered', resend_id: delivered.data.email_id })
+    await request.post('/api/subscriptions/webhook', webhook({ ...delivered, type: 'email.sent' }))
+    expect((await send()).status).toBe('delivered')
+    expect((await row(email))?.status).toBe('subscribed')
   })
 })

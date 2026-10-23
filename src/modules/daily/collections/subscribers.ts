@@ -1,9 +1,19 @@
-import { ValidationError, type Access, type CollectionBeforeChangeHook, type CollectionConfig, type Where } from 'payload'
+import type { PostgresAdapter } from '@payloadcms/db-postgres'
+import { eq } from '@payloadcms/db-postgres/drizzle'
+import {
+  ValidationError,
+  type Access,
+  type CollectionAfterDeleteHook,
+  type CollectionBeforeChangeHook,
+  type CollectionConfig,
+  type Where,
+} from 'payload'
 
 import { localeNames, locales } from '@/i18n/config'
 import { isTimeZone } from '@/lib/local-time'
 
 import { subscriberEndpoints } from '../email/endpoints'
+import { emailSends } from '../email/schema'
 
 const signedIn = ({ req: { user } }: { req: { user: unknown } }) => Boolean(user)
 /** Written by the subscribe box, the manage page and the email jobs, never typed in the admin. */
@@ -46,6 +56,13 @@ const ownerChanges: CollectionBeforeChangeHook = ({ data, originalDoc, operation
   })
 }
 
+/** Rule 10: the morning emails of a deleted subscription stay in the numbers, without who they went to. */
+const keepSendNumbers: CollectionAfterDeleteHook = async ({ doc, id, req }) => {
+  const { drizzle } = req.payload.db as unknown as PostgresAdapter
+  await drizzle.update(emailSends).set({ subscriberId: null }).where(eq(emailSends.subscriberId, Number(id)))
+  return doc
+}
+
 /**
  * Readers of the daily email (docs/specs/daily-email.md「数据」), one per address. Created by the
  * subscribe boxes only: the owner can stop someone here but cannot subscribe anyone or change an
@@ -64,7 +81,7 @@ export const Subscribers: CollectionConfig = {
     defaultColumns: ['email', 'locale', 'timeZone', 'status', 'subscribedAt', 'lastSentAt'],
     listSearchableFields: ['email'],
     components: {
-      beforeListTable: ['/modules/daily/email/admin/subscriber-counts#SubscriberCounts'],
+      beforeListTable: ['/modules/daily/email/admin/subscriber-overview#SubscriberOverview'],
     },
     description: {
       en: 'The daily email goes out at 8 a.m. in each subscriber’s own time zone. Readers change their language and time zone, or unsubscribe, from the links in the emails; here you can only stop sending to someone.',
@@ -79,6 +96,7 @@ export const Subscribers: CollectionConfig = {
   },
   hooks: {
     beforeChange: [ownerChanges],
+    afterDelete: [keepSendNumbers],
   },
   fields: [
     {

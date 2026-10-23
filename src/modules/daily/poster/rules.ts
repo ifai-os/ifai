@@ -5,6 +5,9 @@
  * screen checks an addition the same way the server does; ./desk.ts loads and saves.
  */
 import { shanghaiDate } from '@/lib/shanghai-day'
+import type { Story } from '@/payload-types'
+
+import { originalSource } from './snapshot'
 
 export const POSTER_MAX = 8
 export const SAME_SOURCE_MAX = 2
@@ -19,6 +22,20 @@ export type PosterCandidate = {
   publishedAt: string
   /** Publisher of the original announcement (or of the first report): what "the same source" counts. */
   source: string | null
+}
+
+/** What the rules need of a story; a hook's document has these whatever its locale. */
+export type StoryFacts = Pick<Story, 'id' | 'eventId' | 'heat' | 'score' | 'publishedAt' | 'createdAt' | 'sources'>
+
+export function candidateOf(story: StoryFacts): PosterCandidate {
+  return {
+    id: story.id,
+    eventId: story.eventId,
+    heat: story.heat ?? 0,
+    score: story.score ?? null,
+    publishedAt: story.publishedAt ?? story.createdAt,
+    source: originalSource(story),
+  }
 }
 
 /** A YYYY-MM-DD calendar date that exists. */
@@ -56,18 +73,28 @@ export function byImportance(a: PosterCandidate, b: PosterCandidate): number {
   return b.heat - a.heat || (b.score ?? 0) - (a.score ?? 0) || Date.parse(b.publishedAt) - Date.parse(a.publishedAt) || b.id - a.id
 }
 
-/** The automatic choice: by importance, one story per event, at most two per source, eight at most. */
-export function autoPick(candidates: readonly PosterCandidate[]): number[] {
+/**
+ * By importance, one story per event, at most `max`, and at most `perSource` from one source
+ * when given. The poster's automatic choice and the morning email (docs/specs/daily-email.md
+ * rule 6, no limit per source) both pick this way.
+ */
+export function pickByImportance(candidates: readonly PosterCandidate[], { max, perSource }: { max: number; perSource?: number }): number[] {
   const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]))
   const events = new Set<number>()
   const items: number[] = []
   for (const candidate of [...candidates].sort(byImportance)) {
-    if (items.length === POSTER_MAX) break
-    if (events.has(candidate.eventId) || sameSourceCount(items, candidate, byId) >= SAME_SOURCE_MAX) continue
+    if (items.length === max) break
+    if (events.has(candidate.eventId)) continue
+    if (perSource !== undefined && sameSourceCount(items, candidate, byId) >= perSource) continue
     events.add(candidate.eventId)
     items.push(candidate.id)
   }
   return items
+}
+
+/** The automatic choice: by importance, one story per event, at most two per source, eight at most. */
+export function autoPick(candidates: readonly PosterCandidate[]): number[] {
+  return pickByImportance(candidates, { max: POSTER_MAX, perSource: SAME_SOURCE_MAX })
 }
 
 export type AddCheck = 'ok' | 'present' | 'full' | 'same_source' | 'same_event'

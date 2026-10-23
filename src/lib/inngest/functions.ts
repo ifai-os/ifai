@@ -2,6 +2,7 @@ import { appsHeatFunctions } from '@/modules/apps/metrics/jobs'
 import { appsProfileFunctions } from '@/modules/apps/profile/jobs'
 import { appsReviewFunctions } from '@/modules/apps/reviews/jobs'
 import { dailyCollectFunctions } from '@/modules/daily/collect/jobs'
+import { dailyEmailFunctions } from '@/modules/daily/email/jobs'
 import { dailyHeatFunctions } from '@/modules/daily/heat/jobs'
 import { dailyJudgeFunctions } from '@/modules/daily/judge/jobs'
 import { dailyWriteFunctions } from '@/modules/daily/write/jobs'
@@ -16,6 +17,7 @@ export const functions = [
   ...dailyJudgeFunctions,
   ...dailyWriteFunctions,
   ...dailyHeatFunctions,
+  ...dailyEmailFunctions,
   ...appsProfileFunctions,
   ...appsHeatFunctions,
   ...appsReviewFunctions,

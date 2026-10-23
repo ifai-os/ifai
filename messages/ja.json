@@ -788,6 +788,12 @@
       "notYou": "登録した覚えがありませんか？",
       "unsubscribe": "ワンクリックで配信停止"
     },
+    "digest": {
+      "subject": "{count, plural, =1 {{title}} other {{title} など # 件の AI ニュース}}",
+      "intro": "過去 24 時間 · {count} 件のニュース",
+      "top": "トップニュース",
+      "all": "サイトですべて見る"
+    },
     "footer": {
       "why": "IFAI デイリーに登録されたため、このメールをお送りしています。",
       "manage": "配信設定",
