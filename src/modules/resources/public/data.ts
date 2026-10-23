@@ -207,7 +207,6 @@ type Entry = SkillCandidate & { featured: boolean; item: (locale: Locale) => Ski
 
 const isCheckKey = (key: string): key is CheckKey => (CHECK_KEYS as string[]).includes(key)
 
-
 function scanBadge(status: SkillVersion['scanStatus'] | undefined): ScanBadge | null {
   return status === 'passed' ? 'passed' : status === 'warnings' ? 'reviewed' : null
 }
@@ -339,6 +338,16 @@ export async function getHomeSkills(locale: Locale): Promise<{ featured: SkillLi
       .slice(0, homeSkillsShown)
       .map((entry) => entry.item(locale)),
   }
+}
+
+/** The member's saved Skills for「我的收藏」, in the order given (newest save first); unpublished ones are left out. */
+export async function getSavedSkills(ids: number[], locale: Locale): Promise<SkillListItem[]> {
+  const { entries: all } = await getEntries()
+  const byId = new Map(all.map((entry) => [entry.id, entry]))
+  return ids.flatMap((id) => {
+    const entry = byId.get(id)
+    return entry ? [entry.item(locale)] : []
+  })
 }
 
 const detailSelect = { ...listSelect, status: true, delistReason: true, repository: true, license: true, runtime: true, capabilities: true, example: true, workflow: true, notes: true, ownerNotes: true } as const

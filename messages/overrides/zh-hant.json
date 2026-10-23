@@ -63,7 +63,7 @@
   "saves": {
     "signInTitle": "登入後就能收藏",
     "afterSignIn": "登入後會自動幫你完成收藏。",
-    "signInBody": "登入後就能看到你收藏的應用。"
+    "signInBody": "登入後就能看到你收藏的應用和 Skill。"
   },
   "reviews": {
     "failed": "評價沒有載入成功。",

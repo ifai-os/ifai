@@ -38,6 +38,11 @@ export async function createMember(baseURL: string, name = 'Smoke test member') 
       if (!rows[0]) throw new Error(`No app ${slug}; run scripts/seed-apps.ts`)
       return rows[0].id
     },
+    async skillId(slug: string): Promise<number> {
+      const { rows } = await client.query<{ id: number }>('select id from skills where slug = $1', [slug])
+      if (!rows[0]) throw new Error(`No Skill ${slug}; run scripts/seed-skills.ts`)
+      return rows[0].id
+    },
     /** A review of the app written straight to the table, as if the member had just written it. */
     async addReview(appId: number, body: string, rating = 4): Promise<void> {
       await client.query(`insert into app_reviews (app_id, user_id, rating, body, lang) values ($1, $2, $3, $4, 'en')`, [

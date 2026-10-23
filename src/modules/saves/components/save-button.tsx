@@ -11,13 +11,24 @@ type SaveButtonProps = {
   className: string
   /** The phone bar's button: a bookmark before the label and the count after it. */
   withCount?: boolean
+  /** Only the bookmark; the label is for screen readers (the Skill page's phone bar). */
+  iconOnly?: boolean
 }
 
 /** 收藏 / 已收藏 for the thing in the SaveProvider around it. */
-export function SaveButton({ className, withCount = false }: SaveButtonProps) {
+export function SaveButton({ className, withCount = false, iconOnly = false }: SaveButtonProps) {
   const t = useTranslations('saves')
   const format = useFormatter()
   const { saved, count, toggle } = useSave()
+
+  if (iconOnly) {
+    return (
+      <button type="button" aria-pressed={saved} onClick={toggle} className={`${className} ${saved ? 'text-accent' : 'text-ink'}`}>
+        <Icon name="bookmark" size={20} fill={saved ? 'currentColor' : 'none'} />
+        <span className="sr-only">{saved ? t('saved') : t('save')}</span>
+      </button>
+    )
+  }
 
   return (
     <button type="button" aria-pressed={saved} onClick={toggle} className={`${className} ${saved ? 'text-accent' : 'text-ink'}`}>
