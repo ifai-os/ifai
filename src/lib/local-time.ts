@@ -50,7 +50,9 @@ export function relativeDay(key: string, today: string): 'today' | 'yesterday' |
   return key === yesterday ? 'yesterday' : null
 }
 
-function isTimeZone(name: string): boolean {
+/** Whether the name is an IANA time zone this runtime knows ("Asia/Tokyo", "UTC"). */
+export function isTimeZone(name: string): boolean {
+  if (!name || name.length > 64) return false
   try {
     new Intl.DateTimeFormat('en-US', { timeZone: name })
     return true

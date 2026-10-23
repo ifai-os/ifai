@@ -735,6 +735,64 @@
     "earlier": "前の号",
     "later": "次の号"
   },
+  "subscribe": {
+    "title": "毎朝8時、AIデイリーをメールでお届け",
+    "note": "選んだ言語で、お住まいの地域の朝8時に配信します。いつでも配信を停止できます",
+    "email": "メールアドレス",
+    "submit": "登録する",
+    "done": "登録しました。明朝8時にお届けします",
+    "invalid": "有効なメールアドレスを入力してください",
+    "suggest": "もしかして <fix>{domain}</fix> ですか？",
+    "failed": "登録できませんでした。しばらくしてからもう一度お試しください"
+  },
+  "subscription": {
+    "title": "配信設定",
+    "address": "登録メールアドレス",
+    "statusLabel": "状態",
+    "status": {
+      "subscribed": "配信中",
+      "unsubscribed": "配信停止済み",
+      "stopped": "停止中"
+    },
+    "stopped": {
+      "bounce": "このアドレスへのメールが返送されたため、配信を止めています。",
+      "complaint": "このアドレスで迷惑メールとして報告されたため、配信を止めています。",
+      "owner": "このアドレスへの配信は停止されています。"
+    },
+    "next": "次回の配信：{time}（{zone}）",
+    "settings": "メールの設定",
+    "language": "言語",
+    "timeZone": "タイムゾーン",
+    "timeZoneHint": "このタイムゾーンの朝8時に配信します。",
+    "save": "保存",
+    "saved": "保存しました",
+    "unsubscribe": "配信を停止する",
+    "unsubscribed": "配信を停止しました。今後AIデイリーのメールは届きません。",
+    "resubscribe": "もう一度登録する",
+    "resubscribed": "もう一度登録しました。",
+    "invalidTitle": "このリンクは無効です",
+    "invalidBody": "リンクが途中で切れているか、登録がすでに削除されています。",
+    "failed": "保存できませんでした。しばらくしてからもう一度お試しください"
+  },
+  "dailyEmail": {
+    "senderName": "IFAI デイリー",
+    "welcome": {
+      "subject": "IFAI デイリーへようこそ",
+      "preheader": "最初のメールは{time}に届きます。",
+      "heading": "登録が完了しました",
+      "schedule": "毎朝8時（{zone}）に、過去24時間のAIニュースをこのアドレスにお届けします。",
+      "first": "最初のメールは{time}に届きます。",
+      "change": "言語やタイムゾーンは、下の「配信設定」から変更できます。毎回のメールの末尾にも同じリンクがあります。",
+      "manage": "配信設定",
+      "notYou": "登録した覚えがありませんか？",
+      "unsubscribe": "ワンクリックで配信停止"
+    },
+    "footer": {
+      "why": "IFAI デイリーに登録されたため、このメールをお送りしています。",
+      "manage": "配信設定",
+      "unsubscribe": "配信停止"
+    }
+  },
   "categories": {
     "product": "製品アップデート",
     "industry": "業界動向",

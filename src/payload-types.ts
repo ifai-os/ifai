@@ -75,6 +75,7 @@ export interface Config {
     sources: Source;
     stories: Story;
     posters: Poster;
+    subscribers: Subscriber;
     skills: Skill;
     'skill-versions': SkillVersion;
     'agent-hosts': AgentHost;
@@ -95,6 +96,7 @@ export interface Config {
     sources: SourcesSelect<false> | SourcesSelect<true>;
     stories: StoriesSelect<false> | StoriesSelect<true>;
     posters: PostersSelect<false> | PostersSelect<true>;
+    subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
     skills: SkillsSelect<false> | SkillsSelect<true>;
     'skill-versions': SkillVersionsSelect<false> | SkillVersionsSelect<true>;
     'agent-hosts': AgentHostsSelect<false> | AgentHostsSelect<true>;
@@ -510,6 +512,27 @@ export interface Poster {
   createdAt: string;
 }
 /**
+ * The daily email goes out at 8 a.m. in each subscriber’s own time zone. Readers change their language and time zone, or unsubscribe, from the links in the emails; here you can only stop sending to someone.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers".
+ */
+export interface Subscriber {
+  id: number;
+  email: string;
+  locale: 'en' | 'zh-Hans' | 'zh-Hant' | 'ja' | 'ko';
+  timeZone: string;
+  status: 'subscribed' | 'unsubscribed' | 'stopped';
+  stopReason?: ('bounce' | 'complaint' | 'owner') | null;
+  sourcePage?: string | null;
+  subscribedAt?: string | null;
+  unsubscribedAt?: string | null;
+  welcomeSentAt?: string | null;
+  lastSentAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Files and fingerprints are on the versions.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -909,6 +932,10 @@ export interface PayloadLockedDocument {
         value: number | Poster;
       } | null)
     | ({
+        relationTo: 'subscribers';
+        value: number | Subscriber;
+      } | null)
+    | ({
         relationTo: 'skills';
         value: number | Skill;
       } | null)
@@ -1180,6 +1207,24 @@ export interface PostersSelect<T extends boolean = true> {
   status?: T;
   generatedAt?: T;
   snapshot?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers_select".
+ */
+export interface SubscribersSelect<T extends boolean = true> {
+  email?: T;
+  locale?: T;
+  timeZone?: T;
+  status?: T;
+  stopReason?: T;
+  sourcePage?: T;
+  subscribedAt?: T;
+  unsubscribedAt?: T;
+  welcomeSentAt?: T;
+  lastSentAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

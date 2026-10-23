@@ -1330,6 +1330,60 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.subscribe_attempts": {
+      "name": "subscribe_attempts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "visitor_hash": {
+          "name": "visitor_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "subscribe_attempts_visitor_idx": {
+          "name": "subscribe_attempts_visitor_idx",
+          "columns": [
+            {
+              "expression": "visitor_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.skill_events": {
       "name": "skill_events",
       "schema": "",
@@ -4069,181 +4123,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.app_reports": {
-      "name": "app_reports",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "app_id": {
-          "name": "app_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "kind": {
-          "name": "kind",
-          "type": "enum_app_reports_kind",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "body": {
-          "name": "body",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "contact": {
-          "name": "contact",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "page_locale": {
-          "name": "page_locale",
-          "type": "enum_app_reports_page_locale",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reporter": {
-          "name": "reporter",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "enum_app_reports_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'open'"
-        },
-        "resolved_at": {
-          "name": "resolved_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "app_reports_app_idx": {
-          "name": "app_reports_app_idx",
-          "columns": [
-            {
-              "expression": "app_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "app_reports_reporter_idx": {
-          "name": "app_reports_reporter_idx",
-          "columns": [
-            {
-              "expression": "reporter",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "app_reports_status_idx": {
-          "name": "app_reports_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "app_reports_updated_at_idx": {
-          "name": "app_reports_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "app_reports_created_at_idx": {
-          "name": "app_reports_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "app_reports_app_id_apps_id_fk": {
-          "name": "app_reports_app_id_apps_id_fk",
-          "tableFrom": "app_reports",
-          "tableTo": "apps",
-          "columnsFrom": [
-            "app_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.sources": {
       "name": "sources",
       "schema": "",
@@ -5064,6 +4943,195 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.subscribers": {
+      "name": "subscribers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "enum_subscribers_locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "time_zone": {
+          "name": "time_zone",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'UTC'"
+        },
+        "status": {
+          "name": "status",
+          "type": "enum_subscribers_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'subscribed'"
+        },
+        "stop_reason": {
+          "name": "stop_reason",
+          "type": "enum_subscribers_stop_reason",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_page": {
+          "name": "source_page",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subscribed_at": {
+          "name": "subscribed_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unsubscribed_at": {
+          "name": "unsubscribed_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "welcome_sent_at": {
+          "name": "welcome_sent_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_sent_at": {
+          "name": "last_sent_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "subscribers_email_idx": {
+          "name": "subscribers_email_idx",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "subscribers_status_idx": {
+          "name": "subscribers_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "subscribers_subscribed_at_idx": {
+          "name": "subscribers_subscribed_at_idx",
+          "columns": [
+            {
+              "expression": "subscribed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "subscribers_unsubscribed_at_idx": {
+          "name": "subscribers_unsubscribed_at_idx",
+          "columns": [
+            {
+              "expression": "unsubscribed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "subscribers_updated_at_idx": {
+          "name": "subscribers_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "subscribers_created_at_idx": {
+          "name": "subscribers_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -8613,12 +8681,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "app_reports_id": {
-          "name": "app_reports_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "sources_id": {
           "name": "sources_id",
           "type": "integer",
@@ -8633,6 +8695,12 @@
         },
         "posters_id": {
           "name": "posters_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subscribers_id": {
+          "name": "subscribers_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -8774,21 +8842,6 @@
           "method": "btree",
           "with": {}
         },
-        "payload_locked_documents_rels_app_reports_id_idx": {
-          "name": "payload_locked_documents_rels_app_reports_id_idx",
-          "columns": [
-            {
-              "expression": "app_reports_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "payload_locked_documents_rels_sources_id_idx": {
           "name": "payload_locked_documents_rels_sources_id_idx",
           "columns": [
@@ -8824,6 +8877,21 @@
           "columns": [
             {
               "expression": "posters_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payload_locked_documents_rels_subscribers_id_idx": {
+          "name": "payload_locked_documents_rels_subscribers_id_idx",
+          "columns": [
+            {
+              "expression": "subscribers_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -8976,19 +9044,6 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "payload_locked_documents_rels_app_reports_fk": {
-          "name": "payload_locked_documents_rels_app_reports_fk",
-          "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "app_reports",
-          "columnsFrom": [
-            "app_reports_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "payload_locked_documents_rels_sources_fk": {
           "name": "payload_locked_documents_rels_sources_fk",
           "tableFrom": "payload_locked_documents_rels",
@@ -9021,6 +9076,19 @@
           "tableTo": "posters",
           "columnsFrom": [
             "posters_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_subscribers_fk": {
+          "name": "payload_locked_documents_rels_subscribers_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "subscribers",
+          "columnsFrom": [
+            "subscribers_id"
           ],
           "columnsTo": [
             "id"
@@ -9450,34 +9518,6 @@
         "open-source"
       ]
     },
-    "public.enum_app_reports_kind": {
-      "name": "enum_app_reports_kind",
-      "schema": "public",
-      "values": [
-        "wrong-info",
-        "shut-down",
-        "other"
-      ]
-    },
-    "public.enum_app_reports_page_locale": {
-      "name": "enum_app_reports_page_locale",
-      "schema": "public",
-      "values": [
-        "en",
-        "zh-Hans",
-        "zh-Hant",
-        "ja",
-        "ko"
-      ]
-    },
-    "public.enum_app_reports_status": {
-      "name": "enum_app_reports_status",
-      "schema": "public",
-      "values": [
-        "open",
-        "resolved"
-      ]
-    },
     "public.enum_sources_type": {
       "name": "enum_sources_type",
       "schema": "public",
@@ -9550,6 +9590,35 @@
       "values": [
         "draft",
         "generated"
+      ]
+    },
+    "public.enum_subscribers_locale": {
+      "name": "enum_subscribers_locale",
+      "schema": "public",
+      "values": [
+        "en",
+        "zh-Hans",
+        "zh-Hant",
+        "ja",
+        "ko"
+      ]
+    },
+    "public.enum_subscribers_status": {
+      "name": "enum_subscribers_status",
+      "schema": "public",
+      "values": [
+        "subscribed",
+        "unsubscribed",
+        "stopped"
+      ]
+    },
+    "public.enum_subscribers_stop_reason": {
+      "name": "enum_subscribers_stop_reason",
+      "schema": "public",
+      "values": [
+        "bounce",
+        "complaint",
+        "owner"
       ]
     },
     "public.enum_skills_status": {
@@ -9716,6 +9785,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "d045dad8-886e-4928-a247-a2dcd95bf00c",
+  "id": "da8db45a-f2a6-41a5-ad97-c279b62259e9",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
