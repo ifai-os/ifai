@@ -161,5 +161,37 @@
     "info": {
       "repository": "來源儲存庫"
     }
+  },
+  "subscribe": {
+    "title": "每天早上 8 點，把 AI 日報寄到你的信箱",
+    "note": "依你選擇的語言，在你所在時區的早上 8 點寄送，隨時可以取消訂閱",
+    "email": "你的電子郵件",
+    "invalid": "請輸入有效的電子郵件地址",
+    "failed": "訂閱失敗，請稍後再試"
+  },
+  "subscription": {
+    "address": "訂閱的電子郵件",
+    "status": {
+      "unsubscribed": "已取消訂閱",
+      "stopped": "已停止寄送"
+    },
+    "stopped": {
+      "bounce": "寄到這個信箱的郵件被退回了，所以停止寄送。",
+      "complaint": "日報在這個信箱被標成了垃圾郵件，所以停止寄送。",
+      "owner": "這個信箱已停止寄送。"
+    },
+    "timeZoneHint": "每天在這個時區的早上 8 點寄送。",
+    "unsubscribe": "取消訂閱",
+    "unsubscribed": "已取消訂閱，不會再收到日報郵件。",
+    "failed": "儲存失敗，請稍後再試"
+  },
+  "dailyEmail": {
+    "welcome": {
+      "schedule": "每天早上 8 點（{zone}），我們會把過去 24 小時的 AI 大事寄到這個信箱。",
+      "unsubscribe": "一鍵取消訂閱"
+    },
+    "footer": {
+      "unsubscribe": "取消訂閱"
+    }
   }
 }

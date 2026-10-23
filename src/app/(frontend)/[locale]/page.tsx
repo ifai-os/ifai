@@ -12,6 +12,8 @@ import { dayKey, serverTimeZone } from '@/lib/local-time'
 import { alternatesFor } from '@/lib/seo'
 import { AppTile } from '@/modules/apps/components/app-tile'
 import { getHomeApps } from '@/modules/apps/data'
+import { SubscribeBox } from '@/modules/daily/email/components/subscribe-box'
+import { subscribingOpen } from '@/modules/daily/email/delivery'
 import { TodayHeadlines } from '@/modules/daily/public/components/today-headlines'
 import { latestStories } from '@/modules/daily/public/data'
 import { ScanBadgeView } from '@/modules/resources/public/components/badges'
@@ -94,6 +96,8 @@ export default async function HomePage({ params }: Props) {
           )}
         </div>
       </section>
+
+      {subscribingOpen() && <SubscribeBox variant="band" />}
 
       {apps.trending.length > 0 && (
         <section aria-labelledby="trending-apps" className="flex flex-col gap-4">

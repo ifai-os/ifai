@@ -699,6 +699,64 @@
     "earlier": "Previous poster",
     "later": "Next poster"
   },
+  "subscribe": {
+    "title": "Get the AI Daily in your inbox at 8 a.m.",
+    "note": "Sent at 8 a.m. your time, in your language. Unsubscribe anytime.",
+    "email": "Your email",
+    "submit": "Subscribe",
+    "done": "You're in. See you at 8 a.m.",
+    "invalid": "Enter a valid email address",
+    "suggest": "Did you mean <fix>{domain}</fix>?",
+    "failed": "That didn't go through. Please try again in a moment."
+  },
+  "subscription": {
+    "title": "Manage subscription",
+    "address": "Email",
+    "statusLabel": "Status",
+    "status": {
+      "subscribed": "Subscribed",
+      "unsubscribed": "Unsubscribed",
+      "stopped": "Stopped"
+    },
+    "stopped": {
+      "bounce": "Emails to this address bounced, so we stopped sending.",
+      "complaint": "The Daily was marked as spam at this address, so we stopped sending.",
+      "owner": "Sending to this address has been stopped."
+    },
+    "next": "Next email: {time} ({zone})",
+    "settings": "Email settings",
+    "language": "Language",
+    "timeZone": "Time zone",
+    "timeZoneHint": "The Daily arrives at 8 a.m. in this time zone.",
+    "save": "Save",
+    "saved": "Saved",
+    "unsubscribe": "Unsubscribe",
+    "unsubscribed": "You're unsubscribed. We won't email you the Daily again.",
+    "resubscribe": "Subscribe again",
+    "resubscribed": "You're subscribed again.",
+    "invalidTitle": "This link no longer works",
+    "invalidBody": "The link may be incomplete, or the subscription has been deleted.",
+    "failed": "That didn't go through. Please try again in a moment."
+  },
+  "dailyEmail": {
+    "senderName": "IFAI Daily",
+    "welcome": {
+      "subject": "Welcome to the IFAI Daily",
+      "preheader": "Your first email arrives on {time}.",
+      "heading": "You're subscribed",
+      "schedule": "Every morning at 8:00 ({zone}), we'll send the past 24 hours of AI news to this address.",
+      "first": "The first one arrives on {time}.",
+      "change": "To change the language or time zone, use Manage subscription below. The link is at the bottom of every email, too.",
+      "manage": "Manage subscription",
+      "notYou": "Didn't sign up for this?",
+      "unsubscribe": "Unsubscribe with one click"
+    },
+    "footer": {
+      "why": "You're receiving this because you subscribed to the IFAI Daily.",
+      "manage": "Manage subscription",
+      "unsubscribe": "Unsubscribe"
+    }
+  },
   "categories": {
     "product": "Product update",
     "industry": "Industry",

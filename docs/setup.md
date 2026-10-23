@@ -15,7 +15,7 @@ pnpm dev                 # http://localhost:3000
 ```
 
 - 第一次打开 http://localhost:3000/admin 会让你创建后台管理员账号。
-- 本地没配 Resend 时，邮箱登录链接会打印在运行 `pnpm dev` 的终端里。
+- 本地没配 Resend 时，邮箱登录链接会打印在运行 `pnpm dev` 的终端里。日报邮件也一样：`.env` 里设 `DAILY_EMAIL_ENABLED=true` 才有订阅框，订阅后的欢迎信打印在终端里，里面有管理订阅和退订的链接。
 - 两个密钥都用随机字符串，两者不要相同：`openssl rand -base64 32`
 - 后台任务（日报采集、写作）：另开一个终端运行 `pnpm inngest`，打开 http://localhost:8288 就是 Inngest 的本地控制台；`.env` 里保留 `INNGEST_DEV=1`。
 - 本地默认不调用模型（`MODEL_CALLS_ENABLED=false`）。要试真实调用，填 `OPENROUTER_API_KEY` 并把开关改成 `true`。
@@ -46,6 +46,8 @@ pnpm dev                 # http://localhost:3000
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | 见第 5 步 | 不填 | 预览地址不固定，第三方登录只在生产和本地可用 |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | 见第 6 步 | 不填 | 同上 |
 | `RESEND_API_KEY` / `EMAIL_FROM` | 见第 7 步 | 同生产 | 预览环境用邮箱魔法链接登录 |
+| `DAILY_EMAIL_FROM` | `news@ifai.io`（见第 7 步） | 同生产 | 日报邮件的发件地址。和 `RESEND_API_KEY` 都配好，订阅框才会出现 |
+| `DAILY_EMAIL_ENABLED` | 先不填，日报邮件第 2 步验过后改成 `true` | 要测订阅时设 `true` | 不是 `true` 就不显示订阅框、不接受新订阅、不发日报邮件；已有的订阅保留 |
 | `R2_*` | 见第 4 步 | 建议用单独的存储桶 | |
 | `OPENROUTER_API_KEY` | 见第 8 步 | 另一个 key | 预览用单独的 key，额度设小一点 |
 | `AI_DAILY_BUDGET_USD` | `10` | `1` | 每天（上海时间）的模型费用上限，美元 |
@@ -90,13 +92,24 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 
 登录按钮上的品牌图标，请从 Google 和 GitHub 官方的品牌资源页下载后再加，现在按钮只有文字。
 
-## 7. Resend（登录邮件）
+## 7. Resend（登录邮件和日报邮件）
 
 1. 在 resend.com 添加发信域名（建议用子域名，如 `mail.<域名>`），按提示添加 DNS 记录并验证。
 2. 新建 API Key（Sending access）→ `RESEND_API_KEY`。
 3. `EMAIL_FROM` 填 `IFAI <hello@mail.<域名>>`。
 
 同一套配置也用于后台管理员的找回密码邮件；没配 Resend 时，这类邮件只打印在服务器日志里。
+
+日报邮件（[specs/daily-email.md](./specs/daily-email.md)）从 `news@ifai.io` 发，回信直接回到这个邮箱：
+
+1. 先开好 `news@ifai.io` 这个邮箱，确认能收信。读者回信会到这里（退信由 Resend 处理，不进这个邮箱）。
+2. Resend → Domains → Add Domain，填 `ifai.io`，按页面给的值在 `ifai.io` 的 DNS 里加记录：SPF（`send` 子域名的 MX 和 TXT）和 DKIM（`resend._domainkey` 的 TXT），等状态变成 Verified。登录邮件用的发信域名不用动。
+3. 在 `ifai.io` 的 DNS 里加一条 DMARC 记录：类型 TXT，名称 `_dmarc`，值 `v=DMARC1; p=none;`。Gmail 和 Yahoo 要求群发的域名有 DMARC，先用 `p=none` 只观察不拦截。已经有 `_dmarc` 记录的话保留原来的，不要再加一条。
+4. 在这个域名的设置里确认 Click Tracking 和 Open Tracking 是关着的（默认关）：规格要求不改写链接、不统计打开。
+5. Vercel 的生产和预览环境都填 `DAILY_EMAIL_FROM` = `news@ifai.io`，只填地址，发件人名称（IFAI Daily、IFAI 日报……）按订阅者的语言自动加。`RESEND_API_KEY` 用登录邮件那个；如果建 key 时限定了域名，改成全部域名，或者给 `ifai.io` 另建一个 key。
+6. `DAILY_EMAIL_ENABLED` 先不填：现在合并的是第 1 步（订阅与退订），每天早上的发送在第 2 步。第 2 步合并、在预览环境验过以后，生产环境改成 `true`。要在预览环境试订阅，只在 Preview 设 `true`。改完环境变量要重新部署一次才生效（Deployments → 最新一次 → Redeploy）。
+7. 试一遍：在预览环境的 `/zh-hans/daily` 用自己的邮箱订阅，收到欢迎信后点「管理订阅」改语言和时区，再点「一键退订」。Gmail 会在发件人旁边显示「退订」，但新域名发得少时可能不显示，不影响邮件里的退订链接。
+8. 免费版每天 100 封、每月 3,000 封，和登录邮件共用；订阅者到 80 人左右换 Pro（Settings → Billing）。退信和投诉的回调（`RESEND_WEBHOOK_SECRET`）在第 2 步加。
 
 ## 8. OpenRouter（模型）
 
