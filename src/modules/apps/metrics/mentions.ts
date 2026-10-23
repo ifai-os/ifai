@@ -103,3 +103,19 @@ export async function mentionCounts(db: Db, since: Date, until: Date): Promise<M
     .groupBy(appMentions.appId)
   return new Map(rows.map((row) => [row.appId, row.count]))
 }
+
+/**
+ * The publish times to match again when a story changes (published, corrected, withdrawn, or
+ * another report merged into it): its own, and any its matches were recorded at, since a story
+ * published again gets a new time. Null when there is no such story and nothing matched it.
+ */
+export async function storyWindow(storyId: number): Promise<{ since: string; until: string } | null> {
+  const { payload, db } = await getDb()
+  const [story, rows] = await Promise.all([
+    payload.findByID({ collection: 'stories', id: storyId, depth: 0, select: { publishedAt: true }, disableErrors: true }),
+    db.select({ publishedAt: appMentions.publishedAt }).from(appMentions).where(eq(appMentions.storyId, storyId)),
+  ])
+  const times = [...(story?.publishedAt ? [Date.parse(story.publishedAt)] : []), ...rows.map((row) => row.publishedAt.getTime())]
+  if (times.length === 0) return null
+  return { since: new Date(Math.min(...times)).toISOString(), until: new Date(Math.max(...times) + 1).toISOString() }
+}
