@@ -4,6 +4,7 @@ import { ai as defaultAi } from '@/lib/ai'
 import { getDb } from '@/lib/db/drizzle'
 import type { Source, Story } from '@/payload-types'
 
+import { storyCategoryOf } from '../categories'
 import { storedHeat } from '../heat/heat'
 import { storyEntities } from '../entities'
 import { trendOf } from '../heat/rules'
@@ -89,7 +90,8 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
   const at = now.toISOString()
   // The other languages remember which simplified Chinese they were written from (review rules).
   const basedOn = hansHash(output.zhHans)
-  const category = analysis.structure?.category ?? 'industry'
+  // A result structured before the categories changed may still name a former one.
+  const category = storyCategoryOf(analysis.structure?.category)
   const heat = await storedHeat(analysis.eventId)
 
   const story = await payload.create({

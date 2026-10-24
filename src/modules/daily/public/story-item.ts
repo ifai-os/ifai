@@ -2,7 +2,7 @@ import type { Locale } from '@/i18n/config'
 import { inAnyLanguage, inReaderLanguage, type InLanguage, type Localized } from '@/lib/i18n/localized'
 import type { Media, Story } from '@/payload-types'
 
-import { storyCategories, type StoryCategory } from '../categories'
+import { storyCategories, storyCategoryOf, type StoryCategory } from '../categories'
 import type { EntityKind, StoryEntity } from '../entities'
 import { parseVideo, type Video } from '../media'
 import type { HeatTrend, SourceRole } from '../story-fields'
@@ -76,6 +76,22 @@ export type TopicPage = {
   developer: { name: string; key: string | null } | null
 }
 
+/**
+ * A category page (docs/specs/daily.md「分类与分类页」): one page of the category's published
+ * stories, newest first, and the banner's numbers.
+ */
+export type CategoryPage = {
+  category: StoryCategory
+  total: number
+  page: number
+  pages: number
+  stories: StoryItem[]
+  /** Published in the last 7 days. */
+  week: number
+  /** When the newest story went up; null while the category has none. */
+  latest: string | null
+}
+
 export type StoryDetail = StoryItem & {
   sources: StorySource[]
   /** Other published stories of the same event, newest first. */
@@ -117,7 +133,7 @@ export function toItem(doc: RawStory, locale: Locale): StoryItem {
   return {
     id: doc.id,
     slug: doc.slug,
-    category: isStoryCategory(doc.category) ? doc.category : 'industry',
+    category: storyCategoryOf(doc.category),
     publishedAt: doc.publishedAt ?? doc.createdAt,
     correctedAt: doc.correctedAt ?? null,
     // A published story always has English; the last fallback only keeps a broken record from crashing the page.

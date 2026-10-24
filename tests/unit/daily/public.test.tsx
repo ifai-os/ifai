@@ -8,16 +8,19 @@ import { dateOfKey, dayKey, groupByDay, readerTimeZone, relativeDay } from '@/li
 import { DailyFeed } from '@/modules/daily/public/components/daily-feed'
 import { HotList } from '@/modules/daily/public/components/hot-list'
 import { HottestCard } from '@/modules/daily/public/components/hottest-card'
+import { CategoryPageView } from '@/modules/daily/public/components/category-page'
 import { MentionedApps } from '@/modules/daily/public/components/mentioned-apps'
 import { StoryDetailView } from '@/modules/daily/public/components/story-detail'
 import { TodayHeadlines } from '@/modules/daily/public/components/today-headlines'
 import { TopicPageView } from '@/modules/daily/public/components/topic-page'
 import { listHref, readPage, readTopicKey, storyHref, topicHref } from '@/modules/daily/public/list-params'
 import { renderFeed } from '@/modules/daily/public/rss'
+import { storyCategoryOf } from '@/modules/daily/categories'
 import {
   onePerEvent,
   toHot,
   toItem,
+  type CategoryPage,
   type HotStory,
   type RawStory,
   type StoryDetail,
@@ -36,7 +39,7 @@ const render = (element: ReactElement) =>
 
 const story = (overrides: Partial<StoryItem> & Pick<StoryItem, 'id' | 'publishedAt'>): StoryItem => ({
   slug: `story-${overrides.id}`,
-  category: 'product',
+  category: 'tools',
   correctedAt: null,
   title: { value: `Story ${overrides.id}`, lang: 'en' },
   summary: { value: 'What happened, in one line.', lang: 'en' },
@@ -378,10 +381,69 @@ describe('a company’s or product’s topic page', () => {
 
   it('says when there is nothing earlier, and leaves out a maker it does not know', () => {
     const html = render(<TopicPageView topic={{ ...topic, page: 2, earlier: 0, developer: null, app: null }} serverToday="2026-10-22" />)
-    expect(html).toContain(en.daily.topicEnd)
+    expect(html).toContain(en.daily.noEarlier)
     expect(html).toContain('href="/en/daily/topic/kimi"')
     expect(html).not.toContain('Made by')
     expect(html).not.toContain('/en/apps/')
+  })
+})
+
+describe('a category page', () => {
+  const page: CategoryPage = {
+    category: 'tools',
+    total: 23,
+    page: 1,
+    pages: 2,
+    stories: [
+      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'workspaces', moreReports: 2, tryIt: { value: 'Invite a teammate.', lang: 'en' } }),
+      story({ id: 2, publishedAt: '2026-10-21T20:15:00Z', slug: 'preview' }),
+    ],
+    week: 18,
+    latest: '2026-10-22T09:40:00Z',
+  }
+
+  it('reads the former categories as the new ones', () => {
+    expect(storyCategoryOf('product')).toBe('tools')
+    expect(storyCategoryOf('design')).toBe('aigc')
+    expect(storyCategoryOf('open')).toBe('open')
+    expect(storyCategoryOf('gossip')).toBe('industry')
+    expect(storyCategoryOf(undefined)).toBe('industry')
+  })
+
+  it('heads the cards with the banner: #name, what it covers, the week and the newest time', () => {
+    const html = render(<CategoryPageView page={page} serverToday="2026-10-22" />)
+    expect(html).toContain('>#</span>AI tools</h1>')
+    expect(html).toContain(en.categoryAbout.tools)
+    expect(html).toContain('18 stories in the last 7 days')
+    expect(html).toContain('updated 9:40 AM')
+    // Every category as a pill, this one current; no category name on its own cards.
+    const current = html.match(/<a [^>]*aria-current="page"[^>]*>([^<]*)<\/a>/)
+    expect(current?.[0]).toContain('href="/en/daily/category/tools"')
+    expect(current?.[1]).toBe(en.categories.tools)
+    // The name shows in the title and the pill only.
+    expect(html.split(`>${en.categories.tools}<`)).toHaveLength(3)
+    expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
+    expect(html).toContain('>Try it</span> Invite a teammate.')
+    expect(html).toContain('2 more outlets reported this')
+    expect(html).toContain(en.card.moreSources.match(/=0 \{([^}]*)\}/)?.[1] ?? 'missing')
+    expect(html).toContain('href="/en/daily/category/tools?page=2"')
+    expect(html).toContain(en.daily.loadEarlier)
+  })
+
+  it('names an older update by its day, links the newer page, and says when there is nothing earlier', () => {
+    const html = render(<CategoryPageView page={{ ...page, page: 2, latest: '2026-10-21T20:15:00Z' }} serverToday="2026-10-22" />)
+    expect(html).toContain('updated yesterday at 8:15 PM')
+    expect(html).toMatch(/<a [^>]*href="\/en\/daily\/category\/tools"[^>]*>Newer stories<\/a>|<a [^>]*rel="prev"[^>]*href="\/en\/daily\/category\/tools"/)
+    expect(html).toContain(en.daily.noEarlier)
+    expect(html).not.toContain('?page=3')
+  })
+
+  it('shows the empty state while the category has no stories', () => {
+    const html = render(<CategoryPageView page={{ ...page, total: 0, pages: 0, stories: [], week: 0, latest: null }} serverToday="2026-10-22" />)
+    expect(html).toContain(en.daily.emptyCategoryTitle)
+    expect(html).toContain('href="/en/daily"')
+    expect(html).not.toContain('in the last 7 days')
+    expect(html).not.toContain(en.daily.noEarlier)
   })
 })
 
@@ -403,7 +465,7 @@ describe('the RSS feed', () => {
     expect(xml).toContain('<language>ja</language>')
     expect(xml).toContain('<link>https://ifai.example/ja/daily</link>')
     expect(xml).toContain('https://ifai.example/ja/daily/story-1')
-    expect(xml).toContain('<category>cat:product</category>')
+    expect(xml).toContain('<category>cat:tools</category>')
     expect(xml).toContain('Fri, 23 Oct 2026 01:00:00 GMT')
     expect(xml).toContain('試してみる: Try now')
     // Markup in a summary is wrapped as character data, not parsed as part of the feed.

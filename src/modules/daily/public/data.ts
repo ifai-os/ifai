@@ -22,6 +22,7 @@ import {
   sourcesOf,
   toHot,
   toItem,
+  type CategoryPage,
   type HotStory,
   type RawStory,
   type StoryDetail,
@@ -30,7 +31,7 @@ import {
   type TopicPage,
 } from './story-item'
 
-export type { HotStory, StoryDetail, StoryEntityItem, StoryItem, StorySource, StoryTopic, TopicPage } from './story-item'
+export type { CategoryPage, HotStory, StoryDetail, StoryEntityItem, StoryItem, StorySource, StoryTopic, TopicPage } from './story-item'
 export { isStoryCategory } from './story-item'
 
 /**
@@ -52,6 +53,10 @@ export const similarShown = 3
 const similarMin = 0.6
 /** A topic page lists this many stories at a time. */
 export const topicPageSize = 20
+/** And a category page. */
+export const categoryPageSize = 20
+/** A category page's banner counts the stories of this long. */
+const categoryWeekMs = 7 * 24 * 3_600_000
 /** The hottest story of "today" was published within this long. */
 const hottestWithinMs = 24 * 3_600_000
 /** Apps mentioned in stories of the last 48 hours: today in any time zone. */
@@ -90,15 +95,13 @@ async function payload() {
   return getPayload({ config })
 }
 
-type ListArgs = { category: StoryCategory | null; tag?: StoryTag | null; page: number }
+type ListArgs = { tag?: StoryTag | null; page: number }
 
 const findStories = unstable_cache(
-  async ({ category, tag, page }: ListArgs) => {
+  async ({ tag, page }: ListArgs) => {
     const result = await (await payload()).find({
       collection: 'stories',
-      where: {
-        and: [published, ...(category ? [{ category: { equals: category } }] : []), ...(tag ? [{ tags: { contains: tag } }] : [])],
-      },
+      where: { and: [published, ...(tag ? [{ tags: { contains: tag } }] : [])] },
       sort: '-publishedAt',
       page,
       limit: storiesPerPage,
@@ -111,6 +114,57 @@ const findStories = unstable_cache(
     return { docs: result.docs as unknown as RawStory[], total: result.totalDocs, pages: result.totalPages }
   },
   ['daily-list'],
+  cacheOptions,
+)
+
+// One page of a category's published stories, newest first (its category page).
+const findCategoryPage = unstable_cache(
+  async (category: StoryCategory, page: number) => {
+    const result = await (await payload()).find({
+      collection: 'stories',
+      where: { and: [published, { category: { equals: category } }] },
+      sort: '-publishedAt',
+      page,
+      limit: categoryPageSize,
+      locale: 'all',
+      depth: 1,
+      populate,
+      select,
+      overrideAccess: false,
+    })
+    return { docs: result.docs as unknown as RawStory[], total: result.totalDocs, pages: result.totalPages }
+  },
+  ['daily-category-page'],
+  cacheOptions,
+)
+
+// A category page's banner: its stories of the last 7 days, counted when the cache fills (so up to
+// an hour behind as stories age out), and when the newest went up.
+const findCategorySummary = unstable_cache(
+  async (category: StoryCategory) => {
+    const client = await payload()
+    const inCategory: Where[] = [published, { category: { equals: category } }]
+    const since = new Date(Date.now() - categoryWeekMs).toISOString()
+    const [week, newest] = await Promise.all([
+      client.count({
+        collection: 'stories',
+        where: { and: [...inCategory, { publishedAt: { greater_than_equal: since } }] },
+        overrideAccess: false,
+      }),
+      client.find({
+        collection: 'stories',
+        where: { and: inCategory },
+        sort: '-publishedAt',
+        limit: 1,
+        depth: 0,
+        select: { publishedAt: true, createdAt: true },
+        overrideAccess: false,
+      }),
+    ])
+    const doc = newest.docs[0]
+    return { week: week.totalDocs, latest: doc ? (doc.publishedAt ?? doc.createdAt) : null }
+  },
+  ['daily-category-summary'],
   cacheOptions,
 )
 
@@ -412,10 +466,29 @@ const findPosterDates = unstable_cache(
   cacheOptions,
 )
 
-/** One page of published stories, newest first, optionally in one category or with one tag. */
+/** One page of published stories, newest first, optionally with one tag. */
 export async function listStories({ locale, ...args }: ListArgs & { locale: Locale }): Promise<StoryPage> {
   const result = await findStories(args)
   return { stories: result.docs.map((doc) => toItem(doc, locale)), total: result.total, page: args.page, pages: result.pages }
+}
+
+/**
+ * A category page (docs/specs/daily.md「分类与分类页」): one page of its published stories, newest
+ * first, how many went up in the last 7 days and when the newest did; null past the last page.
+ * A category without stories yet still has a page (its empty state).
+ */
+export async function getCategoryPage(category: StoryCategory, page: number, locale: Locale): Promise<CategoryPage | null> {
+  const [result, summary] = await Promise.all([findCategoryPage(category, page), findCategorySummary(category)])
+  if (page > 1 && result.docs.length === 0) return null
+  return {
+    category,
+    total: result.total,
+    page,
+    pages: result.pages,
+    stories: result.docs.map((doc) => toItem(doc, locale)),
+    week: summary.week,
+    latest: summary.latest,
+  }
 }
 
 /**

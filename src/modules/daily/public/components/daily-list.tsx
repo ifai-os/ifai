@@ -7,7 +7,6 @@ import { ListLink, ListNavigationProvider, ListResults } from '@/components/stat
 import type { Locale } from '@/i18n/config'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
 
-import type { StoryCategory } from '../../categories'
 import type { StoryTag } from '../../tags'
 import { SubscribeBox } from '../../email/components/subscribe-box'
 import { subscribingOpen } from '../../email/delivery'
@@ -23,27 +22,26 @@ import { PosterCard } from './poster-card'
 
 type DailyListProps = {
   locale: Locale
-  /** The category being shown; null for every story. */
-  category: StoryCategory | null
-  /** The industry tag being shown (`/daily/tag/<tag>`), if any. */
+  /** The industry tag being shown (`/daily/tag/<tag>`), if any; null for every story. */
   tag?: StoryTag | null
   page: number
 }
 
 /**
  * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): today's hottest story and the
- * latest「每日 AI 大事」poster (first page of every story only), categories, stories by
- * day and earlier pages, and beside them the apps in today's news and the hottest events of the
- * last 48 hours. The email subscribe box sits under the poster on wide screens (in the poster's
- * place when there is none) and after the stories on phones and tablets.
+ * latest「每日 AI 大事」poster (first page of every story only), the categories (each has its own
+ * page, ./category-page.tsx), stories by day and earlier pages, and beside them the apps in
+ * today's news and the hottest events of the last 48 hours. The email subscribe box sits under
+ * the poster on wide screens (in the poster's place when there is none) and after the stories on
+ * phones and tablets. A tag's page is the same list without the first row and the categories.
  */
-export async function DailyList({ locale, category, tag = null, page }: DailyListProps) {
-  const front = !category && !tag && page === 1
+export async function DailyList({ locale, tag = null, page }: DailyListProps) {
+  const front = !tag && page === 1
   const [t, names, tagNames, result, hottest, poster, hot, apps] = await Promise.all([
     getTranslations('daily'),
     getTranslations('categories'),
     getTranslations('tags'),
-    listStories({ locale, category, tag, page }),
+    listStories({ locale, tag, page }),
     front ? hottestStory(locale) : null,
     front ? latestPoster() : null,
     hotStories(locale),
@@ -60,11 +58,7 @@ export async function DailyList({ locale, category, tag = null, page }: DailyLis
   return (
     <ListNavigationProvider>
       <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 pt-5 pb-16 md:gap-7 md:pt-8 md:pb-24">
-        {tag ? (
-          <h1 className="text-h1">{t('tagTitle', { tag: tagNames(tag) })}</h1>
-        ) : (
-          <h1 className="sr-only">{category ? names(category) : t('title')}</h1>
-        )}
+        {tag ? <h1 className="text-h1">{t('tagTitle', { tag: tagNames(tag) })}</h1> : <h1 className="sr-only">{t('title')}</h1>}
         {/* The board's row: hottest story and poster share it 2 : 1 and wrap when there is no room. */}
         <div className="flex flex-col gap-4 empty:hidden md:flex-row md:flex-wrap">
           {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
@@ -86,14 +80,14 @@ export async function DailyList({ locale, category, tag = null, page }: DailyLis
           )}
         </div>
 
-        {!tag && <CategoryNav current={category} />}
+        {!tag && <CategoryNav current={null} />}
 
         <div className="flex flex-col gap-12 lg:flex-row lg:items-start">
           <div className="flex min-w-0 flex-1 flex-col gap-5 md:gap-7">
             <ListResults skeleton={<DailyFeedSkeleton count={Math.min(Math.max(result.stories.length, 3), 6)} />}>
               {result.stories.length > 0 ? (
                 <DailyFeed stories={result.stories} serverToday={serverToday} />
-              ) : category || tag ? (
+              ) : tag ? (
                 <EmptyState title={t('emptyCategoryTitle')} body={t('emptyCategoryBody')}>
                   <ListLink href="/daily" className={buttonClass('secondary')}>
                     {t('allStories')}
@@ -107,12 +101,12 @@ export async function DailyList({ locale, category, tag = null, page }: DailyLis
             {(page > 1 || page < result.pages) && (
               <nav aria-label={t('pages')} className="flex flex-wrap justify-center gap-3 pt-2">
                 {page > 1 && (
-                  <ListLink rel="prev" href={listHref({ category, tag, page: page - 1 })} className={pill}>
+                  <ListLink rel="prev" href={listHref({ tag, page: page - 1 })} className={pill}>
                     {t('loadNewer')}
                   </ListLink>
                 )}
                 {page < result.pages && (
-                  <ListLink rel="next" href={listHref({ category, tag, page: page + 1 })} className={pill}>
+                  <ListLink rel="next" href={listHref({ tag, page: page + 1 })} className={pill}>
                     {t('loadEarlier')}
                   </ListLink>
                 )}

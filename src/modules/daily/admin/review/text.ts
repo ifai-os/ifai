@@ -215,7 +215,15 @@ const zh = {
     render_failed: '海报图片没生成出来',
     failed: '操作失败',
   },
-  categories: { product: '产品更新', industry: '行业动态', open: '开源模型', design: '图像与设计', research: '研究进展' } as Record<StoryCategory, string>,
+  categories: {
+    llm: '大模型',
+    tools: 'AI工具',
+    aigc: 'AIGC',
+    open: '开源',
+    industry: '行业动态',
+    research: 'AI科研',
+    robotics: '机器人',
+  } as Record<StoryCategory, string>,
   join: '、',
 }
 
@@ -427,7 +435,15 @@ const en: ReviewText = {
     render_failed: 'The poster images could not be made',
     failed: 'Something went wrong',
   },
-  categories: { product: 'Product update', industry: 'Industry', open: 'Open models', design: 'Image & design', research: 'Research' },
+  categories: {
+    llm: 'AI models',
+    tools: 'AI tools',
+    aigc: 'Generative media',
+    open: 'Open source',
+    industry: 'Industry',
+    research: 'Research',
+    robotics: 'Robotics',
+  },
   join: ', ',
 }
 

@@ -13,7 +13,7 @@ import { feedPath, listHref, posterDay, posterHref, posterImagePath, storyHref, 
 
 const descriptionLength = 160
 
-/** Title, description, canonical address and the RSS link of a list page. */
+/** Title, description, canonical address and the RSS link of a list page: the daily list, a category's or a tag's. */
 export async function listMetadata({
   locale,
   category,
@@ -25,9 +25,10 @@ export async function listMetadata({
   tag?: StoryTag | null
   page: number
 }): Promise<Metadata> {
-  const [t, names, tagNames] = await Promise.all([
+  const [t, names, about, tagNames] = await Promise.all([
     getTranslations({ locale, namespace: 'daily' }),
     getTranslations({ locale, namespace: 'categories' }),
+    getTranslations({ locale, namespace: 'categoryAbout' }),
     getTranslations({ locale, namespace: 'tags' }),
   ])
   const base = category
@@ -37,7 +38,8 @@ export async function listMetadata({
       : t('title')
   return {
     title: page > 1 ? t('pageTitle', { title: base, page }) : base,
-    description: t('description'),
+    // A category page describes the category, as its banner does.
+    description: category ? about(category) : t('description'),
     alternates: {
       ...alternatesFor(listHref({ category, tag, page }), locale),
       types: { 'application/rss+xml': localizePath(locale, feedPath) },

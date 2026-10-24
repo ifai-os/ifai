@@ -27,5 +27,5 @@ export default async function DailyTagPage({ params, searchParams }: Props) {
   const page = readPage(await searchParams)
   if (!isStoryTag(tag) || !page) notFound()
 
-  return <DailyList locale={locale} category={null} tag={tag} page={page} />
+  return <DailyList locale={locale} tag={tag} page={page} />
 }

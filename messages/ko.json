@@ -921,6 +921,8 @@
     "title": "데일리",
     "description": "오늘 AI에서 달라진 것. 모든 소식은 출처를 확인했고, 쉬운 요약을 함께 제공해요.",
     "categoryTitle": "{category} · 데일리",
+    "categoryWeek": "최근 7일 소식 {count}개",
+    "categoryUpdated": "최근 업데이트 {when, select, today {{time}} yesterday {어제 {time}} other {{date} {time}}}",
     "pageTitle": "{title} · {page}페이지",
     "pages": "페이지 이동",
     "filterLabel": "카테고리로 필터",
@@ -976,7 +978,7 @@
     "topicCount": "소식 {count}개",
     "topicDeveloper": "개발사 <link>{name}</link>",
     "topicEarlier": "이전 소식 더 보기({count}개)",
-    "topicEnd": "더 이전 소식이 없습니다",
+    "noEarlier": "더 이전 소식이 없습니다",
     "share": "공유",
     "copied": "링크를 복사했어요",
     "newTab": "(새 탭에서 열림)",
@@ -1069,11 +1071,22 @@
     }
   },
   "categories": {
-    "product": "제품 업데이트",
+    "llm": "AI 모델",
+    "tools": "AI 도구",
+    "aigc": "이미지·영상 생성",
+    "open": "오픈소스",
     "industry": "업계 동향",
-    "open": "오픈 모델",
-    "design": "이미지·디자인",
-    "research": "연구"
+    "research": "연구",
+    "robotics": "로봇"
+  },
+  "categoryAbout": {
+    "llm": "새 모델 출시와 업그레이드, 컨텍스트 길이·가격·API 변경 소식.",
+    "tools": "AI 앱과 도구의 새 기능과 신제품, 가격과 이용 범위 변경 소식.",
+    "aigc": "이미지·영상·오디오·음악·3D 콘텐츠의 생성과 편집.",
+    "open": "오픈소스·오픈 웨이트 모델, 데이터셋, 프레임워크와 개발 도구.",
+    "industry": "투자 유치, 인수합병, 제휴, 인사, 정책, 소송과 컴퓨팅 거래.",
+    "research": "논문, 벤치마크, 새로운 방법론, 그리고 과학 연구에 쓰이는 AI.",
+    "robotics": "휴머노이드 로봇, 로봇 팔, 체화 AI 모델과 자율주행."
   },
   "tags": {
     "llm": "대형 모델",

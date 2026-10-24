@@ -921,6 +921,8 @@
     "title": "日报",
     "description": "今天 AI 有什么变化：每条都核对过来源，配白话摘要。",
     "categoryTitle": "{category} · 日报",
+    "categoryWeek": "近 7 天 {count, plural, other {# 条}}",
+    "categoryUpdated": "最近更新 {when, select, today {{time}} yesterday {昨天 {time}} other {{date} {time}}}",
     "pageTitle": "{title} · 第 {page} 页",
     "pages": "翻页",
     "filterLabel": "按分类筛选",
@@ -976,7 +978,7 @@
     "topicCount": "{count, plural, other {# 条新闻}}",
     "topicDeveloper": "开发公司 <link>{name}</link>",
     "topicEarlier": "加载更早的新闻（{count} 条）",
-    "topicEnd": "没有更早的新闻了",
+    "noEarlier": "没有更早的新闻了",
     "share": "分享",
     "copied": "链接已复制",
     "newTab": "（在新标签页打开）",
@@ -1069,11 +1071,22 @@
     }
   },
   "categories": {
-    "product": "产品更新",
+    "llm": "大模型",
+    "tools": "AI工具",
+    "aigc": "AIGC",
+    "open": "开源",
     "industry": "行业动态",
-    "open": "开源模型",
-    "design": "图像与设计",
-    "research": "研究进展"
+    "research": "AI科研",
+    "robotics": "机器人"
+  },
+  "categoryAbout": {
+    "llm": "新模型发布和升级，以及上下文长度、价格和 API 的变化。",
+    "tools": "AI 应用和工具的新功能、新产品，以及价格和开放范围的变化。",
+    "aigc": "图像、视频、音频、音乐和 3D 内容的生成与编辑。",
+    "open": "开源和开放权重的模型、数据集、框架与开发工具。",
+    "industry": "融资、并购、合作、人事变动、政策、诉讼和算力交易。",
+    "research": "论文、基准测试、新方法，以及 AI 用在科学研究里的进展。",
+    "robotics": "人形机器人、机械臂、具身智能模型和自动驾驶。"
   },
   "tags": {
     "llm": "大模型",

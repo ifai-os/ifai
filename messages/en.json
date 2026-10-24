@@ -921,6 +921,8 @@
     "title": "Daily",
     "description": "Today's AI news, checked against the sources, with a plain-language summary of each story.",
     "categoryTitle": "{category} · Daily",
+    "categoryWeek": "{count, plural, one {# story} other {# stories}} in the last 7 days",
+    "categoryUpdated": "updated {when, select, today {{time}} yesterday {yesterday at {time}} other {{date}, {time}}}",
     "pageTitle": "{title} · Page {page}",
     "pages": "Pages",
     "filterLabel": "Filter by category",
@@ -976,7 +978,7 @@
     "topicCount": "{count, plural, one {# story} other {# stories}}",
     "topicDeveloper": "Made by <link>{name}</link>",
     "topicEarlier": "Load earlier stories ({count})",
-    "topicEnd": "No earlier stories",
+    "noEarlier": "No earlier stories",
     "share": "Share",
     "copied": "Link copied",
     "newTab": "(opens in a new tab)",
@@ -1069,11 +1071,22 @@
     }
   },
   "categories": {
-    "product": "Product update",
+    "llm": "AI models",
+    "tools": "AI tools",
+    "aigc": "Generative media",
+    "open": "Open source",
     "industry": "Industry",
-    "open": "Open models",
-    "design": "Image & design",
-    "research": "Research"
+    "research": "Research",
+    "robotics": "Robotics"
+  },
+  "categoryAbout": {
+    "llm": "New models and upgrades, and changes to context length, pricing and APIs.",
+    "tools": "New features and products in AI apps and tools, and changes to pricing and availability.",
+    "aigc": "Generating and editing images, video, audio, music and 3D.",
+    "open": "Open-source and open-weight models, datasets, frameworks and developer tools.",
+    "industry": "Funding, acquisitions, partnerships, people moves, policy, lawsuits and compute deals.",
+    "research": "Papers, benchmarks and new methods, and AI at work in scientific research.",
+    "robotics": "Humanoid robots, robot arms, embodied AI models and self-driving."
   },
   "tags": {
     "llm": "Large models",

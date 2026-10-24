@@ -6,13 +6,10 @@ import { ListLink, ListResults } from '@/components/states/list-navigation'
 import { Link } from '@/i18n/navigation'
 
 import type { TopicPage } from '../story-item'
-import { storyHref, topicHref } from '../list-params'
-import { TopicListSkeleton } from './daily-skeletons'
+import { topicHref } from '../list-params'
+import { StoryCardsSkeleton } from './daily-skeletons'
+import { pageEnd, pagePill, StoryCard } from './story-card'
 import { initialOf } from './story-related'
-import { TopicTime } from './topic-time'
-
-const pill =
-  'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-6 text-meta text-ink-2 transition-colors hover:border-ink-4'
 
 /**
  * A company's or product's topic page (「IFAI 公司与产品话题页」board; docs/specs/daily.md
@@ -24,7 +21,6 @@ const pill =
 export function TopicPageView({ topic, serverToday }: { topic: TopicPage; serverToday: string }) {
   const t = useTranslations('daily')
   const names = useTranslations('categories')
-  const card = useTranslations('card')
 
   return (
     <main id="main" className="flex w-full flex-1 flex-col bg-surface">
@@ -96,42 +92,24 @@ export function TopicPageView({ topic, serverToday }: { topic: TopicPage; server
 
       <div className="mx-auto flex w-full max-w-240 flex-col gap-7 px-4 pt-8 pb-16 md:pb-30">
         {topic.page > 1 && (
-          <ListLink rel="prev" href={topicHref(topic.key, topic.page - 1)} className={`${pill} self-center`}>
+          <ListLink rel="prev" href={topicHref(topic.key, topic.page - 1)} className={`${pagePill} self-center`}>
             {t('loadNewer')}
           </ListLink>
         )}
-        <ListResults skeleton={<TopicListSkeleton count={Math.min(topic.stories.length, 6)} />}>
+        <ListResults skeleton={<StoryCardsSkeleton count={Math.min(topic.stories.length, 6)} />}>
           <ol className="flex flex-col gap-7">
             {topic.stories.map((story) => (
-              <li key={story.id} className="flex flex-col gap-2.5">
-                <TopicTime iso={story.publishedAt} serverToday={serverToday} />
-                <article className="flex flex-col gap-3 rounded-card bg-bg px-5 py-5 md:px-7 md:py-6">
-                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-4">
-                    <span>{names(story.category)}</span>
-                    <span>{card('moreSources', { count: story.moreReports })}</span>
-                  </p>
-                  <h2 lang={story.title.lang} className="text-h3">
-                    <Link href={storyHref(story.slug)} className="hover:text-accent">
-                      {story.title.value}
-                    </Link>
-                  </h2>
-                  {story.summary && (
-                    <p lang={story.summary.lang} className="line-clamp-3 text-body text-ink-3">
-                      {story.summary.value}
-                    </p>
-                  )}
-                </article>
-              </li>
+              <StoryCard key={story.id} story={story} serverToday={serverToday} category={names(story.category)} />
             ))}
           </ol>
         </ListResults>
         <nav aria-label={t('pages')} className="flex justify-center pt-1">
           {topic.page < topic.pages ? (
-            <ListLink rel="next" href={topicHref(topic.key, topic.page + 1)} className={pill}>
+            <ListLink rel="next" href={topicHref(topic.key, topic.page + 1)} className={pagePill}>
               {t('topicEarlier', { count: topic.earlier })}
             </ListLink>
           ) : (
-            <p className="text-meta text-ink-4">{t('topicEnd')}</p>
+            <p className={pageEnd}>{t('noEarlier')}</p>
           )}
         </nav>
       </div>

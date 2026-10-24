@@ -37,7 +37,7 @@ const sampleStories: SampleStory[] = [
   {
     // Published a minute ago: on every reader's "today". Shares its event with the story below.
     slug: 'sample-lumen-chat-adds-shared-workspaces',
-    category: 'product',
+    category: 'tools',
     status: 'published',
     eventId: 900001,
     representativeItemId: 900001,
@@ -139,7 +139,7 @@ const sampleStories: SampleStory[] = [
   {
     // Same event as the first story, published earlier: listed there under "more on this story".
     slug: 'sample-lumen-chat-announces-workspaces',
-    category: 'product',
+    category: 'tools',
     status: 'published',
     eventId: 900001,
     representativeItemId: 900004,

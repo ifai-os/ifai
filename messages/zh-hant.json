@@ -921,6 +921,8 @@
     "title": "日報",
     "description": "今天 AI 有什麼變化：每條都核對過來源，配白話摘要。",
     "categoryTitle": "{category} · 日報",
+    "categoryWeek": "近 7 天 {count, plural, other {# 則}}",
+    "categoryUpdated": "最近更新 {when, select, today {{time}} yesterday {昨天 {time}} other {{date} {time}}}",
     "pageTitle": "{title} · 第 {page} 頁",
     "pages": "翻頁",
     "filterLabel": "依分類篩選",
@@ -976,7 +978,7 @@
     "topicCount": "{count, plural, other {# 則新聞}}",
     "topicDeveloper": "開發公司 <link>{name}</link>",
     "topicEarlier": "載入更早的新聞（{count} 則）",
-    "topicEnd": "沒有更早的新聞了",
+    "noEarlier": "沒有更早的新聞了",
     "share": "分享",
     "copied": "連結已複製",
     "newTab": "（在新分頁開啟）",
@@ -1069,11 +1071,22 @@
     }
   },
   "categories": {
-    "product": "產品更新",
+    "llm": "大模型",
+    "tools": "AI工具",
+    "aigc": "AIGC",
+    "open": "開源",
     "industry": "產業動態",
-    "open": "開源模型",
-    "design": "影像與設計",
-    "research": "研究進展"
+    "research": "AI科研",
+    "robotics": "機器人"
+  },
+  "categoryAbout": {
+    "llm": "新模型釋出和升級，以及上下文長度、價格和 API 的變化。",
+    "tools": "AI 應用和工具的新功能、新產品，以及價格和開放範圍的變化。",
+    "aigc": "影像、影片、音訊、音樂和 3D 內容的生成與編輯。",
+    "open": "開源和開放權重的模型、資料集、框架與開發工具。",
+    "industry": "融資、併購、合作、人事變動、政策、訴訟和算力交易。",
+    "research": "論文、基準測試、新方法，以及 AI 用在科學研究裡的進展。",
+    "robotics": "人形機器人、機械臂、具身智慧模型和自動駕駛。"
   },
   "tags": {
     "llm": "大型模型",

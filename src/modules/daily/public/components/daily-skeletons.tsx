@@ -89,8 +89,8 @@ export function StoryDetailSkeleton() {
   )
 }
 
-/** A topic page's stories while another page of them loads: a time, then a card shaped like the story's. */
-export function TopicListSkeleton({ count }: { count: number }) {
+/** A topic or category page's stories while another page loads: a time, then a card shaped like `StoryCard`. */
+export function StoryCardsSkeleton({ count }: { count: number }) {
   const t = useTranslations('states')
   return (
     <div role="status" aria-label={t('loadingList')} className="flex flex-col gap-7">

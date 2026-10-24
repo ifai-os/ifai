@@ -62,11 +62,13 @@ const statusLabels: Record<StoryStatus, { en: string; zh: string }> = {
 };
 
 const categoryLabels = {
-  product: { en: "Product update", zh: "产品更新" },
+  llm: { en: "AI models", zh: "大模型" },
+  tools: { en: "AI tools", zh: "AI工具" },
+  aigc: { en: "Generative media", zh: "AIGC" },
+  open: { en: "Open source", zh: "开源" },
   industry: { en: "Industry", zh: "行业动态" },
-  open: { en: "Open models", zh: "开源模型" },
-  design: { en: "Image & design", zh: "图像与设计" },
-  research: { en: "Research", zh: "研究进展" },
+  research: { en: "Research", zh: "AI科研" },
+  robotics: { en: "Robotics", zh: "机器人" },
 } as const;
 
 const roleLabels: Record<SourceRole, { en: string; zh: string }> = {

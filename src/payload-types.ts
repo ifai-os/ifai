@@ -456,7 +456,7 @@ export interface Story {
    * English, shared by all languages.
    */
   slug: string;
-  category: 'product' | 'industry' | 'open' | 'design' | 'research';
+  category: 'llm' | 'tools' | 'aigc' | 'open' | 'industry' | 'research' | 'robotics';
   status: 'pending' | 'published' | 'rejected' | 'merged' | 'withdrawn';
   /**
    * The original first.

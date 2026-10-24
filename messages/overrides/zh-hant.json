@@ -162,7 +162,8 @@
     "thisStory": "本則",
     "similarNote": "過去類似的事，幫助理解這一則。",
     "topicCount": "{count, plural, other {# 則新聞}}",
-    "topicEarlier": "載入更早的新聞（{count} 則）"
+    "topicEarlier": "載入更早的新聞（{count} 則）",
+    "categoryWeek": "近 7 天 {count, plural, other {# 則}}"
   },
   "resources": {
     "emptyBody": "第一批 Skill 正在檢測和審核，很快會出現在這裡。",

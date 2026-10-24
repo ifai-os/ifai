@@ -921,6 +921,8 @@
     "title": "デイリー",
     "description": "今日のAIの変化。すべて情報源を確認し、わかりやすい要約を添えています。",
     "categoryTitle": "{category} · デイリー",
+    "categoryWeek": "直近7日間で{count}件",
+    "categoryUpdated": "最終更新 {when, select, today {{time}} yesterday {昨日 {time}} other {{date} {time}}}",
     "pageTitle": "{title} · {page}ページ目",
     "pages": "ページ送り",
     "filterLabel": "カテゴリで絞り込む",
@@ -976,7 +978,7 @@
     "topicCount": "ニュース {count} 件",
     "topicDeveloper": "開発元 <link>{name}</link>",
     "topicEarlier": "さらに前のニュースを読み込む（{count} 件）",
-    "topicEnd": "これより前のニュースはありません",
+    "noEarlier": "これより前のニュースはありません",
     "share": "共有",
     "copied": "リンクをコピーしました",
     "newTab": "（新しいタブで開きます）",
@@ -1069,11 +1071,22 @@
     }
   },
   "categories": {
-    "product": "製品アップデート",
+    "llm": "AIモデル",
+    "tools": "AIツール",
+    "aigc": "画像・動画生成",
+    "open": "オープンソース",
     "industry": "業界動向",
-    "open": "オープンモデル",
-    "design": "画像・デザイン",
-    "research": "研究"
+    "research": "研究",
+    "robotics": "ロボット"
+  },
+  "categoryAbout": {
+    "llm": "新しいモデルの公開やアップデート、コンテキスト長・料金・APIの変更。",
+    "tools": "AIアプリやツールの新機能・新製品、料金や提供範囲の変更。",
+    "aigc": "画像・動画・音声・音楽・3Dコンテンツの生成と編集。",
+    "open": "オープンソースやオープンウェイトのモデル、データセット、フレームワーク、開発ツール。",
+    "industry": "資金調達、買収、提携、人事、政策、訴訟、計算資源の取引。",
+    "research": "論文、ベンチマーク、新しい手法、そして科学研究でのAI活用の進展。",
+    "robotics": "人型ロボット、ロボットアーム、身体性AIのモデル、自動運転。"
   },
   "tags": {
     "llm": "大規模モデル",

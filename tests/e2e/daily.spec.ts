@@ -22,6 +22,10 @@ test('unknown stories, categories, pages and posters answer 404', async ({ page,
   for (const path of [
     '/en/daily/not-a-story',
     '/en/daily/category/not-a-category',
+    // The categories before 2026-10-24 (docs/specs/daily.md「分类与分类页」).
+    '/en/daily/category/product',
+    '/en/daily/category/design',
+    '/en/daily/category/tools?page=999',
     '/en/daily/tag/not-a-tag',
     '/en/daily/topic/nobodyhere',
     '/en/daily/topic/Not%20Compared',
@@ -73,7 +77,7 @@ test.describe('with the sample stories', () => {
   test("today's hottest story leads, and the hottest events of 48 hours are listed once each", async ({ page }) => {
     await page.goto('/en/daily')
     const hottest = page.getByRole('region', { name: titles.workspaces })
-    await expect(hottest).toContainText(`${en.daily.hottest} · ${en.categories.product} · 2 more outlets reported this`)
+    await expect(hottest).toContainText(`${en.daily.hottest} · ${en.categories.tools} · 2 more outlets reported this`)
     await expect(hottest.getByRole('link')).toHaveAttribute('href', '/en/daily/sample-lumen-chat-adds-shared-workspaces')
 
     const hot = page.getByRole('region', { name: en.daily.hotTitle })
@@ -84,10 +88,14 @@ test.describe('with the sample stories', () => {
     await expect(items.nth(1)).toContainText(`1 outlet${en.daily.trend.rising}`)
     await expect(items.nth(2)).toHaveText(/2 outlets$/)
 
-    // Categories and later pages keep the hot list but not the hottest story.
-    await page.goto('/en/daily/category/open')
+    // A tag's list keeps the hot list but not the hottest story; a category's page has neither (its board has no column).
+    await page.goto('/en/daily/tag/assistants')
     await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
     await expect(page.getByRole('region', { name: en.daily.hotTitle })).toBeVisible()
+    await page.goto('/en/daily/category/open')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.open}`)
+    await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
+    await expect(page.getByRole('region', { name: en.daily.hotTitle })).toHaveCount(0)
   })
 
   test("the list leads to the day's poster: the stories on it and its image in every language", async ({ page, request }) => {
@@ -180,22 +188,49 @@ test.describe('with the sample stories', () => {
     await expect(page.getByText('Image: Lumen Labs')).toBeVisible()
   })
 
-  test('filters by category', async ({ page }) => {
-    await page.goto('/en/daily/category/open')
-    await expect(page.getByRole('heading', { level: 1, name: en.categories.open })).toBeVisible()
-    const filter = page.getByRole('navigation', { name: en.daily.filterLabel })
-    await expect(filter.getByRole('link', { name: en.categories.open })).toHaveAttribute('aria-current', 'page')
-    const rows = page.getByRole('article')
-    await expect(rows.getByRole('link', { name: titles.weights })).toBeVisible()
-    await expect(rows.getByRole('link', { name: titles.workspaces })).toHaveCount(0)
+  test("a category's page has its banner, every category as pills, and its stories as cards", async ({ page }) => {
+    await page.goto('/en/daily/category/tools')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.tools}`)
+    const banner = page.getByRole('region', { name: en.categories.tools })
+    await expect(banner).toContainText(en.categoryAbout.tools)
+    // The newest sample story went up a minute before the tests, so the update is today's: a time alone.
+    await expect(banner).toContainText(/stor(y|ies) in the last 7 days · updated \d{1,2}:\d{2}\s[AP]M$/)
+    await expect(page).toHaveTitle(new RegExp(`^${en.categories.tools} · Daily`))
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', en.categoryAbout.tools)
 
-    await filter.getByRole('link', { name: en.categories.product }).click()
-    await expect(page).toHaveURL(/\/en\/daily\/category\/product$/)
-    await expect(rows.getByRole('link', { name: titles.workspaces })).toBeVisible()
+    const filter = page.getByRole('navigation', { name: en.daily.filterLabel })
+    await expect(filter.getByRole('link')).toHaveCount(8)
+    await expect(filter.getByRole('link', { name: en.categories.tools, exact: true })).toHaveAttribute('aria-current', 'page')
+    const cards = page.getByRole('main').getByRole('article')
+    // Newest first, under their times; the「试一试」in its grey box.
+    await expect(cards.getByRole('link')).toHaveText([titles.workspaces, titles.preview])
+    await expect(cards.first()).toContainText(`${en.daily.tryIt} Open a workspace and invite a teammate.`)
+    await expect(cards.nth(1)).toContainText(en.card.moreSources.match(/=0 \{([^}]*)\}/)![1])
+    await expect(page.getByText(en.daily.noEarlier)).toBeVisible()
+
+    await filter.getByRole('link', { name: en.categories.open, exact: true }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/category\/open$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.open}`)
+    await expect(cards.getByRole('link')).toHaveText([titles.weights])
+    await filter.getByRole('link', { name: en.daily.allCategories, exact: true }).click()
+    await expect(page).toHaveURL(/\/en\/daily$/)
+  })
+
+  test("a category's banner keeps its text to the left of the art on phones", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/zh-hans/daily/category/llm')
+    const title = page.getByRole('heading', { level: 1 })
+    await expect(title).toHaveText('#大模型')
+    const banner = page.getByRole('region', { name: '大模型' })
+    // 200 high at least, the text 210 wide at most, so the art's last 150 px stay in view.
+    expect((await banner.boundingBox())!.height).toBeGreaterThanOrEqual(200)
+    expect((await title.boundingBox())!.width).toBeLessThanOrEqual(210)
   })
 
   test('an empty category says so and links to every story', async ({ page }) => {
-    await page.goto('/en/daily/category/design')
+    await page.goto('/en/daily/category/robotics')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.robotics}`)
+    await expect(page.getByText(/in the last 7 days/)).toHaveCount(0)
     await expect(page.getByText(en.daily.emptyCategoryTitle)).toBeVisible()
     await page.getByRole('link', { name: en.daily.allStories }).click()
     await expect(page).toHaveURL(/\/en\/daily$/)
@@ -286,7 +321,7 @@ test.describe('with the sample stories', () => {
     const main = page.getByRole('main')
     await expect(main.getByText('2 stories')).toBeVisible()
     await expect(main.getByRole('article').getByRole('link')).toHaveText([titles.workspaces, titles.preview])
-    await expect(main.getByText(en.daily.topicEnd)).toBeVisible()
+    await expect(main.getByText(en.daily.noEarlier)).toBeVisible()
     await expect(main.getByRole('link', { name: /^App page/ })).toHaveAttribute('href', '/en/apps/lumen-chat')
     // The app's developer has a topic page of its own: a company.
     await main.getByRole('link', { name: 'Lumen Labs' }).click()

@@ -12,7 +12,7 @@ const instructions = `You extract the structure of an AI news item for an editor
 
 Return JSON with:
 - "kind": "news" when the item reports one concrete happening; "roundup" when it is a digest or newsletter that lists several unrelated stories; "insufficient" when there is not enough material to know what happened (for example only a title, or a teaser).
-- "category": one of
+- "category": the one category that fits best, one of
 ${categoryLines}
 - "tags": up to ${maxStoryTags} industry tags the news belongs to, most fitting first, only from
 ${tagLines}
