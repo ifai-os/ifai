@@ -11,6 +11,7 @@
 | [legal.md](./legal.md) — 隐私政策与用户协议 | 已实现（条文待专业评审） |
 | [resources.md](./resources.md) — 资源（Agent Skills） | 已确认，实现中（第 3 步完成） |
 | [search.md](./search.md) — 全站搜索 | 已实现，待预览环境验收 |
+| [rankings.md](./rankings.md) — 排行（模型盲测，第三期） | 草稿，第 1 步已实现，页面在第三期前不开放；标「按推荐」的规则待确认 |
 
 ## 模板
 

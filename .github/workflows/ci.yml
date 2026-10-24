@@ -99,3 +99,73 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+
+  # The model rankings open in the third phase (NEXT_PUBLIC_SITE_PHASE=3), so the job above only
+  # checks that they stay hidden. This one builds the third phase with the sample rankings and runs
+  # their smoke tests. When the site moves to the third phase, fold it into the job above.
+  rankings:
+    name: Rankings smoke tests (third phase)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ifai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # CI-only placeholder values, as above.
+    env:
+      DATABASE_URI: postgres://postgres:postgres@localhost:5432/ifai
+      PAYLOAD_SECRET: ci-only-payload-secret-not-used-anywhere-else
+      BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-used-anywhere-else
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_PHASE: '3'
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrations
+        run: pnpm payload migrate
+
+      - name: Sample rankings
+        run: pnpm payload run scripts/seed-rankings.ts
+
+      - name: Build (third phase)
+        run: pnpm build
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Rankings smoke tests
+        run: pnpm test:e2e tests/e2e/rankings.spec.ts
+        env:
+          E2E_SAMPLE_RANKINGS: '1'
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-rankings
+          path: playwright-report
+          retention-days: 7

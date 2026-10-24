@@ -21,6 +21,7 @@ import * as migration_20261023_073510_app_reports from './20261023_073510_app_re
 import * as migration_20261023_082050_daily_email_sends from './20261023_082050_daily_email_sends';
 import * as migration_20261023_084701_app_submissions from './20261023_084701_app_submissions';
 import * as migration_20261024_041525_admin_log from './20261024_041525_admin_log';
+import * as migration_20261024_180123_rankings from './20261024_180123_rankings';
 
 export const migrations = [
   {
@@ -136,6 +137,11 @@ export const migrations = [
   {
     up: migration_20261024_041525_admin_log.up,
     down: migration_20261024_041525_admin_log.down,
-    name: '20261024_041525_admin_log'
+    name: '20261024_041525_admin_log',
+  },
+  {
+    up: migration_20261024_180123_rankings.up,
+    down: migration_20261024_180123_rankings.down,
+    name: '20261024_180123_rankings'
   },
 ];

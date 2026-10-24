@@ -72,6 +72,7 @@ pnpm dev                 # http://localhost:3000
 | `R2_*` | 见第 4 步 | 建议用单独的存储桶 | |
 | `OPENROUTER_API_KEY` | 见第 8 步 | 另一个 key | 预览用单独的 key，额度设小一点 |
 | `AI_DAILY_BUDGET_USD` | `10` | `1` | 每天（上海时间）的模型费用上限，美元 |
+| `ARENA_DAILY_BUDGET_USD` | 第三期前不用填（默认 `2`） | 不填 | 排行生成参赛回答每天（上海时间）的花费上限，美元，也算在 `AI_DAILY_BUDGET_USD` 里 |
 | `MODEL_CALLS_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不调用模型 |
 | `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源 |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |

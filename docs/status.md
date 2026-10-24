@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-24（后台界面语言与按钮样式；后台「操作记录」页；后台「模型用量」页；导出我的数据；应用资料每 90 天提醒核对；日报收藏；Vercel 变量标 Sensitive 的影响；全站搜索；线上配置进展；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
+更新于 2026-10-24（排行第 1 步，第三期前不开放；后台界面语言与按钮样式；后台「操作记录」页；后台「模型用量」页；导出我的数据；应用资料每 90 天提醒核对；日报收藏；Vercel 变量标 Sensitive 的影响；全站搜索；线上配置进展；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
 
 ## 现在到哪了
 
@@ -62,6 +62,7 @@
 - **后台「模型用量」页已完成**（[specs/foundation.md](./specs/foundation.md)「后台 · 模型用量」）：后台左侧「审核队列」下面的「模型用量」（`/admin/model-usage`，代码在 `src/admin/model-usage/`），只读 `model_receipts`，不加表。今天（上海时间）的花费和每日预算、三个总开关和 OpenRouter 密钥配了没有，近 14 天每天的成功、失败和花费，按用途（今天 / 近 7 天 / 近 30 天）的模块、模型、调用数、token 和花费，近 30 天失败到现在也没成功、或者卡住的调用（错误信息，链到对应的新闻、应用、Skill 版本或原文）。预算的读法和上限常量搬到了 `src/lib/ai/limits.ts`，调用和这一页共用。Payload 的自定义根页面默认谁都能打开，这一页自己把没登录的人送去登录页；以后再加 `admin.components.views` 的页面要照做。
 - **后台「操作记录」页已完成**（[specs/foundation.md](./specs/foundation.md)「后台 · 操作记录」，PRD R14「管理员操作留痕」）：后台左侧「模型用量」下面的「操作记录」（`/admin/admin-log`，代码在 `src/admin/admin-log/`）。迁移 `admin_log` 建 Drizzle 表 `admin_log`；`payload.config.ts` 里所有集合过一遍 `withAdminLog`（`src/lib/admin-log/`），管理员保存、新建、删除任何一条，按各模块的后台按钮（集合上的 POST 接口，成功才记），以及登录后台，各记一行：只记改了哪些字段和状态的前后值，不记内容；改简体时繁体跟着改，算同一行。和保存在同一个事务里写，写记录失败不挡保存。页面按内容、管理员、操作筛选，每行能进「这一条的记录」。后台任务、脚本和读者的操作不记。**以后新加集合**：放进 `withAdminLog([...])` 那个数组就有记录；新加的后台按钮接口自动记，在 `src/admin/admin-log/text.ts` 的 `actions` 补上它的中英文名字（单元测试会检查每个 POST 接口都有名字）。
 - **后台界面语言与按钮样式已调整**：后台界面只有中文和英文两种（自定义的后台文字只写了这两种，后台只给站长用），没选过时一律中文（`src/proxy.ts` 在 `/admin` 下补上 Payload 的 `payload-lng=zh`，不再跟浏览器的 Accept-Language 走）；顶栏加了「界面语言：中文 · English」切换（`src/admin/ui-language/switch.tsx`），原来的语言选择改名「内容语言」（它选的是编辑哪种语言的内容）。后台按钮改成前台 `src/components/button.tsx` 的样子（主按钮黑底、次按钮描边、6px 圆角、14px），写在 `src/admin/theme/admin.css`，经 `admin.components.providers` 加载；后台不加载 Tailwind，令牌值在这里重复一份，改设计令牌时要一起改。深色主题下主按钮反成白底。
+- **排行（第三期）第 1 步已做好，第三期前不开放**（[specs/rankings.md](./specs/rankings.md)，规则里标「按推荐」的几条待站长确认）：自建题库盲测。站长在后台加赛道（迁移带了文本、编程）、参赛模型（OpenRouter ID、开放权重 / 闭源、地区）和题库；任务 `rankings-answers` 每 30 分钟给每道题、每个模型生成一份回答（用途 `arena`，`ai.contest`，每天最多 `ARENA_DAILY_BUDGET_USD`，默认 2 美元），提到自己或被截断的不进盲测。会员在 `/[locale]/rankings/vote` 看两份匿名回答投票（游客能看、投票先登录，每天 200 票，4 秒内投的不计分），`rankings-snapshot` 每周一 06:00（上海时间）用 Bradley–Terry 算分存快照，`/[locale]/rankings` 只读快照：前 10、性价比、完整榜单（许可和地区筛选）、走势、按厂商、新上榜。不到 300 票的标「暂定」。`NEXT_PUBLIC_SITE_PHASE` 小于 3 时页面和接口都是 404、导航没有入口；CI 另有一个按第三期构建的任务，用 `scripts/seed-rankings.ts` 的示例数据跑冒烟测试。代码在 `src/modules/rankings/`。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块；其中「提交成功」资源投稿做成了共用的 `src/components/states/submitted.tsx`，应用的提交表单直接用。`LoadingState` 可以传 `skeleton` 换成按页面形状画的骨架，一行字的占位用 `SkeletonLine`。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 - **部署改由 GitHub Actions 做**（`.github/workflows/deploy.yml`）：Vercel Hobby 不能导入私有组织仓库，所以 Vercel 项目 `ifai1/ifai` 不连 Git，`main` 用 Vercel CLI 部署生产；每个 PR 先由 `neondatabase/create-branch-action` 建 Neon 分支 `preview/pr-<编号>`，连接串作为 `DATABASE_URI` 传给构建（迁移）和预览运行时，部署完对预览地址跑冒烟测试（原来挂在 `deployment_status` 上的 `preview-smoke.yml` 删掉了），PR 关闭时删分支。Vercel 的 Neon 集成不再用。缺 secret 时 Deploy 跳过、不报错。生产部署先关着（站长说暂不用生产），仓库变量 `PRODUCTION_DEPLOY=true` 后才部署。2026-10-24：PR 合并后它的 Neon 分支就删了，合并过的功能没处看，所以推送到 `main` 也部署一个预览：连长期的 Neon 分支 `preview/main`（每次合并跑迁移，数据留着），部署完用 `vercel alias set` 把固定地址 `https://ifai-preview-ifai1.vercel.app` 指过去；`siteUrl()` 在这个预览里用固定地址（`PREVIEW_SITE_URL`），登录链接和页面里的链接都指向它。这个预览不跑冒烟测试，免得测试数据混进站长在上面点的数据。示例数据由手动运行的「Seed main preview」加（`.github/workflows/seed-main-preview.yml`）：种子脚本平时只认本机数据库，设了 `SEED_PREVIEW_MAIN=1` 才写远程库（`scripts/seed-target.ts`），只有这个 workflow 会设，而且它只连 `preview/main`。
@@ -77,7 +78,7 @@
 | 第一期 | 日报之后 | 应用 | 第 1–6 步（集合与后台录入、官网取材与资料草稿、列表页和详情页、热度，收藏、评价、评价翻译、报错、提交应用，桌面详情的四个标签）完成，首批导入清单已备好，下一步首批导入和预览环境验收 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 第 1–5 步（实现顺序）完成，下一步预览环境验收 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
-| 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
+| 第三期 | 21–26 | 排行（模型盲测）、Wiki | 排行第 1 步（文本、编程两个赛道的题库盲测和每周排行）已做好，第三期前不开放；Wiki 只有画板 |
 
 第一期在第 12 周末上线。之后每期 6–8 周，开工前先过闸口：用上一期的数据决定下一期是否开工。每两周在预览环境里从用户视角走一遍新功能。
 
@@ -174,6 +175,7 @@
 - [ ] 隐私政策和用户协议：开好 `hello@ifai.io` 邮箱（或者告诉 Claude 换成别的地址，改 `src/modules/legal/documents.ts`）；正式上线前请懂当地法律的人看一遍两页条文；定了公司主体后补上适用法律和争议解决地点。账号删除的 PR 合并后，隐私政策「你可以做什么」一节加上账号页的说明。
 - [ ] 正式上线后：在 Google Search Console 和 Bing Webmaster Tools 验证 `ifai.io`，提交 `https://ifai.io/sitemap.xml`，过几天看「网页索引」里有没有被排除的地址，「增强功能」里面包屑和结构化数据有没有报错；挑一条新闻、一个应用、一个 Skill 的地址贴到 https://search.google.com/test/rich-results 看一遍。
 - [ ] 以后再定：商业化方式；排行第一批参赛模型和题库（第三期前）。
+- [ ] 排行（第三期，不急）：确认 [specs/rankings.md](./specs/rankings.md)「已定的规则」里标「按推荐」的几条（自建盲测而不是 R06 的编辑推荐榜、题库模式、投票要登录、300 票暂定、「开放权重 / 闭源」）；定第一批参赛模型和题库。上线前（`NEXT_PUBLIC_SITE_PHASE` 改成 3 之前）要先补「下载我的数据」和隐私政策里的盲测投票（见规格「导出与删除账号」），在 Vercel 填 `ARENA_DAILY_BUDGET_USD`。
 
 ## 已知问题
 

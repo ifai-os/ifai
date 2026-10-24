@@ -4,7 +4,7 @@
  * days the daily budget counts.
  */
 import { shanghaiDate } from '@/lib/shanghai-day'
-import { embeddingPurposes, modelFor, textPurposes, type Purpose } from '@/lib/ai/purposes'
+import { contestPurposes, embeddingPurposes, modelFor, textPurposes, type ContestPurpose, type Purpose } from '@/lib/ai/purposes'
 
 type Env = Record<string, string | undefined>
 
@@ -27,10 +27,10 @@ export const PROBLEM_DAYS = 30
 /** At most this many calls are listed under「要处理的调用」. */
 export const PROBLEM_LIMIT = 30
 
-export type Module = 'daily' | 'apps' | 'resources'
+export type Module = 'daily' | 'apps' | 'resources' | 'rankings'
 
 /** Which module calls each purpose (src/lib/ai/purposes.ts). */
-export const purposeModules: Record<Purpose, Module> = {
+export const purposeModules: Record<Purpose | ContestPurpose, Module> = {
   prefilter: 'daily',
   score: 'daily',
   structure: 'daily',
@@ -41,11 +41,14 @@ export const purposeModules: Record<Purpose, Module> = {
   profile: 'apps',
   translate: 'apps',
   describe: 'resources',
+  arena: 'rankings',
 }
 
 const defaultModels: Record<Purpose, string> = { ...textPurposes, ...embeddingPurposes }
-const knownPurposes = Object.keys(purposeModules) as Purpose[]
-const isKnown = (purpose: string): purpose is Purpose => Object.hasOwn(purposeModules, purpose)
+const knownPurposes = Object.keys(purposeModules) as (Purpose | ContestPurpose)[]
+const isKnown = (purpose: string): purpose is Purpose | ContestPurpose => Object.hasOwn(purposeModules, purpose)
+/** A purpose whose model comes with each call (the arena's contestants), so it has no model of its own to show. */
+export const isContestPurpose = (purpose: string): purpose is ContestPurpose => (contestPurposes as readonly string[]).includes(purpose)
 
 /** The Shanghai date `days` days before `now`'s Shanghai date. */
 function dateBefore(now: Date, days: number): string {
@@ -83,7 +86,7 @@ export type PurposeTotals = {
 export type PurposeRow = PurposeTotals & {
   /** null for a purpose that is no longer in purposes.ts but still has receipts. */
   module: Module | null
-  /** The model the purpose uses now; null for an unknown purpose. */
+  /** The model the purpose uses now; null for an unknown purpose and for a contest purpose (one model per contestant). */
   model: string | null
   /** AI_MODEL_<PURPOSE> points it away from the default. */
   changed: boolean
@@ -103,6 +106,7 @@ export function purposeRows(totals: PurposeTotals[], env: Env = process.env): Pu
     const row = byPurpose.get(purpose) ?? empty(purpose)
     const averageUsd = row.succeeded > 0 ? row.costUsd / row.succeeded : null
     if (!isKnown(purpose)) return { ...row, module: null, model: null, changed: false, averageUsd }
+    if (isContestPurpose(purpose)) return { ...row, module: purposeModules[purpose], model: null, changed: false, averageUsd }
     const model = modelFor(purpose, env)
     return { ...row, module: purposeModules[purpose], model, changed: model !== defaultModels[purpose], averageUsd }
   })
@@ -121,13 +125,20 @@ export function budgetOf(spentUsd: number, budgetUsd: number): Budget {
   }
 }
 
-export type SubjectKind = 'stories' | 'raw_items' | 'apps' | 'app_reviews' | 'skill-versions'
+export type SubjectKind = 'stories' | 'raw_items' | 'apps' | 'app_reviews' | 'skill-versions' | 'arena-answers'
 export type Subject = { kind: SubjectKind; id: number }
-const subjectKinds: readonly string[] = ['stories', 'raw_items', 'apps', 'app_reviews', 'skill-versions'] satisfies SubjectKind[]
+const subjectKinds: readonly string[] = [
+  'stories',
+  'raw_items',
+  'apps',
+  'app_reviews',
+  'skill-versions',
+  'arena-answers',
+] satisfies SubjectKind[]
 
 /**
  * What a receipt was about: "stories:12", "stories:12:shorten", "raw_items:5", "apps:3",
- * "app_reviews:9", "skill-versions:4". Anything else is shown as written.
+ * "app_reviews:9", "skill-versions:4", "arena-answers:7". Anything else is shown as written.
  */
 export function parseSubject(subject: string | null): Subject | null {
   const match = subject?.match(/^([a-z_-]+):(\d+)(?::.*)?$/)
