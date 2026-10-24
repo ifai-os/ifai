@@ -1,10 +1,10 @@
 import config from '@payload-config'
 import { and, desc, gte, isNull } from '@payloadcms/db-postgres/drizzle'
-import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { cache } from 'react'
 
 import type { Locale } from '@/i18n/config'
+import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
 import { shanghaiDate } from '@/lib/shanghai-day'
 import { appsCacheTag } from '@/modules/apps/cache'
@@ -64,7 +64,7 @@ async function payload() {
 
 type ListArgs = { category: StoryCategory | null; page: number }
 
-const findStories = unstable_cache(
+const findStories = cached(
   async ({ category, page }: ListArgs) => {
     const result = await (await payload()).find({
       collection: 'stories',
@@ -83,7 +83,7 @@ const findStories = unstable_cache(
   cacheOptions,
 )
 
-const findLatest = unstable_cache(
+const findLatest = cached(
   async (limit: number) => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -101,7 +101,7 @@ const findLatest = unstable_cache(
   cacheOptions,
 )
 
-const findStory = unstable_cache(
+const findStory = cached(
   async (slug: string) => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -118,7 +118,7 @@ const findStory = unstable_cache(
   cacheOptions,
 )
 
-const findDevelopments = unstable_cache(
+const findDevelopments = cached(
   async (eventId: number, storyId: number) => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -137,7 +137,7 @@ const findDevelopments = unstable_cache(
 )
 
 // Stories of every event with heat (the heat job keeps it to the last 48 hours), hottest first.
-const findHot = unstable_cache(
+const findHot = cached(
   async () => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -165,7 +165,7 @@ export type MentionedApp = {
 }
 
 // The apps pages' matches of published stories to published apps (src/modules/apps/metrics/mentions.ts).
-const findMentionedApps = unstable_cache(
+const findMentionedApps = cached(
   async (): Promise<MentionedApp[]> => {
     const { payload: client, db } = await getDb()
     const rows = await db
@@ -217,7 +217,7 @@ function logoOf(media: number | Media | null | undefined): MentionedApp['logo'] 
 }
 
 // Generated posters only (the visitor's access rules); the editor's generating refreshes the tag.
-const findPoster = unstable_cache(
+const findPoster = cached(
   async (date: string): Promise<PosterSnapshot | null> => {
     const { docs } = await (await payload()).find({
       collection: 'posters',
@@ -234,7 +234,7 @@ const findPoster = unstable_cache(
   cacheOptions,
 )
 
-const findPosterDates = unstable_cache(
+const findPosterDates = cached(
   async (): Promise<string[]> => {
     const { docs } = await (await payload()).find({
       collection: 'posters',
@@ -251,7 +251,7 @@ const findPosterDates = unstable_cache(
   cacheOptions,
 )
 
-const countSources = unstable_cache(
+const countSources = cached(
   async () => (await (await payload()).count({ collection: 'sources', where: { enabled: { equals: true } } })).totalDocs,
   ['daily-sources-count'],
   cacheOptions,
