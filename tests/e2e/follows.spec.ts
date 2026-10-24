@@ -69,17 +69,21 @@ test.describe('with the sample stories', () => {
     try {
       await context.addCookies([member.cookie])
       const main = page.getByRole('main')
+      // Each follow is answered before the next one is made, so「我的关注」lists them in a known order (newest first).
+      const answered = () => page.waitForResponse((r) => r.url().endsWith('/api/follows') && r.request().method() === 'POST')
 
       // Back from signing in with the follow in the address: it finishes by itself, and the address is cleaned up.
+      const returned = answered()
       await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces?follow=topic-lumenchat')
+      await returned
       await expect(main.getByRole('button', { name: en.follows.followingTopic, exact: true })).toHaveAttribute('aria-pressed', 'true')
       await expect(page).toHaveURL(/\/en\/daily\/sample-lumen-chat-adds-shared-workspaces$/)
       // The topic's own row has no second button.
       await expect(main.getByRole('button', { name: /Lumen Chat$/ })).toHaveCount(0)
 
-      await main.getByRole('button', { name: 'Follow Lumen Labs', exact: true }).click()
+      await Promise.all([answered(), main.getByRole('button', { name: 'Follow Lumen Labs', exact: true }).click()])
       await expect(main.getByRole('button', { name: 'Following Lumen Labs', exact: true })).toHaveAttribute('aria-pressed', 'true')
-      await main.getByRole('button', { name: `Follow ${assistants}`, exact: true }).click()
+      await Promise.all([answered(), main.getByRole('button', { name: `Follow ${assistants}`, exact: true }).click()])
       await expect(main.getByRole('button', { name: `Following ${assistants}`, exact: true })).toHaveAttribute('aria-pressed', 'true')
 
       // Only companies and products a published story is about.
@@ -102,10 +106,11 @@ test.describe('with the sample stories', () => {
       const button = main.getByRole('button', { name: /^Follow(ing)? Lumen Chat$/ })
       await expect(button).toHaveAttribute('aria-pressed', 'true')
       await expect(main.getByText('1 follower', { exact: true })).toBeVisible()
-      await button.click()
+      // A button sends one request at a time, so each answer comes back before it is pressed again.
+      await Promise.all([answered(), button.click()])
       await expect(button).toHaveAttribute('aria-pressed', 'false')
       await expect(main.getByText('1 follower', { exact: true })).toHaveCount(0)
-      await button.click()
+      await Promise.all([answered(), button.click()])
       await expect(button).toHaveAttribute('aria-pressed', 'true')
       await expect(main.getByText('1 follower', { exact: true })).toBeVisible()
       await expect(main.getByRole('link', { name: en.follows.title, exact: true })).toHaveAttribute('href', '/en/me/following')
