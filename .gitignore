@@ -18,6 +18,7 @@ next-env.d.ts
 /media/
 /arena-images/
 /skill-versions/
+/circle-images/
 
 # tests
 /coverage/

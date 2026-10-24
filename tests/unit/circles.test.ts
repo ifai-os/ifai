@@ -5,6 +5,7 @@ import {
   hotCircleIds,
   hotScore,
   linkify,
+  mediaRules,
   parseMembershipInput,
   parsePostInput,
   parseReactionInput,
@@ -19,7 +20,7 @@ describe('circles: post input', () => {
   it('keeps line breaks, drops invisible characters and trims', () => {
     expect(parsePostInput({ circle: 3, body: '  First line\r\n\n\n\nsecond​  ', locale: 'zh-Hans' })).toEqual({
       ok: true,
-      value: { circle: 3, body: 'First line\n\nsecond', locale: 'zh-Hans' },
+      value: { circle: 3, body: 'First line\n\nsecond', locale: 'zh-Hans', images: [], video: null },
     })
     expect(parsePostInput({ circle: '3', body: 'id as text', locale: 'en' })).toMatchObject({ ok: true, value: { circle: 3 } })
   })
@@ -37,6 +38,25 @@ describe('circles: post input', () => {
     expect(parsePostInput({ circle: 1, body: 42, locale: 'en' })).toEqual({ ok: false, error: 'empty-body' })
     expect(parsePostInput({ circle: 1, body: 'x', locale: 'fr' })).toEqual({ ok: false, error: 'invalid-locale' })
     expect(parsePostInput(null)).toEqual({ ok: false, error: 'invalid-circle' })
+  })
+
+  it('takes pictures and a video, and then the text can be left out', () => {
+    expect(parsePostInput({ circle: 1, body: '', locale: 'en', images: [4, '7', 2] })).toEqual({
+      ok: true,
+      value: { circle: 1, body: '', locale: 'en', images: [4, 7, 2], video: null },
+    })
+    expect(parsePostInput({ circle: 1, body: ' ', locale: 'en', video: 9 })).toMatchObject({ ok: true, value: { body: '', images: [], video: 9 } })
+    expect(parsePostInput({ circle: 1, body: '', locale: 'en', images: [] })).toEqual({ ok: false, error: 'empty-body' })
+    expect(parsePostInput({ circle: 1, body: 'x', locale: 'en', images: Array.from({ length: mediaRules.maxImages }, (_, i) => i + 1) }).ok).toBe(true)
+    expect(parsePostInput({ circle: 1, body: 'x', locale: 'en', images: Array.from({ length: mediaRules.maxImages + 1 }, (_, i) => i + 1) })).toEqual({
+      ok: false,
+      error: 'too-many-images',
+    })
+    expect(parsePostInput({ circle: 1, body: 'x', locale: 'en', images: [3, 3] })).toEqual({ ok: false, error: 'invalid-images' })
+    expect(parsePostInput({ circle: 1, body: 'x', locale: 'en', images: [0] })).toEqual({ ok: false, error: 'invalid-images' })
+    expect(parsePostInput({ circle: 1, body: 'x', locale: 'en', images: '3' })).toEqual({ ok: false, error: 'invalid-images' })
+    expect(parsePostInput({ circle: 1, body: 'x', locale: 'en', video: 'abc' })).toEqual({ ok: false, error: 'invalid-video' })
+    expect(parsePostInput({ circle: 1, body: 'x', locale: 'en', video: null })).toMatchObject({ ok: true, value: { video: null } })
   })
 
   it('reads joins, reactions and reports, and nothing else', () => {

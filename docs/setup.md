@@ -77,6 +77,7 @@ pnpm dev                 # http://localhost:3000
 | `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源 |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |
 | `GITHUB_TOKEN` | 可选 | 可选 | Skill 导入用的只读 GitHub 令牌（Fine-grained，Contents: Read）；不填只能导入公开仓库，且受匿名限额 |
+| `YOUTUBE_API_KEY` | 可选 | 不填 | 圈子的 YouTube 视频卡显示时长要用它（Google Cloud 里开 YouTube Data API v3，建一个 API key，限定只能调这个 API）；不填也能读标题和封面，只是没有时长 |
 | `APPS_SHOW_TRANCO_RANK` | 看过 Tranco 条款再决定 | 同生产 | 写成 `true` 才在应用页面显示 Tranco 名次（列表的「网站排名」列、详情页的数字）；不填不显示，名次照常算进热度 |
 | `APPS_NEW_SINCE` | 首批应用导入完后填上线那天，如 `2026-11-01` | 同生产 | 上海日期。这天之前收录的应用不进「新上架」榜和「本周新上架」，免得首批导入占满一个月；不填不限 |
 
@@ -94,6 +95,8 @@ pnpm dev                 # http://localhost:3000
    - R2 概览页上的 Account ID → `R2_ACCOUNT_ID`
    - 存储桶名 → `R2_BUCKET`
 4. 可选：存储桶 Settings → Public access，绑定自定义域名（例如 `media.<域名>`），填到 `R2_PUBLIC_URL`，图片就直接从 Cloudflare 的 CDN 输出。
+
+圈子的图片放在存储桶的 `circles/` 下，网站按动态是否公开决定给不给看（没发出去的、站长隐藏的都打不开），所以它们一直经过网站输出，不用公开地址。第 4 项开了公开访问的话，知道文件地址的人能从那个域名绕过去：在 Cloudflare 给那个域名加一条 WAF 规则，挡住路径以 `/circles/` 开头的请求。
 
 四个 `R2_*` 变量都填了才会启用 R2；否则上传的文件存在本地 `media/` 目录（Vercel 上不能写文件，所以生产环境必须配 R2）。
 

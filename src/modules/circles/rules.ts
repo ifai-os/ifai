@@ -25,6 +25,33 @@ export const circleRules = {
   recentPosters: 3,
 } as const
 
+/**
+ * Pictures and video links in posts (docs/specs/circles.md rules 12 and 13). The page shrinks a
+ * picture before sending it; the server turns it upright, drops its metadata and keeps WebP copies.
+ */
+export const mediaRules = {
+  /** Pictures in one post. */
+  maxImages: 9,
+  /** Bytes the page sends per picture: Vercel takes 4.5 MB a request. */
+  maxUploadBytes: 4 * 1024 * 1024,
+  /** Bytes of a file the reader picks; anything but a GIF is shrunk first. */
+  maxPickedBytes: 20 * 1024 * 1024,
+  /** The longest side the page shrinks photos to, and the longest the server keeps. */
+  maxSide: 2048,
+  /** Width × height the server opens at most. */
+  maxPixels: 50_000_000,
+  /** Pictures a member can upload per Shanghai day (ten posts of nine). */
+  dailyImages: 90,
+  /** Video links a member can look up per Shanghai day; links someone looked up already are free. */
+  dailyVideos: 30,
+} as const
+
+/** The picture types a post takes, as the page and the server see them. */
+export const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
+
+export const videoProviders = ['youtube', 'bilibili', 'vimeo'] as const
+export type VideoProvider = (typeof videoProviders)[number]
+
 /** The six reactions, in the order the picker shows them; stored by key, shown as the emoji. */
 export const reactions = ['like', 'love', 'insight', 'celebrate', 'eyes', 'rocket'] as const
 export type Reaction = (typeof reactions)[number]
@@ -77,20 +104,38 @@ export function hotCircleIds(today: { id: number; today: number }[]): number[] {
     .map((circle) => circle.id)
 }
 
-export type PostInput = { circle: number; body: string; locale: Locale }
+export type PostInput = { circle: number; body: string; locale: Locale; images: number[]; video: number | null }
 
-export type PostInputError = 'invalid-circle' | 'empty-body' | 'body-too-long' | 'invalid-locale'
+export type PostInputError =
+  | 'invalid-circle'
+  | 'empty-body'
+  | 'body-too-long'
+  | 'invalid-locale'
+  | 'too-many-images'
+  | 'invalid-images'
+  | 'invalid-video'
 
-/** POST /api/circles/posts { circle, body, locale }: the page's language helps tell the post's own. */
+/**
+ * POST /api/circles/posts { circle, body, locale, images?, video? }: the page's language helps
+ * tell the post's own. `images` are ids from POST /api/circles/images in the order they show,
+ * `video` an id from POST /api/circles/videos; with either, the text can be left empty.
+ */
 export function parsePostInput(input: unknown): { ok: true; value: PostInput } | { ok: false; error: PostInputError } {
   const fields = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
   const circle = parseId(fields.circle)
   if (!circle) return { ok: false, error: 'invalid-circle' }
+  const images = fields.images ?? []
+  if (!Array.isArray(images)) return { ok: false, error: 'invalid-images' }
+  const imageIds = images.map(parseId)
+  if (imageIds.some((id) => id === null) || new Set(imageIds).size !== imageIds.length) return { ok: false, error: 'invalid-images' }
+  if (imageIds.length > mediaRules.maxImages) return { ok: false, error: 'too-many-images' }
+  const video = fields.video === undefined || fields.video === null ? null : parseId(fields.video)
+  if (video === null && fields.video !== undefined && fields.video !== null) return { ok: false, error: 'invalid-video' }
   const body = typeof fields.body === 'string' ? cleanText(fields.body) : ''
-  if (!body) return { ok: false, error: 'empty-body' }
+  if (!body && imageIds.length === 0 && video === null) return { ok: false, error: 'empty-body' }
   if (textLength(body) > circleRules.maxBody) return { ok: false, error: 'body-too-long' }
   if (!isLocale(fields.locale)) return { ok: false, error: 'invalid-locale' }
-  return { ok: true, value: { circle, body, locale: fields.locale } }
+  return { ok: true, value: { circle, body, locale: fields.locale, images: imageIds as number[], video } }
 }
 
 /** POST /api/circles/members { circle, joined }. */
@@ -157,9 +202,39 @@ export type ReactionView = {
   names: string[]
 }
 
+/** A picture in a post: its three sizes (rule 12) and its shape, for the grid and the viewer. */
+export type PostImage = {
+  id: number
+  /** 400 px, cropped square: the grid. */
+  square: string
+  /** Up to 800 px on the long side: a post's only picture. */
+  feed: string
+  /** Up to 2048 px: the viewer. */
+  full: string
+  width: number
+  height: number
+}
+
+/** A video link as cards show it. Without a title nothing could be read about it, and the card is a plain link. */
+export type VideoView = {
+  id: number
+  provider: VideoProvider
+  /** The video's own page. */
+  url: string
+  /** The site's player, loaded only once the reader presses play. */
+  embed: string
+  title: string | null
+  channel: string | null
+  /** Seconds, when the site says. */
+  duration: number | null
+  /** Kept on IFAI, so showing it asks nothing of the video site. */
+  cover: string | null
+}
+
 export type PostView = {
   id: number
   circle: number
+  /** Can be empty when the post has pictures or a video. */
   body: string
   /** The language it is written in: a site locale, or `und`. */
   lang: string
@@ -171,6 +246,9 @@ export type PostView = {
   createdAt: string
   /** By how many people, most first; the picker's order breaks ties. */
   reactions: ReactionView[]
+  /** None on a hidden post: its pictures are no longer public. */
+  images: PostImage[]
+  video: VideoView | null
 }
 
 /** GET /api/circles/feed?tab=latest[&circle=3][&cursor=…] */
@@ -199,6 +277,9 @@ export type CirclesError =
   | 'daily-limit'
   | 'own-post'
   | 'invalid-request'
+  | 'too-large'
+  | 'invalid-image'
+  | 'unsupported-video'
 
 /** The reactions on one post, most people first, the picker's order breaking ties. */
 export function sortReactions(list: ReactionView[]): ReactionView[] {

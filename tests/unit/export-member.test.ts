@@ -134,8 +134,17 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
       { circleId: 21, createdAt: day('2026-10-21') },
     ],
     circlePosts: [
-      { id: 30, circleId: 20, body: 'My first picture', lang: 'en', status: 'shown', createdAt: day('2026-10-23') },
-      { id: 31, circleId: 21, body: '被隐藏的一条', lang: 'zh-Hans', status: 'hidden', createdAt: day('2026-10-22') },
+      {
+        id: 30,
+        circleId: 20,
+        body: 'My first picture',
+        lang: 'en',
+        status: 'shown',
+        createdAt: day('2026-10-23'),
+        images: ['/api/circle-images/file/a1.webp', '/api/circle-images/file/b2.webp?prefix=circles'],
+        video: { provider: 'youtube', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', title: 'A video' },
+      },
+      { id: 31, circleId: 21, body: '被隐藏的一条', lang: 'zh-Hans', status: 'hidden', createdAt: day('2026-10-22'), images: [], video: null },
     ],
     circleReactions: [{ postId: 40, circleId: 20, reaction: 'rocket', createdAt: day('2026-10-23') }],
     circlePostReports: [{ postId: 41, circleId: 22, reason: 'abuse', createdAt: day('2026-10-22'), resolvedAt: day('2026-10-23') }],
@@ -252,8 +261,18 @@ describe('shapeMemberExport', () => {
       { circle: refs.circle.get(21), joinedAt: '2026-10-21T08:00:00.000Z' },
     ])
     expect(file.circlePosts).toEqual([
-      { id: 30, circle: refs.circle.get(20), text: 'My first picture', language: 'en', status: 'shown', postedAt: '2026-10-23T08:00:00.000Z' },
-      { id: 31, circle: refs.circle.get(21), text: '被隐藏的一条', language: 'zh-Hans', status: 'hidden', postedAt: '2026-10-22T08:00:00.000Z' },
+      {
+        id: 30,
+        circle: refs.circle.get(20),
+        text: 'My first picture',
+        language: 'en',
+        status: 'shown',
+        // Full addresses, so the file still says where each picture is.
+        images: [`${site}/api/circle-images/file/a1.webp`, `${site}/api/circle-images/file/b2.webp?prefix=circles`],
+        video: { site: 'youtube', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', title: 'A video' },
+        postedAt: '2026-10-23T08:00:00.000Z',
+      },
+      { id: 31, circle: refs.circle.get(21), text: '被隐藏的一条', language: 'zh-Hans', status: 'hidden', images: [], video: null, postedAt: '2026-10-22T08:00:00.000Z' },
     ])
     expect(file.circleReactions).toEqual([{ post: 40, circle: refs.circle.get(20), reaction: 'rocket', reactedAt: '2026-10-23T08:00:00.000Z' }])
     // A circle that is gone keeps only its id.

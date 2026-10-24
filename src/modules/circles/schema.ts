@@ -1,14 +1,15 @@
-import { index, integer, pgTable, serial, text, timestamp, uniqueIndex } from '@payloadcms/db-postgres/drizzle/pg-core'
+import { boolean, index, integer, pgTable, serial, text, timestamp, uniqueIndex } from '@payloadcms/db-postgres/drizzle/pg-core'
 
 import { authUsers } from '@/lib/auth/schema'
 
-import { postStatuses, reactions, reportReasons } from './rules'
+import { postStatuses, reactions, reportReasons, videoProviders } from './rules'
 
 /**
  * The circles module's own tables (docs/specs/circles.md「数据」): members write them all day, so
  * they are Drizzle tables rather than Payload collections; registered in payload.config.ts so
  * migrations create them. `circle_id` points at the `circles` collection. Deleting a member
  * deletes their memberships, posts and reactions; deleting a post deletes its reactions and reports.
+ * Pictures are the `circle-images` upload collection (./collections/CircleImages.ts).
  */
 
 /** A member who joined a circle: its「我的圈子」and the count on its card. */
@@ -29,9 +30,41 @@ export const circleMembers = pgTable(
 )
 
 /**
+ * A video link (docs/specs/circles.md rule 13), read once from its site and shared by every post
+ * that links it: public facts, nobody's personal data. `cover_id` is the cover in `circle-images`.
+ * `found` is false when nothing could be read (gone, private, or the site did not answer); such a
+ * card is a plain link, and the next post with the link tries again after an hour. A row pasted
+ * over a week ago that no post uses any more is deleted (./media/cleanup.ts).
+ */
+export const circleVideos = pgTable(
+  'circle_videos',
+  {
+    id: serial('id').primaryKey(),
+    provider: text('provider', { enum: videoProviders }).notNull(),
+    /** The video's id on its site (./media/links.ts). */
+    videoKey: text('video_key').notNull(),
+    url: text('url').notNull(),
+    title: text('title'),
+    channel: text('channel'),
+    durationSeconds: integer('duration_seconds'),
+    coverId: integer('cover_id'),
+    found: boolean('found').default(false).notNull(),
+    /** Who first pasted it, for the daily limit. */
+    requestedBy: text('requested_by').references(() => authUsers.id, { onDelete: 'set null' }),
+    fetchedAt: timestamp('fetched_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('circle_videos_provider_key_idx').on(table.provider, table.videoKey),
+    index('circle_videos_requested_idx').on(table.requestedBy, table.createdAt),
+  ],
+)
+
+/**
  * A member's post in a circle, shown at once, no moderation first; it cannot be edited, only
- * deleted. `lang` is the language the text is in (src/lib/i18n/detect.ts). The site owner can hide
- * one; a hidden post shows only to its author.
+ * deleted. `lang` is the language the text is in (src/lib/i18n/detect.ts); the text can be empty
+ * when the post has pictures or a video. The site owner can hide one; a hidden post shows only to
+ * its author.
  */
 export const circlePosts = pgTable(
   'circle_posts',
@@ -44,12 +77,14 @@ export const circlePosts = pgTable(
     body: text('body').notNull(),
     lang: text('lang').notNull(),
     status: text('status', { enum: postStatuses }).default('shown').notNull(),
+    videoId: integer('video_id').references(() => circleVideos.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index('circle_posts_created_idx').on(table.createdAt),
     index('circle_posts_circle_idx').on(table.circleId, table.id),
     index('circle_posts_user_created_idx').on(table.userId, table.createdAt),
+    index('circle_posts_video_idx').on(table.videoId),
   ],
 )
 
@@ -97,6 +132,7 @@ export const circlePostReports = pgTable(
 )
 
 export const circlesTables = {
+  circle_videos: circleVideos,
   circle_members: circleMembers,
   circle_posts: circlePosts,
   circle_post_reactions: circlePostReactions,

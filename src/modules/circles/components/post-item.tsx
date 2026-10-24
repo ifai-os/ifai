@@ -10,10 +10,11 @@ import { Link } from '@/i18n/navigation'
 import { linkify, reactionEmoji, reactions, type PostView, type Reaction, type ReactionView } from '../rules'
 import { useCircles } from './circles-provider'
 import { PersonAvatar } from './person-avatar'
+import { PostImages, PostVideo } from './post-media'
 
 const dayMs = 24 * 60 * 60 * 1000
 
-/** One post: who and when, in which circle, the text, the reactions, and「更多」(delete one's own, report the others). */
+/** One post: who and when, in which circle, the text, its pictures or video, the reactions, and「更多」(delete one's own, report the others). */
 export function PostItem({ post, reported, onReport }: { post: PostView; reported: boolean; onReport: () => void }) {
   const t = useTranslations('circles')
   const { byId } = useCircles()
@@ -46,17 +47,21 @@ export function PostItem({ post, reported, onReport }: { post: PostView; reporte
         <MoreMenu post={post} name={name} reported={reported} onReport={onReport} />
       </div>
       {post.hidden && <p className="rounded-thumb bg-warn px-3 py-2 text-meta text-warn-ink">{t('hiddenNote')}</p>}
-      <p lang={post.lang} className="text-body whitespace-pre-line wrap-anywhere">
-        {linkify(post.body).map((part, index) =>
-          'href' in part ? (
-            <a key={index} href={part.href} target="_blank" rel="nofollow ugc noopener noreferrer" className="text-link hover:underline">
-              {part.text}
-            </a>
-          ) : (
-            <span key={index}>{part.text}</span>
-          ),
-        )}
-      </p>
+      {post.body && (
+        <p lang={post.lang} className="text-body whitespace-pre-line wrap-anywhere">
+          {linkify(post.body).map((part, index) =>
+            'href' in part ? (
+              <a key={index} href={part.href} target="_blank" rel="nofollow ugc noopener noreferrer" className="text-link hover:underline">
+                {part.text}
+              </a>
+            ) : (
+              <span key={index}>{part.text}</span>
+            ),
+          )}
+        </p>
+      )}
+      {post.images.length > 0 && <PostImages images={post.images} />}
+      {post.video && <PostVideo video={post.video} />}
       {!post.hidden && <ReactionBar post={post} />}
     </li>
   )

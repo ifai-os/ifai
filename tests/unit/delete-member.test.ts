@@ -11,13 +11,15 @@ function fakePayload(remove = vi.fn().mockResolvedValue({ docs: [], errors: [] }
 }
 
 describe('deleteMemberData', () => {
-  it('deletes the member’s submissions and reports, whatever their status', async () => {
+  it('deletes the member’s submissions, reports and pictures, whatever their status', async () => {
     const { payload, remove, drizzleDelete, where } = fakePayload()
     await deleteMemberData(payload, 'member-1')
     expect(remove.mock.calls.map(([options]) => options)).toEqual([
       { collection: 'app-submissions', where: { submitterId: { equals: 'member-1' } }, overrideAccess: true },
       { collection: 'skill-submissions', where: { submitterId: { equals: 'member-1' } }, overrideAccess: true },
       { collection: 'app-reports', where: { reporter: { equals: 'u:member-1' } }, overrideAccess: true },
+      // Pictures for circle posts, posted or not; Payload deletes their files.
+      { collection: 'circle-images', where: { uploader: { equals: 'member-1' } }, overrideAccess: true },
     ])
     // Their reports of other members' reviews and posts, kept by `u:<id>` in app_review_reports and circle_post_reports.
     expect(drizzleDelete.mock.calls.map(([table]) => getTableName(table))).toEqual(['app_review_reports', 'circle_post_reports'])

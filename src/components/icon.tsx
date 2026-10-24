@@ -129,6 +129,21 @@ const icons = {
       <path d="M19 2.5v5M16.5 5h5" />
     </>
   ),
+  image: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="9" cy="10" r="2" />
+      <path d="m21 16-5-5-9 9" />
+    </>
+  ),
+  video: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="M10 9.5v5l4.5-2.5z" fill="currentColor" />
+    </>
+  ),
+  play: <path d="M8.5 5.5v13l11-6.5z" fill="currentColor" />,
+  chevronLeft: <path d="m15 6-6 6 6 6" />,
   share: (
     <>
       <path d="M12 3v12M7 8l5-5 5 5" />
