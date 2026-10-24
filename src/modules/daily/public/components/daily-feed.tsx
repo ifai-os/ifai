@@ -39,7 +39,7 @@ export function DailyFeed({ stories, serverToday }: DailyFeedProps) {
             {/* 「IFAI 日报（新版）」: the calendar tile, then the day and its count on one line. */}
             <header className="flex items-center gap-3">
               <DateBadge date={group.date} size="sm" />
-              <div className="flex min-w-0 flex-wrap items-baseline gap-x-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-3">
                 <h2 id={`day-${group.key}`} className="text-h3 font-semibold">
                   {relative ? t(relative) : date}
                 </h2>
