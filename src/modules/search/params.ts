@@ -1,4 +1,4 @@
-import { searchKinds, type SearchKind } from './kinds'
+import { visibleKinds, type SearchKind } from './kinds'
 
 /** Longest search passed on; longer input is cut (the same as the apps and Skills lists). */
 export const maxQueryLength = 64
@@ -24,13 +24,13 @@ export function cleanQuery(value: string): string {
   return Array.from(value.replace(/\s+/g, ' ').trim()).slice(0, maxQueryLength).join('').trim()
 }
 
-/** `?q=`, `?type=` and `?page=` of the search page; an unknown type is「全部」. */
+/** `?q=`, `?type=` and `?page=` of the search page; an unknown type, or one whose module has not launched, is「全部」. */
 export function readSearchParams(params: SearchParams): SiteSearchParams {
   const type = first(params.type)
   const page = first(params.page)
   return {
     q: cleanQuery(first(params.q)),
-    type: (searchKinds as readonly string[]).includes(type) ? (type as SearchKind) : 'all',
+    type: (visibleKinds() as readonly string[]).includes(type) ? (type as SearchKind) : 'all',
     page: page === '' ? 1 : /^[1-9]\d{0,5}$/.test(page) ? Number(page) : null,
   }
 }

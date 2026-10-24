@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-24（后台界面语言与按钮样式；后台「操作记录」页；后台「模型用量」页；导出我的数据；应用资料每 90 天提醒核对；日报收藏；Vercel 变量标 Sensitive 的影响；全站搜索；线上配置进展；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
+更新于 2026-10-24（Wiki 第 1 步·条目与主题（第三期，上线前 404）；后台界面语言与按钮样式；后台「操作记录」页；后台「模型用量」页；导出我的数据；应用资料每 90 天提醒核对；日报收藏；Vercel 变量标 Sensitive 的影响；全站搜索；线上配置进展；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
 
 ## 现在到哪了
 
@@ -59,6 +59,7 @@
 - **结构化数据与分享卡片已完成**（技术方案「SEO 验收」的结构化数据部分）：首页 `WebSite` + `Organization`，日报详情 `NewsArticle`，应用详情 `SoftwareApplication`，Skill 详情 `SoftwareSourceCode`，三个详情页带面包屑；只写页面上看得到的内容和日期，应用不写评分。顺手修了日报详情的分享卡片：它自己设了 `openGraph`，把布局里的站名、语言和图片整个替换掉了，现在一律经过 `src/lib/seo.ts` 的 `shareCard()`；应用详情的分享图换成官网图。做法见 [specs/foundation.md](./specs/foundation.md)「结构化数据与分享卡片」。上线后用 Google 富媒体搜索结果测试和 Search Console 的「增强功能」看有没有报错。
 - **隐私政策和用户协议已完成**（[specs/legal.md](./specs/legal.md)）：`/[locale]/privacy`、`/[locale]/terms`，五种语言，进站点地图；条文放在 `messages/*.json` 的 `legal`，生效日期、各节顺序和联系邮箱 `hello@ifai.io` 在 `src/modules/legal/documents.ts`。页脚加了两个链接，登录页和登录对话框表单下面写「继续即表示你同意《用户协议》和《隐私政策》」（新标签页打开）。条文按现有代码核对过收集了什么、交给谁、留多久；以后新增收集或接入统计、报错工具，先改这两页再上线。
 - **全站搜索已完成**（[specs/search.md](./specs/search.md)，PRD R15）：顶栏语言按钮左边的放大镜进 `/[locale]/search`，一次查日报新闻（标题、摘要）、应用（名称、别名、一句话介绍、标签）和 Skill（显示名、一句话介绍、标签、slug），五种语言的字段都查，只返回已发布的。「全部」每类最多 5 条，类型标签（全部 / 日报 / 应用 / Skills）带数量，单个类型每页 20 条；应用和 Skill 名称完全相同的排最前、以搜索词开头的其次，其余按热度和「综合」，新闻新的在前。每行写明类型（R15「链接类型可见」）。没结果时保留输入、给「热门」（热度前 4 的应用和安装最多的 2 个 Skill）；画板上的纠错建议和「大家在搜」要有搜索日志，这一期不做。404 页加了搜索框。搜索页 `noindex, follow`，不进站点地图。不缓存、不记录搜索词，用 Postgres 的 `ILIKE`（Payload `like`），内容多了再接 Meilisearch。代码在 `src/modules/search/`，各模块加了 `searchApps`、`searchSkills`、`searchStories`。类型跟着 `NEXT_PUBLIC_SITE_PHASE`（`kinds.ts`），以后推荐、圈子、Wiki 上线时各加一种。
+- **Wiki 第 1 步（条目与主题）已完成**（[specs/wiki.md](./specs/wiki.md)，PRD R07、R26，第三期模块）：后台「Wiki」分组下两个集合「主题」「条目」（不建 Drizzle 表；迁移 `wiki`）。条目只有概念、方法两类，草稿 / 已发布，读者只读；发布前检查英文版齐全（名称、一句话定义、白话说明、例子、局限，方法类的步骤，主题、来源、复核日期），先修不能成圈，易混、相关只填一边、两边都显示；开了版本历史。页面：`/[locale]/wiki` 首页（今日条目按上海时间轮换、按主题浏览、最新条目、你知道吗）、`/wiki/topics/[slug]` 主题页（必读按站长排的顺序）、`/wiki/[slug]` 条目页（「又称」、正文各节、容易混淆、先读这些 / 接着读 / 相关条目，每个条目只出现一次，用得上的应用和 Skill、相关日报、参考来源、复核于和更新于）、`/wiki/entries` 全部条目。接进全站搜索（类型 `wiki`，五种语言的名称、别名、定义都查）、站点地图（`wiki` 一节）和 JSON-LD（`DefinedTerm`）。`src/config/site.ts` 加了 `isLaunched(模块)`：`NEXT_PUBLIC_SITE_PHASE` 小于 3 时 Wiki 的页面 404，导航、搜索、站点地图里都没有；集合照常建，站长可以先在后台写。示例数据 `scripts/seed-wiki.ts`（6 个主题、11 个条目）；CI 改成按第三期构建，冒烟测试 `tests/e2e/wiki.spec.ts` 覆盖它。画板上的读者编辑、「本周上新」、模型 / 公司 / 人物分类没做，见规格「和画板不一致的地方」。代码在 `src/modules/wiki/`。
 - **后台「模型用量」页已完成**（[specs/foundation.md](./specs/foundation.md)「后台 · 模型用量」）：后台左侧「审核队列」下面的「模型用量」（`/admin/model-usage`，代码在 `src/admin/model-usage/`），只读 `model_receipts`，不加表。今天（上海时间）的花费和每日预算、三个总开关和 OpenRouter 密钥配了没有，近 14 天每天的成功、失败和花费，按用途（今天 / 近 7 天 / 近 30 天）的模块、模型、调用数、token 和花费，近 30 天失败到现在也没成功、或者卡住的调用（错误信息，链到对应的新闻、应用、Skill 版本或原文）。预算的读法和上限常量搬到了 `src/lib/ai/limits.ts`，调用和这一页共用。Payload 的自定义根页面默认谁都能打开，这一页自己把没登录的人送去登录页；以后再加 `admin.components.views` 的页面要照做。
 - **后台「操作记录」页已完成**（[specs/foundation.md](./specs/foundation.md)「后台 · 操作记录」，PRD R14「管理员操作留痕」）：后台左侧「模型用量」下面的「操作记录」（`/admin/admin-log`，代码在 `src/admin/admin-log/`）。迁移 `admin_log` 建 Drizzle 表 `admin_log`；`payload.config.ts` 里所有集合过一遍 `withAdminLog`（`src/lib/admin-log/`），管理员保存、新建、删除任何一条，按各模块的后台按钮（集合上的 POST 接口，成功才记），以及登录后台，各记一行：只记改了哪些字段和状态的前后值，不记内容；改简体时繁体跟着改，算同一行。和保存在同一个事务里写，写记录失败不挡保存。页面按内容、管理员、操作筛选，每行能进「这一条的记录」。后台任务、脚本和读者的操作不记。**以后新加集合**：放进 `withAdminLog([...])` 那个数组就有记录；新加的后台按钮接口自动记，在 `src/admin/admin-log/text.ts` 的 `actions` 补上它的中英文名字（单元测试会检查每个 POST 接口都有名字）。
 - **后台界面语言与按钮样式已调整**：后台界面只有中文和英文两种（自定义的后台文字只写了这两种，后台只给站长用），没选过时一律中文（`src/proxy.ts` 在 `/admin` 下补上 Payload 的 `payload-lng=zh`，不再跟浏览器的 Accept-Language 走）；顶栏加了「界面语言：中文 · English」切换（`src/admin/ui-language/switch.tsx`），原来的语言选择改名「内容语言」（它选的是编辑哪种语言的内容）。后台按钮改成前台 `src/components/button.tsx` 的样子（主按钮黑底、次按钮描边、6px 圆角、14px），写在 `src/admin/theme/admin.css`，经 `admin.components.providers` 加载；后台不加载 Tailwind，令牌值在这里重复一份，改设计令牌时要一起改。深色主题下主按钮反成白底。
@@ -77,7 +78,8 @@
 | 第一期 | 日报之后 | 应用 | 第 1–6 步（集合与后台录入、官网取材与资料草稿、列表页和详情页、热度，收藏、评价、评价翻译、报错、提交应用，桌面详情的四个标签）完成，首批导入清单已备好，下一步首批导入和预览环境验收 |
 | 第一期 | 日报之后 | 资源（Agent Skills） | 第 1–5 步（实现顺序）完成，下一步预览环境验收 |
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） | 只有画板 |
-| 第三期 | 21–26 | 排行（模型盲测）、Wiki | 只有画板 |
+| 第三期 | 21–26 | 排行（模型盲测） | 只有画板 |
+| 第三期 | 21–26 | Wiki | 规格草稿；第 1 步（条目与主题、四个页面、搜索、站点地图）完成，第三期前页面 404，标「待确认」的几条等站长确认 |
 
 第一期在第 12 周末上线。之后每期 6–8 周，开工前先过闸口：用上一期的数据决定下一期是否开工。每两周在预览环境里从用户视角走一遍新功能。
 
@@ -86,6 +88,7 @@
 1. **日报预览环境验收**：按 daily.md「验收标准」在预览环境逐条过一遍（要先按 setup.md 配好 Neon、Vercel、OpenRouter、Inngest），发现的问题各开一个 PR。邮件订阅两步都已完成：按 setup.md 第 7 步配好 Resend 和回调，在预览环境按 [specs/daily-email.md](./specs/daily-email.md)「验收标准」过一遍，再在生产打开 `DAILY_EMAIL_ENABLED`。
 2. **应用首批导入**：清单已备好（[docs/apps/](./apps/)，247 个）。预览环境部署好后，先在后台「批量添加应用」贴 `first-batch-try.txt` 的 10 个，确认草稿质量，再整份贴 `first-batch-all.txt`（已收录的按域名跳过）。应用第 1–6 步都已合并，导入之后按 apps.md「验收标准」在预览环境逐条过一遍。这个沙盒的网络策略不放行 toolify.ai 和 tranco-list.eu，Tranco 下载要在预览环境验证，或者在项目设置里加白名单。
 3. **资源预览环境验收**：第 1–5 步都已合并，按 resources.md「验收标准」在预览环境逐条过一遍。说明起草要在预览环境配好 `OPENROUTER_API_KEY`、打开 `MODEL_CALLS_ENABLED`，对两三个真实 Skill 点「生成说明草稿」看质量。6 个宿主里 Codex 之后几个的目录位置、官网和安装说明要站长在后台补（使用指南和 install.md 都读这里）。
+4. **Wiki**：第 1 步合并后，站长确认规格里标「待确认」的几条（见「待站长处理」）；在画布「照实现补的画板」下补「Wiki 条目页」「Wiki 主题页」和手机版；下一步做日报、应用、Skill 页面上的「相关 Wiki 条目」和正文里的术语解释卡（规格「不做」第 3 条）。
 
 ## 已做的决定
 
@@ -133,6 +136,13 @@
 
 - Logo 定稿为「简化 3」：横条眼睛，f 的横杠只向右伸出。文件在 `public/brand/`、`src/app/icon.svg`、`favicon.ico`、`apple-icon.png`。
 
+Wiki（2026-10-24 按推荐默认值起草，站长还没确认；细节见 wiki.md）：
+
+- 条目只有概念和方法两类，按主题浏览；模型、产品、公司在应用目录和资源里，条目页链过去，不在 Wiki 另建。
+- 条目由站长写、核对后发布，读者只读；第一步不调用模型。复核日期手动填，和「更新于」分开显示。
+- 关系（先修、相关、易混）由站长在后台确认，不从正文推导。
+- 第三期之前先建好、关着：页面 404，导航、搜索、站点地图里没有。
+
 仓库：GitHub `ifai-os/ifai`（私有），默认分支 `main`。
 
 ## 待站长处理
@@ -173,6 +183,8 @@
 - [ ] 导出我的数据部署到预览环境后：用测试账号收藏一个应用、写一条评价、提交一个应用，在账号页点「下载我的数据」，打开下载的 JSON 看一遍各段；再用 Google 或 GitHub 登录的账号下一次，`linkedAccounts` 里有这个服务商，整个文件里没有任何令牌。手机宽度也点一次。
 - [ ] 隐私政策和用户协议：开好 `hello@ifai.io` 邮箱（或者告诉 Claude 换成别的地址，改 `src/modules/legal/documents.ts`）；正式上线前请懂当地法律的人看一遍两页条文；定了公司主体后补上适用法律和争议解决地点。账号删除的 PR 合并后，隐私政策「你可以做什么」一节加上账号页的说明。
 - [ ] 正式上线后：在 Google Search Console 和 Bing Webmaster Tools 验证 `ifai.io`，提交 `https://ifai.io/sitemap.xml`，过几天看「网页索引」里有没有被排除的地址，「增强功能」里面包屑和结构化数据有没有报错；挑一条新闻、一个应用、一个 Skill 的地址贴到 https://search.google.com/test/rich-results 看一遍。
+- [ ] Wiki 规格的「待确认」（[specs/wiki.md](./specs/wiki.md)「和画板不一致的地方」）：要不要以后开放读者投稿或纠错（画板是「人人都能编辑」，现在只有站长写）；「本周上新」和模型、公司、人物、事件分类不做，行不行；首页介绍和模块介绍（`modules.wiki`）从「人人可编辑的 AI 百科」改成了「用白话讲清 AI 术语，附例子和来源」。另外，AGENTS.md 和本页写着「没上线的模块不提前建页面或数据表」，Wiki 是按站长的要求先建好、上线前 404 的，确认这样做之后把那句话改成「没上线的模块页面返回 404」之类。
+- [ ] Wiki 部署到预览环境后：把 Vercel Preview 的 `NEXT_PUBLIC_SITE_PHASE` 临时改成 `3` 再重新部署（看完改回 `1`；第二期的模块也会一起出现），手动运行「Seed main preview」加示例条目。在 `/zh-hans/wiki` 看首页的数字、今日条目和主题卡，点「Agent 与执行」进主题页，再点 Agent：看「又称」、容易混淆、先读这些、参考来源和复核日期；五种语言切一遍（繁体由简体转换，「智能体」会变成「智慧體」；韩语还没有内容，显示英文）；顶栏搜「智能体」和「AI agent」都应该找到 Agent。后台「Wiki → 条目」新建一条，不写定义直接发布，看提示停在哪里；把 Harness 设成 Agent 的先修，看成圈的提示。手机宽度看首页、主题页和条目页。
 - [ ] 以后再定：商业化方式；排行第一批参赛模型和题库（第三期前）。
 
 ## 已知问题
@@ -195,6 +207,7 @@
 - 沙盒里的 DNS 查询全部失败（ENOTFOUND），订阅接口的收信服务器检查在这里一律当作「查询出错」不拦；冒烟测试里「域名收不了信」那条在查不到 `gmail.com` 的地方自动跳过，CI 上照常跑。
 - 生产构建（Turbopack）里页面和接口各有一份 `payload` 模块，Payload 实例却是共用的（谁先启动用谁的）。先打开过后台页面时，接口里 `instanceof ValidationError` 认不出钩子抛的错误：后台保存被拒时只显示错误的 `message`，字段下面的提示没有了。所以钩子拒绝保存一律用 `src/lib/field-error.ts` 的 `rejectField`（把说明也写进 `message`），判断是不是某个字段的错误用 `isFieldError`（看形状、不用 `instanceof`）。应用提交、资源（`collections/guards.ts`、`submit/submit.ts`）和日报订阅者都已改用它们；新写的钩子不要直接 `throw new ValidationError`。
 - Payload 的自定义根页面（`payload.config.ts` 里 `admin.components.views` 的页面）不经过后台的登录检查，没登录也会渲染，而且不带后台的导航外框。页面自己要检查 `initPageResult.req.user` 并跳到登录页，再用 `DefaultTemplate` 包起来，照 `src/admin/model-usage/view.tsx`。集合下面的自定义页面（如审核队列）不受影响。
+- Payload 数组里设了 `required` 的单个关系字段，迁移建成 `NOT NULL`，外键却是 `ON DELETE SET NULL`：删掉被指向的那一条时数据库报错，删不掉。新写的这类字段不要设 `required`，在保存钩子里检查，再用 `beforeDelete` 把指向它的行删掉（照 `src/modules/wiki/collections/guard.ts` 的 `dropComparisons`）。资源模块的 Skill 版本「宿主」（`skill_versions_compatibility.host_id`）也是这样：宿主被某个版本用着时，后台删不掉这个宿主，还没改。
 - ESLint 10 的 peer 依赖警告是已知情况，见 AGENTS.md。
 
 ## 设计稿

@@ -58,8 +58,9 @@ describe('namesFirst', () => {
 })
 
 describe('visibleKinds', () => {
-  it('searches the Daily, apps and Skills from the first phase', () => {
+  it('searches the Daily, apps and Skills from the first phase, and the Wiki from the third', () => {
     expect(visibleKinds(1)).toEqual(['daily', 'apps', 'skills'])
-    expect(visibleKinds(3)).toEqual(['daily', 'apps', 'skills'])
+    expect(visibleKinds(2)).toEqual(['daily', 'apps', 'skills'])
+    expect(visibleKinds(3)).toEqual(['daily', 'apps', 'skills', 'wiki'])
   })
 })

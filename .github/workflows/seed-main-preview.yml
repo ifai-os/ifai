@@ -1,7 +1,8 @@
 name: Seed main preview
 
 # Fills main's preview (https://ifai-preview-ifai1.vercel.app, see deploy.yml) with the sample
-# stories, apps and Skills that CI's smoke tests use, so its pages have something to show.
+# stories, apps, Skills and Wiki entries that CI's smoke tests use, so its pages have something to
+# show. (The Wiki's pages show only once the preview's NEXT_PUBLIC_SITE_PHASE is 3.)
 # Run it by hand: Actions → Seed main preview → Run workflow. Safe to run again: the scripts
 # overwrite their own samples and leave everything else alone.
 # It writes only to the Neon branch preview/main. It never creates that branch (deploy.yml does,
@@ -71,8 +72,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Same order as CI: stories first, so the apps seed matches the stories that mention the sample
-      # apps. SEED_PREVIEW_MAIN lets the scripts write to this one remote database (scripts/seed-target.ts).
-      - name: Sample stories, apps and Skills
+      # apps; the Wiki last, so its entries can link them. SEED_PREVIEW_MAIN lets the scripts write to
+      # this one remote database (scripts/seed-target.ts).
+      - name: Sample stories, apps, Skills and Wiki entries
         env:
           DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
           SEED_PREVIEW_MAIN: '1'
@@ -80,6 +82,7 @@ jobs:
           pnpm payload run scripts/seed-stories.ts
           pnpm payload run scripts/seed-apps.ts
           pnpm payload run scripts/seed-skills.ts
+          pnpm payload run scripts/seed-wiki.ts
 
       # Pages keep what they read for up to an hour, and the samples were written from here, so the
       # site never heard about them. Clearing Vercel's data cache makes them show up right away.

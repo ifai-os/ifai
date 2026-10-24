@@ -36,6 +36,8 @@ import { SkillTags } from './modules/resources/collections/SkillTags'
 import { SkillVersions } from './modules/resources/collections/SkillVersions'
 import { resourcesTables } from './modules/resources/db/schema'
 import { savesTables } from './modules/saves/schema'
+import { WikiEntries } from './modules/wiki/collections/WikiEntries'
+import { WikiTopics } from './modules/wiki/collections/WikiTopics'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -108,6 +110,8 @@ export default buildConfig({
     AgentHosts,
     SkillTags,
     SkillSubmissions,
+    WikiTopics,
+    WikiEntries,
   ]),
   editor: lexicalEditor(),
 

@@ -16,10 +16,10 @@ export type SitemapPage = {
 export const pagesPerFile = 9000
 
 /** Sections of the sitemap, each split into numbered files ("daily-1.xml"). */
-export const sitemapSections = ['pages', 'daily', 'apps', 'skills'] as const
+export const sitemapSections = ['pages', 'daily', 'apps', 'skills', 'wiki'] as const
 export type SitemapSection = (typeof sitemapSections)[number]
 
-const fileName = /^(pages|daily|apps|skills)-([1-9]\d{0,3})\.xml$/
+const fileName = /^(pages|daily|apps|skills|wiki)-([1-9]\d{0,3})\.xml$/
 
 /** "daily-2.xml" → section and 1-based number; null for anything else. */
 export function parseSitemapFile(name: string): { section: SitemapSection; number: number } | null {

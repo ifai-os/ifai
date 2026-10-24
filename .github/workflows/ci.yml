@@ -41,6 +41,9 @@ jobs:
       BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-used-anywhere-else
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_TELEMETRY_DISABLED: '1'
+      # Builds with every module up to phase three (the Wiki), so the smoke tests cover them before launch.
+      # Phase one's navigation is covered by the unit tests (tests/unit/site-config.test.ts).
+      NEXT_PUBLIC_SITE_PHASE: '3'
       # The subscribe boxes and endpoints, for the smoke tests. Without Resend the emails only go to the server log.
       DAILY_EMAIL_ENABLED: 'true'
       # Signs the smoke tests' fake Resend webhooks (base64 of a made-up string).
@@ -74,9 +77,14 @@ jobs:
       - name: Migrations apply to an empty database
         run: pnpm payload migrate
 
-      # Stories first, so the apps seed can match the stories that mention the sample apps.
-      - name: Sample stories, apps and Skills for the smoke tests
-        run: pnpm payload run scripts/seed-stories.ts && pnpm payload run scripts/seed-apps.ts && pnpm payload run scripts/seed-skills.ts
+      # Stories first, so the apps seed can match the stories that mention the sample apps; the Wiki last,
+      # so its entries can link the sample apps, Skills and stories.
+      - name: Sample stories, apps, Skills and Wiki entries for the smoke tests
+        run: |
+          pnpm payload run scripts/seed-stories.ts
+          pnpm payload run scripts/seed-apps.ts
+          pnpm payload run scripts/seed-skills.ts
+          pnpm payload run scripts/seed-wiki.ts
 
       - name: Build
         run: pnpm build
@@ -91,6 +99,7 @@ jobs:
           E2E_SAMPLE_APPS: '1'
           E2E_SAMPLE_SKILLS: '1'
           E2E_SAMPLE_STORIES: '1'
+          E2E_SAMPLE_WIKI: '1'
 
       - name: Upload Playwright report
         if: failure()

@@ -11,6 +11,7 @@
 | [legal.md](./legal.md) — 隐私政策与用户协议 | 已实现（条文待专业评审） |
 | [resources.md](./resources.md) — 资源（Agent Skills） | 已确认，实现中（第 3 步完成） |
 | [search.md](./search.md) — 全站搜索 | 已实现，待预览环境验收 |
+| [wiki.md](./wiki.md) — Wiki（第三期） | 草稿，第 1 步（条目与主题、四个页面、搜索、站点地图）实现中；标「待确认」的几条等站长确认 |
 
 ## 模板
 

@@ -76,6 +76,7 @@ src/
     legal/                 隐私政策与用户协议：各节顺序、生效日期、联系邮箱（documents.ts），页面组件；条文在 messages 的 legal
     saves/                 通用收藏：Drizzle 表（schema.ts）、类型与校验（target.ts）、读写（data.ts）、收藏按钮和「我的收藏」（components/）；接口在 src/app/api/saves
     resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、前台（public/：数据、筛选排序、install.md、安装计数、页面组件）、统计汇总（stats/）、投稿（submit/：校验、投稿与通知、邮件、发信任务、页面组件；接口在 src/app/api/resources/submissions）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
+    wiki/                  Wiki（第三期，src/config/site.ts 的 isLaunched('wiki') 管上不上线）：集合与保存、删除时的检查（collections/：条目、主题、guard.ts）、规则（rules.ts：发布前要齐全、先修不成圈、双向关系怎么汇总、又称、今日条目）、页面数据与缓存（data.ts、cache.ts）、地址（links.ts）、标题与 JSON-LD（metadata.ts、structured-data.ts）、站点地图（sitemap.ts）、页面组件（components/）
   payload.config.ts
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko
@@ -107,6 +108,7 @@ pnpm payload migrate:create <名字>  # 改了集合或表结构之后
 pnpm payload migrate               # 执行未执行的迁移
 pnpm payload run scripts/seed-apps.ts  # 本机数据库加示例应用；冒烟测试配合 E2E_SAMPLE_APPS=1
 pnpm payload run scripts/seed-skills.ts  # 本机数据库加示例 Skill；冒烟测试配合 E2E_SAMPLE_SKILLS=1
+pnpm payload run scripts/seed-wiki.ts  # 本机数据库加示例 Wiki 主题和条目（放在上面几个之后）；冒烟测试配合 NEXT_PUBLIC_SITE_PHASE=3 构建和 E2E_SAMPLE_WIKI=1
 pnpm generate:types                # 改了集合之后，重新生成 src/payload-types.ts
 pnpm generate:importmap            # 加了后台自定义组件之后
 ```

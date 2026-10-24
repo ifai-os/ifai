@@ -45,7 +45,7 @@
     "apps": "注目度順のAIアプリ一覧。料金と代替アプリも掲載",
     "rankings": "匿名ブラインド投票によるモデルランキング",
     "resources": "バージョン管理と安全チェック済みのAgent Skills",
-    "wiki": "誰でも編集できるAI百科事典"
+    "wiki": "AI用語をやさしく解説。例と出典つき"
   },
   "card": {
     "heat": "注目度 {value}",
@@ -109,12 +109,14 @@
       "all": "すべて",
       "daily": "デイリー",
       "apps": "アプリ",
-      "skills": "Skills"
+      "skills": "Skills",
+      "wiki": "Wiki"
     },
     "kind": {
       "daily": "デイリー",
       "apps": "アプリ",
-      "skills": "Skill"
+      "skills": "Skill",
+      "wiki": "Wiki"
     },
     "found": "「{q}」の検索結果 {count} 件",
     "seeAll": "{count} 件をすべて見る",
@@ -1063,5 +1065,85 @@
     "data": "データ分析",
     "productivity": "仕事効率化",
     "life": "暮らし"
+  },
+  "wiki": {
+    "title": "Wiki",
+    "description": "AI用語をやさしい言葉で解説。意味、例、限界、確認できる出典まで。IFAI編集部が執筆・確認しています。",
+    "welcome": "IFAI Wikiへようこそ",
+    "intro": "AIの言葉をやさしく解説します。どんな意味か、例、うまくいかない場面、そして確認できる出典まで。すべての項目はIFAI編集部が執筆し、事実を確認してから公開しています。",
+    "searchLabel": "Wikiを検索",
+    "searchPlaceholder": "項目を検索（例：Agent、コンテキストウィンドウ、RAG）",
+    "entryCount": "{count, plural, other {<b>#</b> 項目}}",
+    "topicCount": "{count, plural, other {<b>#</b> トピック}}",
+    "today": "今日の項目",
+    "topicsTitle": "トピックから探す",
+    "entries": "{count, plural, other {# 項目}}",
+    "startWith": "まずはここから",
+    "newest": "新しい項目",
+    "seeAll": "すべての項目",
+    "didYouKnow": "知っていますか",
+    "anotherFact": "別のものを見る",
+    "toEntry": "項目「{title}」を読む ›",
+    "emptyTitle": "まだ項目がありません",
+    "emptyBody": "最初の項目を執筆・確認しています。その間に、今日のAIニュースをデイリーでどうぞ。",
+    "toDaily": "デイリーを読む",
+    "sideLabel": "Wiki",
+    "home": "Wikiトップ",
+    "allEntries": "すべての項目",
+    "topics": "トピック",
+    "byType": "種類",
+    "types": {
+      "concept": "概念",
+      "method": "手法"
+    },
+    "typesPlural": {
+      "concept": "概念",
+      "method": "手法"
+    },
+    "breadcrumb": "現在の位置",
+    "topicTitle": "{topic} · Wiki",
+    "mustRead": "まず読む項目",
+    "mustReadNote": "編集部がすすめる順番です。",
+    "inTopic": "このトピックのすべての項目",
+    "topicEmpty": "このトピックにはまだ項目がありません。",
+    "entriesTitle": "Wikiのすべての項目",
+    "entriesTypeTitle": "Wiki · {type}",
+    "entriesIntro": "すべての項目を名前順に並べています。",
+    "typeFilter": "項目の種類",
+    "allTypes": "すべて",
+    "pageTitle": "{title} · {page}ページ目",
+    "pages": "ページ",
+    "previous": "前へ",
+    "next": "次へ",
+    "pageOf": "{page} / {pages} ページ",
+    "entryTitle": "{title} · Wiki",
+    "alsoCalled": "別名：<names></names>",
+    "separator": "、",
+    "definition": "ひとことで言うと",
+    "sections": {
+      "explanation": "やさしく説明すると",
+      "examples": "例",
+      "steps": "手順",
+      "uses": "何に使うか",
+      "limitations": "限界",
+      "contexts": "場面による意味の違い",
+      "comparisons": "混同しやすい言葉",
+      "relations": "関連する項目",
+      "further": "試してみる",
+      "sources": "出典"
+    },
+    "prerequisites": "先に読む",
+    "readNext": "次に読む",
+    "related": "関連",
+    "apps": "アプリ",
+    "skills": "Skills",
+    "stories": "デイリーの関連記事",
+    "reviewedOn": "{date} 事実確認",
+    "updatedOn": "<time></time> 更新",
+    "reviewNote": "「事実確認」は編集部がこの項目を出典と最後に照らし合わせた日です。言い回しの修正では変わりません。",
+    "reportMistake": "誤りや古い情報を見つけましたか？",
+    "tellUs": "メールで知らせる",
+    "reportSubject": "Wiki：{title}",
+    "toc": "このページの内容"
   }
 }
