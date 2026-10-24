@@ -2,9 +2,11 @@ name: Deploy
 
 # Vercel Hobby can't import a private organisation repo, so GitHub Actions builds
 # and deploys with the Vercel CLI instead of the Vercel Git integration.
-#   push to main  → production deployment
+#   push to main  → main's preview: a long-lived Neon branch (preview/main, migrated on every merge)
+#                   and a fixed address that moves to each new deployment; production too once
+#                   PRODUCTION_DEPLOY is true
 #   pull request  → preview deployment with its own Neon branch, then the smoke tests against it
-#   PR closed     → the Neon branch is deleted
+#   PR closed     → the PR's Neon branch is deleted
 # Secrets (repository → Settings → Secrets and variables → Actions), see docs/setup.md step 3:
 # VERCEL_TOKEN, NEON_API_KEY, NEON_PROJECT_ID and, if previews are protected, VERCEL_AUTOMATION_BYPASS_SECRET.
 on:
@@ -29,13 +31,14 @@ env:
   NEON_BRANCH: preview/pr-${{ github.event.pull_request.number }}
 
 jobs:
-  # Until the secrets are filled in, skip deploying instead of failing every PR.
+  # Decides what to deploy (the deploy job's matrix). Until the secrets are filled in, it skips
+  # deploying instead of failing every run.
   config:
     name: Check secrets
     if: github.event.action != 'closed'
     runs-on: ubuntu-24.04
     outputs:
-      ready: ${{ steps.check.outputs.ready }}
+      targets: ${{ steps.check.outputs.targets }}
       smoke: ${{ steps.check.outputs.smoke }}
     steps:
       - id: check
@@ -47,6 +50,8 @@ jobs:
           PRODUCTION_DEPLOY: ${{ vars.PRODUCTION_DEPLOY }}
           BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           PREVIEW_UNPROTECTED: ${{ vars.PREVIEW_UNPROTECTED }}
+          # main's preview lives at this fixed address; a repository variable can change it.
+          MAIN_PREVIEW_DOMAIN: ${{ vars.MAIN_PREVIEW_DOMAIN || 'ifai-preview-ifai1.vercel.app' }}
         run: |
           # Previews sit behind Vercel Deployment Protection, so the smoke tests need the bypass secret,
           # unless the repository variable PREVIEW_UNPROTECTED says protection is off.
@@ -55,40 +60,52 @@ jobs:
           elif [ "$IS_PR" = true ]; then
             echo "::notice::Skipping preview smoke tests: VERCEL_AUTOMATION_BYPASS_SECRET is not set (see docs/setup.md step 3)."
           fi
-          # Production stays off until the repository variable PRODUCTION_DEPLOY is set to true.
-          if [ "$IS_PR" != true ] && [ "$PRODUCTION_DEPLOY" != true ]; then
-            echo "::notice::Not deploying to production: repository variable PRODUCTION_DEPLOY is not true (see docs/setup.md step 3)."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           missing=()
           [ -n "$VERCEL_TOKEN" ] || missing+=(VERCEL_TOKEN)
-          if [ "$IS_PR" = true ]; then
-            [ -n "$NEON_API_KEY" ] || missing+=(NEON_API_KEY)
-            [ -n "$NEON_PROJECT_ID" ] || missing+=(NEON_PROJECT_ID)
-          fi
+          [ -n "$NEON_API_KEY" ] || missing+=(NEON_API_KEY)
+          [ -n "$NEON_PROJECT_ID" ] || missing+=(NEON_PROJECT_ID)
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::notice::Not deploying: missing secrets ${missing[*]} (see docs/setup.md step 3)."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "targets=[]" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          if [ "$IS_PR" = true ]; then
+            targets=$(jq -cn --arg branch "$NEON_BRANCH" \
+              '[{label: "preview", target: "preview", neon_branch: $branch}]')
+          else
+            targets=$(jq -cn --arg domain "$MAIN_PREVIEW_DOMAIN" \
+              '[{label: "main preview", target: "preview", neon_branch: "preview/main", domain: $domain}]')
+            # Production stays off until the repository variable PRODUCTION_DEPLOY is set to true.
+            if [ "$PRODUCTION_DEPLOY" = true ]; then
+              targets=$(jq -c '. + [{label: "production", target: "production"}]' <<<"$targets")
+            else
+              echo "::notice::Not deploying to production: repository variable PRODUCTION_DEPLOY is not true (see docs/setup.md step 3)."
+            fi
+          fi
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
   deploy:
-    name: Deploy to ${{ github.event_name == 'push' && 'production' || 'preview' }}
+    name: Deploy to ${{ matrix.label }}
     needs: config
-    if: needs.config.outputs.ready == 'true'
+    if: needs.config.outputs.targets != '[]'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      # main's preview and production deploy side by side; one failing doesn't cancel the other.
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.config.outputs.targets) }}
     environment:
-      name: ${{ github.event_name == 'push' && 'Production' || 'Preview' }}
+      name: ${{ matrix.target == 'production' && 'Production' || 'Preview' }}
       url: ${{ steps.deploy.outputs.url }}
+    # Read only by the smoke tests, which run for pull requests, where there is a single target.
     outputs:
       url: ${{ steps.deploy.outputs.url }}
       sha: ${{ steps.sha.outputs.sha }}
     env:
-      TARGET: ${{ github.event_name == 'push' && 'production' || 'preview' }}
-      PROD_FLAG: ${{ github.event_name == 'push' && '--prod' || '' }}
+      TARGET: ${{ matrix.target }}
+      PROD_FLAG: ${{ matrix.target == 'production' && '--prod' || '' }}
+      DOMAIN: ${{ matrix.domain }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       NEXT_TELEMETRY_DISABLED: '1'
 
@@ -112,16 +129,17 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global "$VERCEL_CLI"
 
-      # Each PR gets its own copy of the database, branched from Neon's default (production) branch.
-      # Re-runs reuse the branch, so its data survives pushes to the PR.
-      - name: Neon branch for this PR
+      # Each preview gets its own copy of the database, branched from Neon's default (production)
+      # branch the first time: preview/pr-<n> for a PR, preview/main for main. Later runs reuse the
+      # branch, so its data survives pushes to the PR and, for main, every merge.
+      - name: Neon branch ${{ matrix.neon_branch }}
         id: neon
-        if: github.event_name == 'pull_request'
+        if: matrix.neon_branch
         uses: neondatabase/create-branch-action@v6
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           api_key: ${{ secrets.NEON_API_KEY }}
-          branch_name: ${{ env.NEON_BRANCH }}
+          branch_name: ${{ matrix.neon_branch }}
 
       - name: Pull Vercel settings and ${{ env.TARGET }} environment variables
         run: vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
@@ -129,11 +147,13 @@ jobs:
       # `pnpm run ci` (vercel.json) migrates the database, then builds. Variables set here win over the
       # pulled ones, so a preview migrates and builds against its own Neon branch, never production.
       # (Only when there is a branch: even an empty DATABASE_URI here would hide the pulled one.)
+      # main's preview also learns its fixed address, for links and sign-in (src/lib/site-url.ts).
       - name: Build
         env:
           NEON_DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
         run: |
           if [ -n "$NEON_DATABASE_URI" ]; then export DATABASE_URI="$NEON_DATABASE_URI"; fi
+          if [ -n "$DOMAIN" ]; then export PREVIEW_SITE_URL="https://$DOMAIN"; fi
           vercel build $PROD_FLAG --token="$VERCEL_TOKEN"
 
       - name: Deploy
@@ -143,11 +163,18 @@ jobs:
         run: |
           # One archive instead of thousands of files: Hobby allows 5000 uploaded files a day (api-upload-free).
           args=(--prebuilt --archive=tgz $PROD_FLAG --token="$VERCEL_TOKEN")
-          # The preview's functions read the same Neon branch at runtime.
+          # The preview's functions read the same Neon branch (and fixed address) at runtime.
           if [ -n "$NEON_DATABASE_URI" ]; then args+=(--env "DATABASE_URI=$NEON_DATABASE_URI"); fi
+          if [ -n "$DOMAIN" ]; then args+=(--env "PREVIEW_SITE_URL=https://$DOMAIN"); fi
           url=$(vercel deploy "${args[@]}")
-          echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed to $url" >> "$GITHUB_STEP_SUMMARY"
+          # main's preview: move the fixed address to the new deployment.
+          if [ -n "$DOMAIN" ]; then
+            vercel alias set "$url" "$DOMAIN" --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
+            url="https://$DOMAIN"
+            echo "Fixed address: $url" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
 
   # The same Playwright smoke tests as CI, against the preview that was just deployed.
   smoke:
