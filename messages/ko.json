@@ -920,9 +920,6 @@
   "daily": {
     "title": "데일리",
     "description": "오늘 AI에서 달라진 것. 모든 소식은 출처를 확인했고, 쉬운 요약을 함께 제공해요.",
-    "intro": "AI가 여러 출처에서 소식을 고르고 중복을 걸러내면, 편집자가 확인한 뒤 바로 게시해요. 시간은 현재 계신 시간대로 표시돼요.",
-    "sourceCount": "출처 {count}곳",
-    "updatedStat": "최근 업데이트 {time}",
     "categoryTitle": "{category} · 데일리",
     "pageTitle": "{title} · {page}페이지",
     "pages": "페이지 이동",
@@ -971,7 +968,7 @@
     "brand": "IFAI · AI 하이라이트",
     "dateLine": "{date} · 상하이 시간",
     "count": "{count, plural, other {#개 소식}}",
-    "view": "포스터 보기",
+    "save": "포스터 다운로드",
     "head": "톱뉴스",
     "imageLine": "{year} · {weekday} · 상하이 시간 · {count, plural, other {#개 소식}}",
     "imageFooter": "모든 소식은 출처를 확인했어요 · {site}",

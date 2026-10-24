@@ -920,9 +920,6 @@
   "daily": {
     "title": "Daily",
     "description": "Today's AI news, checked against the sources, with a plain-language summary of each story.",
-    "intro": "AI reads the sources, picks the stories and removes duplicates; an editor checks each one before it goes up. Times are shown in your time zone.",
-    "sourceCount": "{count, plural, one {# source} other {# sources}}",
-    "updatedStat": "Updated {time}",
     "categoryTitle": "{category} · Daily",
     "pageTitle": "{title} · Page {page}",
     "pages": "Pages",
@@ -971,7 +968,7 @@
     "brand": "IFAI · AI highlights",
     "dateLine": "{date} · Shanghai time",
     "count": "{count, plural, one {# story} other {# stories}}",
-    "view": "View poster",
+    "save": "Download poster",
     "head": "Top story",
     "imageLine": "{weekday}, {year} · Shanghai time · {count, plural, one {# story} other {# stories}}",
     "imageFooter": "Every story checked against its sources · {site}",

@@ -920,9 +920,6 @@
   "daily": {
     "title": "デイリー",
     "description": "今日のAIの変化。すべて情報源を確認し、わかりやすい要約を添えています。",
-    "intro": "AIが各情報源からニュースを選んで重複を除き、編集者が確認したうえですぐに公開します。時刻はお住まいのタイムゾーンで表示します。",
-    "sourceCount": "情報源 {count}件",
-    "updatedStat": "最終更新 {time}",
     "categoryTitle": "{category} · デイリー",
     "pageTitle": "{title} · {page}ページ目",
     "pages": "ページ送り",
@@ -971,7 +968,7 @@
     "brand": "IFAI · AIハイライト",
     "dateLine": "{date} · 上海時間",
     "count": "{count, plural, other {#件}}",
-    "view": "ポスターを見る",
+    "save": "ポスターをダウンロード",
     "head": "トップ",
     "imageLine": "{year} · {weekday} · 上海時間 · {count, plural, other {#件}}",
     "imageFooter": "すべてのニュースを情報源と照合済み · {site}",

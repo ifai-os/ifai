@@ -920,9 +920,6 @@
   "daily": {
     "title": "日报",
     "description": "今天 AI 有什么变化：每条都核对过来源，配白话摘要。",
-    "intro": "AI 从各个信源里筛选、去重，编辑审核后立即发布。时间按你所在的时区显示。",
-    "sourceCount": "{count, plural, other {# 个信源}}",
-    "updatedStat": "最近更新 {time}",
     "categoryTitle": "{category} · 日报",
     "pageTitle": "{title} · 第 {page} 页",
     "pages": "翻页",
@@ -971,7 +968,7 @@
     "brand": "IFAI · AI 大事",
     "dateLine": "{date} · 上海时间",
     "count": "{count, plural, other {# 件大事}}",
-    "view": "查看海报",
+    "save": "下载海报",
     "head": "头条",
     "imageLine": "{year} · {weekday} · 上海时间 · {count, plural, other {# 件大事}}",
     "imageFooter": "每条都核对过来源 · {site}",

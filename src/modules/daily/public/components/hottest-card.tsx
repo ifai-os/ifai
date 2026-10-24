@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 
 import { Link } from '@/i18n/navigation'
@@ -5,7 +6,11 @@ import { Link } from '@/i18n/navigation'
 import type { HotStory } from '../story-item'
 import { storyHref } from '../list-params'
 
-/** 「今日最热」(「IFAI 日报（新版）」board): the hottest story of the last 24 hours, the whole card a link to it. */
+/**
+ * 「今日最热」(「IFAI 日报（新版）」board): the hottest story of the last 24 hours, the whole card a
+ * link to it. Stories have no pictures, so the card wears its category's backdrop
+ * (public/daily/hottest/) under a dark scrim that keeps the white text readable.
+ */
 export function HottestCard({ story, category }: { story: HotStory; category: string }) {
   const t = useTranslations('daily')
   const card = useTranslations('card')
@@ -13,9 +18,17 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
   return (
     <section
       aria-labelledby="hottest-title"
-      className="relative flex min-w-0 flex-col justify-end gap-3.5 overflow-hidden rounded-hero bg-night p-6 text-white md:min-h-80 md:grow-2 md:basis-100 md:p-8"
+      className="relative isolate flex min-w-0 flex-col justify-end gap-3.5 overflow-hidden rounded-hero bg-night p-6 text-white md:min-h-80 md:grow-2 md:basis-100 md:p-8"
     >
-      <p className="self-start rounded-pill bg-white/14 px-2.5 py-1 text-small">
+      <Image
+        src={`/daily/hottest/${story.category}.webp`}
+        alt=""
+        fill
+        sizes="(min-width: 768px) 66vw, 100vw"
+        className="-z-10 object-cover"
+      />
+      <span aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-t from-black/85 via-black/55 to-black/25" />
+      <p className="self-start rounded-pill bg-white/14 px-2.5 backdrop-blur-sm py-1 text-small">
         {t('hottest')} · {category} · {card('moreSources', { count: story.moreReports })}
       </p>
       <h2 id="hottest-title" lang={story.title.lang} className="text-h2 md:text-h1">

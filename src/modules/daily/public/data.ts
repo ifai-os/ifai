@@ -251,12 +251,6 @@ const findPosterDates = unstable_cache(
   cacheOptions,
 )
 
-const countSources = unstable_cache(
-  async () => (await (await payload()).count({ collection: 'sources', where: { enabled: { equals: true } } })).totalDocs,
-  ['daily-sources-count'],
-  cacheOptions,
-)
-
 /** One page of published stories, newest first, optionally in one category. */
 export async function listStories({ locale, ...args }: ListArgs & { locale: Locale }): Promise<StoryPage> {
   const result = await findStories(args)
@@ -348,11 +342,6 @@ export async function hottestStory(locale: Locale, now = new Date()): Promise<Ho
 /** Published apps that published stories of the last 48 hours are about, newest mention first. */
 export async function mentionedApps(): Promise<MentionedApp[]> {
   return findMentionedApps()
-}
-
-/** How many sources the pipeline reads, for the list page's introduction. */
-export async function sourceCount(): Promise<number> {
-  return countSources()
 }
 
 /** A Shanghai day's poster as generated (what its images show); null when that day has none. */

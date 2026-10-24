@@ -10,11 +10,10 @@ import { dayKey, serverTimeZone } from '@/lib/local-time'
 import type { StoryCategory } from '../../categories'
 import { SubscribeBox } from '../../email/components/subscribe-box'
 import { subscribingOpen } from '../../email/delivery'
-import { hotStories, hottestStory, latestPoster, listStories, mentionedApps, sourceCount } from '../data'
+import { hotStories, hottestStory, latestPoster, listStories, mentionedApps } from '../data'
 import { listHref } from '../list-params'
 import { CategoryNav } from './category-nav'
 import { DailyFeed } from './daily-feed'
-import { TodayBadge, UpdatedStat } from './hero-bits'
 import { HotList } from './hot-list'
 import { HottestCard } from './hottest-card'
 import { MentionedApps } from './mentioned-apps'
@@ -28,19 +27,18 @@ type DailyListProps = {
 }
 
 /**
- * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): header with today's hottest story
- * and the latest「每日 AI 大事」poster (first page of every story only), categories, stories by
+ * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): today's hottest story and the
+ * latest「每日 AI 大事」poster (first page of every story only), categories, stories by
  * day and earlier pages, and beside them the apps in today's news and the hottest events of the
  * last 48 hours. The email subscribe box sits under the poster on wide screens (in the poster's
  * place when there is none) and after the stories on phones and tablets.
  */
 export async function DailyList({ locale, category, page }: DailyListProps) {
   const front = !category && page === 1
-  const [t, names, result, sources, hottest, poster, hot, apps] = await Promise.all([
+  const [t, names, result, hottest, poster, hot, apps] = await Promise.all([
     getTranslations('daily'),
     getTranslations('categories'),
     listStories({ locale, category, page }),
-    sourceCount(),
     front ? hottestStory(locale) : null,
     front ? latestPoster() : null,
     hotStories(locale),
@@ -51,37 +49,17 @@ export async function DailyList({ locale, category, page }: DailyListProps) {
 
   const subscribe = subscribingOpen()
   const serverToday = dayKey(new Date(), serverTimeZone)
-  const latest = result.stories[0]?.publishedAt ?? null
   const pill =
     'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-5 text-ui font-medium text-ink transition-colors hover:border-ink-4'
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 pt-5 pb-16 md:gap-7 md:pt-8 md:pb-24">
-      {/* The board's row: header, hottest story and poster share it 1 : 2 : 1 and wrap when there is no room. */}
-      <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
-        <header
-          className={`flex items-start gap-4 rounded-hero border border-surface-2 bg-surface px-5 py-5 md:grow md:basis-54 md:gap-6 md:px-8 md:py-7 ${
-            hottest ? 'md:flex-col md:gap-5' : 'md:items-center'
-          }`}
-        >
-          <TodayBadge serverToday={serverToday} />
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <h1 className="text-h2 md:text-display">{category ? names(category) : t('title')}</h1>
-            <p className="text-meta text-ink-3 md:text-body">{t('intro')}</p>
-            <p className="flex flex-wrap gap-x-2 text-small text-ink-4 md:text-meta">
-              <span>{t('sourceCount', { count: sources })}</span>
-              {latest && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <UpdatedStat iso={latest} />
-                </>
-              )}
-            </p>
-          </div>
-        </header>
+      <h1 className="sr-only">{category ? names(category) : t('title')}</h1>
+      {/* The board's row: hottest story and poster share it 2 : 1 and wrap when there is no room. */}
+      <div className="flex flex-col gap-4 empty:hidden md:flex-row md:flex-wrap">
         {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
         {poster ? (
-          <div className="flex flex-col gap-4 md:grow md:basis-54">
+          <div className={`flex flex-col gap-4 ${hottest ? 'md:grow md:basis-54' : 'md:w-side md:flex-none'}`}>
             <PosterCard poster={poster} locale={locale} />
             {subscribe && (
               <div className="hidden lg:block">
