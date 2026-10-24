@@ -64,6 +64,15 @@ const icons = {
       <path d="m13 21 4-9 4 9M14.5 18h5" />
     </>
   ),
+  more: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={3} />,
+  reaction: (
+    <>
+      <path d="M18.73 10.93A8 8 0 1 1 13.07 5.27" />
+      <path d="M8 15.5c.9 1.1 1.9 1.6 3 1.6s2.1-.5 3-1.6" />
+      <path d="M8.5 11.2h.01M13.5 11.2h.01" strokeWidth={2.4} />
+      <path d="M19 2.5v5M16.5 5h5" />
+    </>
+  ),
   share: (
     <>
       <path d="M12 3v12M7 8l5-5 5 5" />
@@ -133,15 +142,6 @@ const icons = {
   list: <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />,
   grid: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
   plus: <path d="M12 5v14M5 12h14" />,
-  more: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={3} />,
-  reaction: (
-    <>
-      <path d="M18.73 10.93A8 8 0 1 1 13.07 5.27" />
-      <path d="M8 15.5c.9 1.1 1.9 1.6 3 1.6s2.1-.5 3-1.6" />
-      <path d="M8.5 11.2h.01M13.5 11.2h.01" strokeWidth={2.4} />
-      <path d="M19 2.5v5M16.5 5h5" />
-    </>
-  ),
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof icons
