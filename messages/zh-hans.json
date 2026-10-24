@@ -1119,6 +1119,7 @@
     "trendOpen": "开放权重第一",
     "trendChart": "近 {weeks} 周闭源第一和开放权重第一的分数走势。",
     "trendGap": "闭源第一和开放权重第一的差距从 {from} 分变成 {to} 分。",
+    "trendGapSame": "闭源第一和开放权重第一的差距保持在 {to} 分。",
     "makers": "按厂商",
     "makerModels": "{count, plural, other {# 个}}",
     "makersNote": "进入前 {places} 的模型数",

@@ -1119,6 +1119,7 @@
     "trendOpen": "オープンウェイト1位",
     "trendChart": "直近{weeks}週のクローズド1位とオープンウェイト1位のスコア推移。",
     "trendGap": "クローズド1位とオープンウェイト1位の差は{from}点から{to}点になりました。",
+    "trendGapSame": "クローズド1位とオープンウェイト1位の差は{to}点のまま変わっていません。",
     "makers": "メーカー別",
     "makerModels": "{count, plural, other {#モデル}}",
     "makersNote": "トップ{places}に入ったモデル数",

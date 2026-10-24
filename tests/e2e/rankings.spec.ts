@@ -98,7 +98,7 @@ test.describe('with the sample rankings', () => {
 
     await expect(page.getByRole('heading', { name: en.rankings.value })).toBeVisible()
     await expect(page.getByRole('heading', { name: en.rankings.trend.replace('{weeks}', '12') })).toBeVisible()
-    await expect(page.getByText(/^The gap between the best closed and the best open-weights model went from \d+ to \d+ points\.$/)).toBeVisible()
+    await expect(page.getByText(/^The gap between the best closed and the best open-weights model (went from -?\d+ to -?\d+|stayed at -?\d+) points\.$/)).toBeVisible()
     await expect(page.getByRole('heading', { name: en.rankings.makers })).toBeVisible()
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/en\/rankings$/)
   })

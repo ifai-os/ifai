@@ -6,7 +6,8 @@ import { polyline, trendChart, type PlotBox } from '../charts'
 import { TREND_WEEKS, trendGap, type TrendPoint } from '../rules'
 
 const box = { width: 600, height: 200 }
-const plot: PlotBox = { left: 36, top: 12, width: 552, height: 160 }
+// The scores sit in a gutter left of the plot and the weeks in a row under it, so no label meets another at any width.
+const plot: PlotBox = { left: 0, top: 12, width: 600, height: 176 }
 const percent = (value: number, total: number) => `${(value / total) * 100}%`
 
 /**
@@ -18,6 +19,7 @@ export function ScoreTrend({ points }: { points: TrendPoint[] }) {
   const format = useFormatter()
   const chart = trendChart(points)
   const gap = trendGap(points)
+  const gapText = gap && (gap.from === gap.to ? t('trendGapSame', gap) : t('trendGap', gap))
   const date = (week: string) => format.dateTime(dateOfKey(week), { month: 'numeric', day: 'numeric', timeZone: 'UTC' })
 
   return (
@@ -40,44 +42,50 @@ export function ScoreTrend({ points }: { points: TrendPoint[] }) {
           </span>
         </span>
       </div>
-      <div role="img" aria-label={gap ? t('trendGap', gap) : t('trendChart', { weeks: points.length })} className="relative aspect-[3/1] w-full">
-        <svg viewBox={`0 0 ${box.width} ${box.height}`} aria-hidden="true" className="absolute inset-0 size-full overflow-visible">
-          <g className="stroke-surface-2" strokeWidth={1}>
-            {[0, 1 / 3, 2 / 3, 1].map((y) => (
-              <path key={y} d={`M${plot.left} ${plot.top + y * plot.height}H${plot.left + plot.width}`} />
-            ))}
-          </g>
-          {chart.closed.length > 1 && (
-            <polyline points={polyline(chart.closed, plot)} fill="none" strokeWidth={2.5} strokeLinejoin="round" className="stroke-ink" />
-          )}
-          {chart.open.length > 1 && (
-            <polyline points={polyline(chart.open, plot)} fill="none" strokeWidth={2.5} strokeLinejoin="round" className="stroke-accent" />
-          )}
-        </svg>
-        <span aria-hidden="true" className="absolute left-0 -translate-y-1/2 text-micro text-ink-4 tabular-nums" style={{ top: percent(plot.top, box.height) }}>
-          {chart.top}
-        </span>
-        <span
-          aria-hidden="true"
-          className="absolute left-0 -translate-y-1/2 text-micro text-ink-4 tabular-nums"
-          style={{ top: percent(plot.top + plot.height, box.height) }}
-        >
-          {chart.bottom}
-        </span>
-        {chart.weeks.map((mark, index) => (
-          <span
-            key={mark.week}
-            aria-hidden="true"
-            className={`absolute bottom-0 text-micro text-ink-4 tabular-nums ${
-              index === 0 ? '' : index === chart.weeks.length - 1 ? '-translate-x-full' : '-translate-x-1/2'
-            }`}
-            style={{ left: percent(plot.left + mark.x * plot.width, box.width) }}
-          >
-            {date(mark.week)}
-          </span>
-        ))}
+      <div role="img" aria-label={gapText ?? t('trendChart', { weeks: points.length })} className="flex flex-col gap-1 pl-8">
+        <div className="relative aspect-[3/1] w-full">
+          <svg viewBox={`0 0 ${box.width} ${box.height}`} aria-hidden="true" className="absolute inset-0 size-full overflow-visible">
+            <g className="stroke-surface-2" strokeWidth={1}>
+              {[0, 1 / 3, 2 / 3, 1].map((y) => (
+                <path key={y} d={`M${plot.left} ${plot.top + y * plot.height}H${plot.left + plot.width}`} />
+              ))}
+            </g>
+            {chart.closed.length > 1 && (
+              <polyline points={polyline(chart.closed, plot)} fill="none" strokeWidth={2.5} strokeLinejoin="round" className="stroke-ink" />
+            )}
+            {chart.open.length > 1 && (
+              <polyline points={polyline(chart.open, plot)} fill="none" strokeWidth={2.5} strokeLinejoin="round" className="stroke-accent" />
+            )}
+          </svg>
+          {[
+            { score: chart.top, y: plot.top },
+            { score: chart.bottom, y: plot.top + plot.height },
+          ].map((tick) => (
+            <span
+              key={tick.y}
+              aria-hidden="true"
+              className="absolute right-full mr-1.5 -translate-y-1/2 text-micro whitespace-nowrap text-ink-4 tabular-nums"
+              style={{ top: percent(tick.y, box.height) }}
+            >
+              {tick.score}
+            </span>
+          ))}
+        </div>
+        <div aria-hidden="true" className="relative h-4.5 w-full">
+          {chart.weeks.map((mark, index) => (
+            <span
+              key={mark.week}
+              className={`absolute top-0 text-micro whitespace-nowrap text-ink-4 tabular-nums ${
+                index === 0 ? '' : index === chart.weeks.length - 1 ? '-translate-x-full' : '-translate-x-1/2'
+              }`}
+              style={{ left: percent(plot.left + mark.x * plot.width, box.width) }}
+            >
+              {date(mark.week)}
+            </span>
+          ))}
+        </div>
       </div>
-      {gap && <p className="text-meta text-ink-2">{t('trendGap', gap)}</p>}
+      {gapText && <p className="text-meta text-ink-2">{gapText}</p>}
     </section>
   )
 }

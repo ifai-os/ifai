@@ -1119,6 +1119,7 @@
     "trendOpen": "오픈 웨이트 1위",
     "trendChart": "최근 {weeks}주 동안 비공개 1위와 오픈 웨이트 1위의 점수 추이.",
     "trendGap": "비공개 1위와 오픈 웨이트 1위의 차이가 {from}점에서 {to}점이 되었습니다.",
+    "trendGapSame": "비공개 1위와 오픈 웨이트 1위의 차이는 {to}점으로 그대로입니다.",
     "makers": "제조사별",
     "makerModels": "{count, plural, other {#개}}",
     "makersNote": "톱 {places}에 든 모델 수",

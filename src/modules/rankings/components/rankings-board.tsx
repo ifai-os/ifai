@@ -1,9 +1,10 @@
-import { getTranslations } from 'next-intl/server'
+import { getFormatter, getTranslations } from 'next-intl/server'
 
 import { ButtonLink } from '@/components/button'
-import { LocalTime } from '@/components/local-time'
 import { EmptyState } from '@/components/states/empty-state'
 import type { Locale } from '@/i18n/config'
+import { dateOfKey } from '@/lib/local-time'
+import { shanghaiDate } from '@/lib/shanghai-day'
 
 import { getBoard, getCountedVotes, type PublicArena } from '../data'
 import { boardHref, NEWCOMERS_SHOWN, TOP_SHOWN, voteHref, type BoardFilters } from '../rules'
@@ -31,10 +32,14 @@ type RankingsBoardProps = {
  */
 export async function RankingsBoard({ locale, arena, arenas, filters }: RankingsBoardProps) {
   const t = await getTranslations('rankings')
+  const format = await getFormatter()
   const [board, votes] = await Promise.all([getBoard(arena.id, locale), getCountedVotes(arena.id)])
   const slugOf = (item: PublicArena) => (item.slug === arenas[0]?.slug ? null : item.slug)
   const vote = voteHref(slugOf(arena))
   const placed = board.rows.filter((row) => row.rank !== null)
+  // The snapshot's Shanghai date, like the Monday schedule and the trend's weeks: the same day for every reader.
+  const updated =
+    board.computedAt && format.dateTime(dateOfKey(shanghaiDate(new Date(board.computedAt))), { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
   const priced = placed.flatMap((row) => (row.costUsd ? [{ modelId: row.modelId, name: row.name, costUsd: row.costUsd, score: row.score }] : []))
 
   return (
@@ -45,8 +50,8 @@ export async function RankingsBoard({ locale, arena, arenas, filters }: Rankings
         <ArenaTabs arenas={arenas} current={arena.slug} hrefOf={(item) => boardHref(slugOf(item))} />
         <p className="text-meta text-ink-4">
           {arena.intro}
-          {arena.intro && board.computedAt && ' · '}
-          {board.computedAt && t.rich('updated', { date: () => <LocalTime iso={board.computedAt as string} style="date" /> })}
+          {arena.intro && updated && ' · '}
+          {updated && t.rich('updated', { date: () => <time dateTime={board.computedAt as string}>{updated}</time> })}
         </p>
         {placed.length > 0 ? (
           <div className="flex flex-wrap items-stretch gap-4">

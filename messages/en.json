@@ -1119,6 +1119,7 @@
     "trendOpen": "Best open weights",
     "trendChart": "Weekly scores of the best closed and the best open-weights model over the last {weeks} weeks.",
     "trendGap": "The gap between the best closed and the best open-weights model went from {from} to {to} points.",
+    "trendGapSame": "The gap between the best closed and the best open-weights model stayed at {to} points.",
     "makers": "By maker",
     "makerModels": "{count, plural, one {# model} other {# models}}",
     "makersNote": "Models in the top {places}",
