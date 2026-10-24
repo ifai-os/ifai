@@ -36,7 +36,7 @@ describe('companies and products of a story', () => {
 
 describe('industry tags', () => {
   it('keeps known tags only, at most three', () => {
-    expect(tagsOf(['chips', 'gadgets', 'chips', 'devices', 'llm', 'coding'])).toEqual(['chips', 'devices', 'llm'])
+    expect(tagsOf(['chips', 'gadgets', 'chips', 'hardware', 'llm', 'voice', 'music'])).toEqual(['chips', 'hardware', 'voice'])
     expect(tagsOf(undefined)).toEqual([])
     expect(isStoryTag('on-device')).toBe(true)
   })

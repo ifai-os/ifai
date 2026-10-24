@@ -67,7 +67,7 @@ describe('prompt schemas', () => {
     const structure = {
       kind: 'news',
       category: 'llm',
-      tags: ['llm', 'coding'],
+      tags: ['vibe-coding', 'agents'],
       companies: ['Acme'],
       products: ['Model 2'],
       facts: [{ who: 'Acme', what: 'shipped Model 2', when: 'on Tuesday' }],
@@ -76,7 +76,9 @@ describe('prompt schemas', () => {
     expect(structurePrompt.schema.safeParse(structure).success).toBe(true)
     // Tags come from the fixed list only, at most three.
     expect(structurePrompt.schema.safeParse({ ...structure, tags: ['gadgets'] }).success).toBe(false)
-    expect(structurePrompt.schema.safeParse({ ...structure, tags: ['llm', 'coding', 'agents', 'chips'] }).success).toBe(false)
+    expect(structurePrompt.schema.safeParse({ ...structure, tags: ['vibe-coding', 'agents', 'chips', 'voice'] }).success).toBe(false)
+    // Only the site owner's fourteen of 2026-10-24: not the former「大模型」.
+    expect(structurePrompt.schema.safeParse({ ...structure, tags: ['llm'] }).success).toBe(false)
     expect(structurePrompt.schema.safeParse({ ...structure, category: 'sports' }).success).toBe(false)
     // Only the seven categories of 2026-10-24: not the former「产品更新」.
     expect(structurePrompt.schema.safeParse({ ...structure, category: 'product' }).success).toBe(false)

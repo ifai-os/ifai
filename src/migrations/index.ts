@@ -24,6 +24,7 @@ import * as migration_20261024_041525_admin_log from './20261024_041525_admin_lo
 import * as migration_20261024_125558_daily_story_media from './20261024_125558_daily_story_media';
 import * as migration_20261024_135122_daily_story_tags from './20261024_135122_daily_story_tags';
 import * as migration_20261024_155932_daily_categories from './20261024_155932_daily_categories';
+import * as migration_20261024_181845_daily_tags from './20261024_181845_daily_tags';
 
 export const migrations = [
   {
@@ -154,6 +155,11 @@ export const migrations = [
   {
     up: migration_20261024_155932_daily_categories.up,
     down: migration_20261024_155932_daily_categories.down,
-    name: '20261024_155932_daily_categories'
+    name: '20261024_155932_daily_categories',
+  },
+  {
+    up: migration_20261024_181845_daily_tags.up,
+    down: migration_20261024_181845_daily_tags.down,
+    name: '20261024_181845_daily_tags'
   },
 ];

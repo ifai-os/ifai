@@ -94,7 +94,7 @@ const sampleStories: SampleStory[] = [
     publishedAt: minutesAgo(120),
     heat: 45,
     heatTrend: 'rising',
-    tags: ['coding'],
+    tags: ['vibe-coding'],
     entities: [
       { name: 'Kitecode', kind: 'product' },
       { name: 'Kite Studio', kind: 'company' },
@@ -292,7 +292,7 @@ const sampleStories: SampleStory[] = [
     representativeItemId: 900009,
     publishedAt: minutesAgo(2 * day + 150),
     heat: 12,
-    tags: ['devices'],
+    tags: ['hardware'],
     entities: [{ name: 'Strider Robotics', kind: 'company' }],
     sources: [
       { name: 'Strider Robotics', role: 'original', url: 'https://strider.example/news/learning-by-watching', publishedAt: minutesAgo(2 * day + 240) },

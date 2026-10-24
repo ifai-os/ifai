@@ -299,7 +299,7 @@ describe('a story’s page', () => {
       <StoryDetailView
         story={{
           ...detail,
-          tags: ['devices', 'chips'],
+          tags: ['hardware', 'chips'],
           entities: [
             { name: 'MacBook Pro', kind: 'product', key: 'macbookpro', app: null },
             { name: 'Apple', kind: 'company', key: 'apple', app: { slug: 'apple-intelligence', name: 'Apple Intelligence' } },
@@ -310,8 +310,8 @@ describe('a story’s page', () => {
         signIn={{ google: false, github: false, email: true }}
       />,
     )
-    expect(html).toContain(`href="/en/daily/tag/devices"`)
-    expect(html).toContain(`>${en.tags.devices}`)
+    expect(html).toContain(`href="/en/daily/tag/hardware"`)
+    expect(html).toContain(`>${en.tags.hardware}`)
     expect(html).toContain(`>${en.daily.entityKinds.product}<`)
     expect(html).toContain('href="/en/apps/apple-intelligence"')
     expect(html).toContain('href="/en/daily/topic/apple"')

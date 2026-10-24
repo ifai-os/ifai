@@ -308,9 +308,7 @@
     }
   },
   "tags": {
-    "llm": "大型模型",
-    "agents": "AI 代理",
-    "chips": "晶片與運算",
-    "on-device": "裝置端 AI"
+    "agents": "AI代理",
+    "on-device": "裝置端AI"
   }
 }

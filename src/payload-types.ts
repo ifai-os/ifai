@@ -475,25 +475,19 @@ export interface Story {
    */
   tags?:
     | (
-        | 'llm'
         | 'assistants'
         | 'agents'
-        | 'coding'
+        | 'vibe-coding'
         | 'image'
         | 'video'
-        | 'audio'
-        | 'search'
+        | 'music'
+        | 'voice'
         | 'chips'
         | 'on-device'
-        | 'devices'
-        | 'robotics'
-        | 'driving'
+        | 'hardware'
         | 'health'
         | 'education'
-        | 'finance'
-        | 'enterprise'
         | 'security'
-        | 'policy'
         | 'deals'
       )[]
     | null;
