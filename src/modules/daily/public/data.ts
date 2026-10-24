@@ -16,6 +16,7 @@ import { entityKey, topicOf } from '../entities'
 import { posterVersion, readSnapshot, type PosterSnapshot } from '../poster/snapshot'
 import { DAILY_CACHE_TAG } from '../review/cache'
 import { tagsOf, type StoryTag } from '../tags'
+import { readTopicNames, type TopicName } from '../topic-names'
 import {
   entitiesOf,
   onePerEvent,
@@ -538,6 +539,46 @@ export async function getSavedStories(ids: number[], locale: Locale): Promise<St
     const doc = byId.get(id)
     return doc ? [toItem(doc, locale)] : []
   })
+}
+
+/**
+ * 「我的关注」(docs/specs/daily.md「关注」): one page of the published stories with any of the
+ * tags or about any of the companies and products, newest first. Read fresh, not from the shared
+ * cache, since every member's is different.
+ */
+export async function followedStories({
+  locale,
+  tags,
+  keys,
+  page,
+}: {
+  locale: Locale
+  tags: readonly StoryTag[]
+  keys: readonly string[]
+  page: number
+}): Promise<StoryPage> {
+  const any: Where[] = [...(tags.length ? [{ tags: { in: [...tags] } }] : []), ...(keys.length ? [{ 'entities.key': { in: [...keys] } }] : [])]
+  if (any.length === 0) return { stories: [], total: 0, page, pages: 0 }
+  const result = await (await payload()).find({
+    collection: 'stories',
+    where: { and: [published, { or: any }] },
+    sort: '-publishedAt',
+    page,
+    limit: storiesPerPage,
+    locale: 'all',
+    depth: 1,
+    populate,
+    select,
+    overrideAccess: false,
+  })
+  const docs = result.docs as unknown as RawStory[]
+  return { stories: docs.map((doc) => toItem(doc, locale)), total: result.totalDocs, page, pages: result.totalPages }
+}
+
+/** The names of the companies and products with these keys, as their newest published stories write them. */
+export async function topicNames(keys: readonly string[]): Promise<Map<string, TopicName>> {
+  const { db } = await getDb()
+  return readTopicNames(db, keys)
 }
 
 /** The five hottest events of the last 48 hours, one story each (the newest of its event). */
