@@ -37,6 +37,7 @@ pnpm dev                 # http://localhost:3000
 - 推送到 `main`（合并 PR）→ 部署 `main` 的预览：连长期的 Neon 分支 `preview/main`（构建前先跑迁移），部署完把固定地址 `https://ifai-preview-ifai1.vercel.app` 指向这次部署，所以这个地址总是 `main` 最新的样子。打开 `PRODUCTION_DEPLOY` 之后（见第 3 条）同时部署生产环境。
 - 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
 - PR 关闭或合并 → 删掉它的 Neon 分支。
+- 想给 `main` 的预览加示例数据：Actions → **Seed main preview** → Run workflow（手动运行）。它往 `preview/main` 写入和 CI 冒烟测试一样的示例新闻、应用和 Skill，再清掉 Vercel 的数据缓存，页面马上就能看到。可以重复运行，只覆盖示例本身，不动别的数据。预览没配 R2，示例 Skill 的 Zip 下载不了。
 
 1. Vercel 项目已经建好：团队 `ifai1` 下的 `ifai`，没有连接 Git。不要再导入仓库，也不要在 Vercel 里装 Neon 集成（预览库由 GitHub Actions 建，见下面第 3 条）。
 2. 构建命令写在 `vercel.json`：`pnpm run ci`，即先执行数据库迁移、再构建。构建在 GitHub Actions 的机器上跑，所以迁移也是从那里连 Neon 执行的：生产连 `main` 分支，PR 的预览连自己的 `preview/pr-<编号>` 分支，`main` 的预览连 `preview/main`，都不会碰生产库。

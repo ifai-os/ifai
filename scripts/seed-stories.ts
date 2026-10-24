@@ -1,8 +1,9 @@
 /**
  * Sample stories, and the poster of their day, for local development and the CI smoke tests
  * (tests/e2e/daily.spec.ts). The stories are fictional (sources on .example). Runs only
- * against a database on this machine, so it can never put sample stories on a real site.
- * Safe to run again: stories are matched by slug and overwritten.
+ * against a database on this machine, or main's preview when asked (./seed-target.ts), so it
+ * can never put sample stories on a real site. Safe to run again: stories are matched by slug
+ * and overwritten.
  *
  *   pnpm payload run scripts/seed-stories.ts
  */
@@ -12,11 +13,11 @@ import { sql } from '@payloadcms/db-postgres/drizzle'
 import { getPayload } from 'payload'
 
 import type { Story } from '../src/payload-types'
-import { databaseUrl } from '../src/lib/db/url'
 import { shanghaiDate } from '../src/lib/shanghai-day'
 import { appMentions } from '../src/modules/apps/schema'
 import { generatePoster } from '../src/modules/daily/poster/desk'
 import { ReviewError } from '../src/modules/daily/review/actions'
+import { assertSeedTarget } from './seed-target'
 
 type Text = Pick<Story, 'title' | 'summary'> & Partial<Pick<Story, 'tryIt'>>
 
@@ -176,22 +177,7 @@ const sampleStories: SampleStory[] = [
   },
 ]
 
-const localHosts = new Set(['localhost', '127.0.0.1', '[::1]'])
-
-function assertLocalDatabase() {
-  let host = ''
-  try {
-    host = new URL(databaseUrl()).hostname
-  } catch {
-    // Reported below.
-  }
-  if (!localHosts.has(host)) {
-    console.error(`Refusing to add sample stories: the database is on "${host || 'unknown'}", not this machine.`)
-    process.exit(1)
-  }
-}
-
-assertLocalDatabase()
+assertSeedTarget('sample stories')
 const payload = await getPayload({ config })
 
 for (const story of sampleStories) {

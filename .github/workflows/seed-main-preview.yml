@@ -1,0 +1,92 @@
+name: Seed main preview
+
+# Fills main's preview (https://ifai-preview-ifai1.vercel.app, see deploy.yml) with the sample
+# stories, apps and Skills that CI's smoke tests use, so its pages have something to show.
+# Run it by hand: Actions → Seed main preview → Run workflow. Safe to run again: the scripts
+# overwrite their own samples and leave everything else alone.
+# It writes only to the Neon branch preview/main. It never creates that branch (deploy.yml does,
+# when it deploys main) and never connects to production.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: seed-main-preview
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # Same project as deploy.yml; repository variables override them there too.
+  VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID || 'team_5ej7Y4L2sAmq0AqIlyXG4sHI' }}
+  VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID || 'prj_75LhQzJ83dQTRSSvmxhosJkobFGh' }}
+  VERCEL_CLI: vercel@63.1.2
+  NEON_BRANCH: preview/main
+
+jobs:
+  seed:
+    name: Seed main preview
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      # Only for loading the Payload config on this machine; the preview's own secrets stay in Vercel.
+      PAYLOAD_SECRET: seed-only-payload-secret-not-used-anywhere-else
+      BETTER_AUTH_SECRET: seed-only-better-auth-secret-not-used-anywhere-else
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      # The samples go with main's code and schema, whichever branch the run was started from.
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Check that ${{ env.NEON_BRANCH }} exists
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          branches=$(curl -fsS -H "Authorization: Bearer $NEON_API_KEY" -H 'Accept: application/json' \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+          if ! jq -e --arg name "$NEON_BRANCH" 'any(.branches[]; .name == $name)' <<<"$branches" >/dev/null; then
+            echo "::error::Neon branch $NEON_BRANCH does not exist yet. deploy.yml creates it the next time main is deployed."
+            exit 1
+          fi
+
+      # The branch exists, so this only looks up its connection string.
+      - name: Connect to ${{ env.NEON_BRANCH }}
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: ${{ env.NEON_BRANCH }}
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Same order as CI: stories first, so the apps seed matches the stories that mention the sample
+      # apps. SEED_PREVIEW_MAIN lets the scripts write to this one remote database (scripts/seed-target.ts).
+      - name: Sample stories, apps and Skills
+        env:
+          DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
+          SEED_PREVIEW_MAIN: '1'
+        run: |
+          pnpm payload run scripts/seed-stories.ts
+          pnpm payload run scripts/seed-apps.ts
+          pnpm payload run scripts/seed-skills.ts
+
+      # Pages keep what they read for up to an hour, and the samples were written from here, so the
+      # site never heard about them. Clearing Vercel's data cache makes them show up right away.
+      # (It is the whole project's cache: harmless, it refills on the next visits.)
+      - name: Clear Vercel's data cache
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --global "$VERCEL_CLI"
+          vercel cache purge --type data --yes --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"

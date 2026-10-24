@@ -1,17 +1,18 @@
 /**
  * Sample Skills for local development and the CI smoke tests (tests/e2e/resources.spec.ts).
  * The Skills are fictional and harmless (Markdown only, no scripts). Runs only against a
- * database on this machine, so it can never put sample Skills on a real site. Safe to run
- * again: sample Skills are matched by slug and rebuilt with their versions.
+ * database on this machine, or main's preview when asked (./seed-target.ts), so it can never put
+ * sample Skills on a real site. Safe to run again: sample Skills are matched by slug and rebuilt
+ * with their versions.
  *
  *   pnpm payload run scripts/seed-skills.ts
  */
 import config from '@payload-config'
 import { getPayload, type Payload } from 'payload'
 
-import { databaseUrl } from '../src/lib/db/url'
 import type { Skill } from '../src/payload-types'
 import { buildZip } from '../src/modules/resources/package/zip'
+import { assertSeedTarget } from './seed-target'
 
 type Texts = Partial<Pick<Skill, 'name' | 'tagline' | 'example' | 'notes' | 'ownerNotes'>> & {
   capabilities?: { title: string; detail?: string }[]
@@ -142,21 +143,6 @@ const samples: SampleSkill[] = [
   },
 ]
 
-const localHosts = new Set(['localhost', '127.0.0.1', '[::1]'])
-
-function assertLocalDatabase() {
-  let host = ''
-  try {
-    host = new URL(databaseUrl()).hostname
-  } catch {
-    // Reported below.
-  }
-  if (!localHosts.has(host)) {
-    console.error(`Refusing to add sample Skills: the database is on "${host || 'unknown'}", not this machine.`)
-    process.exit(1)
-  }
-}
-
 function skillMd(sample: SampleSkill, version: string): string {
   return [
     '---',
@@ -263,7 +249,7 @@ async function seedSkill(payload: Payload, sample: SampleSkill, tagIds: Map<stri
   console.log(`${sample.slug}: ${sample.versions.length} version(s)`)
 }
 
-assertLocalDatabase()
+assertSeedTarget('sample Skills')
 const payload = await getPayload({ config })
 
 // The two hosts verified first get sample directories when the owner has not filled them in yet.

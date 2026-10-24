@@ -1,10 +1,10 @@
 /**
  * Sample apps for local development and the CI smoke tests (tests/e2e/apps.spec.ts), with a
  * few weeks of heat scored the way the daily job scores it. The apps are fictional (websites
- * on .example). Runs only against a database on this machine, so it can never put sample apps
- * on a real site. Safe to run again: apps are matched by slug and overwritten, and their heat
- * is written anew. Run it after scripts/seed-stories.ts to match the sample stories that
- * mention the apps.
+ * on .example). Runs only against a database on this machine, or main's preview when asked
+ * (./seed-target.ts), so it can never put sample apps on a real site. Safe to run again: apps
+ * are matched by slug and overwritten, and their heat is written anew. Run it after
+ * scripts/seed-stories.ts to match the sample stories that mention the apps.
  *
  *   pnpm payload run scripts/seed-apps.ts
  */
@@ -14,12 +14,12 @@ import { inArray } from '@payloadcms/db-postgres/drizzle'
 import { getPayload } from 'payload'
 
 import type { App } from '../src/payload-types'
-import { databaseUrl } from '../src/lib/db/url'
 import { shanghaiDate } from '../src/lib/shanghai-day'
 import { scoreApps, type HeatInput } from '../src/modules/apps/heat'
 import { addDays, shanghaiMidnight } from '../src/modules/apps/metrics/days'
 import { syncMentions } from '../src/modules/apps/metrics/mentions'
 import { appMetricsDaily } from '../src/modules/apps/schema'
+import { assertSeedTarget } from './seed-target'
 
 type Profile = Partial<Pick<App, 'tagline' | 'description' | 'features' | 'faqs' | 'tags'>>
 
@@ -168,22 +168,7 @@ const sampleFigures: Record<string, (ago: number) => Figures> = {
   'orbit-notes': (ago) => ({ trancoRank: null, clicks: 5 - ago, mentions: 1 }),
 }
 
-const localHosts = new Set(['localhost', '127.0.0.1', '[::1]'])
-
-function assertLocalDatabase() {
-  let host = ''
-  try {
-    host = new URL(databaseUrl()).hostname
-  } catch {
-    // Reported below.
-  }
-  if (!localHosts.has(host)) {
-    console.error(`Refusing to add sample apps: the database is on "${host || 'unknown'}", not this machine.`)
-    process.exit(1)
-  }
-}
-
-assertLocalDatabase()
+assertSeedTarget('sample apps')
 const payload = await getPayload({ config })
 
 const categories = await payload.find({ collection: 'app-categories', limit: 100, depth: 0 })
