@@ -148,6 +148,11 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
     ],
     circleReactions: [{ postId: 40, circleId: 20, reaction: 'rocket', createdAt: day('2026-10-23') }],
     circlePostReports: [{ postId: 41, circleId: 22, reason: 'abuse', createdAt: day('2026-10-22'), resolvedAt: day('2026-10-23') }],
+    circleComments: [
+      { id: 50, postId: 42, circleId: 20, parentId: null, body: 'Nice one', lang: 'en', status: 'shown', createdAt: day('2026-10-23') },
+      { id: 51, postId: 42, circleId: 20, parentId: 49, body: '同意', lang: 'zh-Hans', status: 'hidden', createdAt: day('2026-10-22') },
+    ],
+    circleCommentReports: [{ commentId: 60, postId: 43, circleId: 21, reason: 'spam', createdAt: day('2026-10-22'), resolvedAt: null }],
     subscriber: {
       id: 5,
       email: 'reader@example.com',
@@ -279,6 +284,13 @@ describe('shapeMemberExport', () => {
     expect(file.circlePostReports).toEqual([
       { post: 41, circle: { id: 22, name: null, url: null }, reason: 'abuse', reportedAt: '2026-10-22T08:00:00.000Z', resolvedAt: '2026-10-23T08:00:00.000Z' },
     ])
+    expect(file.circleComments).toEqual([
+      { id: 50, post: 42, circle: refs.circle.get(20), reply: false, text: 'Nice one', language: 'en', status: 'shown', commentedAt: '2026-10-23T08:00:00.000Z' },
+      { id: 51, post: 42, circle: refs.circle.get(20), reply: true, text: '同意', language: 'zh-Hans', status: 'hidden', commentedAt: '2026-10-22T08:00:00.000Z' },
+    ])
+    expect(file.circleCommentReports).toEqual([
+      { comment: 60, post: 43, circle: refs.circle.get(21), reason: 'spam', reportedAt: '2026-10-22T08:00:00.000Z', resolvedAt: null },
+    ])
   })
 
   it('includes the daily email subscription and its sends, or null when there is none', () => {
@@ -347,6 +359,8 @@ describe('readExportRefs', () => {
       circlePosts: [],
       circleReactions: [],
       circlePostReports: [],
+      circleComments: [],
+      circleCommentReports: [],
     })
     const found = await readExportRefs({ find } as unknown as Payload, empty, 'en', site)
     expect(find).not.toHaveBeenCalled()

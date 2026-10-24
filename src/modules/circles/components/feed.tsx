@@ -85,9 +85,9 @@ export function Feed() {
       </div>
 
       <ReportDialog
-        post={reporting}
+        target={reporting && { kind: 'post', id: reporting.id }}
         onClose={() => setReporting(null)}
-        onReported={(id) => setReported((current) => new Set(current).add(id))}
+        onReported={({ id }) => setReported((current) => new Set(current).add(id))}
       />
     </section>
   )

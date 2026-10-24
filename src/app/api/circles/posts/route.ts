@@ -6,6 +6,7 @@ import { detectLanguage } from '@/lib/i18n/detect'
 import { isCrossSite } from '@/lib/same-origin'
 import { changed, fail, notLaunched, reply } from '@/modules/circles/api'
 import { createPost, deletePost, postView } from '@/modules/circles/data'
+import { withLinkCards } from '@/modules/circles/link-cards'
 import { circlesLaunched, shownCircleIds } from '@/modules/circles/public'
 import { parseId, parsePostInput, type CirclesChange } from '@/modules/circles/rules'
 
@@ -34,7 +35,8 @@ export async function POST(request: NextRequest) {
   const result = await createPost(payload, { circleId: circle, userId, body, lang, images, videoId: video })
   if (result.status === 'daily-limit') return fail('daily-limit', 429)
   if (result.status !== 'created') return fail(result.status, 422)
-  const [change, post] = await Promise.all([changed(payload, circleIds, userId), postView(payload, result.postId, circleIds, userId)])
+  const [change, created] = await Promise.all([changed(payload, circleIds, userId), postView(payload, result.postId, circleIds, userId)])
+  const [post] = created ? await withLinkCards([created], locale) : []
   const response: CirclesChange = { ...change, ...(post && { post }) }
   return reply(response)
 }

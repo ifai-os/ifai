@@ -2,15 +2,22 @@ import { describe, expect, it } from 'vitest'
 
 import {
   circleRules,
+  commentRules,
+  excerpt,
   hotCircleIds,
   hotScore,
   linkify,
   mediaRules,
+  parseCommentInput,
   parseMembershipInput,
   parsePostInput,
   parseReactionInput,
   parseReportInput,
   parseTab,
+  postLocale,
+  postPath,
+  postTitleValues,
+  siteLinks,
   sortReactions,
   toggleReaction,
   type ReactionView,
@@ -65,8 +72,11 @@ describe('circles: post input', () => {
     expect(parseReactionInput({ post: 9, reaction: 'rocket', on: true })).toEqual({ post: 9, reaction: 'rocket', on: true })
     expect(parseReactionInput({ post: 9, reaction: 'thumbs', on: true })).toBeNull()
     expect(parseReactionInput({ post: 9, reaction: 'like' })).toBeNull()
-    expect(parseReportInput({ post: 9, reason: 'offTopic' })).toEqual({ post: 9, reason: 'offTopic' })
+    expect(parseReportInput({ post: 9, reason: 'offTopic' })).toEqual({ target: { kind: 'post', id: 9 }, reason: 'offTopic' })
+    expect(parseReportInput({ comment: 31, reason: 'spam' })).toEqual({ target: { kind: 'comment', id: 31 }, reason: 'spam' })
     expect(parseReportInput({ post: 9, reason: 'boring' })).toBeNull()
+    expect(parseReportInput({ post: 9, comment: 31, reason: 'spam' })).toBeNull()
+    expect(parseReportInput({ reason: 'spam' })).toBeNull()
   })
 
   it('reads the tab from the address: 推荐 when there is none', () => {
@@ -85,7 +95,7 @@ describe('circles: 推荐 and 热议', () => {
     expect(hotScore({ people: 3, hours: 30 })).toBeLessThan(hotScore({ people: 3, hours: 1 }))
     // A day-old post needs many more people than a new one.
     expect(hotScore({ people: 10, hours: 24 })).toBeLessThan(hotScore({ people: 1, hours: 1 }))
-    expect(hotScore({ people: 0, comments: 1, hours: 2 })).toBe(hotScore({ people: 2, hours: 2 }))
+    expect(hotScore({ people: 0, commenters: 1, hours: 2 })).toBe(hotScore({ people: 2, hours: 2 }))
     expect(hotScore({ people: 0, hours: -1 })).toBe(fresh)
   })
 
@@ -170,5 +180,90 @@ describe('circles: links in posts', () => {
     ])
     expect(linkify('<script>alert(1)</script>')).toEqual([{ text: '<script>alert(1)</script>' }])
     expect(linkify('')).toEqual([])
+  })
+})
+
+describe('circles: comments', () => {
+  it('reads a comment or a reply, cleaned like posts', () => {
+    expect(parseCommentInput({ post: 45, body: '  好用\u200b！ ', locale: 'zh-Hans' })).toEqual({
+      ok: true,
+      value: { post: 45, body: '好用！', locale: 'zh-Hans', replyTo: null },
+    })
+    expect(parseCommentInput({ post: 45, body: 'Thanks', locale: 'en', replyTo: 12 })).toMatchObject({ ok: true, value: { replyTo: 12 } })
+    expect(parseCommentInput({ post: 45, body: 'Thanks', locale: 'en', replyTo: null })).toMatchObject({ ok: true, value: { replyTo: null } })
+  })
+
+  it('turns down what is not a comment', () => {
+    const long = 'あ'.repeat(commentRules.maxBody + 1)
+    expect(parseCommentInput({ body: 'x', locale: 'en' })).toEqual({ ok: false, error: 'invalid-post' })
+    expect(parseCommentInput({ post: '45', body: 'x', locale: 'en', replyTo: 'first' })).toEqual({ ok: false, error: 'invalid-reply' })
+    expect(parseCommentInput({ post: 45, body: 'x', locale: 'en', replyTo: 0 })).toEqual({ ok: false, error: 'invalid-reply' })
+    expect(parseCommentInput({ post: 45, body: ' \n ', locale: 'en' })).toEqual({ ok: false, error: 'empty-body' })
+    expect(parseCommentInput({ post: 45, body: long, locale: 'ja' })).toEqual({ ok: false, error: 'body-too-long' })
+    expect(parseCommentInput({ post: 45, body: long.slice(1), locale: 'ja' })).toMatchObject({ ok: true })
+    expect(parseCommentInput({ post: 45, body: 'x', locale: 'fr' })).toEqual({ ok: false, error: 'invalid-locale' })
+    expect(parseCommentInput(null)).toEqual({ ok: false, error: 'invalid-post' })
+  })
+
+  it('counts each commenter once in 推荐', () => {
+    // Two people commenting weigh as four reactions.
+    expect(hotScore({ people: 1, commenters: 2, hours: 5 })).toBe(hotScore({ people: 5, hours: 5 }))
+    expect(hotScore({ people: 1, commenters: 2, hours: 5 })).toBeGreaterThan(hotScore({ people: 1, commenters: 1, hours: 5 }))
+  })
+})
+
+describe('circles: link cards', () => {
+  const origin = 'https://ifai.io'
+
+  it('finds apps and Skills on IFAI, with or without the language prefix, each once', () => {
+    const body = [
+      'https://ifai.io/apps/cursor',
+      'https://ifai.io/zh-hans/resources/skills/frontend-design/v/1.2.0',
+      'https://ifai.io/ja/apps/cursor/',
+      'https://ifai.io/resources/skills/frontend-design?tab=files#install',
+      'https://ifai.io/ko/apps/notion',
+    ].join(' 和 ')
+    expect(siteLinks(body, origin)).toEqual([
+      { kind: 'app', slug: 'cursor' },
+      { kind: 'skill', slug: 'frontend-design' },
+      { kind: 'app', slug: 'notion' },
+    ])
+  })
+
+  it('leaves other sites and other pages as plain links', () => {
+    expect(siteLinks('https://example.com/apps/cursor https://ifai.io.evil.com/apps/x http://ifai.io:8080/apps/y', origin)).toEqual([])
+    expect(siteLinks('https://ifai.io/apps https://ifai.io/apps/category/coding https://ifai.io/fr/apps/x https://ifai.io/apps/Cursor', origin)).toEqual([])
+    expect(siteLinks('https://ifai.io/daily/some-story https://ifai.io/resources/skills/x/files', origin)).toEqual([])
+    expect(siteLinks('https://ifai.io/apps/cursor', 'not a url')).toEqual([])
+  })
+
+  it('looks up a few links at most', () => {
+    const body = Array.from({ length: 15 }, (_, index) => `https://ifai.io/apps/app-${index}`).join(' ')
+    expect(siteLinks(body, origin)).toHaveLength(10)
+  })
+})
+
+describe('circles: a post’s page', () => {
+  it('is canonical in the language the post is written in, English when that is none of the site’s', () => {
+    expect(postPath(45)).toBe('/circles/p/45')
+    expect(postLocale({ lang: 'ja' })).toBe('ja')
+    expect(postLocale({ lang: 'zh-Hant' })).toBe('zh-Hant')
+    expect(postLocale({ lang: 'und' })).toBe('en')
+  })
+
+  it('is titled with the start of the text, or where it was posted when it has none', () => {
+    expect(postTitleValues({ body: '这周用同一套提示词跑了不同风格的插画，最喜欢第三张的配色。附上参数，欢迎一起调。' }, '半格', 'AI 绘画')).toEqual({
+      name: '半格',
+      circle: 'AI 绘画',
+      excerpt: '这周用同一套提示词跑了不同风格的插画，最喜欢第三张的配色。附…',
+      text: 'yes',
+    })
+    expect(postTitleValues({ body: '' }, '半格', 'AI 绘画')).toMatchObject({ text: 'no' })
+  })
+
+  it('cuts text on one line, by characters rather than UTF-16 units', () => {
+    expect(excerpt('第一行\n\n  第二行  ', 60)).toBe('第一行 第二行')
+    expect(excerpt('🎨'.repeat(5), 3)).toBe('🎨🎨🎨…')
+    expect(excerpt('short', 5)).toBe('short')
   })
 })

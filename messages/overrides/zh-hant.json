@@ -307,8 +307,11 @@
     "failed": "動態沒有載入出來。",
     "errors": {
       "imagesGone": "有圖片已經不在了，移除後重新加入。",
-      "videoGone": "這個影片已經不在了，移除後重新加入。"
-    }
+      "videoGone": "這個影片已經不在了，移除後重新加入。",
+      "replyGone": "要回覆的評論已經不在了。"
+    },
+    "repliesFailed": "回覆沒有載入出來，再試一次。",
+    "commentsFailed": "評論沒有載入出來。"
   },
   "legal": {
     "privacy": {

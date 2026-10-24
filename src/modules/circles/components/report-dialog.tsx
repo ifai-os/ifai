@@ -6,14 +6,16 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon'
 
-import { reportReasons, type PostView, type ReportReason } from '../rules'
-import { useCircles } from './circles-provider'
+import { reportReasons, type ReportReason, type ReportTarget } from '../rules'
+import { useCirclesSession } from './circles-session'
 
-/** 「举报」: why, then a thank-you. Opens for one post at a time. */
-export function ReportDialog({ post, onClose, onReported }: { post: PostView | null; onClose: () => void; onReported: (id: number) => void }) {
+type ReportDialogProps = { target: ReportTarget | null; onClose: () => void; onReported: (target: ReportTarget) => void }
+
+/** 「举报」: why, then a thank-you. Opens for one post or comment at a time. */
+export function ReportDialog({ target, onClose, onReported }: ReportDialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
-  const open = post !== null
+  const open = target !== null
 
   useEffect(() => {
     const dialog = ref.current
@@ -29,15 +31,16 @@ export function ReportDialog({ post, onClose, onReported }: { post: PostView | n
       onClose={onClose}
       className="m-auto w-[calc(100%-32px)] max-w-90 overflow-visible rounded-dialog bg-overlay p-0 text-ink shadow-float backdrop:bg-scrim"
     >
-      {post && <ReportForm key={post.id} post={post} titleId={titleId} onClose={onClose} onReported={onReported} />}
+      {target && <ReportForm key={`${target.kind}-${target.id}`} target={target} titleId={titleId} onClose={onClose} onReported={onReported} />}
     </dialog>
   )
 }
 
-function ReportForm({ post, titleId, onClose, onReported }: { post: PostView; titleId: string; onClose: () => void; onReported: (id: number) => void }) {
+function ReportForm({ target, titleId, onClose, onReported }: Omit<ReportDialogProps, 'target'> & { target: ReportTarget; titleId: string }) {
   const t = useTranslations('circles')
   const states = useTranslations('states')
-  const { report } = useCircles()
+  const { report } = useCirclesSession()
+  const comment = target.kind === 'comment'
   const [reason, setReason] = useState<ReportReason | null>(null)
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'failed'>('idle')
 
@@ -45,15 +48,15 @@ function ReportForm({ post, titleId, onClose, onReported }: { post: PostView; ti
     event.preventDefault()
     if (!reason) return
     setState('sending')
-    const ok = await report(post.id, reason)
+    const ok = await report(target, reason)
     setState(ok ? 'done' : 'failed')
-    if (ok) onReported(post.id)
+    if (ok) onReported(target)
   }
 
   return (
     <div className="relative flex flex-col gap-3 p-5">
       <h2 id={titleId} className="pr-8 text-title font-semibold">
-        {t('reportTitle')}
+        {comment ? t('reportCommentTitle') : t('reportTitle')}
       </h2>
       {state === 'done' ? (
         <>
@@ -66,7 +69,7 @@ function ReportForm({ post, titleId, onClose, onReported }: { post: PostView; ti
         </>
       ) : (
         <form onSubmit={send} className="flex flex-col gap-3">
-          <p className="text-meta text-ink-3">{t('reportBody')}</p>
+          <p className="text-meta text-ink-3">{comment ? t('reportCommentBody') : t('reportBody')}</p>
           <fieldset className="flex flex-col">
             <legend className="pb-1 text-meta font-medium text-ink-2">{t('reportReason')}</legend>
             {reportReasons.map((value) => (
@@ -79,7 +82,7 @@ function ReportForm({ post, titleId, onClose, onReported }: { post: PostView; ti
                   onChange={() => setReason(value)}
                   className="size-4 accent-ink"
                 />
-                {t(`reasons.${value}`)}
+                {comment && value === 'offTopic' ? t('offTopicComment') : t(`reasons.${value}`)}
               </label>
             ))}
           </fieldset>

@@ -87,6 +87,11 @@ describe('admin log: endpoint bodies and actions', () => {
       params: { postId: '9' },
     })
     expect(endpointAction('circles', '/:id/posts/:postId', { id: '2', postId: '9' }, { keep: true })?.action).toBe('circles:posts/keep')
+    expect(endpointAction('circles', '/:id/comments/:commentId', { id: '2', commentId: '31' }, { status: 'hidden' })).toEqual({
+      action: 'circles:comments/hidden',
+      params: { commentId: '31' },
+    })
+    expect(endpointAction('circles', '/:id/comments/:commentId', { id: '2', commentId: '31' }, { keep: true })?.action).toBe('circles:comments/keep')
   })
 
   it('logs nothing for endpoints that write nothing', () => {
@@ -102,6 +107,7 @@ describe('admin log: endpoint bodies and actions', () => {
       'apps:/:id/mentions/:mentionId': [{ removed: true }, { removed: false }],
       'app-submissions:/:id/handling': [{ action: 'draft' }, { action: 'duplicate' }],
       'circles:/:id/posts/:postId': [{ status: 'hidden' }, { status: 'shown' }, { keep: true }],
+      'circles:/:id/comments/:commentId': [{ status: 'hidden' }, { status: 'shown' }, { keep: true }],
     }
     const reviewActions = ['edit', 'publish', 'correct', 'reject', 'later', 'withdraw', 'merge', 'keep-separate', 'rewrite']
     const actions: string[] = []
@@ -111,7 +117,7 @@ describe('admin log: endpoint bodies and actions', () => {
         if (!endpoint.custom?.adminLog) continue
         const params = endpoint.path.includes(':action')
           ? reviewActions.map((action) => ({ id: '1', action, reviewId: '2', mentionId: '3' }))
-          : [{ id: '1', reviewId: '2', mentionId: '3', postId: '4' }]
+          : [{ id: '1', reviewId: '2', mentionId: '3', postId: '4', commentId: '5' }]
         for (const routeParams of params) {
           for (const body of bodies[`${collection.slug}:${endpoint.path}`] ?? [{}]) {
             const described = endpointAction(collection.slug, endpoint.path, routeParams, body)

@@ -261,6 +261,24 @@ async function findAppsInOrder(ids: number[]): Promise<RawApp[]> {
 
 const findAppsByIds = cached(findAppsInOrder, ['apps-by-id'], cacheOptions)
 
+const findAppsBySlugs = cached(
+  async (slugs: string[]) => {
+    const { docs } = await (await payload()).find({
+      collection: 'apps',
+      where: { and: [published, { slug: { in: slugs } }] },
+      limit: slugs.length,
+      locale: 'all',
+      depth: 1,
+      select: listSelect,
+      populate,
+      overrideAccess: false,
+    })
+    return docs as unknown as RawApp[]
+  },
+  ['apps-by-slug'],
+  cacheOptions,
+)
+
 const findApp = cached(
   async (slug: string) => {
     const { docs } = await (await payload()).find({
@@ -457,6 +475,16 @@ export async function searchApps({
 export async function getSavedApps(ids: number[], locale: Locale): Promise<HeatedApp[]> {
   const [docs, latest, categories] = await Promise.all([findAppsInOrder(ids), loadLatestHeat(), categoryMap(locale)])
   return docs.map((doc) => withHeat(doc, locale, categories, latest))
+}
+
+/**
+ * Published apps by slug, for cards elsewhere on IFAI (a circle post that links one,
+ * docs/specs/circles.md rule 17); slugs with no published app are left out.
+ */
+export async function getAppsBySlugs(slugs: string[], locale: Locale): Promise<AppListItem[]> {
+  if (slugs.length === 0) return []
+  const [docs, categories] = await Promise.all([findAppsBySlugs([...new Set(slugs)].sort()), categoryMap(locale)])
+  return docs.map((doc) => toListItem(doc, locale, categories))
 }
 
 /** Where「打开网站」goes: the published app's id and website; null when there is no such app or no usable website. */

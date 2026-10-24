@@ -1,19 +1,14 @@
 'use client'
 
-import { useLocale, useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
-import { SignInDialog } from '@/components/auth/sign-in-dialog'
-import { loadTimeoutMs } from '@/components/states/timing'
 import type { Locale } from '@/i18n/config'
 import { useRouter } from '@/i18n/navigation'
-import { authClient } from '@/lib/auth/client'
-import type { AuthProviders } from '@/lib/auth/providers'
 
 import {
   parseTab,
-  toggleReaction,
   type CircleView,
   type CirclesChange,
   type CirclesError,
@@ -21,11 +16,11 @@ import {
   type FeedPage,
   type FeedTab,
   type PostView,
-  type Reaction,
   type ReactionView,
-  type ReportReason,
   type VideoView,
 } from '../rules'
+import { json, request, useCirclesSession } from './circles-session'
+import { PostActionsContext, useReact } from './post-actions'
 
 type Status = 'loading' | 'ready' | 'failed'
 
@@ -46,19 +41,10 @@ export type VideoResult = { ok: true; video: VideoView } | { ok: false; error: '
 const uploadTimeoutMs = 60_000
 const videoTimeoutMs = 30_000
 
-/** What a visitor pressed before being asked to sign in: it names the dialog. */
-type SignInReason = 'join' | 'post' | 'react'
-
-type CirclesContextValue = {
-  circles: CircleView[]
-  byId: ReadonlyMap<number, CircleView>
+type CirclesContextValue = ReturnType<typeof useCirclesSession> & {
   overview: CirclesOverview
   /** The circles the member joined; empty for a visitor and until the first page arrives. */
   joined: number[]
-  signedIn: boolean
-  /** The session is still being read: buttons wait. */
-  sessionPending: boolean
-  member: { id: string; name: string } | null
   tab: FeedTab
   /** The circle the feed is narrowed to (?circle=<slug>), when it is one readers can see. */
   circle: CircleView | null
@@ -67,8 +53,6 @@ type CirclesContextValue = {
   hasMore: boolean
   loadingMore: boolean
   moreFailed: boolean
-  /** When the feed was loaded, for「3 小时前」. */
-  loadedAt: number
   setTab: (tab: FeedTab) => void
   loadMore: () => void
   retry: () => void
@@ -79,10 +63,6 @@ type CirclesContextValue = {
   uploadImage: (file: Blob) => Promise<UploadResult>
   /** The card for a pasted video link. */
   lookUpVideo: (url: string) => Promise<VideoResult>
-  remove: (postId: number) => Promise<boolean>
-  react: (post: PostView, reaction: Reaction, on: boolean) => void
-  report: (postId: number, reason: ReportReason) => Promise<boolean>
-  askToSignIn: (reason: SignInReason) => void
 }
 
 const CirclesContext = createContext<CirclesContextValue | null>(null)
@@ -97,43 +77,25 @@ export function useCircles(): CirclesContextValue {
 /** ?join=<slug>: signing in from「加入」comes back with it, and the circle is joined. */
 const joinParam = 'join'
 
-async function request<T>(url: string, init?: RequestInit): Promise<{ status: number; data: T | null; error?: CirclesError }> {
-  const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(loadTimeoutMs), ...init }).catch(() => null)
-  if (!response) return { status: 0, data: null }
-  const data = (await response.json().catch(() => null)) as (T & { error?: CirclesError }) | null
-  return response.ok && data ? { status: response.status, data } : { status: response.status, data: null, error: data?.error }
-}
-
-const json = (body: object, method = 'POST'): RequestInit => ({
-  method,
-  headers: { 'content-type': 'application/json' },
-  body: JSON.stringify(body),
-})
-
 type CirclesProviderProps = {
-  circles: CircleView[]
   /** The numbers the page was rendered with; the first page of the feed brings fresh ones. */
   overview: CirclesOverview
-  signIn: AuthProviders
   children: ReactNode
 }
 
 /**
  * The circles page (docs/specs/circles.md): the feed, the circles' numbers and the reader's
- * circles, read in the browser. The tab and the circle live in the address (?tab=latest,
- * ?circle=ai-art), so they survive a reload and a shared link. A visitor who presses「加入」
- * gets the sign-in dialog and comes back with ?join=<slug>, which joins the circle.
+ * circles, read in the browser, inside the CirclesSessionProvider. The tab and the circle live
+ * in the address (?tab=latest, ?circle=ai-art), so they survive a reload and a shared link. A
+ * visitor who presses「加入」gets the sign-in dialog and comes back with ?join=<slug>, which joins the circle.
  */
-export function CirclesProvider({ circles, overview: initialOverview, signIn, children }: CirclesProviderProps) {
-  const t = useTranslations('circles')
+export function CirclesProvider({ overview: initialOverview, children }: CirclesProviderProps) {
   const locale = useLocale() as Locale
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { data: session, isPending } = authClient.useSession()
-  const signedIn = Boolean(session?.user)
-  const member = session?.user ? { id: session.user.id, name: session.user.name ?? '' } : null
+  const session = useCirclesSession()
+  const { circles, signedIn, sessionPending: isPending, member, askToSignIn } = session
 
-  const byId = useMemo(() => new Map(circles.map((circle) => [circle.id, circle])), [circles])
   const slug = searchParams.get('circle')
   const circle = (slug && circles.find((item) => item.slug === slug)) || null
   // 我的圈子 is every circle the reader joined; inside one circle it is just 推荐.
@@ -146,19 +108,17 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
   const [failedKey, setFailedKey] = useState<string | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
   const [moreFailed, setMoreFailed] = useState(false)
-  const [signInReason, setSignInReason] = useState<SignInReason | null>(null)
-  const [returnTo, setReturnTo] = useState('')
   /** Only the newest first-page request's answer is shown. */
   const latest = useRef(0)
 
   const feedUrl = useCallback(
     (cursor: number | null) => {
-      const params = new URLSearchParams({ tab })
+      const params = new URLSearchParams({ tab, locale })
       if (circle) params.set('circle', String(circle.id))
       if (cursor) params.set('cursor', String(cursor))
       return `/api/circles/feed?${params}`
     },
-    [tab, circle],
+    [tab, circle, locale],
   )
 
   // The feed on screen is the one for this tab, circle and reader; until it arrives, the skeleton.
@@ -198,8 +158,7 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
       if (!signedIn) {
         const url = new URL(window.location.href)
         url.searchParams.set(joinParam, target.slug)
-        setReturnTo(url.pathname + url.search)
-        setSignInReason('join')
+        askToSignIn('join', url.pathname + url.search)
         return false
       }
       // Shown at once; put back if the server says no.
@@ -209,7 +168,7 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
       else setJoined((current) => (wanted ? current.filter((id) => id !== target.id) : [...new Set([...current, target.id])]))
       return Boolean(data)
     },
-    [isPending, signedIn, applyChange],
+    [isPending, signedIn, applyChange, askToSignIn],
   )
 
   // Once the session is known, and again on signing in or out or changing the tab or circle:
@@ -255,11 +214,6 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
       return { ...shown, posts: [...shown.posts, ...data.posts.filter((post) => !seen.has(post.id))], next: data.next }
     })
   }, [next, loadingMore, feedUrl, key])
-
-  const askToSignIn = useCallback((reason: SignInReason) => {
-    setReturnTo(window.location.pathname + window.location.search)
-    setSignInReason(reason)
-  }, [])
 
   const publish = useCallback(
     async (circleId: number, body: string, media: PostMedia): Promise<PublishResult> => {
@@ -331,48 +285,21 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
     [setPosts],
   )
 
-  const react = useCallback(
-    (post: PostView, reaction: Reaction, on: boolean) => {
-      if (isPending) return
-      if (!signedIn) {
-        askToSignIn('react')
-        return
-      }
-      const before = post.reactions
-      setReactions(post.id, toggleReaction(before, reaction, on))
-      void request<{ reactions: ReactionView[] }>('/api/circles/reactions', json({ post: post.id, reaction, on })).then(({ data, status }) => {
-        if (data) setReactions(post.id, data.reactions)
-        else {
-          setReactions(post.id, before)
-          if (status === 401) askToSignIn('react')
-        }
-      })
-    },
-    [isPending, signedIn, askToSignIn, setReactions],
-  )
-
-  const report = useCallback(async (postId: number, reason: ReportReason) => {
-    const { data } = await request<{ reported: boolean }>('/api/circles/report', json({ post: postId, reason }))
-    return Boolean(data)
-  }, [])
+  const react = useReact(setReactions)
+  const loadedAt = current?.loadedAt ?? 0
+  const actions = useMemo(() => ({ loadedAt, react, remove }), [loadedAt, react, remove])
 
   const retry = useCallback(() => {
     setFailedKey(null)
     void load()
   }, [load])
 
-  const titles: Record<SignInReason, string> = { join: t('signInJoin'), post: t('signInPost'), react: t('signInReact') }
-
   return (
     <CirclesContext
       value={{
-        circles,
-        byId,
+        ...session,
         overview,
         joined,
-        signedIn,
-        sessionPending: isPending,
-        member,
         tab,
         circle,
         status,
@@ -380,7 +307,6 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
         hasMore: next !== null,
         loadingMore,
         moreFailed,
-        loadedAt: current?.loadedAt ?? 0,
         setTab,
         loadMore,
         retry,
@@ -388,21 +314,9 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
         publish,
         uploadImage,
         lookUpVideo,
-        remove,
-        react,
-        report,
-        askToSignIn,
       }}
     >
-      {children}
-      <SignInDialog
-        open={signInReason !== null}
-        onClose={() => setSignInReason(null)}
-        title={signInReason ? titles[signInReason] : ''}
-        providers={signIn}
-        callbackURL={returnTo}
-        sentNote={t('afterSignIn')}
-      />
+      <PostActionsContext value={actions}>{children}</PostActionsContext>
     </CirclesContext>
   )
 }

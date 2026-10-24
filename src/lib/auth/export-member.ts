@@ -10,7 +10,7 @@ import { normalizeEmail } from '@/modules/daily/email/address'
 import { imageViews } from '@/modules/circles/media/images'
 import { videoViews } from '@/modules/circles/media/videos'
 import type { PostStatus, Reaction, ReportReason as PostReportReason, VideoProvider } from '@/modules/circles/rules'
-import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from '@/modules/circles/schema'
+import { circleCommentReports, circleComments, circleMembers, circlePostReactions, circlePostReports, circlePosts } from '@/modules/circles/schema'
 import { emailSends, type EmailSendStatus } from '@/modules/daily/email/schema'
 import { listHref, storyHref, topicHref } from '@/modules/daily/public/list-params'
 import { isStoryTag } from '@/modules/daily/tags'
@@ -126,6 +126,20 @@ export type MemberExport = {
   circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string }[]
   /** Posts by others the member reported: which one and why, not its text or author. */
   circlePostReports: { post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null }[]
+  /** Their comments and replies on posts, newest first, hidden ones too: on which post, not its text or author. */
+  circleComments: {
+    id: number
+    post: number
+    circle: ExportRef
+    /** A reply, listed under another comment. */
+    reply: boolean
+    text: string
+    language: string
+    status: PostStatus
+    commentedAt: string
+  }[]
+  /** Comments by others the member reported: which one and why, not its text or author. */
+  circleCommentReports: { comment: number; post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null }[]
   /** The daily email subscription of the sign-in email, when it is verified and subscribed at some point. */
   dailyEmail: {
     email: string
@@ -188,6 +202,17 @@ export type MemberRecords = {
   }[]
   circleReactions: { postId: number; circleId: number; reaction: Reaction; createdAt: Date }[]
   circlePostReports: { postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
+  circleComments: {
+    id: number
+    postId: number
+    circleId: number
+    parentId: number | null
+    body: string
+    lang: string
+    status: PostStatus
+    createdAt: Date
+  }[]
+  circleCommentReports: { commentId: number; postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
   subscriber: Subscriber | null
   sends: { localDate: string; locale: string; status: EmailSendStatus; storyCount: number | null; sentAt: Date | null }[]
 }
@@ -320,6 +345,8 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     posts,
     postReactions,
     postReports,
+    comments,
+    commentReports,
     subscribers,
   ] = await Promise.all([
     db
@@ -419,6 +446,36 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .innerJoin(circlePosts, eq(circlePosts.id, circlePostReports.postId))
       .where(eq(circlePostReports.reporter, reporter))
       .orderBy(desc(circlePostReports.createdAt)),
+    db
+      .select({
+        id: circleComments.id,
+        postId: circleComments.postId,
+        circleId: circlePosts.circleId,
+        parentId: circleComments.parentId,
+        body: circleComments.body,
+        lang: circleComments.lang,
+        status: circleComments.status,
+        createdAt: circleComments.createdAt,
+      })
+      .from(circleComments)
+      .innerJoin(circlePosts, eq(circlePosts.id, circleComments.postId))
+      .where(eq(circleComments.userId, userId))
+      .orderBy(desc(circleComments.createdAt), desc(circleComments.id)),
+    // Comments are reported as `u:<member id>` too.
+    db
+      .select({
+        commentId: circleCommentReports.commentId,
+        postId: circleComments.postId,
+        circleId: circlePosts.circleId,
+        reason: circleCommentReports.reason,
+        createdAt: circleCommentReports.createdAt,
+        resolvedAt: circleCommentReports.resolvedAt,
+      })
+      .from(circleCommentReports)
+      .innerJoin(circleComments, eq(circleComments.id, circleCommentReports.commentId))
+      .innerJoin(circlePosts, eq(circlePosts.id, circleComments.postId))
+      .where(eq(circleCommentReports.reporter, reporter))
+      .orderBy(desc(circleCommentReports.createdAt)),
     // The subscription is by address, not by account: only an address the member has shown is theirs.
     user.emailVerified
       ? payload.find({ collection: 'subscribers', where: { email: { equals: normalizeEmail(user.email) } }, depth: 0, limit: 1, overrideAccess: true })
@@ -479,6 +536,8 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     }),
     circleReactions: postReactions,
     circlePostReports: postReports,
+    circleComments: comments,
+    circleCommentReports: commentReports,
     subscriber,
     sends,
   }
@@ -500,7 +559,15 @@ export async function readExportRefs(payload: Payload, records: MemberRecords, l
     want('category', idOf(submission.category))
   }
   for (const submission of records.skillSubmissions) want('skill', idOf(submission.skill))
-  for (const row of [...records.circleMembers, ...records.circlePosts, ...records.circleReactions, ...records.circlePostReports]) want('circle', row.circleId)
+  for (const row of [
+    ...records.circleMembers,
+    ...records.circlePosts,
+    ...records.circleReactions,
+    ...records.circlePostReports,
+    ...records.circleComments,
+    ...records.circleCommentReports,
+  ])
+    want('circle', row.circleId)
 
   const found = await Promise.all(
     kinds.map(async (kind) => {
@@ -668,6 +735,24 @@ export function shapeMemberExport(
       reactedAt: iso(reaction.createdAt),
     })),
     circlePostReports: records.circlePostReports.map((report) => ({
+      post: report.postId,
+      circle: ref('circle', report.circleId),
+      reason: report.reason,
+      reportedAt: iso(report.createdAt),
+      resolvedAt: isoOrNull(report.resolvedAt),
+    })),
+    circleComments: records.circleComments.map((comment) => ({
+      id: comment.id,
+      post: comment.postId,
+      circle: ref('circle', comment.circleId),
+      reply: comment.parentId !== null,
+      text: comment.body,
+      language: comment.lang,
+      status: comment.status,
+      commentedAt: iso(comment.createdAt),
+    })),
+    circleCommentReports: records.circleCommentReports.map((report) => ({
+      comment: report.commentId,
       post: report.postId,
       circle: ref('circle', report.circleId),
       reason: report.reason,

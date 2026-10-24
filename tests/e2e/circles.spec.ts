@@ -333,6 +333,219 @@ test.describe('the circles', () => {
       await member.remove()
     }
   })
+
+  test('the comments API answers readers, and only members can comment', async ({ page, request }) => {
+    expect((await request.get('/api/circles/comments')).status()).toBe(400)
+    expect((await request.get('/api/circles/comments?post=abc')).status()).toBe(400)
+    expect((await request.get(`/api/circles/comments?post=${nowhere}`)).status()).toBe(404)
+    const comment = { post: 1, body: 'Nice', locale: 'en' }
+    expect((await request.post('/api/circles/comments', { data: comment })).status()).toBe(401)
+    expect((await request.post('/api/circles/comments', { data: { ...comment, body: ' ' } })).status()).toBe(400)
+    expect((await request.post('/api/circles/comments', { data: { ...comment, replyTo: 'first' } })).status()).toBe(400)
+    expect((await request.post('/api/circles/comments', { data: comment, headers: { 'sec-fetch-site': 'cross-site' } })).status()).toBe(403)
+    expect((await request.delete('/api/circles/comments?id=1')).status()).toBe(401)
+    expect((await request.post('/api/circles/report', { data: { comment: nowhere, reason: 'spam' } })).status()).toBe(404)
+    expect((await request.post('/api/circles/report', { data: { post: 1, comment: 1, reason: 'spam' } })).status()).toBe(400)
+    expect((await page.goto(`/en/circles/p/${nowhere}`))?.status()).toBe(404)
+    expect((await page.goto('/en/circles/p/abc'))?.status()).toBe(404)
+  })
+
+  test('a post’s page: comments, replies, reports, and who can open it', async ({ page, context, baseURL }) => {
+    test.skip(
+      !process.env.DATABASE_URI || !process.env.BETTER_AUTH_SECRET,
+      'Signs members in through the database: needs DATABASE_URI and BETTER_AUTH_SECRET, as in CI.',
+    )
+    test.slow()
+    const site = baseURL ?? 'http://localhost:3000'
+    const member = await createMember(site, 'Ada Comments')
+    const other = await createMember(site, 'Grace Comments')
+    try {
+      const aiArt = (await member.query<{ id: number }>(`select id from circles where slug = 'ai-art'`)).rows[0].id
+      const addPost = async (body: string, lang: string) =>
+        (await other.query<{ id: number }>(`insert into circle_posts (circle_id, user_id, body, lang) values ($1, $2, $3, $4) returning id`, [aiArt, other.id, body, lang]))
+          .rows[0].id
+      const addComment = async (author: typeof member, postId: number, body: string, parent: number | null = null, replyTo: number | null = null) =>
+        (
+          await author.query<{ id: number }>(
+            `insert into circle_comments (post_id, user_id, parent_id, reply_to_id, body, lang) values ($1, $2, $3, $4, $5, 'en') returning id`,
+            [postId, author.id, parent, replyTo, body],
+          )
+        ).rows[0].id
+      const text = '这周用同一套提示词跑了不同风格的插画，最喜欢第三张的配色。附上参数，欢迎一起调。'
+      const theirs = await addPost(text, 'zh-Hans')
+      const thanks = await addComment(other, theirs, 'Thanks! The palette is from an old poster.')
+      const promptToo = await addComment(other, theirs, 'Happy to share the prompt too.', thanks)
+
+      // A visitor: the post and its comments are in the page, canonical in the post's own language.
+      expect((await page.goto(`/en/circles/p/${theirs}`))?.status()).toBe(200)
+      await expect(page).toHaveTitle('Grace Comments: 这周用同一套提示词跑了不同风格的插画，最喜欢第三张的配色。附… · IFAI')
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(`/zh-hans/circles/p/${theirs}$`))
+      await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0)
+      await expect(page.locator('meta[name="robots"]')).toHaveCount(0)
+      const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '[]') as Record<string, unknown>[]
+      expect(jsonLd[0]).toMatchObject({
+        '@type': 'DiscussionForumPosting',
+        text,
+        inLanguage: 'zh-Hans',
+        author: { name: 'Grace Comments' },
+        commentCount: 2,
+        comment: [{ text: 'Thanks! The palette is from an old poster.', comment: [{ text: 'Happy to share the prompt too.' }] }],
+      })
+      expect(jsonLd[1]).toMatchObject({ '@type': 'BreadcrumbList' })
+      const post = page.getByRole('article')
+      await expect(post).toContainText(text)
+      await expect(post.getByRole('button', { name: c.share })).toBeVisible()
+      await expect(page.getByRole('navigation', { name: c.breadcrumb }).getByRole('link', { name: '# AI Art' })).toHaveAttribute('href', '/en/circles?circle=ai-art')
+      const section = page.locator('#comments')
+      await expect(section.getByRole('heading', { name: 'Comments 2' })).toBeVisible()
+      await section.getByRole('button', { name: c.commentLabel }).click()
+      await expectSignIn(page, c.signInComment)
+      await section.getByRole('button', { name: c.replyName.replace('{name}', 'Grace Comments') }).first().click()
+      await expectSignIn(page, c.signInComment)
+
+      // A member comments; it comes first. Too long is turned down before it is sent.
+      await context.addCookies([member.cookie])
+      await page.reload()
+      const box = section.getByRole('textbox', { name: c.commentLabel })
+      const form = section.getByRole('form', { name: c.commentLabel })
+      await box.fill('x'.repeat(501))
+      await form.getByRole('button', { name: c.publish, exact: true }).click()
+      await expect(form.getByRole('alert')).toHaveText(c.errors.tooLong.replace('{max}', '500'))
+      await box.fill('Which model did you use?')
+      await form.getByRole('button', { name: c.publish, exact: true }).click()
+      await expect(box).toHaveValue('')
+      await expect(section.getByRole('listitem').first()).toContainText('Which model did you use?')
+      await expect(section.getByRole('heading', { name: 'Comments 3' })).toBeVisible()
+
+      // Replying to a reply says whom it answers, and goes under the same comment. Esc closes the box.
+      const thread = section.getByRole('listitem').filter({ hasText: 'Thanks! The palette' }).first()
+      const replies = thread.getByRole('list', { name: c.repliesLabel.replace('{name}', 'Grace Comments') })
+      const replyBox = thread.getByRole('textbox', { name: c.replyName.replace('{name}', 'Grace Comments') })
+      await replies.getByRole('button', { name: c.replyName.replace('{name}', 'Grace Comments') }).click()
+      await expect(replyBox).toBeFocused()
+      await page.keyboard.press('Escape')
+      await expect(replyBox).toHaveCount(0)
+      await replies.getByRole('button', { name: c.replyName.replace('{name}', 'Grace Comments') }).click()
+      await replyBox.fill('Yes please!')
+      await thread.getByRole('button', { name: c.reply, exact: true }).click()
+      await expect(replies.getByRole('listitem')).toHaveCount(2)
+      await expect(replies.getByRole('listitem').last()).toContainText(`${c.replyTo.replace('{name}', 'Grace Comments')}Yes please!`)
+      const answer = await member.query(`select parent_id, reply_to_id from circle_comments where user_id = $1 and body = 'Yes please!'`, [member.id])
+      expect(answer.rows).toEqual([{ parent_id: thanks, reply_to_id: promptToo }])
+
+      // Three replies first, the rest on request.
+      for (const n of [1, 2, 3]) await addComment(other, theirs, `More reply ${n}`, thanks)
+      await page.reload()
+      await expect(replies.getByRole('listitem')).toHaveCount(3)
+      await thread.getByRole('button', { name: 'Show 2 more replies' }).click()
+      await expect(replies.getByRole('listitem')).toHaveCount(5)
+      await expect(replies.getByRole('listitem').last()).toContainText('More reply 3')
+
+      // Reporting theirs.
+      await thread.getByRole('button', { name: c.commentMore.replace('{name}', 'Grace Comments') }).first().click()
+      await thread.getByRole('button', { name: c.report, exact: true }).click()
+      const report = page.getByRole('dialog', { name: c.reportCommentTitle })
+      await report.getByLabel(c.offTopicComment).check()
+      await report.getByRole('button', { name: c.reportSend }).click()
+      await expect(report.getByText(c.reportDone)).toBeVisible()
+      await page.keyboard.press('Escape')
+      const reported = await member.query(`select reason from circle_comment_reports where comment_id = $1 and reporter = $2`, [thanks, `u:${member.id}`])
+      expect(reported.rows).toEqual([{ reason: 'offTopic' }])
+
+      // Deleting their own comment, after saying yes; the reply under it goes too.
+      const own = (await member.query<{ id: number }>(`select id from circle_comments where user_id = $1 and parent_id is null`, [member.id])).rows[0].id
+      await addComment(other, theirs, 'GPT Image, mostly.', own)
+      await page.reload()
+      const ownThread = section.getByRole('listitem').filter({ hasText: 'Which model did you use?' }).first()
+      await ownThread.getByRole('button', { name: c.commentMore.replace('{name}', 'Ada Comments') }).click()
+      await ownThread.getByRole('button', { name: c.delete, exact: true }).click()
+      const confirm = ownThread.getByRole('group', { name: c.deleteCommentConfirm })
+      await expect(confirm).toContainText('The reply under it goes too.')
+      await confirm.getByRole('button', { name: c.deleteYes }).click()
+      await expect(section.getByText('Which model did you use?')).toHaveCount(0)
+      await expect(section.getByRole('heading', { name: 'Comments 6' })).toBeVisible()
+      expect((await member.query(`select id from circle_comments where id = $1 or parent_id = $1`, [own])).rows).toEqual([])
+
+      // The feed counts them and links to them.
+      await page.goto('/en/circles?tab=latest&circle=ai-art')
+      const inFeed = page.getByRole('tabpanel').getByRole('listitem').filter({ hasText: text }).first()
+      await expect(inFeed.getByRole('link', { name: '6 comments' })).toHaveAttribute('href', `/en/circles/p/${theirs}#comments`)
+
+      // Fifty a day.
+      const spare = await addPost('A spare post', 'en')
+      await member.query(`insert into circle_comments (post_id, user_id, body, lang) select $1, $2, 'Comment ' || n, 'en' from generate_series(1, 50) n`, [spare, member.id])
+      await page.goto(`/en/circles/p/${theirs}`)
+      await box.fill('One too many')
+      await form.getByRole('button', { name: c.publish, exact: true }).click()
+      await expect(form.getByRole('alert')).toHaveText(c.errors.commentDailyLimit.replace('{limit}', '50'))
+
+      // What the export says about it.
+      const exported = await (await page.request.get('/api/account/export?locale=en')).json()
+      expect(exported.circleComments.find((row: { text: string }) => row.text === 'Yes please!')).toMatchObject({ post: theirs, reply: true, status: 'shown' })
+      expect(exported.circleCommentReports).toMatchObject([{ comment: thanks, post: theirs, reason: 'offTopic', resolvedAt: null }])
+
+      // Hidden by the site owner: gone for others with the replies under it, still there for its author.
+      await member.query(`update circle_comments set status = 'hidden' where id = $1`, [thanks])
+      await page.reload()
+      await expect(section.getByText('Thanks! The palette')).toHaveCount(0)
+      await expect(section.getByText('Yes please!')).toHaveCount(0)
+      await expect(section.getByRole('heading', { name: 'Comments' })).toBeVisible()
+      await expect(section.getByText(c.commentsEmpty)).toBeVisible()
+      await context.clearCookies()
+      await context.addCookies([other.cookie])
+      await page.reload()
+      const hiddenThread = section.getByRole('listitem').filter({ hasText: 'Thanks! The palette' }).first()
+      await expect(hiddenThread.getByText(c.commentHiddenNote)).toBeVisible()
+      // Nobody else sees what is under it, so nothing there can be answered.
+      await expect(hiddenThread.getByText('Yes please!')).toBeVisible()
+      await expect(hiddenThread.getByRole('button', { name: /^Reply to / })).toHaveCount(0)
+
+      // A hidden post opens for its author alone, out of search and without comments; a deleted one for nobody.
+      await member.query(`update circle_posts set status = 'hidden' where id = $1`, [theirs])
+      await page.reload()
+      await expect(page.getByRole('article').getByText(c.hiddenNote)).toBeVisible()
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+      await expect(page.locator('#comments')).toHaveCount(0)
+      await context.clearCookies()
+      await context.addCookies([member.cookie])
+      expect((await page.goto(`/en/circles/p/${theirs}`))?.status()).toBe(404)
+      await member.query(`delete from circle_posts where id = $1`, [theirs])
+      await context.clearCookies()
+      await context.addCookies([other.cookie])
+      expect((await page.goto(`/en/circles/p/${theirs}`))?.status()).toBe(404)
+    } finally {
+      await member.remove()
+      await other.remove()
+    }
+  })
+
+  test('a post links to an app and a Skill on IFAI with cards', async ({ page, baseURL }) => {
+    test.skip(
+      !process.env.DATABASE_URI || !process.env.BETTER_AUTH_SECRET || !process.env.E2E_SAMPLE_APPS || !process.env.E2E_SAMPLE_SKILLS,
+      'Run scripts/seed-apps.ts and scripts/seed-skills.ts and set E2E_SAMPLE_APPS and E2E_SAMPLE_SKILLS.',
+    )
+    const site = baseURL ?? 'http://localhost:3000'
+    const member = await createMember(site, 'Ada Links')
+    try {
+      const aiArt = (await member.query<{ id: number }>(`select id from circles where slug = 'ai-art'`)).rows[0].id
+      const body = `Two I use: ${site}/zh-hans/apps/lumen-chat and ${site}/resources/skills/sample-release-notes/v/1.0.0, plus ${site}/apps/lumen-chat again and ${site}/apps/draft-demo.`
+      const id = (
+        await member.query<{ id: number }>(`insert into circle_posts (circle_id, user_id, body, lang) values ($1, $2, $3, 'en') returning id`, [aiArt, member.id, body])
+      ).rows[0].id
+      await page.goto(`/en/circles/p/${id}`)
+      const post = page.getByRole('article')
+      const cards = post.getByRole('link', { name: /^(App|Skill) · / })
+      await expect(cards).toHaveCount(2)
+      await expect(cards.nth(0)).toHaveAttribute('href', '/en/apps/lumen-chat')
+      await expect(cards.nth(0)).toContainText('App · Lumen Chat')
+      await expect(cards.nth(1)).toHaveAttribute('href', '/en/resources/skills/sample-release-notes')
+      await expect(cards.nth(1)).toContainText(/installs · IFAI Samples/)
+      // A draft gets no card; its address is still a link.
+      await expect(post.getByRole('link', { name: `${site}/apps/draft-demo` })).toBeVisible()
+    } finally {
+      await member.remove()
+    }
+  })
 })
 
 /** A plain picture, as a phone would save it: a JPEG, or PNG when asked. */

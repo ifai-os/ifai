@@ -3,17 +3,18 @@ import { eq } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 
 import { appReviewReports } from '@/modules/apps/schema'
-import { circlePostReports } from '@/modules/circles/schema'
+import { circleCommentReports, circlePostReports } from '@/modules/circles/schema'
 
 /**
  * What a member leaves behind outside the tables that cascade from `auth_users`
  * (docs/specs/foundation.md「账号页与删除账号」): the apps they submitted and the Skills they sent
  * in, which hold their contact email, and the reports they made, about an app (with an optional
- * way to reach them), someone's review or someone's post in a circle, and the pictures they
- * uploaded for posts, posted or not (with their files). Removed whatever their status; listed apps
- * and Skills themselves stay. Saves, their own reviews (with translations and the reports on them),
- * their circles, posts (with the reactions and reports on them) and reactions, and sign-in records
- * go with the account through their foreign keys; videos they pasted first stay, without them.
+ * way to reach them), someone's review, or someone's post or comment in a circle, and the pictures
+ * they uploaded for posts, posted or not (with their files). Removed whatever their status; listed
+ * apps and Skills themselves stay. Saves, their own reviews (with translations and the reports on
+ * them), their circles, posts (with the reactions, reports and comments on them), reactions and
+ * comments (with the replies under them), and sign-in records go with the account through their
+ * foreign keys; videos they pasted first stay, without them.
  */
 export async function deleteMemberData(payload: Payload, userId: string): Promise<void> {
   for (const collection of ['app-submissions', 'skill-submissions'] as const) {
@@ -25,5 +26,6 @@ export async function deleteMemberData(payload: Payload, userId: string): Promis
   const { drizzle } = payload.db as unknown as PostgresAdapter
   await drizzle.delete(appReviewReports).where(eq(appReviewReports.reporter, reporter))
   await drizzle.delete(circlePostReports).where(eq(circlePostReports.reporter, reporter))
+  await drizzle.delete(circleCommentReports).where(eq(circleCommentReports.reporter, reporter))
   await payload.delete({ collection: 'circle-images', where: { uploader: { equals: userId } }, overrideAccess: true })
 }

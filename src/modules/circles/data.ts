@@ -1,5 +1,6 @@
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
-import { and, count, countDistinct, desc, eq, gte, inArray, lt, or, sql, type SQL } from '@payloadcms/db-postgres/drizzle'
+import { and, count, countDistinct, desc, eq, gte, inArray, isNull, lt, ne, or, sql, type SQL } from '@payloadcms/db-postgres/drizzle'
+import { alias } from '@payloadcms/db-postgres/drizzle/pg-core'
 import type { Payload } from 'payload'
 
 import { toneFor } from '@/components/cards/initial-tile'
@@ -22,7 +23,7 @@ import {
 } from './rules'
 import { attachImages, claimable, deleteImages, imageViews } from './media/images'
 import { videoExists, videoViews } from './media/videos'
-import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from './schema'
+import { circleComments, circleMembers, circlePostReactions, circlePostReports, circlePosts } from './schema'
 
 /**
  * Reading and writing circles for the page (src/app/api/circles). Works on the Payload instance it
@@ -135,6 +136,29 @@ export async function reactionsFor(payload: Payload, postIds: number[], userId: 
   return result
 }
 
+const parentComment = alias(circleComments, 'parent_comment')
+
+/**
+ * The comments and replies everyone can see on each of these posts (docs/specs/circles.md rule
+ * 15): shown ones, not under a hidden comment.
+ */
+export async function commentCounts(payload: Payload, postIds: number[]): Promise<Map<number, number>> {
+  if (postIds.length === 0) return new Map()
+  const rows = await drizzleOf(payload)
+    .select({ postId: circleComments.postId, count: count() })
+    .from(circleComments)
+    .leftJoin(parentComment, eq(parentComment.id, circleComments.parentId))
+    .where(
+      and(
+        inArray(circleComments.postId, postIds),
+        eq(circleComments.status, 'shown'),
+        or(isNull(circleComments.parentId), eq(parentComment.status, 'shown')),
+      ),
+    )
+    .groupBy(circleComments.postId)
+  return new Map(rows.map((row) => [row.postId, Number(row.count)]))
+}
+
 const postColumns = {
   id: circlePosts.id,
   circleId: circlePosts.circleId,
@@ -160,9 +184,9 @@ type PostRow = {
 }
 
 async function toViews(payload: Payload, rows: PostRow[], userId: string | null): Promise<PostView[]> {
-  // A hidden post's pictures are no longer public, and its video goes with them.
+  // A hidden post's pictures are no longer public, and its video and comments go with them.
   const shown = rows.filter((row) => row.status === 'shown')
-  const [reacted, { byPost }, videos] = await Promise.all([
+  const [reacted, { byPost }, videos, comments] = await Promise.all([
     reactionsFor(
       payload,
       rows.map((row) => row.id),
@@ -170,6 +194,10 @@ async function toViews(payload: Payload, rows: PostRow[], userId: string | null)
     ),
     imageViews(payload, { postIds: shown.map((row) => row.id), coverIds: [] }),
     videoViews(payload, [...new Set(shown.flatMap((row) => (row.videoId ? [row.videoId] : [])))]),
+    commentCounts(
+      payload,
+      shown.map((row) => row.id),
+    ),
   ])
   return rows.map((row) => ({
     id: row.id,
@@ -183,6 +211,8 @@ async function toViews(payload: Payload, rows: PostRow[], userId: string | null)
     reactions: reacted.get(row.id) ?? [],
     images: row.status === 'shown' ? (byPost.get(row.id) ?? []) : [],
     video: row.status === 'shown' && row.videoId ? (videos.get(row.videoId) ?? null) : null,
+    comments: comments.get(row.id) ?? 0,
+    links: [],
   }))
 }
 
@@ -200,8 +230,8 @@ export type FeedQuery = {
 /**
  * One page of a feed: 最新 newest first; 我的圈子 the same, in the circles the member joined
  * (nothing for a visitor); 推荐 the last `hotDays` days by ./rules.ts hotScore, which the SQL
- * here mirrors. 推荐 pages by position, so a post that moves up meanwhile can come twice; the
- * page drops repeats.
+ * here mirrors (commenters are people with a shown comment, the author aside). 推荐 pages by
+ * position, so a post that moves up meanwhile can come twice; the page drops repeats.
  */
 export async function feedPage(payload: Payload, query: FeedQuery, now = new Date()): Promise<{ posts: PostView[]; next: number | null }> {
   const { tab, circle, cursor, userId } = query
@@ -222,8 +252,13 @@ export async function feedPage(payload: Payload, query: FeedQuery, now = new Dat
   if (tab === 'hot') {
     const since = new Date(now.getTime() - circleRules.hotDays * 24 * 60 * 60 * 1000)
     const people = sql`(select count(distinct ${circlePostReactions.userId}) from ${circlePostReactions} where ${circlePostReactions.postId} = ${circlePosts.id})`
+    const commenters = sql`(select count(distinct ${circleComments.userId}) from ${circleComments} where ${and(
+      eq(circleComments.postId, circlePosts.id),
+      eq(circleComments.status, 'shown'),
+      ne(circleComments.userId, circlePosts.userId),
+    )})`
     const hours = sql`(extract(epoch from (${now.toISOString()}::timestamptz - ${circlePosts.createdAt})) / 3600)`
-    const score = sql`((${people} + 1) / power(greatest(${hours}, 0) + 2, 1.5))`
+    const score = sql`((${people} + 2 * ${commenters} + 1) / power(greatest(${hours}, 0) + 2, 1.5))`
     const offset = cursor ?? 0
     const rows = await db
       .select(postColumns)
@@ -290,7 +325,7 @@ export async function createPost(
   return { status: 'created', postId: created.id }
 }
 
-/** Deletes the member's own post, with its reactions, reports and pictures; false when they have no such post. */
+/** Deletes the member's own post, with its reactions, reports, comments and pictures; false when they have no such post. */
 export async function deletePost(payload: Payload, postId: number, userId: string): Promise<boolean> {
   const deleted = await drizzleOf(payload)
     .delete(circlePosts)
@@ -301,8 +336,8 @@ export async function deletePost(payload: Payload, postId: number, userId: strin
   return true
 }
 
-/** Whether readers can see the post (shown, in a circle they can see): only those take reactions and reports. */
-async function shownPost(payload: Payload, postId: number, circleIds: number[]): Promise<{ userId: string } | null> {
+/** Whether readers can see the post (shown, in a circle they can see): only those take reactions, reports and comments. */
+export async function shownPost(payload: Payload, postId: number, circleIds: number[]): Promise<{ userId: string } | null> {
   if (circleIds.length === 0) return null
   const [post] = await drizzleOf(payload)
     .select({ userId: circlePosts.userId })

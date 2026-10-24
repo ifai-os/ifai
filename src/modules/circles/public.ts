@@ -1,13 +1,17 @@
+import { headers } from 'next/headers'
 import { cache } from 'react'
 
 import { isLaunched } from '@/config/site'
 import type { Locale } from '@/i18n/config'
+import { auth } from '@/lib/auth/auth'
 import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
 
 import { circlesCacheTag } from './cache'
-import { circlesOverview } from './data'
-import type { CircleView, CirclesOverview } from './rules'
+import { commentsPage } from './comments'
+import { circlesOverview, postView } from './data'
+import { withLinkCards } from './link-cards'
+import { parseId, type CircleView, type CirclesOverview, type CommentsPage, type PostView } from './rules'
 
 /** Circles launch in phase two: until then their page and API answer 404 (docs/specs/circles.md「页面与路由」). */
 export function circlesLaunched(): boolean {
@@ -65,3 +69,42 @@ const loadOverview = cached(
 export async function getOverview(ids: number[]): Promise<CirclesOverview> {
   return loadOverview(ids)
 }
+
+export type PostPageData = {
+  post: PostView
+  /** The circle it is in, for the links above it and the title. */
+  circle: CircleView
+  /**
+   * The first page of comments. Null on a hidden post, which only its author opens and which has
+   * none to show, or when they could not be read: the page then reads them itself.
+   */
+  comments: CommentsPage | null
+  /** When it was read, for「3 小时前」. */
+  loadedAt: number
+}
+
+/**
+ * A post's page for the reader (docs/specs/circles.md「/circles/p/[id]」): null when it is not
+ * there for them: deleted, in a hidden circle, or hidden and not theirs. Read once per request,
+ * for the metadata and the page.
+ */
+export const getPostPage = cache(async (id: string, locale: Locale): Promise<PostPageData | null> => {
+  const postId = parseId(id)
+  if (!postId) return null
+  const [session, circles, { payload }] = await Promise.all([auth.api.getSession({ headers: await headers() }), getCircles(locale), getDb()])
+  const userId = session?.user.id ?? null
+  const circleIds = circles.map((circle) => circle.id)
+  const view = await postView(payload, postId, circleIds, userId)
+  const circle = view && circles.find((item) => item.id === view.circle)
+  if (!view || !circle) return null
+  const [post, comments] = await Promise.all([
+    withLinkCards([view], locale).then(([item]) => item),
+    view.hidden
+      ? null
+      : commentsPage(payload, { postId, circleIds, userId, cursor: null }).catch((error: unknown) => {
+          console.warn('Could not read the comments of circle post', postId, error)
+          return null
+        }),
+  ])
+  return { post, circle, comments: comments && { signedIn: Boolean(session), ...comments }, loadedAt: Date.now() }
+})
