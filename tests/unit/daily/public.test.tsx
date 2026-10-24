@@ -254,6 +254,10 @@ describe('a story’s page', () => {
       { name: 'Outlet', role: 'report', url: 'https://outlet.example/x', publishedAt: null },
     ],
     developments: [story({ id: 9, publishedAt: '2026-10-20T09:00:00Z', slug: 'earlier' })],
+    tags: [],
+    entities: [],
+    topic: null,
+    similar: [],
   }
 
   it('lists the sources in order with their role, and the other developments', () => {
@@ -265,6 +269,46 @@ describe('a story’s page', () => {
     expect(html).toContain(`>${en.daily.corrected} <time dateTime="2026-10-22T12:00:00Z">`)
     expect(html).toContain('href="/en/daily/earlier"')
     expect(html).toContain('1 more outlet reported this')
+  })
+
+  it('leaves out the related blocks it has nothing for', () => {
+    const html = render(<StoryDetailView story={detail} signIn={{ google: false, github: false, email: true }} />)
+    for (const heading of [en.daily.tags, en.daily.entities, en.daily.topic, en.daily.similar]) expect(html).not.toContain(heading)
+  })
+
+  it('shows the industry tags, companies and products, the topic and similar events', () => {
+    const topicStories = [
+      story({ id: 20, publishedAt: '2026-10-23T09:00:00Z', slug: 'newer' }),
+      { ...detail, sources: undefined },
+      ...[1, 2, 3, 4, 5].map((n) => story({ id: 20 + n, publishedAt: `2026-10-0${n}T09:00:00Z`, slug: `old-${n}` })),
+    ]
+    const html = render(
+      <StoryDetailView
+        story={{
+          ...detail,
+          tags: ['devices', 'chips'],
+          entities: [
+            { name: 'MacBook Pro', kind: 'product', app: null },
+            { name: 'Apple', kind: 'company', app: { slug: 'apple-intelligence', name: 'Apple Intelligence' } },
+          ],
+          topic: { name: 'MacBook Pro', stories: topicStories },
+          similar: [story({ id: 30, publishedAt: '2025-10-01T09:00:00Z', slug: 'last-year' })],
+        }}
+        signIn={{ google: false, github: false, email: true }}
+      />,
+    )
+    expect(html).toContain(`href="/en/daily/tag/devices"`)
+    expect(html).toContain(`>${en.tags.devices}`)
+    expect(html).toContain(`>${en.daily.entityKinds.product}<`)
+    expect(html).toContain('href="/en/apps/apple-intelligence"')
+    // This story is marked, not linked; five of seven show before「查看更多」.
+    expect(html).toContain(`>${en.daily.thisStory}<`)
+    expect(html).not.toContain('href="/en/daily/story-1"')
+    expect(html).toContain('href="/en/daily/old-3"')
+    expect(html).not.toContain('href="/en/daily/old-4"')
+    expect(html).toContain('Show more (2)')
+    expect(html).toContain('href="/en/daily/last-year"')
+    expect(html.indexOf(en.daily.topic)).toBeLessThan(html.indexOf(en.daily.similar))
   })
 
   it('has a save button next to share', () => {

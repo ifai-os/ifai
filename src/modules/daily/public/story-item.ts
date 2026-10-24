@@ -3,8 +3,10 @@ import { inAnyLanguage, inReaderLanguage, type InLanguage, type Localized } from
 import type { Media, Story } from '@/payload-types'
 
 import { storyCategories, type StoryCategory } from '../categories'
+import type { EntityKind, StoryEntity } from '../entities'
 import { parseVideo, type Video } from '../media'
 import type { HeatTrend, SourceRole } from '../story-fields'
+import type { StoryTag } from '../tags'
 
 /** What the pages show of a story, in the reader's language (no Payload code: components and tests import this). */
 
@@ -45,10 +47,31 @@ export type HotStory = StoryItem & {
   outlets: number
 }
 
+/** A company or product the story is about; `app` when the apps module matched it to a published app. */
+export type StoryEntityItem = { name: string; kind: EntityKind; app: { slug: string; name: string } | null }
+
+/** 「话题追踪」: published stories about the same product or company, newest first, this one included. */
+export type StoryTopic = { name: string; stories: StoryItem[] }
+
 export type StoryDetail = StoryItem & {
   sources: StorySource[]
   /** Other published stories of the same event, newest first. */
   developments: StoryItem[]
+  tags: StoryTag[]
+  entities: StoryEntityItem[]
+  /** Null unless another story shares the topic. */
+  topic: StoryTopic | null
+  /** 「同类事件」: the most similar published stories of other events, most similar first. */
+  similar: StoryItem[]
+}
+
+/** The stored companies and products, keys filled in for rows an older save left without one. */
+export function entitiesOf(doc: Pick<Story, 'entities'>, key: (name: string) => string): StoryEntity[] {
+  return (doc.entities ?? []).flatMap(({ name, kind, key: stored }) => {
+    const trimmed = name?.trim()
+    if (!trimmed) return []
+    return [{ name: trimmed, kind, key: stored || key(trimmed) }]
+  })
 }
 
 /** A story as Payload returns it with `locale: 'all'`. */

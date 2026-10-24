@@ -5,12 +5,14 @@ import { getDb } from '@/lib/db/drizzle'
 import type { Source, Story } from '@/payload-types'
 
 import { storedHeat } from '../heat/heat'
+import { storyEntities } from '../entities'
 import { trendOf } from '../heat/rules'
 import { syncEventSources } from '../heat/sources'
 import type { JudgeDeps } from '../judge/judge'
 import { writePrompt, writtenLocales, type WriteReport, type WrittenLocaleKey } from '../prompts/write'
 import { hansHash } from '../review/rules'
 import { eventItems, itemAnalyses, rawItems } from '../schema'
+import { tagsOf } from '../tags'
 import type { SourceTier } from '../types'
 import { mediaCandidates, storyMedia } from './media'
 import { storySlug } from './slug'
@@ -97,6 +99,8 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
       ...output.zhHans,
       slug,
       category,
+      tags: tagsOf(analysis.structure?.tags),
+      entities: storyEntities(analysis.structure),
       status: 'pending',
       eventId: analysis.eventId,
       representativeItemId: itemId,

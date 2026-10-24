@@ -471,6 +471,44 @@ export interface Story {
       }[]
     | null;
   /**
+   * Up to 3. The story page links each to its list.
+   */
+  tags?:
+    | (
+        | 'llm'
+        | 'assistants'
+        | 'agents'
+        | 'coding'
+        | 'image'
+        | 'video'
+        | 'audio'
+        | 'search'
+        | 'chips'
+        | 'on-device'
+        | 'devices'
+        | 'robotics'
+        | 'driving'
+        | 'health'
+        | 'education'
+        | 'finance'
+        | 'enterprise'
+        | 'security'
+        | 'policy'
+        | 'deals'
+      )[]
+    | null;
+  /**
+   * What the story is about. The first product (else the first company) is its topic: stories sharing it are tracked together.
+   */
+  entities?:
+    | {
+        name: string;
+        kind: 'company' | 'product';
+        key?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Taken from the original article when the story is written. A video shows its cover with a play button and plays in a dialog.
    */
   media?: {
@@ -1279,6 +1317,15 @@ export interface StoriesSelect<T extends boolean = true> {
         role?: T;
         url?: T;
         publishedAt?: T;
+        id?: T;
+      };
+  tags?: T;
+  entities?:
+    | T
+    | {
+        name?: T;
+        kind?: T;
+        key?: T;
         id?: T;
       };
   media?:

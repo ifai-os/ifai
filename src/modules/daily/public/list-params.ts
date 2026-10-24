@@ -1,6 +1,7 @@
 import { localizePath, type Locale } from '@/i18n/config'
 
 import type { StoryCategory } from '../categories'
+import type { StoryTag } from '../tags'
 
 export type SearchParams = Record<string, string | string[] | undefined>
 
@@ -18,9 +19,13 @@ export function readPage(params: SearchParams): number | null {
   return /^[1-9]\d{0,4}$/.test(page) ? Number(page) : null
 }
 
-/** Address of a list page: every story or one category, plus the page when it is not the first. */
-export function listHref({ category, page }: { category?: StoryCategory | null; page?: number } = {}): `/${string}` {
-  const path: `/${string}` = category ? `/daily/category/${category}` : '/daily'
+/** Address of a list page: every story, one category or one tag, plus the page when it is not the first. */
+export function listHref({
+  category,
+  tag,
+  page,
+}: { category?: StoryCategory | null; tag?: StoryTag | null; page?: number } = {}): `/${string}` {
+  const path: `/${string}` = category ? `/daily/category/${category}` : tag ? `/daily/tag/${tag}` : '/daily'
   return page && page > 1 ? `${path}?page=${page}` : path
 }
 

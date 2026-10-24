@@ -3,9 +3,11 @@ import type { CollectionConfig, TextFieldSingleValidation } from "payload";
 import { syncHantFromHans } from "@/lib/i18n/hant-sync";
 
 import { storyCategories } from "../categories";
+import { entityKey, entityKinds, type EntityKind } from "../entities";
 import { parseVideo, storyMediaKinds, type StoryMediaKind } from "../media";
 import { followPublishing, leaveOnDelete } from "../poster/hooks";
 import { reviewEndpoints } from "../review/endpoints";
+import { maxStoryTags, storyTags, tagLabels } from "../tags";
 import {
   heatTrends,
   sourceRoles,
@@ -41,6 +43,11 @@ const validateVideoUrl: TextFieldSingleValidation = (
   return req?.i18n?.language === "en"
     ? "Paste a YouTube or Vimeo link, or the address of an .mp4 or .webm file."
     : "请贴 YouTube 或 Vimeo 的链接，或者 .mp4、.webm 视频文件的地址。";
+};
+
+const entityKindLabels: Record<EntityKind, { en: string; zh: string }> = {
+  company: { en: "Company", zh: "公司" },
+  product: { en: "Product", zh: "产品" },
 };
 
 const signedIn = ({ req: { user } }: { req: { user: unknown } }) =>
@@ -250,6 +257,81 @@ export const Stories: CollectionConfig = {
           type: "date",
           label: { en: "Published", zh: "发布时间" },
           admin: { date: { pickerAppearance: "dayAndTime" } },
+        },
+      ],
+    },
+    {
+      name: "tags",
+      type: "select",
+      hasMany: true,
+      label: { en: "Industry tags", zh: "行业标签" },
+      options: storyTags.map((value) => ({ value, label: tagLabels[value] })),
+      validate: (value: unknown) =>
+        !Array.isArray(value) || value.length <= maxStoryTags
+          ? true
+          : `At most ${maxStoryTags} / 最多 ${maxStoryTags} 个`,
+      admin: {
+        description: {
+          en: "Up to 3. The story page links each to its list.",
+          zh: "最多 3 个，详情页点进去是这个标签下的新闻。",
+        },
+      },
+    },
+    {
+      name: "entities",
+      type: "array",
+      label: { en: "Companies and products", zh: "涉及的公司与产品" },
+      labels: {
+        singular: { en: "Company or product", zh: "公司或产品" },
+        plural: { en: "Companies and products", zh: "公司与产品" },
+      },
+      admin: {
+        description: {
+          en: "What the story is about. The first product (else the first company) is its topic: stories sharing it are tracked together.",
+          zh: "这条新闻讲的公司和产品。第一个产品（没有就第一个公司）是话题，同一话题的新闻串在一起。",
+        },
+      },
+      hooks: {
+        // The key is derived from the name, so an edited name keeps its topic in step.
+        beforeChange: [
+          ({ value }) =>
+            Array.isArray(value)
+              ? value.map((row: { name?: string }) => ({
+                  ...row,
+                  key: entityKey(row.name ?? ""),
+                }))
+              : value,
+        ],
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "name",
+              type: "text",
+              required: true,
+              label: { en: "Name", zh: "名称" },
+            },
+            {
+              name: "kind",
+              type: "select",
+              required: true,
+              defaultValue: "product",
+              label: { en: "Kind", zh: "类型" },
+              options: entityKinds.map((value) => ({
+                value,
+                label: entityKindLabels[value],
+              })),
+            },
+          ],
+        },
+        {
+          name: "key",
+          type: "text",
+          index: true,
+          label: { en: "Key", zh: "比较用的名字" },
+          admin: { hidden: true },
         },
       ],
     },

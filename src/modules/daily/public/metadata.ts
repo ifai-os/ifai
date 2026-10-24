@@ -5,6 +5,7 @@ import { localizePath, locales, ogLocales, type Locale } from '@/i18n/config'
 import { alternatesFor, shareCard } from '@/lib/seo'
 
 import type { StoryCategory } from '../categories'
+import type { StoryTag } from '../tags'
 import { posterVersion } from '../poster/snapshot'
 import { POSTER_SIZE } from '../poster/layout'
 import { getPoster, getStory } from './data'
@@ -16,22 +17,29 @@ const descriptionLength = 160
 export async function listMetadata({
   locale,
   category,
+  tag = null,
   page,
 }: {
   locale: Locale
   category: StoryCategory | null
+  tag?: StoryTag | null
   page: number
 }): Promise<Metadata> {
-  const [t, names] = await Promise.all([
+  const [t, names, tagNames] = await Promise.all([
     getTranslations({ locale, namespace: 'daily' }),
     getTranslations({ locale, namespace: 'categories' }),
+    getTranslations({ locale, namespace: 'tags' }),
   ])
-  const base = category ? t('categoryTitle', { category: names(category) }) : t('title')
+  const base = category
+    ? t('categoryTitle', { category: names(category) })
+    : tag
+      ? t('tagTitle', { tag: tagNames(tag) })
+      : t('title')
   return {
     title: page > 1 ? t('pageTitle', { title: base, page }) : base,
     description: t('description'),
     alternates: {
-      ...alternatesFor(listHref({ category, page }), locale),
+      ...alternatesFor(listHref({ category, tag, page }), locale),
       types: { 'application/rss+xml': localizePath(locale, feedPath) },
     },
   }

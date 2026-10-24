@@ -22,6 +22,7 @@ test('unknown stories, categories, pages and posters answer 404', async ({ page,
   for (const path of [
     '/en/daily/not-a-story',
     '/en/daily/category/not-a-category',
+    '/en/daily/tag/not-a-tag',
     '/en/daily?page=0',
     '/en/daily?page=x',
     '/en/daily/poster/2020-01-01',
@@ -212,6 +213,21 @@ test.describe('with the sample stories', () => {
       '/en/daily/sample-lumen-chat-announces-workspaces',
     )
     await expect(page.getByRole('button', { name: en.daily.share })).toBeVisible()
+  })
+
+  test("a story's page has its industry tags, companies and products, and its topic", async ({ page }) => {
+    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    const topic = page.getByRole('region', { name: new RegExp(en.daily.topic) })
+    await expect(topic.getByText(en.daily.thisStory)).toBeVisible()
+    await expect(topic.getByRole('link', { name: titles.preview })).toHaveAttribute('href', '/en/daily/sample-lumen-chat-announces-workspaces')
+    const entities = page.getByRole('region', { name: en.daily.entities })
+    await expect(entities.getByText('Lumen Labs')).toBeVisible()
+    await page.getByRole('region', { name: en.daily.tags }).getByRole('link', { name: en.tags.enterprise }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/tag\/enterprise$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`${en.tags.enterprise} · Daily`)
+    // Listed by day and again in the hot list beside it.
+    await expect(page.getByRole('link', { name: titles.workspaces }).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: titles.preview })).toHaveCount(0)
   })
 
   test('a corrected story shows when it was corrected', async ({ page }) => {

@@ -1,5 +1,5 @@
 import config from '@payload-config'
-import { and, desc, gte, isNull } from '@payloadcms/db-postgres/drizzle'
+import { and, desc, eq, gte, isNull, sql } from '@payloadcms/db-postgres/drizzle'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { cache } from 'react'
@@ -12,11 +12,24 @@ import { appMentions } from '@/modules/apps/schema'
 import type { Media } from '@/payload-types'
 
 import type { StoryCategory } from '../categories'
+import { entityKey, topicOf } from '../entities'
 import { posterVersion, readSnapshot, type PosterSnapshot } from '../poster/snapshot'
 import { DAILY_CACHE_TAG } from '../review/cache'
-import { onePerEvent, sourcesOf, toHot, toItem, type HotStory, type RawStory, type StoryDetail, type StoryItem } from './story-item'
+import { tagsOf, type StoryTag } from '../tags'
+import {
+  entitiesOf,
+  onePerEvent,
+  sourcesOf,
+  toHot,
+  toItem,
+  type HotStory,
+  type RawStory,
+  type StoryDetail,
+  type StoryEntityItem,
+  type StoryItem,
+} from './story-item'
 
-export type { HotStory, StoryDetail, StoryItem, StorySource } from './story-item'
+export type { HotStory, StoryDetail, StoryEntityItem, StoryItem, StorySource, StoryTopic } from './story-item'
 export { isStoryCategory } from './story-item'
 
 /**
@@ -31,6 +44,11 @@ export const storiesPerPage = 30
 export const feedLength = 50
 export const developmentsShown = 10
 export const hotShown = 5
+/** 「话题追踪」keeps this many stories of the topic, this one included. */
+export const topicShown = 12
+/** 「同类事件」: at most this many, at least this similar (the same event starts at 0.75). */
+export const similarShown = 3
+const similarMin = 0.6
 /** The hottest story of "today" was published within this long. */
 const hottestWithinMs = 24 * 3_600_000
 /** Apps mentioned in stories of the last 48 hours: today in any time zone. */
@@ -54,6 +72,9 @@ const select = {
   correctedAt: true,
   createdAt: true,
   media: true,
+  tags: true,
+  entities: true,
+  representativeItemId: true,
 } as const
 
 /** The story's picture comes along (depth 1), with only what the pages need; Payload builds `url` from `filename`. */
@@ -66,13 +87,15 @@ async function payload() {
   return getPayload({ config })
 }
 
-type ListArgs = { category: StoryCategory | null; page: number }
+type ListArgs = { category: StoryCategory | null; tag?: StoryTag | null; page: number }
 
 const findStories = unstable_cache(
-  async ({ category, page }: ListArgs) => {
+  async ({ category, tag, page }: ListArgs) => {
     const result = await (await payload()).find({
       collection: 'stories',
-      where: { and: [published, ...(category ? [{ category: { equals: category } }] : [])] },
+      where: {
+        and: [published, ...(category ? [{ category: { equals: category } }] : []), ...(tag ? [{ tags: { contains: tag } }] : [])],
+      },
       sort: '-publishedAt',
       page,
       limit: storiesPerPage,
@@ -142,6 +165,87 @@ const findDevelopments = unstable_cache(
   },
   ['daily-developments'],
   cacheOptions,
+)
+
+// Published stories about the same product or company (`stories.entities.key`), newest first.
+const findTopic = unstable_cache(
+  async (key: string) => {
+    const { docs } = await (await payload()).find({
+      collection: 'stories',
+      where: { and: [published, { 'entities.key': { equals: key } }] },
+      sort: '-publishedAt',
+      limit: topicShown,
+      locale: 'all',
+      depth: 1,
+      populate,
+      select,
+      overrideAccess: false,
+    })
+    return docs as unknown as RawStory[]
+  },
+  ['daily-topic'],
+  cacheOptions,
+)
+
+// Published stories of other events whose report reads most like this one's (pgvector, step 6's embeddings).
+const findSimilar = unstable_cache(
+  async (itemId: number, eventId: number, leaveOut: number[]) => {
+    const { payload: client, db } = await getDb()
+    const distance = sql`mine.embedding <=> theirs.embedding`
+    const rows = await db.execute<{ id: number }>(sql`
+      select s.id from stories s
+      join raw_items theirs on theirs.id = s.representative_item_id
+      join raw_items mine on mine.id = ${itemId}
+      where s.status = 'published' and s.event_id <> ${eventId}
+        and mine.embedding is not null and theirs.embedding is not null
+        and 1 - (${distance}) >= ${similarMin}
+      order by ${distance}
+      limit ${similarShown + leaveOut.length}`)
+    const ids = rows.rows.map((row) => Number(row.id)).filter((id) => !leaveOut.includes(id)).slice(0, similarShown)
+    if (!ids.length) return []
+    const { docs } = await client.find({
+      collection: 'stories',
+      where: { and: [published, { id: { in: ids } }] },
+      pagination: false,
+      locale: 'all',
+      depth: 1,
+      populate,
+      select,
+      overrideAccess: false,
+    })
+    const byId = new Map((docs as unknown as RawStory[]).map((doc) => [doc.id, doc]))
+    return ids.flatMap((id) => byId.get(id) ?? [])
+  },
+  ['daily-similar'],
+  cacheOptions,
+)
+
+// The published apps the apps module matched to this story, with the name the match was made on.
+const findStoryApps = unstable_cache(
+  async (storyId: number) => {
+    const { payload: client, db } = await getDb()
+    const rows = await db
+      .select({ appId: appMentions.appId, matched: appMentions.matched })
+      .from(appMentions)
+      .where(and(eq(appMentions.storyId, storyId), isNull(appMentions.removedAt)))
+    if (!rows.length) return []
+    const { docs } = await client.find({
+      collection: 'apps',
+      where: { and: [published, { id: { in: [...new Set(rows.map((row) => row.appId))] } }] },
+      pagination: false,
+      depth: 0,
+      select: { name: true, slug: true },
+      overrideAccess: false,
+    })
+    const byId = new Map(docs.map((doc) => [doc.id, doc]))
+    return rows.flatMap((row) => {
+      const app = byId.get(row.appId)
+      // A match by the source's address names no product, so the app's own name counts too.
+      return app ? [{ keys: [entityKey(row.matched), entityKey(app.name)], slug: app.slug, name: app.name }] : []
+    })
+  },
+  ['daily-story-apps'],
+  { tags: [DAILY_CACHE_TAG, appsCacheTag], revalidate: 3600 },
 )
 
 // Stories of every event with heat (the heat job keeps it to the last 48 hours), hottest first.
@@ -260,7 +364,7 @@ const findPosterDates = unstable_cache(
   cacheOptions,
 )
 
-/** One page of published stories, newest first, optionally in one category. */
+/** One page of published stories, newest first, optionally in one category or with one tag. */
 export async function listStories({ locale, ...args }: ListArgs & { locale: Locale }): Promise<StoryPage> {
   const result = await findStories(args)
   return { stories: result.docs.map((doc) => toItem(doc, locale)), total: result.total, page: args.page, pages: result.pages }
@@ -302,15 +406,37 @@ export async function latestStories(locale: Locale, limit: number): Promise<Stor
   return (await findLatest(limit)).map((doc) => toItem(doc, locale))
 }
 
-/** A published story with its sources and the other stories of its event; null when there is none by that slug. */
+/**
+ * A published story with its sources, the other stories of its event, its tags, companies and
+ * products, its topic and similar events (docs/specs/daily.md「详情页：…」); null when there is
+ * none by that slug.
+ */
 export const getStory = cache(async (slug: string, locale: Locale): Promise<StoryDetail | null> => {
   const doc = await findStory(slug)
   if (!doc) return null
-  const developments = await findDevelopments(doc.eventId, doc.id)
+  const entities = entitiesOf(doc, entityKey)
+  const topic = topicOf(entities)
+  const [developments, topicStories, apps] = await Promise.all([
+    findDevelopments(doc.eventId, doc.id),
+    topic ? findTopic(topic.key) : [],
+    entities.length ? findStoryApps(doc.id) : [],
+  ])
+  // A story of the same event or already in the topic is not「同类」.
+  const similar = await findSimilar(doc.representativeItemId, doc.eventId, topicStories.map((other) => other.id))
   return {
     ...toItem(doc, locale),
     sources: sourcesOf(doc),
     developments: developments.map((other) => toItem(other, locale)),
+    tags: tagsOf(doc.tags),
+    entities: entities.map(({ name, kind, key }): StoryEntityItem => {
+      const app = apps.find((match) => match.keys.includes(key))
+      return { name, kind, app: app ? { slug: app.slug, name: app.name } : null }
+    }),
+    topic:
+      topic && topicStories.some((other) => other.id !== doc.id)
+        ? { name: topic.name, stories: topicStories.map((other) => toItem(other, locale)) }
+        : null,
+    similar: similar.map((other) => toItem(other, locale)),
   }
 })
 

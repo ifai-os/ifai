@@ -67,12 +67,16 @@ describe('prompt schemas', () => {
     const structure = {
       kind: 'news',
       category: 'product',
+      tags: ['llm', 'coding'],
       companies: ['Acme'],
       products: ['Model 2'],
       facts: [{ who: 'Acme', what: 'shipped Model 2', when: 'on Tuesday' }],
       flags: { promotional: false, tutorial: false },
     }
     expect(structurePrompt.schema.safeParse(structure).success).toBe(true)
+    // Tags come from the fixed list only, at most three.
+    expect(structurePrompt.schema.safeParse({ ...structure, tags: ['gadgets'] }).success).toBe(false)
+    expect(structurePrompt.schema.safeParse({ ...structure, tags: ['llm', 'coding', 'agents', 'chips'] }).success).toBe(false)
     expect(structurePrompt.schema.safeParse({ ...structure, category: 'sports' }).success).toBe(false)
     expect(
       groupPrompt.schema.safeParse({ relations: [{ id: 3, relation: 'same', newInformation: true, reason: 'same launch' }] }).success,
@@ -119,7 +123,7 @@ describe('scores', () => {
 describe('embedding text', () => {
   it('prefers the extracted facts over the raw body', () => {
     const facts = [{ who: 'Acme', what: 'shipped Model 2', when: 'today' }]
-    const structure = { kind: 'news' as const, category: 'product' as const, companies: [], products: [], facts, flags: { promotional: false, tutorial: false } }
+    const structure = { kind: 'news' as const, category: 'product' as const, tags: [], companies: [], products: [], facts, flags: { promotional: false, tutorial: false } }
     expect(embeddingText({ title: 'T', summary: 'S', content: 'body'.repeat(300) }, { structure })).toBe('T\nS\nAcme: shipped Model 2')
     expect(embeddingText({ title: 'T', summary: null, content: 'body' }, { structure: null })).toBe('T\nbody')
   })

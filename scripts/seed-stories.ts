@@ -23,7 +23,7 @@ import { assertSeedTarget } from './seed-target'
 type Text = Pick<Story, 'title' | 'summary'> & Partial<Pick<Story, 'tryIt'>>
 
 type SampleStory = Pick<Story, 'slug' | 'category' | 'status' | 'eventId' | 'representativeItemId' | 'sources' | 'heat'> &
-  Partial<Pick<Story, 'heatTrend'>> & {
+  Partial<Pick<Story, 'heatTrend' | 'tags' | 'entities'>> & {
   publishedAt: string | null
   correctedAt?: string
   /** English is required; zh-Hant comes from zh-Hans; a missing language falls back to English. */
@@ -45,6 +45,12 @@ const sampleStories: SampleStory[] = [
     // The hottest event: today's hottest story and first in the last 48 hours, marked new.
     heat: 72,
     heatTrend: 'new',
+    // 「行业标签」「涉及的公司与产品」; shares its topic (Lumen Chat) with the fourth story for「话题追踪」.
+    tags: ['assistants', 'enterprise'],
+    entities: [
+      { name: 'Lumen Chat', kind: 'product' },
+      { name: 'Lumen Labs', kind: 'company' },
+    ],
     sources: [
       { name: 'Lumen Labs', role: 'original', url: 'https://lumen-chat.example/blog/shared-workspaces', publishedAt: minutesAgo(90) },
       { name: 'Sample Tech News', role: 'report', url: 'https://news.example/lumen-workspaces', publishedAt: minutesAgo(60) },
@@ -84,6 +90,11 @@ const sampleStories: SampleStory[] = [
     publishedAt: minutesAgo(120),
     heat: 45,
     heatTrend: 'rising',
+    tags: ['coding', 'llm'],
+    entities: [
+      { name: 'Kitecode', kind: 'product' },
+      { name: 'Kite Studio', kind: 'company' },
+    ],
     sources: [{ name: 'Kite Studio', role: 'original', url: 'https://kitecode.example/blog/open-weights', publishedAt: minutesAgo(200) }],
     text: {
       en: {
@@ -136,6 +147,8 @@ const sampleStories: SampleStory[] = [
     // Same event, same heat: the hot list shows the event once, by its newest story.
     heat: 72,
     heatTrend: 'new',
+    tags: ['assistants'],
+    entities: [{ name: 'Lumen Chat', kind: 'product' }],
     sources: [{ name: 'Lumen Labs', role: 'original', url: 'https://lumen-chat.example/blog/workspaces-preview', publishedAt: '2026-10-19T20:00:00.000Z' }],
     text: {
       en: {
