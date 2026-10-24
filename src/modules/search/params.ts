@@ -1,3 +1,5 @@
+import { sitePhase, type Phase } from '@/config/site'
+
 import { visibleKinds, type SearchKind } from './kinds'
 
 /** Longest search passed on; longer input is cut (the same as the apps and Skills lists). */
@@ -25,12 +27,12 @@ export function cleanQuery(value: string): string {
 }
 
 /** `?q=`, `?type=` and `?page=` of the search page; an unknown type, or one whose module has not launched, is「全部」. */
-export function readSearchParams(params: SearchParams): SiteSearchParams {
+export function readSearchParams(params: SearchParams, phase: Phase = sitePhase): SiteSearchParams {
   const type = first(params.type)
   const page = first(params.page)
   return {
     q: cleanQuery(first(params.q)),
-    type: (visibleKinds() as readonly string[]).includes(type) ? (type as SearchKind) : 'all',
+    type: (visibleKinds(phase) as readonly string[]).includes(type) ? (type as SearchKind) : 'all',
     page: page === '' ? 1 : /^[1-9]\d{0,5}$/.test(page) ? Number(page) : null,
   }
 }
