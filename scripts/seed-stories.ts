@@ -39,13 +39,13 @@ const day = 24 * 60
 
 const sampleStories: SampleStory[] = [
   {
-    // Published a minute ago: on every reader's "today". Shares its event with the story below.
+    // Out five minutes ago by its source: on every reader's "today". Shares its event with the story below.
     slug: 'sample-lumen-chat-adds-shared-workspaces',
     category: 'tools',
     status: 'published',
     eventId: 900001,
     representativeItemId: 900001,
-    publishedAt: minutesAgo(1),
+    publishedAt: minutesAgo(5),
     // The hottest event: today's hottest story and first in the last 48 hours, marked new.
     heat: 72,
     heatTrend: 'new',
@@ -56,9 +56,9 @@ const sampleStories: SampleStory[] = [
       { name: 'Lumen Labs', kind: 'company' },
     ],
     sources: [
-      { name: 'Lumen Labs', role: 'original', url: 'https://lumen-chat.example/blog/shared-workspaces', publishedAt: minutesAgo(90) },
-      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/lumen-workspaces', publishedAt: minutesAgo(60) },
-      { name: 'Another Outlet', role: 'report', url: 'https://outlet.example/lumen-chat-workspaces', publishedAt: minutesAgo(50) },
+      { name: 'Lumen Labs', role: 'original', url: 'https://lumen-chat.example/blog/shared-workspaces', publishedAt: minutesAgo(5) },
+      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/lumen-workspaces', publishedAt: minutesAgo(4) },
+      { name: 'Another Outlet', role: 'report', url: 'https://outlet.example/lumen-chat-workspaces', publishedAt: minutesAgo(3) },
       { name: 'Hacker News', role: 'discussion', url: 'https://news.ycombinator.example/item?id=900001', publishedAt: null },
     ],
     text: {
@@ -99,7 +99,7 @@ const sampleStories: SampleStory[] = [
       { name: 'Kitecode', kind: 'product' },
       { name: 'Kite Studio', kind: 'company' },
     ],
-    sources: [{ name: 'Kite Studio', role: 'original', url: 'https://kitecode.example/blog/open-weights', publishedAt: minutesAgo(200) }],
+    sources: [{ name: 'Kite Studio', role: 'original', url: 'https://kitecode.example/blog/open-weights', publishedAt: minutesAgo(120) }],
     text: {
       en: {
         title: 'Sample: Kitecode publishes the weights of its code model',
@@ -126,8 +126,8 @@ const sampleStories: SampleStory[] = [
     heat: 30,
     correctedAt: '2026-10-20T10:00:00.000Z',
     sources: [
-      { name: 'Orbit Research', role: 'original', url: 'https://orbit-notes.example/research/benchmark', publishedAt: '2026-10-20T07:00:00.000Z' },
-      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/orbit-benchmark', publishedAt: '2026-10-20T07:40:00.000Z' },
+      { name: 'Orbit Research', role: 'original', url: 'https://orbit-notes.example/research/benchmark', publishedAt: '2026-10-20T08:15:00.000Z' },
+      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/orbit-benchmark', publishedAt: '2026-10-20T08:40:00.000Z' },
     ],
     text: {
       en: {
@@ -153,7 +153,7 @@ const sampleStories: SampleStory[] = [
     heatTrend: 'new',
     tags: ['assistants'],
     entities: [{ name: 'Lumen Chat', kind: 'product' }],
-    sources: [{ name: 'Lumen Labs', role: 'original', url: 'https://lumen-chat.example/blog/workspaces-preview', publishedAt: '2026-10-19T20:00:00.000Z' }],
+    sources: [{ name: 'Lumen Labs', role: 'original', url: 'https://lumen-chat.example/blog/workspaces-preview', publishedAt: '2026-10-19T22:30:00.000Z' }],
     text: {
       en: {
         title: 'Sample: Lumen Chat previews team workspaces',
@@ -179,9 +179,9 @@ const sampleStories: SampleStory[] = [
       { name: 'Nimbus AI', kind: 'company' },
     ],
     sources: [
-      { name: 'Nimbus AI', role: 'original', url: 'https://nimbus-ai.example/blog/nimbus-3', publishedAt: minutesAgo(day + 60) },
-      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/nimbus-3', publishedAt: minutesAgo(day + 30) },
-      { name: 'Another Outlet', role: 'report', url: 'https://outlet.example/nimbus-3-reasoning', publishedAt: minutesAgo(day + 20) },
+      { name: 'Nimbus AI', role: 'original', url: 'https://nimbus-ai.example/blog/nimbus-3', publishedAt: minutesAgo(day) },
+      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/nimbus-3', publishedAt: minutesAgo(day - 30) },
+      { name: 'Another Outlet', role: 'report', url: 'https://outlet.example/nimbus-3-reasoning', publishedAt: minutesAgo(day - 40) },
     ],
     text: {
       en: {
@@ -220,8 +220,8 @@ const sampleStories: SampleStory[] = [
       { name: 'Quill Labs', kind: 'company' },
     ],
     sources: [
-      { name: 'Quill Labs', role: 'original', url: 'https://quill.example/blog/series-a', publishedAt: minutesAgo(day + 120) },
-      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/quill-series-a', publishedAt: minutesAgo(day + 90) },
+      { name: 'Quill Labs', role: 'original', url: 'https://quill.example/blog/series-a', publishedAt: minutesAgo(day + 60) },
+      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/quill-series-a', publishedAt: minutesAgo(day + 30) },
     ],
     text: {
       en: {
@@ -257,8 +257,8 @@ const sampleStories: SampleStory[] = [
       { name: 'Prism Studio', kind: 'company' },
     ],
     sources: [
-      { name: 'Prism Studio', role: 'original', url: 'https://prism.example/blog/sketch-to-video', publishedAt: minutesAgo(2 * day + 90) },
-      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/prism-sketch-video', publishedAt: minutesAgo(2 * day + 40) },
+      { name: 'Prism Studio', role: 'original', url: 'https://prism.example/blog/sketch-to-video', publishedAt: minutesAgo(2 * day) },
+      { name: 'Sample Tech News', role: 'report', url: 'https://news.example/prism-sketch-video', publishedAt: minutesAgo(2 * day - 50) },
     ],
     text: {
       en: {
@@ -295,7 +295,7 @@ const sampleStories: SampleStory[] = [
     tags: ['hardware'],
     entities: [{ name: 'Strider Robotics', kind: 'company' }],
     sources: [
-      { name: 'Strider Robotics', role: 'original', url: 'https://strider.example/news/learning-by-watching', publishedAt: minutesAgo(2 * day + 240) },
+      { name: 'Strider Robotics', role: 'original', url: 'https://strider.example/news/learning-by-watching', publishedAt: minutesAgo(2 * day + 150) },
     ],
     text: {
       en: {
@@ -352,7 +352,9 @@ const db = (payload.db as unknown as PostgresAdapter).drizzle
 
 for (const story of sampleStories) {
   const { text, ...fields } = story
-  const data = { ...fields, ...text.en }
+  // A story shows its original source's time (daily.md「发布时间」); the editor approved it ten minutes on.
+  const approvedAt = story.publishedAt ? new Date(Math.min(Date.parse(story.publishedAt) + 10 * 60_000, now)).toISOString() : null
+  const data = { ...fields, approvedAt, ...text.en }
   const existing = await payload.find({ collection: 'stories', where: { slug: { equals: story.slug } }, limit: 1, depth: 0 })
   const doc = existing.docs[0]
     ? await payload.update({ collection: 'stories', id: existing.docs[0].id, locale: 'en', data, depth: 0 })

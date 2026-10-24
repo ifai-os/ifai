@@ -161,7 +161,7 @@ test.describe('with the sample stories', () => {
       // 2026-10-20T08:15Z is 17:15 in Tokyo, still October 20.
       await expect(row.locator('time[datetime="2026-10-20T08:15:00.000Z"]')).toHaveText(/5:15\sPM/)
       await expect(page.getByRole('heading', { level: 2, name: 'Tuesday, October 20' })).toBeVisible()
-      // The newest sample story was published a minute ago, so the first group is today.
+      // The newest sample story came out five minutes ago, so the first group is today.
       await expect(page.locator('[id^="day-"]').first()).toHaveText(en.daily.today)
     })
   })
@@ -216,7 +216,7 @@ test.describe('with the sample stories', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.tools}`)
     const banner = page.getByRole('region', { name: en.categories.tools })
     await expect(banner).toContainText(en.categoryAbout.tools)
-    // The newest sample story went up a minute before the tests, so the update is today's: a time alone.
+    // The newest sample story came out minutes before the tests, so the update is today's: a time alone.
     await expect(banner).toContainText(/stor(y|ies) in the last 7 days · updated \d{1,2}:\d{2}\s[AP]M$/)
     await expect(page).toHaveTitle(new RegExp(`^${en.categories.tools} · Daily`))
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', en.categoryAbout.tools)

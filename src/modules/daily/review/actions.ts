@@ -18,6 +18,7 @@ import { syncEventSources } from '../heat/sources'
 import { sourceRoles } from '../story-fields'
 import { assistPrompt, cleanSuggestion, type AssistKind } from '../prompts/assist'
 import { rewritePrompt } from '../prompts/rewrite'
+import { publishTime } from '../publish-time'
 import { verifyWriting } from '../write/verify'
 import { loadReports, materialOf } from '../write/write'
 import { refreshDailyCache } from './cache'
@@ -208,7 +209,9 @@ async function rewriteOrFail(id: number, deps: ReviewDeps): Promise<void> {
 
 /**
  * 通过并发布: save the edits, make sure the other languages match the simplified Chinese
- * (rewriting the stale ones), then publish. The publish time is the approval time.
+ * (rewriting the stale ones), then publish. The publish time is the news source's (the one the
+ * story has, else its sources'; ../publish-time.ts); the approval time is kept beside it, the
+ * first one when a withdrawn story goes back up.
  */
 export async function publishStory(id: number, edits: Edits | undefined, deps: ReviewDeps = {}): Promise<ReviewDetail> {
   const { payload, db } = await getDb()
@@ -220,7 +223,12 @@ export async function publishStory(id: number, edits: Edits | undefined, deps: R
   if (duplicate) throw new ReviewError('duplicate_open', 409, { duplicate })
   checkLengths(story)
   await rewriteOrFail(id, deps)
-  await patch(payload, id, { status: 'published', publishedAt: now.toISOString(), laterAt: null })
+  await patch(payload, id, {
+    status: 'published',
+    publishedAt: publishTime(story, now),
+    approvedAt: story.approvedAt ?? now.toISOString(),
+    laterAt: null,
+  })
   await (deps.refresh ?? refreshDailyCache)()
   return (await loadReviewDetail(id, now))!
 }

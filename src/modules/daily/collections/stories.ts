@@ -6,6 +6,7 @@ import { storyCategories } from "../categories";
 import { entityKey, entityKinds, type EntityKind } from "../entities";
 import { parseVideo, storyMediaKinds, type StoryMediaKind } from "../media";
 import { followPublishing, leaveOnDelete } from "../poster/hooks";
+import { stampPublishing } from "../publish-time";
 import { reviewEndpoints } from "../review/endpoints";
 import { maxStoryTags, storyTags, tagLabels } from "../tags";
 import {
@@ -93,8 +94,9 @@ const hantFields = ["title", "summary", "tryIt"] as const;
  * zh-Hans by the shared hook (AGENTS.md rule 4), so an editor's zh-Hans correction updates it
  * too. Review (the「审核队列」screen at /admin/collections/stories/review, backed by
  * `src/modules/daily/review/`) moves `status`, rewrites the other languages when the simplified
- * Chinese changed, sets the times and refreshes the site's cache. The day's poster follows a
- * story going on or off the site (../poster/hooks.ts).
+ * Chinese changed, sets the times and refreshes the site's cache. A story going on the site by
+ * any path gets its approval time and, when it has none, a publish time from its sources
+ * (../publish-time.ts). The day's poster follows a story going on or off the site (../poster/hooks.ts).
  */
 export const Stories: CollectionConfig = {
   slug: "stories",
@@ -103,6 +105,7 @@ export const Stories: CollectionConfig = {
     plural: { en: "Stories", zh: "新闻" },
   },
   hooks: {
+    beforeChange: [stampPublishing],
     afterChange: [syncHantFromHans(hantFields), followPublishing],
     afterDelete: [leaveOnDelete],
   },
@@ -503,7 +506,27 @@ export const Stories: CollectionConfig = {
       name: "publishedAt",
       type: "date",
       label: { en: "Published at", zh: "发布时间" },
-      admin: { position: "sidebar", date: { pickerAppearance: "dayAndTime" } },
+      admin: {
+        position: "sidebar",
+        date: { pickerAppearance: "dayAndTime" },
+        description: {
+          en: "The news source's time: the site shows it and sorts by it. Left empty, approving fills in the original source's time (else the approval's).",
+          zh: "新闻源的发布时间，页面上显示、排序都按它。空着时审核通过会填上原文的发布时间，原文没有时间才用审核通过的时刻。",
+        },
+      },
+    },
+    {
+      name: "approvedAt",
+      type: "date",
+      label: { en: "Approved at", zh: "审核通过" },
+      admin: {
+        ...readOnly,
+        date: { pickerAppearance: "dayAndTime" },
+        description: {
+          en: "When it first went on the site. The morning email picks by it.",
+          zh: "第一次上线的时刻，晨报邮件按它选稿。",
+        },
+      },
     },
     {
       name: "correctedAt",

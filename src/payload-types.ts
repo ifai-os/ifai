@@ -577,7 +577,14 @@ export interface Story {
     | boolean
     | null;
   promptVersion?: string | null;
+  /**
+   * The news source's time: the site shows it and sorts by it. Left empty, approving fills in the original source's time (else the approval's).
+   */
   publishedAt?: string | null;
+  /**
+   * When it first went on the site. The morning email picks by it.
+   */
+  approvedAt?: string | null;
   correctedAt?: string | null;
   /**
    * Moves the story to the end of the queue.
@@ -1341,6 +1348,7 @@ export interface StoriesSelect<T extends boolean = true> {
   localeStatus?: T;
   promptVersion?: T;
   publishedAt?: T;
+  approvedAt?: T;
   correctedAt?: T;
   laterAt?: T;
   mergedInto?: T;
