@@ -50,8 +50,8 @@ export async function shownCircleIds(): Promise<number[]> {
 }
 
 /**
- * The numbers on the static page: a few minutes old at most. The page's own requests bring
- * fresh ones (GET /api/circles/feed), so the page only needs them for its first paint.
+ * The numbers in the page's first paint: a few minutes old at most. The page's own requests bring
+ * fresh ones (GET /api/circles/feed) right after.
  */
 const loadOverview = unstable_cache(
   async (ids: number[]): Promise<CirclesOverview> => {
