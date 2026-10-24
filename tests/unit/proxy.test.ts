@@ -44,3 +44,25 @@ describe('locale proxy', () => {
     expect(rewrite && new URL(rewrite).pathname).toBe('/zh-Hans/apps')
   })
 })
+
+describe('admin language', () => {
+  it('opens the back office in Chinese for an English browser that has not chosen', async () => {
+    const response = await proxy(request('/admin/collections/apps', { 'accept-language': 'en-US,en;q=0.9' }))
+    expect(response.headers.get('location')).toBeNull()
+    expect(response.headers.get('x-middleware-request-cookie')).toContain('payload-lng=zh')
+    expect(response.cookies.get('payload-lng')?.value).toBe('zh')
+  })
+
+  it('keeps the other cookies on the request', async () => {
+    const response = await proxy(request('/admin', { cookie: 'payload-token=abc' }))
+    const forwarded = response.headers.get('x-middleware-request-cookie') ?? ''
+    expect(forwarded).toContain('payload-token=abc')
+    expect(forwarded).toContain('payload-lng=zh')
+  })
+
+  it('leaves a language chosen in the back office alone', async () => {
+    const response = await proxy(request('/admin', { 'accept-language': 'zh-CN', cookie: 'payload-lng=en' }))
+    expect(response.headers.get('x-middleware-request-cookie')).toBeNull()
+    expect(response.cookies.get('payload-lng')).toBeUndefined()
+  })
+})

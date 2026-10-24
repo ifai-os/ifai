@@ -1,0 +1,147 @@
+/*
+ * The back office borrows the site's buttons (src/components/button.tsx): primary is black, secondary is outlined,
+ * 40px tall, 6px corners, 14px medium text. The admin loads neither Tailwind nor globals.css, so the token values
+ * are repeated here — change them together with「设计令牌」in src/app/(frontend)/globals.css.
+ * Payload's own styles sit in @layer payload-default, so these unlayered rules win without !important.
+ */
+:root {
+  --ifai-btn-primary-bg: #000000; /* ink */
+  --ifai-btn-primary-hover: #48494c; /* ink-2 */
+  --ifai-btn-primary-ink: #ffffff;
+  --ifai-btn-line: #e4e4e5; /* line */
+  --ifai-btn-line-hover: #6f7174; /* ink-4 */
+  --ifai-btn-bg: #ffffff; /* bg */
+  --ifai-btn-ink: #000000; /* ink */
+  --ifai-btn-disabled-bg: #f0f0f3; /* surface-2 */
+  --ifai-btn-disabled-line: #cdcdce; /* disabled */
+  --ifai-btn-disabled-ink: #6f7174; /* ink-4 */
+}
+
+/* The site has no dark theme; in Payload's dark theme the same buttons are inverted. */
+html[data-theme='dark'] {
+  --ifai-btn-primary-bg: #ffffff;
+  --ifai-btn-primary-hover: #e4e4e5;
+  --ifai-btn-primary-ink: #000000;
+  --ifai-btn-line: var(--theme-elevation-200);
+  --ifai-btn-line-hover: var(--theme-elevation-500);
+  --ifai-btn-bg: transparent;
+  --ifai-btn-ink: var(--theme-text);
+  --ifai-btn-disabled-bg: var(--theme-elevation-100);
+  --ifai-btn-disabled-line: var(--theme-elevation-150);
+  --ifai-btn-disabled-ink: var(--theme-elevation-500);
+}
+
+/* ── Shape: every text button, Payload's and ours ───────────────── */
+.btn.btn--style-primary,
+.btn.btn--style-secondary {
+  --btn-font-weight: 500;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  transition:
+    color 0.15s,
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.btn.btn--style-primary:not(.btn--icon-only) .btn__content,
+.btn.btn--style-secondary:not(.btn--icon-only) .btn__content {
+  gap: 6px;
+}
+.btn.btn--style-primary:not(.btn--icon-only):not(.btn--withPopup),
+.btn.btn--style-secondary:not(.btn--icon-only):not(.btn--withPopup) {
+  min-height: 40px;
+  --btn-padding-block-start: 0;
+  --btn-padding-block-end: 0;
+  --btn-padding-inline-start: 16px;
+  --btn-padding-inline-end: 16px;
+}
+/* Small buttons sit inside panels and table rows: same look, a step shorter. */
+.btn.btn--size-small.btn--style-primary:not(.btn--icon-only),
+.btn.btn--size-small.btn--style-secondary:not(.btn--icon-only),
+.btn.btn--size-xsmall.btn--style-primary:not(.btn--icon-only),
+.btn.btn--size-xsmall.btn--style-secondary:not(.btn--icon-only) {
+  min-height: 32px;
+  --btn-padding-inline-start: 12px;
+  --btn-padding-inline-end: 12px;
+}
+.btn.btn--style-primary .btn__content,
+.btn.btn--style-secondary .btn__content {
+  min-height: inherit;
+}
+
+/* ── Colors ─────────────────────────────────────────────────────── */
+.btn.btn--style-primary {
+  --color: var(--ifai-btn-primary-ink);
+  --bg-color: var(--ifai-btn-primary-bg);
+  --hover-color: var(--ifai-btn-primary-ink);
+  --hover-bg: var(--ifai-btn-primary-hover);
+  --btn-border: 1px solid var(--ifai-btn-primary-bg);
+  --hover-btn-border: 1px solid var(--ifai-btn-primary-hover);
+}
+.btn.btn--style-secondary {
+  --color: var(--ifai-btn-ink);
+  --bg-color: var(--ifai-btn-bg);
+  --hover-color: var(--ifai-btn-ink);
+  --hover-bg: var(--ifai-btn-bg);
+  --btn-border: 1px solid var(--ifai-btn-line);
+  --hover-btn-border: 1px solid var(--ifai-btn-line-hover);
+}
+.btn.btn--style-primary.btn--disabled,
+.btn.btn--style-secondary.btn--disabled {
+  --color: var(--ifai-btn-disabled-ink);
+  --bg-color: var(--ifai-btn-disabled-bg);
+  --hover-color: var(--color);
+  --hover-bg: var(--bg-color);
+  --btn-border: 1px solid var(--ifai-btn-disabled-line);
+  --hover-btn-border: var(--btn-border);
+}
+/* Payload's split "Publish ▾" button: the arrow half follows the same colors. */
+.btn--withPopup .btn.btn--style-primary,
+.btn--withPopup .btn.btn--style-secondary {
+  border-radius: 6px 0 0 6px;
+}
+.btn--withPopup .popup-button {
+  border-radius: 0 6px 6px 0;
+}
+
+/* Payload's grey pills (创建新条目, 列, 过滤条件) become small outlined buttons. */
+.btn.btn--style-pill {
+  --color: var(--ifai-btn-ink);
+  --bg-color: var(--ifai-btn-bg);
+  --hover-color: var(--ifai-btn-ink);
+  --hover-bg: var(--ifai-btn-bg);
+  --btn-border: 1px solid var(--ifai-btn-line);
+  --hover-btn-border: 1px solid var(--ifai-btn-line-hover);
+  --btn-font-weight: 500;
+  border-radius: 6px;
+}
+.btn.btn--style-pill.btn--disabled {
+  --color: var(--ifai-btn-disabled-ink);
+  --hover-btn-border: var(--btn-border);
+}
+
+/* Keyboard focus, as on the site. */
+.btn.btn--style-primary:focus-visible,
+.btn.btn--style-secondary:focus-visible,
+.btn.btn--style-pill:focus-visible {
+  outline: 2px solid var(--ifai-btn-line-hover);
+  outline-offset: 2px;
+}
+
+/* ── 界面语言 switch in the header (src/admin/ui-language/switch.tsx) ── */
+.ifai-ui-language {
+  min-height: calc(var(--base) * 1.2);
+  padding-inline-end: calc(var(--base) * 0.4);
+}
+.ifai-ui-language button:disabled {
+  cursor: default;
+  text-decoration: none;
+}
+.ifai-ui-language button:not(:disabled) {
+  font-weight: 400;
+  color: var(--theme-elevation-600);
+}
+.ifai-ui-language__option {
+  display: inline-flex;
+  align-items: center;
+}
