@@ -61,13 +61,26 @@ test.describe('with the sample stories', () => {
     weights: 'Sample: Kitecode publishes the weights of its code model',
     benchmark: 'Sample: Orbit Notes reports a new summarization benchmark',
     preview: 'Sample: Lumen Chat previews team workspaces',
+    nimbus: 'Sample: Nimbus AI releases Nimbus 3, which reasons step by step',
+    quill: 'Sample: Quill Labs raises a Series A to bring its writing assistant to teams',
+    prism: 'Sample: Prism turns rough sketches into short videos',
+    robot: 'Sample: Strider Robotics shows a warehouse robot that learns by watching',
   }
 
   test('lists published stories newest first and leaves pending and withdrawn ones out', async ({ page }) => {
     await page.goto('/en/daily')
     const main = page.getByRole('main')
     const rows = page.getByRole('article')
-    await expect(rows.getByRole('link', { name: /^Sample: / })).toHaveText([titles.workspaces, titles.weights, titles.benchmark, titles.preview])
+    await expect(rows.getByRole('link', { name: /^Sample: / })).toHaveText([
+      titles.workspaces,
+      titles.weights,
+      titles.nimbus,
+      titles.quill,
+      titles.prism,
+      titles.robot,
+      titles.benchmark,
+      titles.preview,
+    ])
     await expect(main.getByText('Sample pending story')).toHaveCount(0)
     await expect(main.getByText('Sample withdrawn story')).toHaveCount(0)
     await expect(rows.filter({ hasText: titles.workspaces }).getByText('2 more outlets reported this')).toBeVisible()
@@ -82,7 +95,7 @@ test.describe('with the sample stories', () => {
 
     const hot = page.getByRole('region', { name: en.daily.hotTitle })
     // One story per event (the earlier Lumen Chat story shares its event); withdrawn and pending ones never show.
-    await expect(hot.getByRole('link')).toHaveText([titles.workspaces, titles.weights, titles.benchmark])
+    await expect(hot.getByRole('link')).toHaveText([titles.workspaces, titles.weights, titles.benchmark, titles.nimbus, titles.quill])
     const items = hot.getByRole('listitem')
     await expect(items.nth(0)).toContainText(`3 outlets${en.daily.trend.new}`)
     await expect(items.nth(1)).toContainText(`1 outlet${en.daily.trend.rising}`)
@@ -168,6 +181,8 @@ test.describe('with the sample stories', () => {
     await page.goto('/zh-hans/daily')
     const day = page.locator('header').filter({ has: page.getByRole('heading', { level: 2, name: /^10月20日 星期二$/ }) })
     await expect(day).toContainText('1 条')
+    // A sample story went up exactly a day before the samples were added.
+    await expect(page.getByRole('heading', { level: 2, name: '昨天' })).toBeVisible()
   })
 
   test('a picture shows beside its story and on its page; a video plays in a dialog', async ({ page }) => {
@@ -180,6 +195,14 @@ test.describe('with the sample stories', () => {
     await play.click()
     const dialog = page.getByRole('dialog', { name: titles.weights })
     await expect(dialog.locator('iframe')).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/M7lc1UVf-VE\?autoplay=1/)
+    await page.keyboard.press('Escape')
+    await expect(page.locator('iframe')).toHaveCount(0)
+    // Vimeo too, asked not to track (dnt=1).
+    await page.getByRole('button', { name: `Play video: ${titles.robot}` }).click()
+    await expect(page.getByRole('dialog', { name: titles.robot }).locator('iframe')).toHaveAttribute(
+      'src',
+      'https://player.vimeo.com/video/76979871?autoplay=1&dnt=1',
+    )
     await page.keyboard.press('Escape')
     await expect(page.locator('iframe')).toHaveCount(0)
 
@@ -227,14 +250,7 @@ test.describe('with the sample stories', () => {
     expect((await title.boundingBox())!.width).toBeLessThanOrEqual(210)
   })
 
-  test('an empty category says so and links to every story', async ({ page }) => {
-    await page.goto('/en/daily/category/robotics')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.robotics}`)
-    await expect(page.getByText(/in the last 7 days/)).toHaveCount(0)
-    await expect(page.getByText(en.daily.emptyCategoryTitle)).toBeVisible()
-    await page.getByRole('link', { name: en.daily.allStories }).click()
-    await expect(page).toHaveURL(/\/en\/daily$/)
-  })
+  // Every category has sample stories, so an empty one is left to tests/unit/daily/public.test.tsx.
 
   test("a story's page has its sources, original first, and the other developments of its event", async ({ page }) => {
     const response = await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
@@ -259,12 +275,14 @@ test.describe('with the sample stories', () => {
     await expect(topic.getByRole('link', { name: titles.preview })).toHaveAttribute('href', '/en/daily/sample-lumen-chat-announces-workspaces')
     const entities = page.getByRole('region', { name: en.daily.entities })
     await expect(entities.getByText('Lumen Labs')).toBeVisible()
-    await page.getByRole('region', { name: en.daily.tags }).getByRole('link', { name: en.tags.enterprise }).click()
-    await expect(page).toHaveURL(/\/en\/daily\/tag\/enterprise$/)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`${en.tags.enterprise} · Daily`)
+    await page.getByRole('region', { name: en.daily.tags }).getByRole('link', { name: en.tags.assistants }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/tag\/assistants$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`${en.tags.assistants} · Daily`)
     // Listed by day and again in the hot list beside it.
     await expect(page.getByRole('link', { name: titles.workspaces }).first()).toBeVisible()
-    await expect(page.getByRole('link', { name: titles.preview })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: titles.preview })).toBeVisible()
+    // Prism's story has other tags and isn't hot enough for the hot list.
+    await expect(page.getByRole('link', { name: titles.prism })).toHaveCount(0)
   })
 
   test('another category keeps the page and puts a skeleton, then a retry, where the stories were', async ({ page }) => {
@@ -327,6 +345,26 @@ test.describe('with the sample stories', () => {
     await main.getByRole('link', { name: 'Lumen Labs' }).click()
     await expect(page).toHaveURL(/\/en\/daily\/topic\/lumenlabs$/)
     await expect(page.getByRole('main').getByText(en.daily.entityKinds.company, { exact: true })).toBeVisible()
+  })
+
+  test("a story's page lists the stories of other events that read like it, each event once", async ({ page }) => {
+    // Its report reads like Kitecode's and Orbit Notes', the closer first.
+    await page.goto('/en/daily/sample-nimbus-3-reasons-step-by-step')
+    const similar = page.getByRole('region', { name: en.daily.similar })
+    await expect(similar.getByRole('link')).toHaveText([new RegExp(titles.weights), new RegExp(titles.benchmark)])
+
+    // Both Lumen Chat stories read like Quill's, but they are one event: listed once, by the closer story.
+    await page.goto('/en/daily/sample-quill-raises-funding-for-team-writing')
+    await expect(similar.getByRole('link')).toHaveText([new RegExp(titles.workspaces)])
+
+    // The other Lumen Chat story is of the same event, so only Quill's is listed.
+    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    await expect(similar.getByRole('link')).toHaveText([new RegExp(titles.quill)])
+
+    // Nothing reads like it: no such block.
+    await page.goto('/en/daily/sample-prism-turns-sketches-into-video')
+    await expect(page.getByRole('heading', { level: 1, name: titles.prism })).toBeVisible()
+    await expect(similar).toHaveCount(0)
   })
 
   test('a corrected story shows when it was corrected', async ({ page }) => {
