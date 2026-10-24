@@ -23,6 +23,8 @@ import { AppReports } from './modules/apps/collections/AppReports'
 import { AppSubmissions } from './modules/apps/collections/AppSubmissions'
 import { Apps } from './modules/apps/collections/Apps'
 import { appsTables } from './modules/apps/schema'
+import { Circles } from './modules/circles/collections/Circles'
+import { circlesTables } from './modules/circles/schema'
 import { Posters } from './modules/daily/collections/posters'
 import { Sources } from './modules/daily/collections/sources'
 import { Stories } from './modules/daily/collections/stories'
@@ -108,6 +110,7 @@ export default buildConfig({
     AgentHosts,
     SkillTags,
     SkillSubmissions,
+    Circles,
   ]),
   editor: lexicalEditor(),
 
@@ -139,7 +142,7 @@ export default buildConfig({
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
     // Our own Drizzle tables (Better Auth, model receipts, the daily module's raw_items and subscribe attempts,
-    // skill install events, the admin log) join Payload's schema so migrations create and track them.
+    // skill install events, circles' members and posts, the admin log) join Payload's schema so migrations create and track them.
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
@@ -152,6 +155,7 @@ export default buildConfig({
           ...resourcesTables,
           ...appsTables,
           ...savesTables,
+          ...circlesTables,
           ...adminLogTables,
         },
       }),

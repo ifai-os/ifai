@@ -116,6 +116,16 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
         createdAt: '2026-10-21T09:00:00.000Z',
       } satisfies SkillSubmission,
     ],
+    circleMembers: [
+      { circleId: 20, createdAt: day('2026-10-22') },
+      { circleId: 21, createdAt: day('2026-10-21') },
+    ],
+    circlePosts: [
+      { id: 30, circleId: 20, body: 'My first picture', lang: 'en', status: 'shown', createdAt: day('2026-10-23') },
+      { id: 31, circleId: 21, body: '被隐藏的一条', lang: 'zh-Hans', status: 'hidden', createdAt: day('2026-10-22') },
+    ],
+    circleReactions: [{ postId: 40, circleId: 20, reaction: 'rocket', createdAt: day('2026-10-23') }],
+    circlePostReports: [{ postId: 41, circleId: 22, reason: 'abuse', createdAt: day('2026-10-22'), resolvedAt: day('2026-10-23') }],
     subscriber: {
       id: 5,
       email: 'reader@example.com',
@@ -144,6 +154,10 @@ const refs: ExportRefs = {
   skill: new Map([[2, { id: 2, name: 'PDF reader', url: `${site}/en/resources/skills/pdf-reader` }]]),
   category: new Map([[3, { id: 3, name: 'Writing', url: `${site}/en/apps/category/writing` }]]),
   story: new Map(),
+  circle: new Map([
+    [20, { id: 20, name: 'AI art', url: `${site}/en/circles?circle=ai-art` }],
+    [21, { id: 21, name: 'Prompts', url: null }],
+  ]),
 }
 
 const shape = (input: MemberRecords, sessionId: string | null = 'session-now') =>
@@ -204,6 +218,23 @@ describe('shapeMemberExport', () => {
     expect(appReports[0]).toMatchObject({ app: refs.app.get(1), details: 'The price is wrong', status: 'resolved' })
   })
 
+  it('gives the member’s circles and posts, hidden ones too, and keeps others’ posts to their id', () => {
+    const file = shape(records())
+    expect(file.circles).toEqual([
+      { circle: refs.circle.get(20), joinedAt: '2026-10-22T08:00:00.000Z' },
+      { circle: refs.circle.get(21), joinedAt: '2026-10-21T08:00:00.000Z' },
+    ])
+    expect(file.circlePosts).toEqual([
+      { id: 30, circle: refs.circle.get(20), text: 'My first picture', language: 'en', status: 'shown', postedAt: '2026-10-23T08:00:00.000Z' },
+      { id: 31, circle: refs.circle.get(21), text: '被隐藏的一条', language: 'zh-Hans', status: 'hidden', postedAt: '2026-10-22T08:00:00.000Z' },
+    ])
+    expect(file.circleReactions).toEqual([{ post: 40, circle: refs.circle.get(20), reaction: 'rocket', reactedAt: '2026-10-23T08:00:00.000Z' }])
+    // A circle that is gone keeps only its id.
+    expect(file.circlePostReports).toEqual([
+      { post: 41, circle: { id: 22, name: null, url: null }, reason: 'abuse', reportedAt: '2026-10-22T08:00:00.000Z', resolvedAt: '2026-10-23T08:00:00.000Z' },
+    ])
+  })
+
   it('includes the daily email subscription and its sends, or null when there is none', () => {
     expect(shape(records()).dailyEmail).toMatchObject({
       email: 'reader@example.com',
@@ -227,6 +258,10 @@ describe('readExportRefs', () => {
     ],
     skills: [{ id: 2, name: 'PDF reader', slug: 'pdf-reader', status: 'delisted' }],
     'app-categories': [{ id: 3, name: 'Writing', slug: 'writing' }],
+    circles: [
+      { id: 20, name: 'AI 绘画', slug: 'ai-art', shown: true },
+      { id: 21, name: '提示词', slug: 'prompts', shown: false },
+    ],
   }
 
   it('looks each kind up once, in the page language, with addresses only for pages readers can open', async () => {
@@ -235,12 +270,12 @@ describe('readExportRefs', () => {
     const input = records({ saves: [{ targetType: 'app', targetId: 8, createdAt: day('2026-10-20') }] })
     const found = await readExportRefs(payload, input, 'ja', site)
 
-    expect(find).toHaveBeenCalledTimes(3)
+    expect(find).toHaveBeenCalledTimes(4)
     for (const [options] of find.mock.calls) expect(options).toMatchObject({ locale: 'ja', overrideAccess: true, depth: 0 })
     const ids = Object.fromEntries(
       find.mock.calls.map(([options]) => [options.collection, (options as unknown as { where: { id: { in: number[] } } }).where.id.in]),
     )
-    expect(ids).toEqual({ apps: [8, 1, 99], skills: [2], 'app-categories': [3] })
+    expect(ids).toEqual({ apps: [8, 1, 99], skills: [2], 'app-categories': [3], circles: [20, 21, 22] })
 
     const ref = (map: Map<number, ExportRef>, id: number) => map.get(id)
     expect(ref(found.app, 1)).toEqual({ id: 1, name: 'Notion', url: `${site}/ja/apps/notion` })
@@ -248,14 +283,28 @@ describe('readExportRefs', () => {
     expect(ref(found.app, 8)).toEqual({ id: 8, name: 'Old app', url: null })
     expect(ref(found.skill, 2)).toEqual({ id: 2, name: 'PDF reader', url: `${site}/ja/resources/skills/pdf-reader` })
     expect(ref(found.category, 3)).toEqual({ id: 3, name: 'Writing', url: `${site}/ja/apps/category/writing` })
+    // A hidden circle has no page.
+    expect(ref(found.circle, 20)).toEqual({ id: 20, name: 'AI 绘画', url: `${site}/ja/circles?circle=ai-art` })
+    expect(ref(found.circle, 21)).toEqual({ id: 21, name: '提示词', url: null })
   })
 
   it('reads nothing for a member with nothing to name', async () => {
     const find = vi.fn()
-    const empty = records({ saves: [], reviews: [], reviewReports: [], appReports: [], appSubmissions: [], skillSubmissions: [] })
+    const empty = records({
+      saves: [],
+      reviews: [],
+      reviewReports: [],
+      appReports: [],
+      appSubmissions: [],
+      skillSubmissions: [],
+      circleMembers: [],
+      circlePosts: [],
+      circleReactions: [],
+      circlePostReports: [],
+    })
     const found = await readExportRefs({ find } as unknown as Payload, empty, 'en', site)
     expect(find).not.toHaveBeenCalled()
-    expect(found.app.size + found.skill.size + found.category.size).toBe(0)
+    expect(found.app.size + found.skill.size + found.category.size + found.circle.size).toBe(0)
   })
 })
 

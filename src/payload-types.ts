@@ -82,6 +82,7 @@ export interface Config {
     'agent-hosts': AgentHost;
     'skill-tags': SkillTag;
     'skill-submissions': SkillSubmission;
+    circles: Circle;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -104,6 +105,7 @@ export interface Config {
     'agent-hosts': AgentHostsSelect<false> | AgentHostsSelect<true>;
     'skill-tags': SkillTagsSelect<false> | SkillTagsSelect<true>;
     'skill-submissions': SkillSubmissionsSelect<false> | SkillSubmissionsSelect<true>;
+    circles: CirclesSelect<false> | CirclesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -934,6 +936,41 @@ export interface SkillSubmission {
   createdAt: string;
 }
 /**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Readers’ posts go live at once: hide one in the circle’s Posts tab.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circles".
+ */
+export interface Circle {
+  id: number;
+  /**
+   * Shown as “# name”.
+   */
+  name: string;
+  /**
+   * What people post here, for the circle’s card and search engines.
+   */
+  description?: string | null;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  /**
+   * The card’s color, from the design tokens.
+   */
+  tone: '0' | '1' | '2' | '3' | '4' | '5' | '6';
+  /**
+   * Smaller comes first.
+   */
+  order?: number | null;
+  /**
+   * Unticked, the circle and its posts leave the page and nobody can post in it. Nothing is deleted.
+   */
+  shown?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1016,6 +1053,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'skill-submissions';
         value: number | SkillSubmission;
+      } | null)
+    | ({
+        relationTo: 'circles';
+        value: number | Circle;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1497,6 +1538,20 @@ export interface SkillSubmissionsSelect<T extends boolean = true> {
   submitterId?: T;
   reply?: T;
   adminNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circles_select".
+ */
+export interface CirclesSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  slug?: T;
+  tone?: T;
+  order?: T;
+  shown?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -76,6 +76,7 @@ src/
     legal/                 隐私政策与用户协议：各节顺序、生效日期、联系邮箱（documents.ts），页面组件；条文在 messages 的 legal
     saves/                 通用收藏：Drizzle 表（schema.ts）、类型与校验（target.ts）、读写（data.ts）、收藏按钮和「我的收藏」（components/）；接口在 src/app/api/saves
     resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、前台（public/：数据、筛选排序、install.md、安装计数、页面组件）、统计汇总（stats/）、投稿（submit/：校验、投稿与通知、邮件、发信任务、页面组件；接口在 src/app/api/resources/submissions）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
+    circles/               圈子（第二期，src/config/site.ts 的 isLaunched('circles') 管上不上线）：集合（collections/）、规则与类型（rules.ts）、Drizzle 表（schema.ts）、读写（data.ts）、页面取数和缓存（public.ts、cache.ts）、接口共用的回复（api.ts）、后台读写与接口（admin.ts、endpoints.ts、admin/）、页面组件（components/）；接口在 src/app/api/circles
   payload.config.ts
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko

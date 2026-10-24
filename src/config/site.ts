@@ -38,3 +38,8 @@ export function visibleNavItems(phase: Phase = sitePhase): NavItem[] {
 export function upcomingNavItems(phase: Phase = sitePhase): NavItem[] {
   return navItems.filter((item) => item.phase > phase)
 }
+
+/** Whether a module has launched in this phase: its pages and API exist only then. */
+export function isLaunched(key: ModuleKey, phase: Phase = sitePhase): boolean {
+  return navItems.some((item) => item.key === key && item.phase <= phase)
+}

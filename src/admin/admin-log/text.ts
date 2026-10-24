@@ -65,6 +65,9 @@ const zh = {
     'apps:reviews/translate': '应用评价：重新翻译',
     'apps:reports/delist': '应用报错：下架这个应用',
     'apps:reports/resolve': '应用报错：标记完成',
+    'circles:posts/hidden': '圈子动态：隐藏',
+    'circles:posts/shown': '圈子动态：重新显示',
+    'circles:posts/keep': '圈子动态：举报不成立',
   } as Record<string, string>,
 }
 
@@ -134,6 +137,9 @@ const en: LogText = {
     'apps:reviews/translate': 'App review: translate again',
     'apps:reports/delist': 'App reports: delist the app',
     'apps:reports/resolve': 'App reports: mark done',
+    'circles:posts/hidden': 'Circle post: hide',
+    'circles:posts/shown': 'Circle post: show again',
+    'circles:posts/keep': 'Circle post: reports were wrong',
   },
 }
 
