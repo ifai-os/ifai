@@ -230,6 +230,52 @@ test.describe('with the sample stories', () => {
     await expect(page.getByRole('link', { name: titles.preview })).toHaveCount(0)
   })
 
+  test('another category keeps the page and puts a skeleton, then a retry, where the stories were', async ({ page }) => {
+    await page.clock.install()
+    await page.goto('/en/daily', { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    // Hold the next view of the list back, as a slow connection would.
+    let release = (): void => undefined
+    const held = new Promise<void>((resolve) => (release = resolve))
+    await page.route(
+      (url) => url.pathname === '/en/daily/category/research' && url.searchParams.has('_rsc'),
+      async (route) => {
+        await held
+        await route.continue()
+      },
+    )
+
+    const categories = main.getByRole('navigation', { name: en.daily.filterLabel })
+    await categories.getByRole('link', { name: en.categories.research }).click()
+    const skeleton = main.getByRole('status', { name: en.states.loadingList })
+    await expect(skeleton).toBeVisible()
+    await expect(categories).toBeVisible()
+
+    await page.clock.fastForward(10_000)
+    await expect(main.getByRole('alert')).toContainText(en.states.failedTitle)
+    await main.getByRole('button', { name: en.states.retry }).click()
+    await expect(skeleton).toBeVisible()
+
+    release()
+    await expect(page).toHaveURL(/\/en\/daily\/category\/research$/)
+    await expect(main.getByRole('link', { name: titles.benchmark }).first()).toBeVisible()
+    await expect(skeleton).toHaveCount(0)
+  })
+
+  test("a story's page shows its skeleton while it comes in over a slow connection", async ({ page, context }) => {
+    await page.goto('/en/daily', { waitUntil: 'networkidle' })
+    const cdp = await context.newCDPSession(page)
+    await cdp.send('Network.enable')
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 400, downloadThroughput: 12 * 1024, uploadThroughput: 12 * 1024 })
+
+    await page.getByRole('main').getByRole('link', { name: titles.preview }).first().click()
+    const skeleton = page.getByRole('status', { name: en.states.loadingPage })
+    await expect(skeleton).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: titles.preview })).toBeVisible({ timeout: 20_000 })
+    await expect(skeleton).toHaveCount(0)
+  })
+
   test('a corrected story shows when it was corrected', async ({ page }) => {
     await page.goto('/en/daily/sample-orbit-notes-benchmark')
     await expect(page.getByRole('note')).toContainText(en.daily.corrected)

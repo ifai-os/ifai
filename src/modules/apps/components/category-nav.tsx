@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { ListLink } from '@/components/states/list-navigation'
 
 import type { Board } from '../boards'
 import type { CategoryItem } from '../data'
@@ -31,7 +31,7 @@ export function CategoryNav({ categories, total, current, q, board }: CategoryNa
           const active = item.slug === current
           return (
             <li key={item.slug ?? 'all'} className="flex-none">
-              <Link
+              <ListLink
                 href={listHref({ category: item.slug, q, board })}
                 aria-current={active ? 'page' : undefined}
                 className={`flex h-8.5 items-center gap-2.5 rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors md:h-10 md:rounded-none md:border-0 md:px-0 md:text-body md:font-medium ${
@@ -46,7 +46,7 @@ export function CategoryNav({ categories, total, current, q, board }: CategoryNa
                 />
                 <span className="md:flex-1">{item.name}</span>
                 <span className="hidden text-small font-normal text-ink-4 tabular-nums md:inline">{item.count}</span>
-              </Link>
+              </ListLink>
             </li>
           )
         })}
