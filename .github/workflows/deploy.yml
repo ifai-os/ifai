@@ -183,13 +183,8 @@ jobs:
       - name: Smoke tests against ${{ env.BASE_URL }}
         run: pnpm test:e2e
 
-      - name: Upload Playwright report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: preview-playwright-report
-          path: playwright-report
-          retention-days: 7
+      # No report upload here: Playwright writes request headers into the call log of a failed API
+      # request, so the HTML report could carry the bypass secret. The job log masks it; read failures there.
 
   cleanup:
     name: Delete the PR's Neon branch

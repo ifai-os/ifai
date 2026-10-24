@@ -78,7 +78,7 @@ pnpm dev                 # http://localhost:3000
 | `APPS_SHOW_TRANCO_RANK` | 看过 Tranco 条款再决定 | 同生产 | 写成 `true` 才在应用页面显示 Tranco 名次（列表的「网站排名」列、详情页的数字）；不填不显示，名次照常算进热度 |
 | `APPS_NEW_SINCE` | 首批应用导入完后填上线那天，如 `2026-11-01` | 同生产 | 上海日期。这天之前收录的应用不进「新上架」榜和「本周新上架」，免得首批导入占满一个月；不填不限 |
 
-5. 预览环境默认开着 Vercel 的访问保护。要让 GitHub Actions 对预览环境跑冒烟测试：Settings → Deployment Protection → Protection Bypass for Automation 生成一个密钥，把它加到 GitHub 仓库的 Settings → Secrets → Actions，名字叫 `VERCEL_AUTOMATION_BYPASS_SECRET`。没有这个 secret 时，Deploy 照常部署预览，只跳过冒烟测试（不然每条测试都会被保护页挡住）。如果决定关掉预览的访问保护，就不用这个 secret，改在仓库 Variables 里加 `PREVIEW_UNPROTECTED` = `true`，冒烟测试照样会跑。
+5. 预览环境默认开着 Vercel 的访问保护。要让 GitHub Actions 对预览环境跑冒烟测试：Settings → Deployment Protection → Protection Bypass for Automation 生成一个密钥，把它加到 GitHub 仓库的 Settings → Secrets → Actions，名字叫 `VERCEL_AUTOMATION_BYPASS_SECRET`。没有这个 secret 时，Deploy 照常部署预览，只跳过冒烟测试（不然每条测试都会被保护页挡住）。如果决定关掉预览的访问保护，就不用这个 secret，改在仓库 Variables 里加 `PREVIEW_UNPROTECTED` = `true`，冒烟测试照样会跑。带这个密钥时，预览的冒烟测试不录 trace，也不上传 Playwright 报告：两者都会写下请求头，密钥会跟着进 artifact。测试失败时看那次 job 的日志，日志里的密钥会被 Actions 打码。
 6. 这些环境变量**不要勾 Sensitive**。构建在 GitHub Actions 上跑，要用 `vercel pull` 把变量取下来；标成 Sensitive 的变量取不到值，只拿到占位符 `[SENSITIVE]`：`DATABASE_URI` 拿到占位符，构建时的迁移就连不上数据库；`NEXT_PUBLIC_*` 拿到占位符，写进页面的也是它。只在运行时用的密钥勾了也能用，网站运行时读得到真值，预览的 `PAYLOAD_SECRET`、`BETTER_AUTH_SECRET` 现在就标着 Sensitive；这时构建日志里 Better Auth 会警告密钥不到 32 个字符（`at least 32 characters`）、熵太低（`low-entropy`），说的是占位符，不用换密钥。改了环境变量要重新部署才生效：生产在 Actions → Deploy 里重跑 `main` 最近一次，预览往 PR 推一个提交或重跑它的 Deploy。Vercel 控制台的 Redeploy 也可以。
 7. 正式域名：`ifai.io` 现在在 Cloudflare 上指向别的服务。接到 Vercel 之前（Vercel 项目 → Settings → Domains 添加，再按提示改 Cloudflare 的 DNS），生产只能用 Vercel 分配的 `*.vercel.app` 地址访问，依赖正式域名的回调都收不到：Resend 的退信和投诉回调（第 7 步）、Google 和 GitHub 登录的回调地址（第 5、6 步）。
 
