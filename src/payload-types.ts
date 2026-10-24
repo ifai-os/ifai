@@ -470,6 +470,24 @@ export interface Story {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Taken from the original article when the story is written. A video shows its cover with a play button and plays in a dialog.
+   */
+  media?: {
+    kind?: ('none' | 'image' | 'video') | null;
+    /**
+     * YouTube, Vimeo, or an .mp4 / .webm file.
+     */
+    videoUrl?: string | null;
+    /**
+     * For a video, its cover. Optional for videos.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Shown under the picture on the story page: "Image: …".
+     */
+    credit?: string | null;
+  };
   eventId: number;
   representativeItemId: number;
   score?: number | null;
@@ -1262,6 +1280,14 @@ export interface StoriesSelect<T extends boolean = true> {
         url?: T;
         publishedAt?: T;
         id?: T;
+      };
+  media?:
+    | T
+    | {
+        kind?: T;
+        videoUrl?: T;
+        image?: T;
+        credit?: T;
       };
   eventId?: T;
   representativeItemId?: T;

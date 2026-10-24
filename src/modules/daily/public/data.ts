@@ -53,7 +53,11 @@ const select = {
   publishedAt: true,
   correctedAt: true,
   createdAt: true,
+  media: true,
 } as const
+
+/** The story's picture comes along (depth 1), with only what the pages need; Payload builds `url` from `filename`. */
+const populate = { media: { url: true, filename: true, width: true, height: true } } as const
 
 // Publishing refreshes the cache right away; the hour only bounds changes made outside the review screen.
 const cacheOptions = { tags: [DAILY_CACHE_TAG], revalidate: 3600 }
@@ -73,7 +77,8 @@ const findStories = unstable_cache(
       page,
       limit: storiesPerPage,
       locale: 'all',
-      depth: 0,
+      depth: 1,
+      populate,
       select,
       overrideAccess: false,
     })
@@ -91,7 +96,8 @@ const findLatest = unstable_cache(
       sort: '-publishedAt',
       limit,
       locale: 'all',
-      depth: 0,
+      depth: 1,
+      populate,
       select,
       overrideAccess: false,
     })
@@ -108,7 +114,8 @@ const findStory = unstable_cache(
       where: { and: [published, { slug: { equals: slug } }] },
       limit: 1,
       locale: 'all',
-      depth: 0,
+      depth: 1,
+      populate,
       select,
       overrideAccess: false,
     })
@@ -126,7 +133,8 @@ const findDevelopments = unstable_cache(
       sort: '-publishedAt',
       limit: developmentsShown,
       locale: 'all',
-      depth: 0,
+      depth: 1,
+      populate,
       select,
       overrideAccess: false,
     })
@@ -145,7 +153,8 @@ const findHot = unstable_cache(
       sort: ['-heat', '-publishedAt'],
       limit: 40,
       locale: 'all',
-      depth: 0,
+      depth: 1,
+      populate,
       select: { ...select, heat: true, heatTrend: true },
       overrideAccess: false,
     })
@@ -279,7 +288,8 @@ export async function searchStories({
     page,
     limit,
     locale: 'all',
-    depth: 0,
+    depth: 1,
+    populate,
     select,
     overrideAccess: false,
   })
@@ -316,7 +326,8 @@ export async function getSavedStories(ids: number[], locale: Locale): Promise<St
     where: { and: [published, { id: { in: ids } }] },
     pagination: false,
     locale: 'all',
-    depth: 0,
+    depth: 1,
+    populate,
     select,
     overrideAccess: false,
   })

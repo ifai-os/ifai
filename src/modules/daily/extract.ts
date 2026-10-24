@@ -1,6 +1,7 @@
 import { Readability } from '@mozilla/readability'
 import { parseHTML } from 'linkedom'
 
+import { findMedia, type FoundMedia } from './media'
 import { cleanText, toDate } from './text'
 import { normalizeUrl, siteOf } from './url'
 
@@ -16,6 +17,8 @@ export type Article = {
   publishedAt?: Date
   /** Outbound links inside the article body, normalized; what a roundup points at. */
   links: string[]
+  /** The page's picture and video, for the story (docs/specs/daily.md「配图与视频」). */
+  media: FoundMedia
 }
 
 /** Pages larger than this are not articles; skip them before parsing. */
@@ -36,6 +39,7 @@ export function extractArticle(html: string, url: string): Article | null {
     300,
   )
   const markupDate = publishedFromMarkup(document)
+  const media = findMedia(document, url)
 
   let parsed: ReturnType<Readability['parse']>
   try {
@@ -46,7 +50,7 @@ export function extractArticle(html: string, url: string): Article | null {
   const text = cleanText(parsed?.textContent, 60_000)
   if (!parsed || text.length < 200) return null
 
-  const article: Article = { text, links: linksIn(parsed.content, url) }
+  const article: Article = { text, links: linksIn(parsed.content, url), media }
   // Readability keeps "Headline | Site" for short headlines; the page's own headline is cleaner.
   const title = headline || cleanText(parsed.title, 300)
   if (title) article.title = title

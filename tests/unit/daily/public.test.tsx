@@ -33,6 +33,7 @@ const story = (overrides: Partial<StoryItem> & Pick<StoryItem, 'id' | 'published
   tryIt: null,
   moreReports: 0,
   originalName: 'Maker',
+  media: null,
   ...overrides,
 })
 

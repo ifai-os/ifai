@@ -153,6 +153,30 @@ test.describe('with the sample stories', () => {
     })
   })
 
+  test('day headings put the count on the same line, with a space before the weekday in Chinese', async ({ page }) => {
+    await page.goto('/zh-hans/daily')
+    const day = page.locator('header').filter({ has: page.getByRole('heading', { level: 2, name: /^10月20日 星期二$/ }) })
+    await expect(day).toContainText('1 条')
+  })
+
+  test('a picture shows beside its story and on its page; a video plays in a dialog', async ({ page }) => {
+    await page.goto('/en/daily')
+    const pictured = page.getByRole('article').filter({ hasText: titles.workspaces })
+    await expect(pictured.locator('img').first()).toHaveAttribute('src', /\/_next\/image\?url=%2Fapi%2Fmedia%2Ffile%2F/)
+
+    const play = page.getByRole('button', { name: `Play video: ${titles.weights}` })
+    await expect(page.locator('iframe')).toHaveCount(0)
+    await play.click()
+    const dialog = page.getByRole('dialog', { name: titles.weights })
+    await expect(dialog.locator('iframe')).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/M7lc1UVf-VE\?autoplay=1/)
+    await page.keyboard.press('Escape')
+    await expect(page.locator('iframe')).toHaveCount(0)
+
+    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    await expect(page.getByRole('img', { name: titles.workspaces })).toBeVisible()
+    await expect(page.getByText('Image: Lumen Labs')).toBeVisible()
+  })
+
   test('filters by category', async ({ page }) => {
     await page.goto('/en/daily/category/open')
     await expect(page.getByRole('heading', { level: 1, name: en.categories.open })).toBeVisible()

@@ -1,13 +1,22 @@
 import type { Locale } from '@/i18n/config'
 import { inAnyLanguage, inReaderLanguage, type InLanguage, type Localized } from '@/lib/i18n/localized'
-import type { Story } from '@/payload-types'
+import type { Media, Story } from '@/payload-types'
 
 import { storyCategories, type StoryCategory } from '../categories'
+import { parseVideo, type Video } from '../media'
 import type { HeatTrend, SourceRole } from '../story-fields'
 
 /** What the pages show of a story, in the reader's language (no Payload code: components and tests import this). */
 
 export type StorySource = { name: string; role: SourceRole; url: string; publishedAt: string | null }
+
+/** A picture as the pages draw it: our own file and its size. */
+export type StoryPicture = { url: string; width: number; height: number }
+
+/** The story's picture or video (docs/specs/daily.md「配图与视频」). A video's cover may be missing. */
+export type StoryMedia =
+  | { kind: 'image'; picture: StoryPicture; credit: string | null }
+  | { kind: 'video'; video: Video; picture: StoryPicture | null; credit: string | null }
 
 export type StoryItem = {
   id: number
@@ -23,6 +32,7 @@ export type StoryItem = {
   moreReports: number
   /** Publisher of the original announcement (or of the first report). */
   originalName: string | null
+  media: StoryMedia | null
 }
 
 /** A story in「48 小时热门」and「今日最热」: its event's heat and how many outlets reported it. */
@@ -70,7 +80,26 @@ export function toItem(doc: RawStory, locale: Locale): StoryItem {
     tryIt: inReaderLanguage(doc.tryIt, locale),
     moreReports: sources.filter((source) => source.role === 'report').length,
     originalName: (sources.find((source) => source.role === 'original') ?? sources[0])?.name ?? null,
+    media: mediaOf(doc.media),
   }
+}
+
+function pictureOf(image: number | Media | null | undefined): StoryPicture | null {
+  if (!image || typeof image !== 'object' || !image.url || !image.width || !image.height) return null
+  return { url: image.url, width: image.width, height: image.height }
+}
+
+/** Null unless there is something to show: a picture, or a video address we can play. */
+export function mediaOf(media: Story['media']): StoryMedia | null {
+  if (!media) return null
+  const picture = pictureOf(media.image)
+  const credit = media.credit?.trim() || null
+  if (media.kind === 'video') {
+    const video = parseVideo(media.videoUrl)
+    return video ? { kind: 'video', video, picture, credit } : null
+  }
+  if (media.kind === 'image' && picture) return { kind: 'image', picture, credit }
+  return null
 }
 
 export function toHot(doc: RawStory, locale: Locale): HotStory {

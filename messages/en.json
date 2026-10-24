@@ -961,7 +961,9 @@
     "newTab": "(opens in a new tab)",
     "rss": "RSS feed",
     "feedTitle": "IFAI Daily",
-    "feedDescription": "AI news, checked against the sources, with a plain-language summary of each story."
+    "feedDescription": "AI news, checked against the sources, with a plain-language summary of each story.",
+    "playVideo": "Play video: {title}",
+    "imageCredit": "Image: {name}"
   },
   "poster": {
     "title": "Daily AI highlights",

@@ -8,8 +8,8 @@ import { storyHref } from '../list-params'
 
 /**
  * 「今日最热」(「IFAI 日报（新版）」board): the hottest story of the last 24 hours, the whole card a
- * link to it. Stories have no pictures, so the card wears its category's backdrop
- * (public/daily/hottest/) under a dark scrim that keeps the white text readable.
+ * link to it. Its picture (or video cover) is the backdrop, else its category's (public/daily/hottest/),
+ * under a dark scrim that keeps the white text readable.
  */
 export function HottestCard({ story, category }: { story: HotStory; category: string }) {
   const t = useTranslations('daily')
@@ -21,7 +21,7 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
       className="relative isolate flex min-w-0 flex-col justify-end gap-3.5 overflow-hidden rounded-hero bg-night p-6 text-white md:min-h-80 md:grow-2 md:basis-100 md:p-8"
     >
       <Image
-        src={`/daily/hottest/${story.category}.webp`}
+        src={story.media?.picture?.url ?? `/daily/hottest/${story.category}.webp`}
         alt=""
         fill
         sizes="(min-width: 768px) 66vw, 100vw"

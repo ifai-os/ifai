@@ -10,6 +10,7 @@ import { SaveProvider } from '@/modules/saves/components/save-provider'
 
 import type { StoryDetail } from '../story-item'
 import { listHref, storyHref } from '../list-params'
+import { StoryFigure } from './story-media'
 
 function hostOf(url: string): string {
   try {
@@ -75,6 +76,8 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
               {story.summary.value}
             </p>
           )}
+
+          <StoryFigure story={story} />
 
           {story.tryIt && (
             <section aria-labelledby="try-it" className="flex flex-col gap-1.5 rounded-card bg-surface px-5 py-4">

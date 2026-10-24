@@ -12,6 +12,7 @@ import { writePrompt, writtenLocales, type WriteReport, type WrittenLocaleKey } 
 import { hansHash } from '../review/rules'
 import { eventItems, itemAnalyses, rawItems } from '../schema'
 import type { SourceTier } from '../types'
+import { mediaCandidates, storyMedia } from './media'
 import { storySlug } from './slug'
 import { verifyWriting } from './verify'
 
@@ -118,6 +119,7 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
     if (key === 'zhHans') continue
     await payload.update({ collection: 'stories', id: story.id, locale: writtenLocales[key], data: output[key] })
   }
+  await attachMedia(payload, story.id, reports.all, { alt: output.en.title, name: slug })
   // Reports that joined while the model was writing, and Hacker News threads about them.
   await syncEventSources([analysis.eventId])
   return { status: 'written', storyId: story.id, slug, verified: verification.ok }
@@ -221,6 +223,17 @@ export function storySources(reports: WriteReport[], self: Member): StorySource[
     list.push({ name: 'Hacker News', url: self.item.discussionUrl, publishedAt: null, role: 'discussion' })
   }
   return list
+}
+
+/** The story's picture or video (「配图与视频」); a failure here never stops the story. */
+async function attachMedia(payload: Payload, storyId: number, reports: WriteReport[], file: { alt: string; name: string }) {
+  try {
+    const { data, problems } = await storyMedia(await mediaCandidates(reports), file)
+    if (problems.length) payload.logger.warn({ storyId, problems }, 'daily: story media not copied')
+    if (data.kind !== 'none') await payload.update({ collection: 'stories', id: storyId, data: { media: data } })
+  } catch (error) {
+    payload.logger.warn({ storyId, err: error }, 'daily: story media failed')
+  }
 }
 
 async function uniqueSlug(payload: Payload, base: string): Promise<string> {

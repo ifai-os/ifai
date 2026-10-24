@@ -961,7 +961,9 @@
     "newTab": "（新しいタブで開きます）",
     "rss": "RSSフィード",
     "feedTitle": "IFAI デイリー",
-    "feedDescription": "情報源を確認したAIニュースを、わかりやすい要約つきでお届けします。"
+    "feedDescription": "情報源を確認したAIニュースを、わかりやすい要約つきでお届けします。",
+    "playVideo": "動画を再生：{title}",
+    "imageCredit": "画像：{name}"
   },
   "poster": {
     "title": "AIデイリーハイライト",

@@ -11,6 +11,7 @@ import config from '@payload-config'
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { sql } from '@payloadcms/db-postgres/drizzle'
 import { getPayload } from 'payload'
+import sharp from 'sharp'
 
 import type { Story } from '../src/payload-types'
 import { shanghaiDate } from '../src/lib/shanghai-day'
@@ -192,6 +193,39 @@ for (const story of sampleStories) {
     const localized = text[locale]
     if (localized) await payload.update({ collection: 'stories', id: doc.id, locale, data: localized, depth: 0 })
   }
+}
+
+// 「配图与视频」: a drawn picture on the first story, a video (YouTube's own API demo) on the second.
+async function samplePicture(): Promise<number> {
+  const filename = 'sample-story-picture.png'
+  const found = await payload.find({ collection: 'media', where: { filename: { equals: filename } }, limit: 1, depth: 0 })
+  if (found.docs[0]) return found.docs[0].id
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9e5f5"/><stop offset="1" stop-color="#e2ebf5"/></linearGradient></defs>
+    <rect width="1200" height="750" fill="url(#g)"/>
+    <rect x="160" y="140" width="880" height="470" rx="28" fill="#ffffff"/>
+    <rect x="160" y="140" width="220" height="470" rx="28" fill="#2a2d3a"/>
+    <rect x="430" y="200" width="420" height="28" rx="14" fill="#3b3550"/>
+    <rect x="430" y="260" width="540" height="18" rx="9" fill="#acaeb3"/>
+    <rect x="430" y="300" width="480" height="18" rx="9" fill="#cdcdce"/>
+    <circle cx="470" cy="420" r="40" fill="#da282a"/><circle cx="540" cy="420" r="40" fill="#0355e3"/><circle cx="610" cy="420" r="40" fill="#2e7d4f"/>
+  </svg>`
+  const data = await sharp(Buffer.from(svg)).png().toBuffer()
+  const media = await payload.create({
+    collection: 'media',
+    data: { alt: 'Sample: a drawn workspace screen' },
+    file: { data, mimetype: 'image/png', name: filename, size: data.byteLength },
+  })
+  return media.id
+}
+
+const sampleMedia: Record<string, () => Promise<NonNullable<Story['media']>>> = {
+  'sample-lumen-chat-adds-shared-workspaces': async () => ({ kind: 'image', image: await samplePicture(), credit: 'Lumen Labs' }),
+  'sample-kitecode-opens-its-model-weights': async () => ({ kind: 'video', videoUrl: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', credit: 'Kite Studio' }),
+}
+for (const [slug, media] of Object.entries(sampleMedia)) {
+  const { docs } = await payload.find({ collection: 'stories', where: { slug: { equals: slug } }, limit: 1, depth: 0 })
+  if (docs[0]) await payload.update({ collection: 'stories', id: docs[0].id, locale: 'en', data: { media: await media() }, depth: 0 })
 }
 
 // 「今天提到的应用」on the daily list: the apps job's matches. Written here when scripts/seed-apps.ts ran
