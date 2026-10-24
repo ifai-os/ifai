@@ -2,7 +2,7 @@
 
 给接手的人和 AI 会话看的：开工前先读 [AGENTS.md](../AGENTS.md)，再读这一页。每合并一个 PR，顺手更新「现在到哪了」和「下一步」。
 
-更新于 2026-10-23（后台「模型用量」页；导出我的数据；应用资料每 90 天提醒核对；日报收藏；Vercel 变量标 Sensitive 的影响；全站搜索；线上配置进展；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
+更新于 2026-10-24（后台「操作记录」页；后台「模型用量」页；导出我的数据；应用资料每 90 天提醒核对；日报收藏；Vercel 变量标 Sensitive 的影响；全站搜索；线上配置进展；结构化数据与分享卡片；账号页与删除账号；隐私政策和用户协议；应用首批导入清单；后台保存被拒时的提示统一用 `rejectField`；画布·海报画板和 `night` 令牌；应用第 6 步·桌面详情的四个标签；应用第 5 步·提交应用；站点地图与 robots.txt；日报·邮件订阅第 2 步·发送；资源第 5 步·加载骨架；应用第 5 步·报错；日报·邮件订阅第 1 步·订阅与退订；资源第 5 步·投稿；应用第 5 步·评价翻译；资源第 5 步·统计汇总、使用指南、收藏；日报·邮件订阅规格）。
 
 ## 现在到哪了
 
@@ -60,6 +60,7 @@
 - **隐私政策和用户协议已完成**（[specs/legal.md](./specs/legal.md)）：`/[locale]/privacy`、`/[locale]/terms`，五种语言，进站点地图；条文放在 `messages/*.json` 的 `legal`，生效日期、各节顺序和联系邮箱 `hello@ifai.io` 在 `src/modules/legal/documents.ts`。页脚加了两个链接，登录页和登录对话框表单下面写「继续即表示你同意《用户协议》和《隐私政策》」（新标签页打开）。条文按现有代码核对过收集了什么、交给谁、留多久；以后新增收集或接入统计、报错工具，先改这两页再上线。
 - **全站搜索已完成**（[specs/search.md](./specs/search.md)，PRD R15）：顶栏语言按钮左边的放大镜进 `/[locale]/search`，一次查日报新闻（标题、摘要）、应用（名称、别名、一句话介绍、标签）和 Skill（显示名、一句话介绍、标签、slug），五种语言的字段都查，只返回已发布的。「全部」每类最多 5 条，类型标签（全部 / 日报 / 应用 / Skills）带数量，单个类型每页 20 条；应用和 Skill 名称完全相同的排最前、以搜索词开头的其次，其余按热度和「综合」，新闻新的在前。每行写明类型（R15「链接类型可见」）。没结果时保留输入、给「热门」（热度前 4 的应用和安装最多的 2 个 Skill）；画板上的纠错建议和「大家在搜」要有搜索日志，这一期不做。404 页加了搜索框。搜索页 `noindex, follow`，不进站点地图。不缓存、不记录搜索词，用 Postgres 的 `ILIKE`（Payload `like`），内容多了再接 Meilisearch。代码在 `src/modules/search/`，各模块加了 `searchApps`、`searchSkills`、`searchStories`。类型跟着 `NEXT_PUBLIC_SITE_PHASE`（`kinds.ts`），以后推荐、圈子、Wiki 上线时各加一种。
 - **后台「模型用量」页已完成**（[specs/foundation.md](./specs/foundation.md)「后台 · 模型用量」）：后台左侧「审核队列」下面的「模型用量」（`/admin/model-usage`，代码在 `src/admin/model-usage/`），只读 `model_receipts`，不加表。今天（上海时间）的花费和每日预算、三个总开关和 OpenRouter 密钥配了没有，近 14 天每天的成功、失败和花费，按用途（今天 / 近 7 天 / 近 30 天）的模块、模型、调用数、token 和花费，近 30 天失败到现在也没成功、或者卡住的调用（错误信息，链到对应的新闻、应用、Skill 版本或原文）。预算的读法和上限常量搬到了 `src/lib/ai/limits.ts`，调用和这一页共用。Payload 的自定义根页面默认谁都能打开，这一页自己把没登录的人送去登录页；以后再加 `admin.components.views` 的页面要照做。
+- **后台「操作记录」页已完成**（[specs/foundation.md](./specs/foundation.md)「后台 · 操作记录」，PRD R14「管理员操作留痕」）：后台左侧「模型用量」下面的「操作记录」（`/admin/admin-log`，代码在 `src/admin/admin-log/`）。迁移 `admin_log` 建 Drizzle 表 `admin_log`；`payload.config.ts` 里所有集合过一遍 `withAdminLog`（`src/lib/admin-log/`），管理员保存、新建、删除任何一条，按各模块的后台按钮（集合上的 POST 接口，成功才记），以及登录后台，各记一行：只记改了哪些字段和状态的前后值，不记内容；改简体时繁体跟着改，算同一行。和保存在同一个事务里写，写记录失败不挡保存。页面按内容、管理员、操作筛选，每行能进「这一条的记录」。后台任务、脚本和读者的操作不记。**以后新加集合**：放进 `withAdminLog([...])` 那个数组就有记录；新加的后台按钮接口自动记，在 `src/admin/admin-log/text.ts` 的 `actions` 补上它的中英文名字（单元测试会检查每个 POST 接口都有名字）。
 - **共用的空状态与加载状态已做好**，按「空状态与加载状态」画板：列表骨架、卡片骨架、空状态、加载失败重试、断网提示、全站 `error.tsx` 和 404，在 `src/components/states/`（按钮在 `src/components/button.tsx`）。各模块的页面直接用，不要再各写一套；和模块绑定的状态（日报未发布、搜索无结果、Skill 安全扫描、机器翻译标记、需要登录弹窗、提交成功）留给各自的模块；其中「提交成功」资源投稿做成了共用的 `src/components/states/submitted.tsx`，应用的提交表单直接用。`LoadingState` 可以传 `skeleton` 换成按页面形状画的骨架，一行字的占位用 `SkeletonLine`。
 - **线上环境还没配**。Neon、Vercel、R2、Google / GitHub 登录、Resend 这几个账号由站长按 [setup.md](./setup.md) 开，密钥不经过 AI。
 - **部署改由 GitHub Actions 做**（`.github/workflows/deploy.yml`）：Vercel Hobby 不能导入私有组织仓库，所以 Vercel 项目 `ifai1/ifai` 不连 Git，`main` 用 Vercel CLI 部署生产；每个 PR 先由 `neondatabase/create-branch-action` 建 Neon 分支 `preview/pr-<编号>`，连接串作为 `DATABASE_URI` 传给构建（迁移）和预览运行时，部署完对预览地址跑冒烟测试（原来挂在 `deployment_status` 上的 `preview-smoke.yml` 删掉了），PR 关闭时删分支。Vercel 的 Neon 集成不再用。缺 secret 时 Deploy 跳过、不报错。生产部署先关着（站长说暂不用生产），仓库变量 `PRODUCTION_DEPLOY=true` 后才部署。2026-10-24：PR 合并后它的 Neon 分支就删了，合并过的功能没处看，所以推送到 `main` 也部署一个预览：连长期的 Neon 分支 `preview/main`（每次合并跑迁移，数据留着），部署完用 `vercel alias set` 把固定地址 `https://ifai-preview-ifai1.vercel.app` 指过去；`siteUrl()` 在这个预览里用固定地址（`PREVIEW_SITE_URL`），登录链接和页面里的链接都指向它。这个预览不跑冒烟测试，免得测试数据混进站长在上面点的数据。
@@ -167,6 +168,7 @@
 - [ ] 资源模块上线前：Claude Code、Codex、OpenClaw、Hermes、Pi、WorkBuddy 的官方授权 logo 文件。Skill 详情页现在用的是首字母占位图标。
 - [ ] 日报收藏部署到预览环境后：没登录在一条新闻的详情页点「收藏」，看登录对话框，登录回来是否自动收好；账号菜单进「我的收藏」，日报一段在最上面，点标题回到详情，再取消收藏；在后台撤回这条新闻后再收藏一条、撤回，确认「我的收藏」里看不到它。手机宽度看详情页的两个按钮和「我的收藏」。
 - [ ] 删除账号部署到预览环境后：用一个测试账号收藏一个应用、写一条评价、提交一个应用，再从账号菜单进「账号」删除，确认回到「账号已删除」、右上角变回登录图标；后台应用提交里那条没了，用同一个邮箱再登录是空账号。
+- [ ] 操作记录部署到预览环境后：在后台改一个应用的一句话介绍并保存，下架再恢复一个应用，在审核队列发布或撤回一条新闻，删一个测试用的 Skill 标签；再打开左侧「操作记录」，看每件事各一行、改了哪些字段和状态对不对，点「这一条的记录」只看那个应用，按「删除」筛一次。
 - [ ] 导出我的数据部署到预览环境后：用测试账号收藏一个应用、写一条评价、提交一个应用，在账号页点「下载我的数据」，打开下载的 JSON 看一遍各段；再用 Google 或 GitHub 登录的账号下一次，`linkedAccounts` 里有这个服务商，整个文件里没有任何令牌。手机宽度也点一次。
 - [ ] 隐私政策和用户协议：开好 `hello@ifai.io` 邮箱（或者告诉 Claude 换成别的地址，改 `src/modules/legal/documents.ts`）；正式上线前请懂当地法律的人看一遍两页条文；定了公司主体后补上适用法律和争议解决地点。账号删除的 PR 合并后，隐私政策「你可以做什么」一节加上账号页的说明。
 - [ ] 正式上线后：在 Google Search Console 和 Bing Webmaster Tools 验证 `ifai.io`，提交 `https://ifai.io/sitemap.xml`，过几天看「网页索引」里有没有被排除的地址，「增强功能」里面包屑和结构化数据有没有报错；挑一条新闻、一个应用、一个 Skill 的地址贴到 https://search.google.com/test/rich-results 看一遍。

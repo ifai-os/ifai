@@ -19,7 +19,9 @@ import { ImportButton as ImportButton_732f6da2a57c9425424227b664ca593e } from '.
 import { DescribePanel as DescribePanel_62e1fd9685e86a291070552a381d803d } from '../../../modules/resources/admin/describe-panel'
 import { ReviewNavLink as ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../../../modules/daily/admin/review/links'
 import { ModelUsageNavLink as ModelUsageNavLink_e8dd740ddf39723610754fc9fa3ab578 } from '../../../admin/model-usage/nav-link'
+import { AdminLogNavLink as AdminLogNavLink_f6731c953a0e4e47f3848e4b44367eb8 } from '../../../admin/admin-log/nav-link'
 import { ModelUsageView as ModelUsageView_304a9f7c53a4c3ddf1679b524418e932 } from '../../../admin/model-usage/view'
+import { AdminLogView as AdminLogView_a36c77c37339db68486e971f26eb44af } from '../../../admin/admin-log/view'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -46,7 +48,9 @@ export const importMap = {
   "/modules/resources/admin/describe-panel#DescribePanel": DescribePanel_62e1fd9685e86a291070552a381d803d,
   "/modules/daily/admin/review/links#ReviewNavLink": ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1,
   "/admin/model-usage/nav-link#ModelUsageNavLink": ModelUsageNavLink_e8dd740ddf39723610754fc9fa3ab578,
+  "/admin/admin-log/nav-link#AdminLogNavLink": AdminLogNavLink_f6731c953a0e4e47f3848e4b44367eb8,
   "/admin/model-usage/view#ModelUsageView": ModelUsageView_304a9f7c53a4c3ddf1679b524418e932,
+  "/admin/admin-log/view#AdminLogView": AdminLogView_a36c77c37339db68486e971f26eb44af,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

@@ -46,7 +46,7 @@ src/
     (frontend)/globals.css 设计令牌（Tailwind @theme）
     (payload)/             Payload 生成的后台和 REST 路由，不要手改
     api/auth/[...all]/     Better Auth 接口
-  admin/                   跨模块的后台页面：model-usage/（模型用量：花费与预算、开关、按用途、要处理的调用）
+  admin/                   跨模块的后台页面：model-usage/（模型用量：花费与预算、开关、按用途、要处理的调用）、admin-log/（操作记录：谁在后台保存、删除、按了什么按钮）
   collections/             Payload 集合（Admins、Media；模块的集合放到各自模块里）
   components/              共用组件：site-header、search-link、language-switcher、cards/、auth/（登录表单和登录对话框）、account/（账号页、下载我的数据和删除账号）…
   config/site.ts           导航与分期
@@ -54,6 +54,7 @@ src/
   lib/
     ai/                    模型调用：按用途选模型、回执（model_receipts）、每日预算（limits.ts）、总开关
     inngest/               Inngest 客户端和任务列表
+    admin-log/             后台操作记录：表（schema.ts）、记什么（rules.ts）、所有集合的钩子和接口包装（hooks.ts 的 withAdminLog）
     switches.ts            总开关 COLLECT_ENABLED、MODEL_CALLS_ENABLED、DAILY_EMAIL_ENABLED
     shanghai-day.ts        上海时间的自然日（预算和海报按它算）
     email/layout.ts        邮件版式（登录邮件、投稿邮件共用；纯文本版一起生成）

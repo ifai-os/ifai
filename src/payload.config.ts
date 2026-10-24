@@ -13,6 +13,8 @@ import sharp from 'sharp'
 import { Admins } from './collections/Admins'
 import { Media } from './collections/Media'
 import { defaultLocale, localeNames, locales } from './i18n/config'
+import { withAdminLog } from './lib/admin-log/hooks'
+import { adminLogTables } from './lib/admin-log/schema'
 import { aiTables } from './lib/ai/schema'
 import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
@@ -60,11 +62,17 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: ' · IFAI 后台' },
     components: {
-      // The daily review queue and model usage, next to the collection links.
-      afterNavLinks: ['/modules/daily/admin/review/links#ReviewNavLink', '/admin/model-usage/nav-link#ModelUsageNavLink'],
+      // The daily review queue, model usage and the admin log, next to the collection links.
+      afterNavLinks: [
+        '/modules/daily/admin/review/links#ReviewNavLink',
+        '/admin/model-usage/nav-link#ModelUsageNavLink',
+        '/admin/admin-log/nav-link#AdminLogNavLink',
+      ],
       views: {
         // Spend, budget, switches and failed calls across modules (docs/specs/foundation.md「后台 · 模型用量」).
         modelUsage: { Component: '/admin/model-usage/view#ModelUsageView', path: '/model-usage', exact: true },
+        // Who did what in the back office (docs/specs/foundation.md「后台 · 操作记录」).
+        adminLog: { Component: '/admin/admin-log/view#AdminLogView', path: '/admin-log', exact: true },
       },
     },
   },
@@ -73,7 +81,24 @@ export default buildConfig({
     supportedLanguages: { zh, en },
     fallbackLanguage: 'zh',
   },
-  collections: [Admins, Media, AppCategories, Apps, AppReports, AppSubmissions, Sources, Stories, Posters, Subscribers, Skills, SkillVersions, AgentHosts, SkillTags, SkillSubmissions],
+  // Every collection records what admins save, delete and press (docs/specs/foundation.md「后台 · 操作记录」).
+  collections: withAdminLog([
+    Admins,
+    Media,
+    AppCategories,
+    Apps,
+    AppReports,
+    AppSubmissions,
+    Sources,
+    Stories,
+    Posters,
+    Subscribers,
+    Skills,
+    SkillVersions,
+    AgentHosts,
+    SkillTags,
+    SkillSubmissions,
+  ]),
   editor: lexicalEditor(),
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;
@@ -104,7 +129,7 @@ export default buildConfig({
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
     // Our own Drizzle tables (Better Auth, model receipts, the daily module's raw_items and subscribe attempts,
-    // skill install events) join Payload's schema so migrations create and track them.
+    // skill install events, the admin log) join Payload's schema so migrations create and track them.
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
@@ -117,6 +142,7 @@ export default buildConfig({
           ...resourcesTables,
           ...appsTables,
           ...savesTables,
+          ...adminLogTables,
         },
       }),
     ],
