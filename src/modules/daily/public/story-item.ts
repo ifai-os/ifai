@@ -47,11 +47,34 @@ export type HotStory = StoryItem & {
   outlets: number
 }
 
-/** A company or product the story is about; `app` when the apps module matched it to a published app. */
-export type StoryEntityItem = { name: string; kind: EntityKind; app: { slug: string; name: string } | null }
+/** A company or product the story is about; `key` names its topic page; `app` when the apps module matched it to a published app. */
+export type StoryEntityItem = { name: string; kind: EntityKind; key: string; app: { slug: string; name: string } | null }
 
 /** 「话题追踪」: published stories about the same product or company, newest first, this one included. */
-export type StoryTopic = { name: string; stories: StoryItem[] }
+export type StoryTopic = { name: string; key: string; stories: StoryItem[] }
+
+/** An app's logo as the pages draw it. */
+export type TopicLogo = { url: string; width: number | null; height: number | null }
+
+/**
+ * A company's or product's topic page (docs/specs/daily.md「公司与产品的话题页」): its name and
+ * kind as the newest story writes them, the published stories about it, newest first, one page
+ * at a time; the app it is, and for a product the app's developer, when the apps module has it.
+ */
+export type TopicPage = {
+  key: string
+  name: string
+  kind: EntityKind
+  total: number
+  page: number
+  pages: number
+  stories: StoryItem[]
+  /** Stories older than this page's. */
+  earlier: number
+  app: { slug: string; name: string; logo: TopicLogo | null } | null
+  /** `key` when the developer has a topic page too. */
+  developer: { name: string; key: string | null } | null
+}
 
 export type StoryDetail = StoryItem & {
   sources: StorySource[]

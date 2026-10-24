@@ -88,3 +88,26 @@ export function StoryDetailSkeleton() {
     </div>
   )
 }
+
+/** A topic page's stories while another page of them loads: a time, then a card shaped like the story's. */
+export function TopicListSkeleton({ count }: { count: number }) {
+  const t = useTranslations('states')
+  return (
+    <div role="status" aria-label={t('loadingList')} className="flex flex-col gap-7">
+      {Array.from({ length: count }, (_, index) => {
+        const width = widths[index % widths.length]
+        return (
+          <div key={index} className="flex flex-col gap-2.5">
+            <SkeletonLine text="text-body" width="120px" />
+            <div className="flex flex-col gap-3 rounded-card bg-bg px-5 py-5 md:px-7 md:py-6">
+              <SkeletonLine text="text-meta" width="30%" />
+              <SkeletonLine text="text-h3" width={width.title} bar="h-4.5" />
+              <SkeletonLine text="text-body" width={width.summary} bar="h-3" />
+              <SkeletonLine text="text-body" width={width.more} bar="h-3" />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}

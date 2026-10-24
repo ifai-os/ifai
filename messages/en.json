@@ -971,6 +971,12 @@
       "product": "Product"
     },
     "appPage": "App page",
+    "topicTitle": "#{name} · Daily",
+    "topicDescription": "Every Daily story about {name}, newest first.",
+    "topicCount": "{count, plural, one {# story} other {# stories}}",
+    "topicDeveloper": "Made by <link>{name}</link>",
+    "topicEarlier": "Load earlier stories ({count})",
+    "topicEnd": "No earlier stories",
     "share": "Share",
     "copied": "Link copied",
     "newTab": "(opens in a new tab)",

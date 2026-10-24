@@ -1,6 +1,7 @@
 import { localizePath, type Locale } from '@/i18n/config'
 
 import type { StoryCategory } from '../categories'
+import { entityKey } from '../entities'
 import type { StoryTag } from '../tags'
 
 export type SearchParams = Record<string, string | string[] | undefined>
@@ -31,6 +32,26 @@ export function listHref({
 
 export function storyHref(slug: string): `/${string}` {
   return `/daily/${slug}`
+}
+
+/**
+ * The topic page's key from its address: null unless it is already a compared name (so every
+ * topic has one address) of a sensible length. The segment may arrive still percent-encoded.
+ */
+export function readTopicKey(segment: string): string | null {
+  let key = segment
+  try {
+    if (key.includes('%')) key = decodeURIComponent(key)
+  } catch {
+    return null
+  }
+  return key.length > 0 && key.length <= 100 && entityKey(key) === key ? key : null
+}
+
+/** A company's or product's topic page, by its compared name (`entityKey`), plus the page when it is not the first. */
+export function topicHref(key: string, page?: number): `/${string}` {
+  const path: `/${string}` = `/daily/topic/${encodeURIComponent(key)}`
+  return page && page > 1 ? `${path}?page=${page}` : path
 }
 
 export const feedPath = '/daily/rss.xml'

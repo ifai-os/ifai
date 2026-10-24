@@ -971,6 +971,12 @@
       "product": "產品"
     },
     "appPage": "應用頁",
+    "topicTitle": "#{name} · 日報",
+    "topicDescription": "IFAI 日報裡關於 {name} 的所有新聞，最新的在上面。",
+    "topicCount": "{count, plural, other {# 則新聞}}",
+    "topicDeveloper": "開發公司 <link>{name}</link>",
+    "topicEarlier": "載入更早的新聞（{count} 則）",
+    "topicEnd": "沒有更早的新聞了",
     "share": "分享",
     "copied": "連結已複製",
     "newTab": "（在新分頁開啟）",

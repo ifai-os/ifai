@@ -971,6 +971,12 @@
       "product": "製品"
     },
     "appPage": "アプリページ",
+    "topicTitle": "#{name} · デイリー",
+    "topicDescription": "IFAI デイリーの {name} に関するニュース。新しい順です。",
+    "topicCount": "ニュース {count} 件",
+    "topicDeveloper": "開発元 <link>{name}</link>",
+    "topicEarlier": "さらに前のニュースを読み込む（{count} 件）",
+    "topicEnd": "これより前のニュースはありません",
     "share": "共有",
     "copied": "リンクをコピーしました",
     "newTab": "（新しいタブで開きます）",

@@ -971,6 +971,12 @@
       "product": "产品"
     },
     "appPage": "应用页",
+    "topicTitle": "#{name} · 日报",
+    "topicDescription": "IFAI 日报里关于 {name} 的所有新闻，最新的在上面。",
+    "topicCount": "{count, plural, other {# 条新闻}}",
+    "topicDeveloper": "开发公司 <link>{name}</link>",
+    "topicEarlier": "加载更早的新闻（{count} 条）",
+    "topicEnd": "没有更早的新闻了",
     "share": "分享",
     "copied": "链接已复制",
     "newTab": "（在新标签页打开）",

@@ -23,6 +23,8 @@ test('unknown stories, categories, pages and posters answer 404', async ({ page,
     '/en/daily/not-a-story',
     '/en/daily/category/not-a-category',
     '/en/daily/tag/not-a-tag',
+    '/en/daily/topic/nobodyhere',
+    '/en/daily/topic/Not%20Compared',
     '/en/daily?page=0',
     '/en/daily?page=x',
     '/en/daily/poster/2020-01-01',
@@ -274,6 +276,22 @@ test.describe('with the sample stories', () => {
     await expect(skeleton).toBeVisible()
     await expect(page.getByRole('heading', { level: 1, name: titles.preview })).toBeVisible({ timeout: 20_000 })
     await expect(skeleton).toHaveCount(0)
+  })
+
+  test("a product's topic page lists the stories about it, with its maker and app", async ({ page }) => {
+    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    await page.getByRole('region', { name: en.daily.entities }).getByRole('link', { name: /^Lumen Chat/ }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/topic\/lumenchat$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('#Lumen Chat')
+    const main = page.getByRole('main')
+    await expect(main.getByText('2 stories')).toBeVisible()
+    await expect(main.getByRole('article').getByRole('link')).toHaveText([titles.workspaces, titles.preview])
+    await expect(main.getByText(en.daily.topicEnd)).toBeVisible()
+    await expect(main.getByRole('link', { name: /^App page/ })).toHaveAttribute('href', '/en/apps/lumen-chat')
+    // The app's developer has a topic page of its own: a company.
+    await main.getByRole('link', { name: 'Lumen Labs' }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/topic\/lumenlabs$/)
+    await expect(page.getByRole('main').getByText(en.daily.entityKinds.company, { exact: true })).toBeVisible()
   })
 
   test('a corrected story shows when it was corrected', async ({ page }) => {

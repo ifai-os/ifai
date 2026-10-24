@@ -27,9 +27,10 @@ import {
   type StoryDetail,
   type StoryEntityItem,
   type StoryItem,
+  type TopicPage,
 } from './story-item'
 
-export type { HotStory, StoryDetail, StoryEntityItem, StoryItem, StorySource, StoryTopic } from './story-item'
+export type { HotStory, StoryDetail, StoryEntityItem, StoryItem, StorySource, StoryTopic, TopicPage } from './story-item'
 export { isStoryCategory } from './story-item'
 
 /**
@@ -49,6 +50,8 @@ export const topicShown = 12
 /** 「同类事件」: at most this many, at least this similar (the same event starts at 0.75). */
 export const similarShown = 3
 const similarMin = 0.6
+/** A topic page lists this many stories at a time. */
+export const topicPageSize = 20
 /** The hottest story of "today" was published within this long. */
 const hottestWithinMs = 24 * 3_600_000
 /** Apps mentioned in stories of the last 48 hours: today in any time zone. */
@@ -185,6 +188,51 @@ const findTopic = unstable_cache(
   },
   ['daily-topic'],
   cacheOptions,
+)
+
+// One page of the published stories about a company or product, newest first (its topic page).
+const findTopicPage = unstable_cache(
+  async (key: string, page: number) => {
+    const result = await (await payload()).find({
+      collection: 'stories',
+      where: { and: [published, { 'entities.key': { equals: key } }] },
+      sort: '-publishedAt',
+      page,
+      limit: topicPageSize,
+      locale: 'all',
+      depth: 1,
+      populate,
+      select,
+      overrideAccess: false,
+    })
+    return { docs: result.docs as unknown as RawStory[], total: result.totalDocs, pages: result.totalPages }
+  },
+  ['daily-topic-page'],
+  cacheOptions,
+)
+
+// Published apps by their compared names (name and aliases), so a topic page can say which app it is.
+const findTopicApps = unstable_cache(
+  async () => {
+    const { docs } = await (await payload()).find({
+      collection: 'apps',
+      where: published,
+      pagination: false,
+      depth: 1,
+      select: { name: true, slug: true, aliases: true, developer: true, logo: true },
+      populate: { media: { url: true, filename: true, width: true, height: true, sizes: true } },
+      overrideAccess: false,
+    })
+    return docs.map((app) => ({
+      keys: [app.name, ...(app.aliases ?? [])].map(entityKey).filter(Boolean),
+      slug: app.slug,
+      name: app.name,
+      developer: app.developer?.trim() || null,
+      logo: logoOf(app.logo),
+    }))
+  },
+  ['daily-topic-apps'],
+  { tags: [DAILY_CACHE_TAG, appsCacheTag], revalidate: 3600 },
 )
 
 // Published stories of other events whose report reads most like this one's (pgvector, step 6's embeddings).
@@ -430,13 +478,41 @@ export const getStory = cache(async (slug: string, locale: Locale): Promise<Stor
     tags: tagsOf(doc.tags),
     entities: entities.map(({ name, kind, key }): StoryEntityItem => {
       const app = apps.find((match) => match.keys.includes(key))
-      return { name, kind, app: app ? { slug: app.slug, name: app.name } : null }
+      return { name, kind, key, app: app ? { slug: app.slug, name: app.name } : null }
     }),
     topic:
       topic && topicStories.some((other) => other.id !== doc.id)
-        ? { name: topic.name, stories: topicStories.map((other) => toItem(other, locale)) }
+        ? { name: topic.name, key: topic.key, stories: topicStories.map((other) => toItem(other, locale)) }
         : null,
     similar: similar.map((other) => toItem(other, locale)),
+  }
+})
+
+/**
+ * A company's or product's topic page (docs/specs/daily.md「公司与产品的话题页」); null when no
+ * published story is about it, or the page is past the last.
+ */
+export const getTopicPage = cache(async (key: string, page: number, locale: Locale): Promise<TopicPage | null> => {
+  const [result, first, apps] = await Promise.all([findTopicPage(key, page), page === 1 ? null : findTopicPage(key, 1), findTopicApps()])
+  const newest = (first ?? result).docs[0]
+  const entity = newest && entitiesOf(newest, entityKey).find((item) => item.key === key)
+  if (!entity || result.docs.length === 0) return null
+  const app = apps.find((match) => match.keys.includes(key)) ?? null
+  // Only a product's app says who made it; stories naming both do not.
+  const developerName = entity.kind === 'product' ? app?.developer : null
+  const developerKey = developerName ? entityKey(developerName) : ''
+  const developerHasPage = developerKey && developerKey !== key ? (await findTopicPage(developerKey, 1)).total > 0 : false
+  return {
+    key,
+    name: entity.name,
+    kind: entity.kind,
+    total: result.total,
+    page,
+    pages: result.pages,
+    stories: result.docs.map((doc) => toItem(doc, locale)),
+    earlier: Math.max(0, result.total - (page - 1) * topicPageSize - result.docs.length),
+    app: app ? { slug: app.slug, name: app.name, logo: app.logo } : null,
+    developer: developerName ? { name: developerName, key: developerHasPage ? developerKey : null } : null,
   }
 })
 

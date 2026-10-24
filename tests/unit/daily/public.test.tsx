@@ -11,9 +11,19 @@ import { HottestCard } from '@/modules/daily/public/components/hottest-card'
 import { MentionedApps } from '@/modules/daily/public/components/mentioned-apps'
 import { StoryDetailView } from '@/modules/daily/public/components/story-detail'
 import { TodayHeadlines } from '@/modules/daily/public/components/today-headlines'
-import { listHref, readPage, storyHref } from '@/modules/daily/public/list-params'
+import { TopicPageView } from '@/modules/daily/public/components/topic-page'
+import { listHref, readPage, readTopicKey, storyHref, topicHref } from '@/modules/daily/public/list-params'
 import { renderFeed } from '@/modules/daily/public/rss'
-import { onePerEvent, toHot, toItem, type HotStory, type RawStory, type StoryDetail, type StoryItem } from '@/modules/daily/public/story-item'
+import {
+  onePerEvent,
+  toHot,
+  toItem,
+  type HotStory,
+  type RawStory,
+  type StoryDetail,
+  type StoryItem,
+  type TopicPage,
+} from '@/modules/daily/public/story-item'
 
 import en from '../../../messages/en.json'
 
@@ -288,10 +298,10 @@ describe('a story’s page', () => {
           ...detail,
           tags: ['devices', 'chips'],
           entities: [
-            { name: 'MacBook Pro', kind: 'product', app: null },
-            { name: 'Apple', kind: 'company', app: { slug: 'apple-intelligence', name: 'Apple Intelligence' } },
+            { name: 'MacBook Pro', kind: 'product', key: 'macbookpro', app: null },
+            { name: 'Apple', kind: 'company', key: 'apple', app: { slug: 'apple-intelligence', name: 'Apple Intelligence' } },
           ],
-          topic: { name: 'MacBook Pro', stories: topicStories },
+          topic: { name: 'MacBook Pro', key: 'macbookpro', stories: topicStories },
           similar: [story({ id: 30, publishedAt: '2025-10-01T09:00:00Z', slug: 'last-year' })],
         }}
         signIn={{ google: false, github: false, email: true }}
@@ -301,6 +311,8 @@ describe('a story’s page', () => {
     expect(html).toContain(`>${en.tags.devices}`)
     expect(html).toContain(`>${en.daily.entityKinds.product}<`)
     expect(html).toContain('href="/en/apps/apple-intelligence"')
+    expect(html).toContain('href="/en/daily/topic/apple"')
+    expect(html).toContain('href="/en/daily/topic/macbookpro"')
     // This story is marked, not linked; five of seven show before「查看更多」.
     expect(html).toContain(`>${en.daily.thisStory}<`)
     expect(html).not.toContain('href="/en/daily/story-1"')
@@ -315,6 +327,61 @@ describe('a story’s page', () => {
     const html = render(<StoryDetailView story={detail} signIn={{ google: false, github: false, email: true }} />)
     expect(html).toContain(`aria-pressed="false"`)
     expect(html.indexOf(`>${en.saves.save}</button>`)).toBeLessThan(html.indexOf(en.daily.share))
+  })
+})
+
+describe('a company’s or product’s topic page', () => {
+  const topic: TopicPage = {
+    key: 'kimi',
+    name: 'Kimi',
+    kind: 'product',
+    total: 23,
+    page: 1,
+    pages: 2,
+    stories: [
+      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'k3', moreReports: 6 }),
+      story({ id: 2, publishedAt: '2026-09-11T20:15:00Z', slug: 'k28' }),
+      story({ id: 3, publishedAt: '2025-11-06T22:05:00Z', slug: 'k2-thinking' }),
+    ],
+    earlier: 3,
+    app: { slug: 'kimi', name: 'Kimi', logo: null },
+    developer: { name: 'Moonshot AI', key: 'moonshotai' },
+  }
+
+  it('has addresses only for compared names', () => {
+    expect(topicHref('kimi')).toBe('/daily/topic/kimi')
+    expect(topicHref('月之暗面', 2)).toBe('/daily/topic/%E6%9C%88%E4%B9%8B%E6%9A%97%E9%9D%A2?page=2')
+    expect(readTopicKey('kimi')).toBe('kimi')
+    expect(readTopicKey('%E6%9C%88%E4%B9%8B%E6%9A%97%E9%9D%A2')).toBe('月之暗面')
+    expect(readTopicKey('月之暗面')).toBe('月之暗面')
+    expect(readTopicKey('Kimi')).toBeNull()
+    expect(readTopicKey('kimi%20k2')).toBeNull()
+    expect(readTopicKey('%E0%A4%A')).toBeNull()
+    expect(readTopicKey('')).toBeNull()
+  })
+
+  it('names it, links its maker and app, and lists the stories under their times', () => {
+    const html = render(<TopicPageView topic={topic} serverToday="2026-10-22" />)
+    expect(html).toContain('>#</span>Kimi</h1>')
+    expect(html).toContain(`>${en.daily.entityKinds.product}<`)
+    expect(html).toMatch(/Made by <a [^>]*href="\/en\/daily\/topic\/moonshotai">Moonshot AI<\/a>/)
+    expect(html).toContain('23 stories')
+    expect(html).toContain('href="/en/apps/kimi"')
+    // Today by name, this year without the year, earlier years with it.
+    expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
+    expect(html).toContain('<span>September 11</span>')
+    expect(html).toContain('<span>November 6, 2025</span>')
+    expect(html).toContain('6 more outlets reported this')
+    expect(html).toContain('href="/en/daily/topic/kimi?page=2"')
+    expect(html).toContain('Load earlier stories (3)')
+  })
+
+  it('says when there is nothing earlier, and leaves out a maker it does not know', () => {
+    const html = render(<TopicPageView topic={{ ...topic, page: 2, earlier: 0, developer: null, app: null }} serverToday="2026-10-22" />)
+    expect(html).toContain(en.daily.topicEnd)
+    expect(html).toContain('href="/en/daily/topic/kimi"')
+    expect(html).not.toContain('Made by')
+    expect(html).not.toContain('/en/apps/')
   })
 })
 

@@ -971,6 +971,12 @@
       "product": "제품"
     },
     "appPage": "앱 페이지",
+    "topicTitle": "#{name} · 데일리",
+    "topicDescription": "IFAI 데일리의 {name} 관련 소식을 최신순으로 모았습니다.",
+    "topicCount": "소식 {count}개",
+    "topicDeveloper": "개발사 <link>{name}</link>",
+    "topicEarlier": "이전 소식 더 보기({count}개)",
+    "topicEnd": "더 이전 소식이 없습니다",
     "share": "공유",
     "copied": "링크를 복사했어요",
     "newTab": "(새 탭에서 열림)",

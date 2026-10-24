@@ -6,7 +6,7 @@ import { Link } from '@/i18n/navigation'
 
 import type { StoryTag } from '../../tags'
 import type { StoryEntityItem, StoryItem, StoryTopic } from '../story-item'
-import { listHref, storyHref } from '../list-params'
+import { listHref, storyHref, topicHref } from '../list-params'
 import { ShowMoreList } from './show-more'
 
 /** 「话题追踪」shows this many before「查看更多」. */
@@ -56,7 +56,9 @@ export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId:
       <h2 id="topic" className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-h2">
         <Icon name="clock" size={20} className="text-accent" />
         {t('topic')}
-        <span className="text-body font-normal text-ink-4">{topic.name}</span>
+        <Link href={topicHref(topic.key)} className="text-body font-normal text-ink-4 hover:text-accent">
+          {topic.name}
+        </Link>
       </h2>
       <p className="text-meta text-ink-4">{t('topicNote')}</p>
       <ShowMoreList
@@ -123,7 +125,12 @@ export function TagList({ tags }: { tags: StoryTag[] }) {
   )
 }
 
-/**「涉及的公司与产品」: an initial tile, the name and its kind; an app page when the app is on the site. */
+/** The first letter of a name, as the tiles show it. */
+export function initialOf(name: string): string {
+  return Array.from(name.trim())[0]?.toUpperCase() ?? ''
+}
+
+/**「涉及的公司与产品」: an initial tile, the name and its kind, leading to its topic page; an app page when the app is on the site. */
 export function EntityList({ entities }: { entities: StoryEntityItem[] }) {
   const t = useTranslations('daily')
   return (
@@ -134,18 +141,18 @@ export function EntityList({ entities }: { entities: StoryEntityItem[] }) {
       <ul className="flex flex-col gap-2.5">
         {entities.map((entity) => (
           <li key={`${entity.kind}-${entity.name}`} className="flex items-center justify-between gap-2">
-            <span className="flex min-w-0 items-center gap-2.5">
+            <Link href={topicHref(entity.key)} className="group flex min-w-0 items-center gap-2.5">
               <span
                 aria-hidden="true"
                 className="flex size-8 flex-none items-center justify-center rounded-thumb border border-surface-2 bg-surface text-ui font-semibold"
               >
-                {Array.from(entity.name)[0]?.toUpperCase()}
+                {initialOf(entity.name)}
               </span>
               <span className="flex min-w-0 flex-col">
-                <span className="truncate text-ui font-medium">{entity.name}</span>
+                <span className="truncate text-ui font-medium group-hover:text-accent">{entity.name}</span>
                 <span className="text-small text-ink-4">{t(`entityKinds.${entity.kind}`)}</span>
               </span>
-            </span>
+            </Link>
             {entity.app && (
               <Link
                 href={`/apps/${entity.app.slug}`}

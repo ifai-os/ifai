@@ -8,8 +8,8 @@ import type { StoryCategory } from '../categories'
 import type { StoryTag } from '../tags'
 import { posterVersion } from '../poster/snapshot'
 import { POSTER_SIZE } from '../poster/layout'
-import { getPoster, getStory } from './data'
-import { feedPath, listHref, posterDay, posterHref, posterImagePath, storyHref } from './list-params'
+import { getPoster, getStory, getTopicPage } from './data'
+import { feedPath, listHref, posterDay, posterHref, posterImagePath, storyHref, topicHref } from './list-params'
 
 const descriptionLength = 160
 
@@ -56,6 +56,20 @@ export async function storyMetadata(slug: string, locale: Locale): Promise<Metad
     description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
     alternates: alternatesFor(storyHref(story.slug), locale),
     ...shareCard(locale, { article: { publishedTime: story.publishedAt, modifiedTime: story.correctedAt } }),
+  }
+}
+
+/** A topic page: its name; kept out of search engines while only one story is about it (thin page). */
+export async function topicMetadata(key: string, page: number, locale: Locale): Promise<Metadata> {
+  const topic = await getTopicPage(key, page, locale)
+  if (!topic) return {}
+  const t = await getTranslations({ locale, namespace: 'daily' })
+  const title = t('topicTitle', { name: topic.name })
+  return {
+    title: page > 1 ? t('pageTitle', { title, page }) : title,
+    description: t('topicDescription', { name: topic.name }),
+    alternates: alternatesFor(topicHref(key, page), locale),
+    ...(topic.total < 2 ? { robots: { index: false, follow: true } } : {}),
   }
 }
 
