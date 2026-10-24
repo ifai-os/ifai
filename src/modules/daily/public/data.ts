@@ -289,21 +289,29 @@ const findTopicApps = unstable_cache(
   { tags: [DAILY_CACHE_TAG, appsCacheTag], revalidate: 3600 },
 )
 
-// Published stories of other events whose report reads most like this one's (pgvector, step 6's embeddings).
+// Published stories whose report reads most like this one's (pgvector, step 6's embeddings): one per
+// event, the closest, leaving out the given events.
 const findSimilar = unstable_cache(
-  async (itemId: number, eventId: number, leaveOut: number[]) => {
+  async (itemId: number, leaveOut: number[]) => {
     const { payload: client, db } = await getDb()
     const distance = sql`mine.embedding <=> theirs.embedding`
+    const events = sql.join(
+      leaveOut.map((id) => sql`${id}`),
+      sql`, `,
+    )
     const rows = await db.execute<{ id: number }>(sql`
-      select s.id from stories s
-      join raw_items theirs on theirs.id = s.representative_item_id
-      join raw_items mine on mine.id = ${itemId}
-      where s.status = 'published' and s.event_id <> ${eventId}
-        and mine.embedding is not null and theirs.embedding is not null
-        and 1 - (${distance}) >= ${similarMin}
-      order by ${distance}
-      limit ${similarShown + leaveOut.length}`)
-    const ids = rows.rows.map((row) => Number(row.id)).filter((id) => !leaveOut.includes(id)).slice(0, similarShown)
+      select id from (
+        select distinct on (s.event_id) s.id, ${distance} as distance from stories s
+        join raw_items theirs on theirs.id = s.representative_item_id
+        join raw_items mine on mine.id = ${itemId}
+        where s.status = 'published' and s.event_id not in (${events})
+          and mine.embedding is not null and theirs.embedding is not null
+          and 1 - (${distance}) >= ${similarMin}
+        order by s.event_id, ${distance}
+      ) closest
+      order by distance
+      limit ${similarShown}`)
+    const ids = rows.rows.map((row) => Number(row.id))
     if (!ids.length) return []
     const { docs } = await client.find({
       collection: 'stories',
@@ -542,8 +550,8 @@ export const getStory = cache(async (slug: string, locale: Locale): Promise<Stor
     topic ? findTopic(topic.key) : [],
     entities.length ? findStoryApps(doc.id) : [],
   ])
-  // A story of the same event or already in the topic is not「同类」.
-  const similar = await findSimilar(doc.representativeItemId, doc.eventId, topicStories.map((other) => other.id))
+  // 「同类事件」are other events, each listed once, and not the ones the topic already lists.
+  const similar = await findSimilar(doc.representativeItemId, [...new Set([doc.eventId, ...topicStories.map((other) => other.eventId)])])
   return {
     ...toItem(doc, locale),
     sources: sourcesOf(doc),
