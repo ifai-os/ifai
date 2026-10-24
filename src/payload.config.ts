@@ -63,6 +63,10 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: ' · IFAI 后台' },
     components: {
+      // The site's button styles on every admin page (src/admin/theme/admin.css).
+      providers: ['/admin/theme/provider#AdminTheme'],
+      // 界面语言 (中文 / English) in the header, next to the content-language picker.
+      actions: ['/admin/ui-language/switch#UiLanguageSwitch'],
       // The daily review queue, model usage and the admin log, next to the collection links.
       afterNavLinks: [
         '/modules/daily/admin/review/links#ReviewNavLink',
@@ -77,10 +81,16 @@ export default buildConfig({
       },
     },
   },
-  // Admin UI language (the back office is for the site owner).
+  // Admin UI language (the back office is for the site owner, and our admin text exists in these two only).
+  // Chinese unless the owner picks English in the header; src/proxy.ts makes that the default.
   i18n: {
     supportedLanguages: { zh, en },
     fallbackLanguage: 'zh',
+    // The header's locale picker chooses which language of the content is edited, not the interface.
+    translations: {
+      zh: { general: { locale: '内容语言' } },
+      en: { general: { locale: 'Content language' } },
+    },
   },
   // Every collection records what admins save, delete and press (docs/specs/foundation.md「后台 · 操作记录」).
   collections: withAdminLog([
