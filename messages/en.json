@@ -982,8 +982,8 @@
     "later": "Next poster"
   },
   "subscribe": {
-    "title": "Get the AI Daily in your inbox at 8 a.m.",
-    "note": "Sent at 8 a.m. your time, in your language. Unsubscribe anytime.",
+    "title": "AI Daily, 8 a.m. in your inbox",
+    "note": "Your time zone, your language. Unsubscribe anytime.",
     "email": "Your email",
     "submit": "Subscribe",
     "done": "You're in. See you at 8 a.m.",
