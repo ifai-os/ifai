@@ -92,3 +92,11 @@ test('model usage is for signed-in admins only', async ({ page }) => {
   await expect(page.locator('form')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Model usage|模型用量/ })).toHaveCount(0)
 })
+
+test('the admin log is for signed-in admins only', async ({ page }) => {
+  test.skip(!process.env.E2E_ADMIN, 'Needs a database; set E2E_ADMIN=1 where one is available.')
+  await page.goto('/admin/admin-log?kind=delete')
+  await expect(page).toHaveURL(/\/admin\/(login\?redirect=%2Fadmin-log%3Fkind%3Ddelete|create-first-user)/)
+  await expect(page.locator('form')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Admin log|操作记录/ })).toHaveCount(0)
+})
