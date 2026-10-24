@@ -4,15 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { locales, messagesFileName } from '@/i18n/config'
 import { exportFileName } from '@/lib/auth/export-file'
-import {
-  readExportRefs,
-  readFollowRefs,
-  shapeMemberExport,
-  type ExportRef,
-  type ExportRefs,
-  type FollowRefs,
-  type MemberRecords,
-} from '@/lib/auth/export-member'
+import { readExportRefs, shapeMemberExport, type ExportRef, type ExportRefs, type MemberRecords } from '@/lib/auth/export-member'
 import type { AppReport, AppSubmission, SkillSubmission, Subscriber } from '@/payload-types'
 
 const site = 'https://ifai.example'
@@ -56,11 +48,6 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
       { targetType: 'app', targetId: 1, createdAt: day('2026-10-20') },
       { targetType: 'skill', targetId: 2, createdAt: day('2026-10-19') },
       { targetType: 'app', targetId: 99, createdAt: day('2026-10-17') },
-    ],
-    follows: [
-      { targetType: 'topic', targetKey: 'kimi', createdAt: day('2026-10-22') },
-      { targetType: 'tag', targetKey: 'coding', createdAt: day('2026-10-21') },
-      { targetType: 'topic', targetKey: 'gone', createdAt: day('2026-10-18') },
     ],
     reviews: [
       { id: 10, appId: 1, rating: 5, body: 'Great for notes', lang: 'en', status: 'shown', editedAt: null, createdAt: day('2026-10-21') },
@@ -159,14 +146,8 @@ const refs: ExportRefs = {
   story: new Map(),
 }
 
-const followRefs: FollowRefs = new Map([
-  ['topic-kimi', { name: 'Kimi', url: `${site}/en/daily/topic/kimi` }],
-  ['tag-coding', { name: 'Coding', url: `${site}/en/daily/tag/coding` }],
-  ['topic-gone', { name: null, url: null }],
-])
-
 const shape = (input: MemberRecords, sessionId: string | null = 'session-now') =>
-  shapeMemberExport(input, refs, { about: 'About this file', site, sessionId, now, followRefs })
+  shapeMemberExport(input, refs, { about: 'About this file', site, sessionId, now })
 
 describe('shapeMemberExport', () => {
   it('leaves out sign-in tokens and the owner’s internal notes, whatever the records carry', () => {
@@ -195,14 +176,6 @@ describe('shapeMemberExport', () => {
       { type: 'app', id: 1, name: 'Notion', url: `${site}/en/apps/notion`, savedAt: '2026-10-20T08:00:00.000Z' },
       { type: 'skill', id: 2, name: 'PDF reader', url: `${site}/en/resources/skills/pdf-reader`, savedAt: '2026-10-19T08:00:00.000Z' },
       { type: 'app', id: 99, name: null, url: null, savedAt: '2026-10-17T08:00:00.000Z' },
-    ])
-  })
-
-  it('names what the member follows, newest first, and keeps only the key of a company no story is about now', () => {
-    expect(shape(records()).follows).toEqual([
-      { type: 'topic', key: 'kimi', name: 'Kimi', url: `${site}/en/daily/topic/kimi`, followedAt: '2026-10-22T08:00:00.000Z' },
-      { type: 'tag', key: 'coding', name: 'Coding', url: `${site}/en/daily/tag/coding`, followedAt: '2026-10-21T08:00:00.000Z' },
-      { type: 'topic', key: 'gone', name: null, url: null, followedAt: '2026-10-18T08:00:00.000Z' },
     ])
   })
 
@@ -283,32 +256,6 @@ describe('readExportRefs', () => {
     const found = await readExportRefs({ find } as unknown as Payload, empty, 'en', site)
     expect(find).not.toHaveBeenCalled()
     expect(found.app.size + found.skill.size + found.category.size).toBe(0)
-  })
-})
-
-describe('readFollowRefs', () => {
-  it('names tags in the page language and companies by their newest published story, in one query', async () => {
-    const execute = vi.fn(async () => ({ rows: [{ key: 'kimi', name: 'Kimi', kind: 'product' }] }))
-    const payload = { db: { drizzle: { execute } } } as unknown as Payload
-    const found = await readFollowRefs(payload, records(), { locale: 'ja', site, tagName: (tag) => `tag:${tag}` })
-    expect(execute).toHaveBeenCalledTimes(1)
-    expect(Object.fromEntries(found)).toEqual({
-      'topic-kimi': { name: 'Kimi', url: `${site}/ja/daily/topic/kimi` },
-      'tag-coding': { name: 'tag:coding', url: `${site}/ja/daily/tag/coding` },
-      'topic-gone': { name: null, url: null },
-    })
-  })
-
-  it('reads nothing for a member who follows no company or product', async () => {
-    const execute = vi.fn()
-    const payload = { db: { drizzle: { execute } } } as unknown as Payload
-    const found = await readFollowRefs(payload, records({ follows: [{ targetType: 'tag', targetKey: 'llm', createdAt: day('2026-10-20') }] }), {
-      locale: 'en',
-      site,
-      tagName: () => 'Large models',
-    })
-    expect(execute).not.toHaveBeenCalled()
-    expect(found.get('tag-llm')).toEqual({ name: 'Large models', url: `${site}/en/daily/tag/llm` })
   })
 })
 

@@ -4,7 +4,6 @@ import { setRequestLocale } from 'next-intl/server'
 
 import { ListNavigationProvider } from '@/components/states/list-navigation'
 import { isLocale } from '@/i18n/config'
-import { authProviders } from '@/lib/auth/providers'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
 import { TopicPageView } from '@/modules/daily/public/components/topic-page'
 import { getTopicPage } from '@/modules/daily/public/data'
@@ -36,7 +35,7 @@ export default async function DailyTopicPage({ params, searchParams }: Props) {
 
   return (
     <ListNavigationProvider>
-      <TopicPageView topic={topic} serverToday={dayKey(new Date(), serverTimeZone)} signIn={authProviders()} />
+      <TopicPageView topic={topic} serverToday={dayKey(new Date(), serverTimeZone)} />
     </ListNavigationProvider>
   )
 }

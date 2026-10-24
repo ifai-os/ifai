@@ -5,10 +5,7 @@ import { buttonClass } from '@/components/button'
 import { EmptyState } from '@/components/states/empty-state'
 import { ListLink, ListNavigationProvider, ListResults } from '@/components/states/list-navigation'
 import type { Locale } from '@/i18n/config'
-import { authProviders } from '@/lib/auth/providers'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
-import { FollowButton } from '@/modules/follows/components/follow-button'
-import { FollowProvider } from '@/modules/follows/components/follow-provider'
 
 import type { StoryCategory } from '../../categories'
 import type { StoryTag } from '../../tags'
@@ -64,13 +61,7 @@ export async function DailyList({ locale, category, tag = null, page }: DailyLis
     <ListNavigationProvider>
       <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 pt-5 pb-16 md:gap-7 md:pt-8 md:pb-24">
         {tag ? (
-          // No board has the tag page; its「+ 关注」is the topic page's (docs/specs/daily.md「关注」).
-          <FollowProvider targets={[{ type: 'tag', key: tag }]} signIn={authProviders()}>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-              <h1 className="text-h1">{t('tagTitle', { tag: tagNames(tag) })}</h1>
-              <FollowButton target={{ type: 'tag', key: tag }} name={tagNames(tag)} look="page" />
-            </div>
-          </FollowProvider>
+          <h1 className="text-h1">{t('tagTitle', { tag: tagNames(tag) })}</h1>
         ) : (
           <h1 className="sr-only">{category ? names(category) : t('title')}</h1>
         )}
