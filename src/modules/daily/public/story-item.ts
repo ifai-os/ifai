@@ -37,7 +37,7 @@ export type StoryItem = {
   media: StoryMedia | null
 }
 
-/** A story in「48 小时热门」and「今日最热」: its event's heat and how many outlets reported it. */
+/** A story in「48 小时热门」and「头条」: its event's heat and how many outlets reported it. */
 export type HotStory = StoryItem & {
   eventId: number
   /** 0–100, the event's heat (src/modules/daily/heat/rules.ts). */

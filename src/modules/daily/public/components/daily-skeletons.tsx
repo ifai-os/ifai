@@ -20,23 +20,25 @@ const widths = [
 export function DailyFeedSkeleton({ count }: { count: number }) {
   const t = useTranslations('states')
   return (
-    <div role="status" aria-label={t('loadingList')} className="flex flex-col gap-2">
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-13 w-12 rounded-card" />
+    <div role="status" aria-label={t('loadingList')} className="flex flex-col">
+      <div className="flex items-center gap-3 pt-2 pb-4">
+        <Skeleton className="h-10.5 w-10 rounded-thumb" />
         <SkeletonLine text="text-h3" width="120px" bar="h-5" />
       </div>
       <div>
         {Array.from({ length: count }, (_, index) => {
           const width = widths[index % widths.length]
           return (
-            <div key={index} className="flex items-start gap-4 border-t border-line py-4 md:gap-6 md:py-5">
-              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div key={index} className="flex items-start gap-4 border-t border-hairline py-4 md:gap-7 md:py-6">
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
                 <SkeletonLine text="text-meta" width="30%" />
                 <SkeletonLine text="text-title md:text-h3" width={width.title} bar="h-4" />
-                <SkeletonLine text="text-body" width={width.summary} bar="h-3" />
-                <SkeletonLine text="text-body" width={width.more} bar="h-3" />
+                <div>
+                  <SkeletonLine text="text-body" width={width.summary} bar="h-3" />
+                  <SkeletonLine text="text-body" width={width.more} bar="h-3" />
+                </div>
               </div>
-              {index % 2 === 0 && <Skeleton className="hidden aspect-video w-50 flex-none rounded-card md:block" />}
+              {index % 2 === 0 && <Skeleton className="hidden aspect-[10/7] w-40 flex-none rounded-thumb md:block" />}
             </div>
           )
         })}

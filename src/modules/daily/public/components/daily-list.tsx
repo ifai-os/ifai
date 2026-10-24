@@ -28,12 +28,12 @@ type DailyListProps = {
 }
 
 /**
- * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): today's hottest story and the
- * latest「每日 AI 大事」poster (first page of every story only), the categories (each has its own
- * page, ./category-page.tsx), stories by day and earlier pages, and beside them the apps in
- * today's news and the hottest events of the last 48 hours. The email subscribe box sits under
- * the poster on wide screens (in the poster's place when there is none) and after the stories on
- * phones and tablets. A tag's page is the same list without the first row and the categories.
+ * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): 「头条」and the latest「每日 AI 大事」
+ * poster (first page of every story only), then under a line the categories (each has its own page,
+ * ./category-page.tsx), stories by day and earlier pages, and the apps in today's news and the
+ * hottest events of the last 48 hours. The email subscribe box sits under the poster on wide
+ * screens (in the poster's place when there is none) and after the stories on phones and tablets.
+ * A tag's page is the same list without the first row and the categories.
  */
 export async function DailyList({ locale, tag = null, page }: DailyListProps) {
   const front = !tag && page === 1
@@ -52,38 +52,53 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
 
   const subscribe = subscribingOpen()
   const serverToday = dayKey(new Date(), serverTimeZone)
+  const firstRow = Boolean(hottest || poster)
   const pill =
-    'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-5 text-ui font-medium text-ink transition-colors hover:border-ink-4'
+    'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-6 text-meta text-ink-2 transition-colors hover:border-ink-4'
 
   return (
     <ListNavigationProvider>
-      <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 pt-5 pb-16 md:gap-7 md:pt-8 md:pb-24">
+      <main id="main" className="mx-auto flex w-full max-w-240 flex-col gap-5 px-4 pt-5 pb-16 md:gap-10 md:pt-8 md:pb-24">
         {tag ? <h1 className="text-h1">{t('tagTitle', { tag: tagNames(tag) })}</h1> : <h1 className="sr-only">{t('title')}</h1>}
-        {/* The board's row: hottest story and poster share it 2 : 1 and wrap when there is no room. */}
-        <div className="flex flex-col gap-4 empty:hidden md:flex-row md:flex-wrap">
-          {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
-          {poster ? (
-            <div className={`flex flex-col gap-4 ${hottest ? 'md:grow md:basis-54' : 'md:w-side md:flex-none'}`}>
-              <PosterCard poster={poster} locale={locale} />
-              {subscribe && (
-                <div className="hidden lg:block">
+        {/* The board's first row: 「头条」and the poster share it 2 : 1 and wrap when there is no room.
+            Without them only the subscribe box is left, which wide screens show here. */}
+        {(firstRow || subscribe) && (
+          <div className={`flex-col gap-4 md:flex-row md:flex-wrap ${firstRow ? 'flex' : 'hidden lg:flex'}`}>
+            {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
+            {poster ? (
+              <div className={`flex flex-col gap-4 ${hottest ? 'md:grow md:basis-54' : 'md:w-side md:flex-none'}`}>
+                <PosterCard poster={poster} locale={locale} />
+                {subscribe && (
+                  <div className="hidden lg:block">
+                    <SubscribeBox variant="column" />
+                  </div>
+                )}
+              </div>
+            ) : (
+              subscribe && (
+                <div className={`hidden lg:block ${hottest ? 'lg:grow lg:basis-54' : 'lg:w-side lg:flex-none'}`}>
                   <SubscribeBox variant="column" />
                 </div>
-              )}
+              )
+            )}
+          </div>
+        )}
+
+        {/* The board's second part, under a line: the categories (140), the stories and the column beside
+            them (200), 48 apart; what doesn't fit wraps under, as on the board. Phones stack them, the
+            categories as chips. */}
+        <div
+          className={`flex flex-col gap-5 md:flex-row md:flex-wrap md:items-start md:gap-x-12 md:gap-y-10 ${
+            firstRow ? 'md:border-t md:border-line md:pt-6' : subscribe ? 'lg:border-t lg:border-line lg:pt-6' : ''
+          }`}
+        >
+          {!tag && (
+            <div className="md:basis-35">
+              <CategoryNav current={null} />
             </div>
-          ) : (
-            subscribe && (
-              <div className="hidden lg:block lg:w-side lg:flex-none">
-                <SubscribeBox variant="column" />
-              </div>
-            )
           )}
-        </div>
 
-        {!tag && <CategoryNav current={null} />}
-
-        <div className="flex flex-col gap-12 lg:flex-row lg:items-start">
-          <div className="flex min-w-0 flex-1 flex-col gap-5 md:gap-7">
+          <div className="flex min-w-0 flex-col gap-6 md:grow-999 md:basis-105">
             <ListResults skeleton={<DailyFeedSkeleton count={Math.min(Math.max(result.stories.length, 3), 6)} />}>
               {result.stories.length > 0 ? (
                 <DailyFeed stories={result.stories} serverToday={serverToday} />
@@ -99,7 +114,7 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
             </ListResults>
 
             {(page > 1 || page < result.pages) && (
-              <nav aria-label={t('pages')} className="flex flex-wrap justify-center gap-3 pt-2">
+              <nav aria-label={t('pages')} className="flex flex-wrap justify-center gap-3">
                 {page > 1 && (
                   <ListLink rel="prev" href={listHref({ tag, page: page - 1 })} className={pill}>
                     {t('loadNewer')}
@@ -121,7 +136,7 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
           </div>
 
           {(hot.length > 0 || apps.length > 0) && (
-            <aside className="flex flex-col gap-8 lg:w-side lg:flex-none">
+            <aside className="flex flex-col gap-8 max-md:mt-7 md:grow md:basis-50">
               <MentionedApps apps={apps} serverToday={serverToday} />
               {hot.length > 0 && <HotList stories={hot} />}
             </aside>

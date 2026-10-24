@@ -626,7 +626,7 @@ export async function hotStories(locale: Locale): Promise<HotStory[]> {
   return onePerEvent(await findHot(), hotShown).map((doc) => toHot(doc, locale))
 }
 
-/**「今日最热」: the hottest story published in the last 24 hours; null when none has heat. */
+/**「头条」: the hottest story published in the last 24 hours; null when none has heat. */
 export async function hottestStory(locale: Locale, now = new Date()): Promise<HotStory | null> {
   const since = now.getTime() - hottestWithinMs
   const doc = (await findHot()).find((story) => story.publishedAt && new Date(story.publishedAt).getTime() >= since)

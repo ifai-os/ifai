@@ -88,24 +88,27 @@ function VideoButton({
   );
 }
 
+// 「IFAI 日报（新版）」: 160 × 112, corners 8, a hairline round it.
 const thumbBox =
-  "relative block aspect-[16/10] w-24 flex-none rounded-tile bg-surface-2 md:w-50";
+  "relative block aspect-[10/7] w-24 flex-none self-start overflow-hidden rounded-thumb border border-hairline bg-surface-2 md:w-40";
 
 /** The list's thumbnail (「IFAI 日报（新版）」): a picture links to the story, a video plays in place. */
 export function StoryThumb({
   story,
+  className = "",
 }: {
   story: Pick<StoryItem, "slug" | "title" | "media">;
+  className?: string;
 }) {
   const media = story.media;
   if (!media) return null;
-  const sizes = "(min-width: 768px) 200px, 96px";
+  const sizes = "(min-width: 768px) 160px, 96px";
   if (media.kind === "video")
     return (
       <VideoButton
         media={media}
         story={story}
-        className={thumbBox}
+        className={`${thumbBox} ${className}`}
         sizes={sizes}
       />
     );
@@ -114,7 +117,7 @@ export function StoryThumb({
       href={storyHref(story.slug)}
       tabIndex={-1}
       aria-hidden="true"
-      className={`overflow-hidden ${thumbBox}`}
+      className={`${thumbBox} ${className}`}
     >
       <Cover picture={media.picture} sizes={sizes} />
     </Link>

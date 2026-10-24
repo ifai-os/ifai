@@ -27,7 +27,7 @@ export function DailyFeed({ stories, serverToday }: DailyFeedProps) {
   const groups = groupByDay(stories, (story) => story.publishedAt, timeZone)
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {groups.map((group) => {
         const relative = relativeDay(group.key, today)
         // Chinese and Japanese run date and weekday together (「10月20日星期二」); the board has a space between.
@@ -35,12 +35,13 @@ export function DailyFeed({ stories, serverToday }: DailyFeedProps) {
           ? `${format.dateTime(group.date, { month: 'long', day: 'numeric', timeZone: 'UTC' })} ${format.dateTime(group.date, { weekday: 'long', timeZone: 'UTC' })}`
           : format.dateTime(group.date, { month: 'long', day: 'numeric', weekday: 'long', timeZone: 'UTC' })
         return (
-          <section key={group.key} aria-labelledby={`day-${group.key}`} className="flex flex-col gap-2">
-            {/* 「IFAI 日报（新版）」: the calendar tile, then the day and its count on one line. */}
-            <header className="flex items-center gap-3">
+          <section key={group.key} aria-labelledby={`day-${group.key}`} className="flex flex-col">
+            {/* 「IFAI 日报（新版）」: the calendar tile, then the day and its count on one line, all centred;
+                8 above, 16 down to the first story's line. */}
+            <header className="flex items-center gap-3 pt-2 pb-4">
               <DateBadge date={group.date} size="sm" />
               <div className="flex min-w-0 flex-wrap items-center gap-x-3">
-                <h2 id={`day-${group.key}`} className="text-h3 font-semibold">
+                <h2 id={`day-${group.key}`} className="text-h3">
                   {relative ? t(relative) : date}
                 </h2>
                 <span className="text-meta text-ink-4">{t('groupCount', { count: group.items.length })}</span>
