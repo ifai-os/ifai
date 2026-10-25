@@ -156,6 +156,11 @@
     --font-sans: -apple-system, system-ui, "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
     line-break: strict;
   }
+  /* Chinese and Japanese break between characters, also inside a Korean page, whose keep-all they would inherit. */
+  :lang(zh),
+  :lang(ja) {
+    word-break: normal;
+  }
   :lang(ko) {
     --font-sans: -apple-system, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
     word-break: keep-all;

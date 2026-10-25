@@ -23,6 +23,8 @@ import { AppReports } from './modules/apps/collections/AppReports'
 import { AppSubmissions } from './modules/apps/collections/AppSubmissions'
 import { Apps } from './modules/apps/collections/Apps'
 import { appsTables } from './modules/apps/schema'
+import { Circles } from './modules/circles/collections/Circles'
+import { circlesTables } from './modules/circles/schema'
 import { Posters } from './modules/daily/collections/posters'
 import { Sources } from './modules/daily/collections/sources'
 import { Stories } from './modules/daily/collections/stories'
@@ -115,6 +117,7 @@ export default buildConfig({
     AgentHosts,
     SkillTags,
     SkillSubmissions,
+    Circles,
     Arenas,
     ArenaModels,
     ArenaPrompts,
@@ -166,6 +169,7 @@ export default buildConfig({
           ...appsTables,
           ...savesTables,
           ...followsTables,
+          ...circlesTables,
           ...adminLogTables,
           ...rankingsTables,
         },

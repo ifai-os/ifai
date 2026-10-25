@@ -82,6 +82,7 @@ export interface Config {
     'agent-hosts': AgentHost;
     'skill-tags': SkillTag;
     'skill-submissions': SkillSubmission;
+    circles: Circle;
     arenas: Arena;
     'arena-models': ArenaModel;
     'arena-prompts': ArenaPrompt;
@@ -113,6 +114,7 @@ export interface Config {
     'agent-hosts': AgentHostsSelect<false> | AgentHostsSelect<true>;
     'skill-tags': SkillTagsSelect<false> | SkillTagsSelect<true>;
     'skill-submissions': SkillSubmissionsSelect<false> | SkillSubmissionsSelect<true>;
+    circles: CirclesSelect<false> | CirclesSelect<true>;
     arenas: ArenasSelect<false> | ArenasSelect<true>;
     'arena-models': ArenaModelsSelect<false> | ArenaModelsSelect<true>;
     'arena-prompts': ArenaPromptsSelect<false> | ArenaPromptsSelect<true>;
@@ -1009,6 +1011,41 @@ export interface SkillSubmission {
   createdAt: string;
 }
 /**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Readers’ posts go live at once: hide one in the circle’s Posts tab.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circles".
+ */
+export interface Circle {
+  id: number;
+  /**
+   * Shown as “# name”.
+   */
+  name: string;
+  /**
+   * What people post here, for the circle’s card and search engines.
+   */
+  description?: string | null;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  /**
+   * The card’s color, from the design tokens.
+   */
+  tone: '0' | '1' | '2' | '3' | '4' | '5' | '6';
+  /**
+   * Smaller comes first.
+   */
+  order?: number | null;
+  /**
+   * Unticked, the circle and its posts leave the page and nobody can post in it. Nothing is deleted.
+   */
+  shown?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. The rankings are recomputed every Monday at 06:00 Shanghai time.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1270,6 +1307,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'skill-submissions';
         value: number | SkillSubmission;
+      } | null)
+    | ({
+        relationTo: 'circles';
+        value: number | Circle;
       } | null)
     | ({
         relationTo: 'arenas';
@@ -1793,6 +1834,20 @@ export interface SkillSubmissionsSelect<T extends boolean = true> {
   submitterId?: T;
   reply?: T;
   adminNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circles_select".
+ */
+export interface CirclesSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  slug?: T;
+  tone?: T;
+  order?: T;
+  shown?: T;
   updatedAt?: T;
   createdAt?: T;
 }

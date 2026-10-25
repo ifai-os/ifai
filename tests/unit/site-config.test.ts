@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { navItems, parsePhase, upcomingNavItems, visibleNavItems } from '@/config/site'
+import { isLaunched, navItems, parsePhase, upcomingNavItems, visibleNavItems } from '@/config/site'
 
 const keys = (items: { key: string }[]) => items.map((item) => item.key)
 
@@ -18,6 +18,13 @@ describe('phased navigation', () => {
     expect(keys(visibleNavItems(2))).toEqual(['recommend', 'circles', 'daily', 'apps', 'resources'])
     expect(visibleNavItems(3)).toHaveLength(7)
     expect(upcomingNavItems(3)).toHaveLength(0)
+  })
+
+  it('says whether a module has launched, for its pages and API', () => {
+    expect(isLaunched('daily', 1)).toBe(true)
+    expect(isLaunched('circles', 1)).toBe(false)
+    expect(isLaunched('circles', 2)).toBe(true)
+    expect(isLaunched('wiki', 2)).toBe(false)
   })
 
   it('falls back to phase one for missing or invalid values', () => {

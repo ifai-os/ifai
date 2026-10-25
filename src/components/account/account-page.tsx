@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { SignInForm } from '@/components/auth/sign-in-form'
 import { ButtonLink } from '@/components/button'
 import { ThemePicker } from '@/components/theme-picker'
+import { isLaunched } from '@/config/site'
 import type { Locale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
@@ -154,6 +155,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
               {t('exportTitle')}
             </h3>
             <p className="text-ui text-ink-3">{t('exportBody')}</p>
+            {isLaunched('circles') && <p className="text-ui text-ink-3">{t('exportCircles')}</p>}
             <ExportData />
           </section>
           <section aria-labelledby="delete-account" className="flex flex-col items-start gap-3 rounded-card border border-surface-2 p-4 md:p-7">
@@ -161,6 +163,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
               {t('deleteTitle')}
             </h3>
             <p className="text-ui text-ink-3">{t('deleteBody')}</p>
+            {isLaunched('circles') && <p className="text-ui text-ink-3">{t('deleteCircles')}</p>}
             <p className="text-ui text-ink-3">{t('deleteKeeps')}</p>
             <DeleteAccount />
           </section>
