@@ -982,7 +982,7 @@ export interface SkillSubmission {
    */
   status: 'pending' | 'accepted' | 'rejected';
   /**
-   * The Skill imported from this submission. Listed: its page is in the email. Not listed after a blocked scan: the email lists what the scan found.
+   * The Skill imported from this submission; “Make it a Skill” above fills it in. Listed: its page is in the email. Not listed after a blocked scan: the email lists what the scan found.
    */
   skill?: (number | null) | Skill;
   /**
