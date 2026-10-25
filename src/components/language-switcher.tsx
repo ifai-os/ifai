@@ -94,7 +94,7 @@ export function LanguageSwitcher() {
           role="menu"
           aria-label={t('language')}
           onKeyDown={onMenuKeyDown}
-          className="absolute right-1 top-12 z-30 flex w-50 flex-col rounded-tile bg-bg p-1.5 shadow-float"
+          className="absolute right-1 top-12 z-30 flex w-50 flex-col rounded-tile bg-overlay p-1.5 shadow-float"
         >
           {locales.map((item, i) => {
             const checked = item === locale

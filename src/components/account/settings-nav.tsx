@@ -36,7 +36,7 @@ export function SettingsNav({ current }: { current: SettingsSection }) {
             href={sectionHref(section)}
             aria-current={on ? 'page' : undefined}
             className={`flex h-9 flex-none items-center rounded-pill border px-3.5 text-ui whitespace-nowrap transition-colors md:h-11 md:rounded-tile md:border-0 md:text-body ${
-              on ? 'border-ink bg-ink text-white md:bg-surface md:font-semibold md:text-ink' : 'border-line text-ink-2 hover:text-ink md:hover:bg-surface'
+              on ? 'border-ink bg-ink text-bg md:bg-surface md:font-semibold md:text-ink' : 'border-line text-ink-2 hover:text-ink md:hover:bg-surface'
             }`}
           >
             {t(`sections.${section}`)}

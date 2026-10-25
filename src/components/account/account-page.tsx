@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 
 import { SignInForm } from '@/components/auth/sign-in-form'
 import { ButtonLink } from '@/components/button'
+import { ThemePicker } from '@/components/theme-picker'
 import type { Locale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
@@ -138,6 +139,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
         <>
           {title}
           <SettingsCard>
+            <SettingsRow title={t('appearanceLabel')} description={t('appearanceNote')} action={<ThemePicker />} />
             <SettingsRow title={t('languageLabel')} description={t('languageNote')} action={<LanguageChoice />} below />
           </SettingsCard>
         </>

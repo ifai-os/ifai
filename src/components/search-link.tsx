@@ -15,7 +15,7 @@ export function SearchLink() {
       href="/search"
       aria-label={t('search')}
       aria-current={current ? 'page' : undefined}
-      className="flex size-11 flex-none items-center justify-center text-ink transition-colors hover:text-accent"
+      className="flex size-11 flex-none items-center justify-center text-ink transition-colors hover:text-accent-ink"
     >
       <Icon name="search" size={20} />
     </Link>

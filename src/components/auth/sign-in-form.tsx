@@ -216,7 +216,7 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false, 
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="h-11 rounded-btn bg-ink px-5 text-ui font-medium text-white disabled:opacity-60"
+        className="h-11 rounded-btn bg-ink px-5 text-ui font-medium text-bg disabled:opacity-60"
       >
         {status === 'sending' ? t('sending') : t('sendLink')}
       </button>

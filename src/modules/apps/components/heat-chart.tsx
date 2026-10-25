@@ -175,7 +175,7 @@ export function HeatChart({ history }: { history: HeatPoint[] }) {
           <div
             id={`${id}-readout`}
             aria-live="polite"
-            className={`pointer-events-none absolute top-0 flex flex-col rounded-thumb border border-line bg-bg px-2.5 py-1.5 shadow-float ${
+            className={`pointer-events-none absolute top-0 flex flex-col rounded-thumb border border-line bg-overlay px-2.5 py-1.5 shadow-float ${
               shown ? '' : 'sr-only'
             } ${shown && x(shown) > plot.width / 2 ? '-translate-x-[calc(100%+8px)]' : 'translate-x-2'}`}
             style={shown ? { left: percent(x(shown), plot.width) } : undefined}

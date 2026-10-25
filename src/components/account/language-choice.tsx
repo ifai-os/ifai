@@ -34,7 +34,7 @@ export function LanguageChoice() {
             lang={item}
             aria-pressed={current}
             onClick={() => choose(item)}
-            className={`h-9 rounded-btn border px-3.5 text-meta font-medium transition-colors ${current ? 'border-ink bg-ink text-white' : 'border-line bg-bg text-ink-2 hover:border-ink-4'}`}
+            className={`h-9 rounded-btn border px-3.5 text-meta font-medium transition-colors ${current ? 'border-ink bg-ink text-bg' : 'border-line bg-bg text-ink-2 hover:border-ink-4'}`}
           >
             {localeNames[item]}
           </button>

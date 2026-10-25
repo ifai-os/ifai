@@ -26,7 +26,7 @@ export function SkillItem({ skill }: { skill: SkillListItem }) {
       <div className="flex gap-3.5 md:gap-4 group-data-[view=grid]/view:items-center group-data-[view=grid]/view:gap-3">
         <SkillTile name={skill.name.value} slug={skill.slug} size="lg" />
         <div className="hidden min-w-0 flex-col gap-0.5 group-data-[view=grid]/view:flex">
-          <Link href={href} lang={skill.name.lang} className="truncate text-body font-semibold hover:text-accent">
+          <Link href={href} lang={skill.name.lang} className="truncate text-body font-semibold hover:text-accent-ink">
             {skill.name.value}
           </Link>
           <span className="truncate text-small text-ink-4">
@@ -37,7 +37,7 @@ export function SkillItem({ skill }: { skill: SkillListItem }) {
 
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 group-data-[view=grid]/view:hidden">
-          <Link href={href} lang={skill.name.lang} className="text-title font-semibold wrap-anywhere hover:text-accent">
+          <Link href={href} lang={skill.name.lang} className="text-title font-semibold wrap-anywhere hover:text-accent-ink">
             {skill.name.value}
           </Link>
           {skill.certified && (

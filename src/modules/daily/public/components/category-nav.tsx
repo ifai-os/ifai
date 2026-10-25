@@ -37,10 +37,10 @@ export function CategoryNav({ current, large = false }: CategoryNavProps) {
                 className={
                   large
                     ? `flex h-10 items-center rounded-pill border px-5 text-ui font-medium whitespace-nowrap transition-colors ${
-                        active ? 'border-ink bg-ink text-white' : 'border-line bg-bg text-ink-2 hover:border-ink-4'
+                        active ? 'border-ink bg-ink text-bg' : 'border-line bg-bg text-ink-2 hover:border-ink-4'
                       }`
                     : `flex h-8.5 items-center gap-2.5 rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors md:h-auto md:min-h-11 md:rounded-none md:border-0 md:bg-transparent md:px-0 md:text-title md:whitespace-normal ${
-                        active ? 'border-ink bg-ink text-white md:text-ink' : 'border-line bg-bg text-ink-2 hover:border-ink-4 md:text-ink-4 md:hover:text-ink'
+                        active ? 'border-ink bg-ink text-bg md:text-ink' : 'border-line bg-bg text-ink-2 hover:border-ink-4 md:text-ink-4 md:hover:text-ink'
                       }`
                 }
               >
