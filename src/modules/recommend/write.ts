@@ -51,7 +51,7 @@ async function build(payload: Payload, userId: string, markdown: string, article
   const images = await ownImages(payload, userId, { files, ids: [], articleId })
   const byFile = new Map(images.flatMap((image) => (image.filename ? [[image.filename, image.id] as const] : [])))
   if (files.some((file) => !byFile.has(file))) return { ok: false, error: 'image-source' }
-  return { ok: true, body: partsToBody(payload, split.parts, byFile), imageIds: images.map((image) => image.id), images }
+  return { ok: true, body: await partsToBody(split.parts, byFile), imageIds: images.map((image) => image.id), images }
 }
 
 export type SaveResult = { ok: true; id: number; status: ArticleStatus } | { ok: false; error: WriteError }

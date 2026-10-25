@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto'
 
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical'
-import type { Payload, RichTextField } from 'payload'
+import type { RichTextField } from 'payload'
 
 import { codeLanguages, type RichNode, type RichText } from './rules'
 import type { MarkdownPart } from './writing'
@@ -48,8 +48,16 @@ function tidy(nodes: RichNode[]): RichNode[] {
   })
 }
 
-function editorConfig(payload: Payload) {
-  const field = payload.collections.articles.config.fields.find((candidate) => 'name' in candidate && candidate.name === 'body')
+/**
+ * The body field's editor, from the config as this module's own bundle built it. Not the running
+ * Payload's: that one may have been started by another route (the admin, say), whose bundle has
+ * its own copy of Lexical, and Lexical refuses nodes made by another copy.
+ */
+async function editorConfig() {
+  // Imported here, so that what else this file has needs no config (the unit tests).
+  const { default: config } = await import('@payload-config')
+  const articles = (await config).collections.find((collection) => collection.slug === 'articles')
+  const field = articles?.fields.find((candidate) => 'name' in candidate && candidate.name === 'body')
   if (!field || field.type !== 'richText') throw new Error('articles has no body field')
   return editorConfigFactory.fromField({ field: field as RichTextField })
 }
@@ -58,8 +66,8 @@ function editorConfig(payload: Payload) {
  * The body for these parts (`splitMarkdown`); `images` holds the article-images id of each
  * picture's file name. A picture whose file is missing is left out.
  */
-export function partsToBody(payload: Payload, parts: MarkdownPart[], images: Map<string, number>): RichText {
-  const config = editorConfig(payload)
+export async function partsToBody(parts: MarkdownPart[], images: Map<string, number>): Promise<RichText> {
+  const config = await editorConfig()
   const children: RichNode[] = []
   for (const part of parts) {
     if (part.kind === 'image') {
