@@ -122,7 +122,8 @@ function ProfileHeader({ page }: { page: ProfilePageData }) {
         </Link>
       </p>
 
-      <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {/* The cards share their rows, so the numbers line up when a label takes two lines. */}
+      <div className="mt-2 grid grid-cols-3 gap-x-2 sm:gap-x-3">
         <StatCard label={t('postsCard')} value={format.number(stats.posts)}>
           {t('receivedNote', { reactions: stats.reactions, comments: stats.comments })}
         </StatCard>
@@ -139,9 +140,9 @@ function ProfileHeader({ page }: { page: ProfilePageData }) {
 
 function StatCard({ label, value, children }: { label: string; value: string; children?: ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1 rounded-tile border border-line p-4">
-      <span className="text-small text-ink-4">{label}</span>
-      <span className="text-h3 font-semibold">{value}</span>
+    <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-y-1 rounded-tile border border-line p-3 sm:p-4">
+      <span className="text-small text-balance text-ink-4">{label}</span>
+      <span className="text-title font-semibold sm:text-h3">{value}</span>
       {children && <span className="mt-1.5 text-small text-ink-4">{children}</span>}
     </div>
   )
@@ -151,7 +152,7 @@ function StatCard({ label, value, children }: { label: string; value: string; ch
 function CircleTiles({ circles }: { circles: ProfileCircle[] }) {
   const shown = circles.slice(0, 4)
   return (
-    <span aria-hidden="true" className="flex gap-1">
+    <span aria-hidden="true" className="flex flex-wrap gap-1">
       {shown.map(({ circle }) => (
         <span
           key={circle.id}

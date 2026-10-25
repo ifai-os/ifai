@@ -112,3 +112,16 @@ export async function suggestionCandidates(payload: Payload, circleIds: number[]
     ]
   })
 }
+
+/**
+ * The names and addresses of these members as they are now: the candidates are minutes old, and
+ * someone may since have renamed, moved to another address or deleted their account (then missing).
+ */
+export async function currentMembers(payload: Payload, ids: string[]): Promise<Map<string, { name: string; handle: string }>> {
+  if (ids.length === 0) return new Map()
+  const rows = await drizzleOf(payload)
+    .select({ id: authUsers.id, name: authUsers.name, handle: authUsers.handle })
+    .from(authUsers)
+    .where(inArray(authUsers.id, ids))
+  return new Map(rows.flatMap((row) => (row.handle ? [[row.id, { name: cleanName(row.name), handle: row.handle }] as const] : [])))
+}

@@ -91,9 +91,12 @@ function PeopleTabs({ page, side }: { page: PeoplePageData; side: PeopleSide }) 
             item === side ? 'border-ink text-ink' : 'border-transparent text-ink-4 hover:text-ink'
           }`}
         >
-          {item === 'followers'
-            ? t.rich('followersCount', { count: followers, b: bold })
-            : t.rich('followingCount', { count: page.follows.following, b: bold })}
+          {/* One flex item, so the space between the number and the word stays. */}
+          <span>
+            {item === 'followers'
+              ? t.rich('followersCount', { count: followers, b: bold })
+              : t.rich('followingCount', { count: page.follows.following, b: bold })}
+          </span>
         </Link>
       ))}
     </nav>
