@@ -36,7 +36,7 @@ export function StoryRow({
             <LocalTime
               iso={story.publishedAt}
               style="time"
-              className="font-medium text-accent tabular-nums"
+              className="font-medium text-accent-ink tabular-nums"
             />
             <span>{category}</span>
             <span>{card("moreSources", { count: story.moreReports })}</span>
@@ -44,7 +44,7 @@ export function StoryRow({
           <h3 lang={story.title.lang} className="text-title md:text-h3">
             <Link
               href={storyHref(story.slug)}
-              className="text-ink hover:text-accent"
+              className="text-ink hover:text-accent-ink"
             >
               {story.title.value}
             </Link>
@@ -65,7 +65,7 @@ export function StoryRow({
             lang={story.tryIt.lang}
             className="col-span-full rounded-thumb bg-surface px-3.5 py-2.5 text-meta leading-5.25 text-ink-2 md:col-span-1"
           >
-            <span className="me-2 font-medium text-accent">{t("tryIt")}</span>{" "}
+            <span className="me-2 font-medium text-accent-ink">{t("tryIt")}</span>{" "}
             {story.tryIt.value}
           </p>
         )}

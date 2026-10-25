@@ -49,11 +49,11 @@ export async function WikiHome({ locale }: { locale: Locale }) {
               href={entryHref(featured.slug)}
               className="group flex flex-2 basis-75 flex-col gap-3 rounded-hero border border-surface-2 bg-surface p-5 transition-colors hover:border-line md:p-6"
             >
-              <span className="text-small font-medium text-accent">{t('today')}</span>
+              <span className="text-small font-medium text-accent-ink">{t('today')}</span>
               <span className="flex items-center gap-3">
                 <EntryTile entry={featured} size="xl" />
                 <span className="flex min-w-0 flex-col gap-1">
-                  <span lang={featured.title.lang} className="text-h3 font-semibold group-hover:text-accent">
+                  <span lang={featured.title.lang} className="text-h3 font-semibold group-hover:text-accent-ink">
                     {featured.title.value}
                   </span>
                   <span className="self-start">

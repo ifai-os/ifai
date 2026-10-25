@@ -60,7 +60,7 @@ export function CategoryPageView({ page, serverToday }: { page: CategoryPage; se
               className={`absolute -inset-y-75 -right-10 -left-750 -z-10 bg-linear-to-r from-[calc(100%-40px)] md:-right-20 md:from-[calc(100%-180px)] ${look.fade}`}
             />
             <h1 id="category-title" className={`text-display-phone wrap-anywhere md:text-display ${look.title}`}>
-              <span aria-hidden="true" className="text-accent">
+              <span aria-hidden="true" className="text-accent-ink">
                 #
               </span>
               {names(category)}

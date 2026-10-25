@@ -10,6 +10,7 @@ import { NetworkNotice } from '@/components/states/network-notice'
 import { routing } from '@/i18n/routing'
 import { shareCard } from '@/lib/seo'
 import { siteUrl } from '@/lib/site-url'
+import { themeColors, themeScript } from '@/lib/theme'
 
 import '../globals.css'
 
@@ -37,7 +38,10 @@ export async function generateMetadata({ params }: Omit<Props, 'children'>): Pro
 }
 
 export const viewport: Viewport = {
-  themeColor: '#FFFFFF',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: themeColors.light },
+    { media: '(prefers-color-scheme: dark)', color: themeColors.dark },
+  ],
 }
 
 export default async function LocaleLayout({ children, params }: Props) {
@@ -47,12 +51,16 @@ export default async function LocaleLayout({ children, params }: Props) {
   const t = await getTranslations('header')
 
   return (
-    <html lang={locale}>
+    // data-theme is set by themeScript before hydration, so React must not complain about it.
+    <html lang={locale} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="flex min-h-dvh flex-col bg-bg text-ink antialiased">
         <NextIntlClientProvider>
           <a
             href="#main"
-            className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-4 focus:z-50 focus:rounded-btn focus:bg-ink focus:px-4 focus:py-2 focus:text-white"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-4 focus:z-50 focus:rounded-btn focus:bg-ink focus:px-4 focus:py-2 focus:text-bg"
           >
             {t('skip')}
           </a>

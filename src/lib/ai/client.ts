@@ -11,7 +11,7 @@ import {
   ReceiptInFlightError,
 } from './errors'
 import { dailyBudgetUsd, MAX_ATTEMPTS, STALE_AFTER_MS } from './limits'
-import { modelFor, type EmbeddingPurpose, type Purpose, type TextPurpose } from './purposes'
+import { modelFor, type ContestPurpose, type EmbeddingPurpose, type Purpose, type TextPurpose } from './purposes'
 import { hashInput, type Receipt, type ReceiptStore, type ReceiptUsage } from './receipts'
 import { EXTERNAL_DATA_RULE } from './untrusted'
 
@@ -41,6 +41,37 @@ type CallOptions = {
 export type TextCall = CallOptions & { purpose: TextPurpose }
 export type ObjectCall<S extends z.ZodType> = CallOptions & { purpose: TextPurpose; schema: S }
 export type EmbedCall = { purpose: EmbeddingPurpose; values: string[]; subject?: string }
+
+/**
+ * A contestant's answer in the model arena: the same instructions and prompt for every model,
+ * the model chosen by the call (an OpenRouter ID from the arena's contestant list). The prompt is
+ * the site owner's own question, so the outside-data rule is not added.
+ */
+export type ContestCall = {
+  purpose: ContestPurpose
+  model: string
+  instructions: string
+  prompt: string
+  variant?: string
+  subject?: string
+  maxOutputTokens?: number
+}
+
+/** The answer, and whether the model stopped on its own or ran into `maxOutputTokens`. */
+export type ContestOutput = { text: string; cutOff: boolean }
+
+/** A picture as the model returned it, before it is stored. */
+export type ContestImage = { data: Uint8Array; mediaType: string }
+
+/**
+ * A contestant's picture in an image arena: the same call as `ContestCall`, asking OpenRouter for
+ * image output. `keep` stores the first picture and returns its ID before the receipt is marked
+ * done, so the receipt only holds that ID and no later step pays for the picture again.
+ */
+export type ContestImageCall = Omit<ContestCall, 'maxOutputTokens'> & { keep: (image: ContestImage) => Promise<number> }
+
+/** The stored picture's ID; null when the model answered without one. */
+export type ContestImageOutput = { image: number | null }
 
 export type AiResult<T> = {
   output: T
@@ -88,13 +119,15 @@ export function createAi({ store, languageModel, embeddingModel, env = process.e
    * `revive` turns a stored output back into the result (and validates it).
    */
   async function withReceipt<T>(
-    purpose: Purpose,
+    purpose: Purpose | ContestPurpose,
     input: unknown,
     subject: string | undefined,
     run: (model: string) => Promise<{ output: T; usage: ReceiptUsage }>,
     revive: (stored: unknown) => T,
+    /** The contest purposes name their model per call; every other purpose has one in purposes.ts. */
+    contestant?: string,
   ): Promise<AiResult<T>> {
-    const model = modelFor(purpose, env)
+    const model = contestant ?? modelFor(purpose as Purpose, env)
     const inputHash = hashInput({ purpose, model, input })
     const reuse = (receipt: Receipt): AiResult<T> => ({
       output: revive(receipt.output),
@@ -210,5 +243,61 @@ export function createAi({ store, languageModel, embeddingModel, env = process.e
     )
   }
 
-  return { text, object, embed, usageToday }
+  /** One contestant's answer to an arena question (src/modules/rankings/answers). */
+  function contest(call: ContestCall): Promise<AiResult<ContestOutput>> {
+    return withReceipt(
+      call.purpose,
+      { kind: 'contest', instructions: call.instructions, prompt: call.prompt, variant: call.variant, maxOutputTokens: call.maxOutputTokens },
+      call.subject,
+      async (model) => {
+        const result = await generateText({
+          model: languageModel(model),
+          instructions: call.instructions,
+          prompt: call.prompt,
+          maxOutputTokens: call.maxOutputTokens,
+        })
+        return {
+          output: { text: result.text, cutOff: result.finishReason === 'length' },
+          usage: {
+            inputTokens: result.usage.inputTokens ?? 0,
+            outputTokens: result.usage.outputTokens ?? 0,
+            costUsd: costOf(result.providerMetadata),
+          },
+        }
+      },
+      (stored) => z.object({ text: z.string(), cutOff: z.boolean() }).parse(stored),
+      call.model,
+    )
+  }
+
+  /** One contestant's picture for an image-arena question (src/modules/rankings/answers). */
+  function contestImage(call: ContestImageCall): Promise<AiResult<ContestImageOutput>> {
+    return withReceipt(
+      call.purpose,
+      { kind: 'contest-image', instructions: call.instructions, prompt: call.prompt, variant: call.variant },
+      call.subject,
+      async (model) => {
+        const result = await generateText({
+          model: languageModel(model),
+          instructions: call.instructions,
+          prompt: call.prompt,
+          // OpenRouter's chat API returns pictures inline when asked for image output; the provider passes its options on.
+          providerOptions: { openrouter: { modalities: ['image', 'text'] } },
+        })
+        const picture = result.files.find((file) => file.mediaType.startsWith('image/'))
+        return {
+          output: { image: picture ? await call.keep({ data: picture.uint8Array, mediaType: picture.mediaType }) : null },
+          usage: {
+            inputTokens: result.usage.inputTokens ?? 0,
+            outputTokens: result.usage.outputTokens ?? 0,
+            costUsd: costOf(result.providerMetadata),
+          },
+        }
+      },
+      (stored) => z.object({ image: z.number().int().nullable() }).parse(stored),
+      call.model,
+    )
+  }
+
+  return { text, object, embed, contest, contestImage, usageToday }
 }

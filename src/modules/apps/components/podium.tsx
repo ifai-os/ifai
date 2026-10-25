@@ -30,13 +30,13 @@ export function Podium({ apps, heatDay, showSiteRank }: PodiumProps) {
           >
             <span className="flex items-start justify-between gap-3">
               <AppTile name={app.name} slug={app.slug} logo={app.logo} size="xl" />
-              <span className="text-display leading-none text-accent">
+              <span className="text-display leading-none text-accent-ink">
                 <span aria-hidden="true">{String(app.place).padStart(2, '0')}</span>
                 <span className="sr-only">{card('rank', { rank: app.place })}</span>
               </span>
             </span>
             <span className="flex min-w-0 flex-col gap-1">
-              <span className="truncate text-h3 font-semibold group-hover:text-accent">{app.name}</span>
+              <span className="truncate text-h3 font-semibold group-hover:text-accent-ink">{app.name}</span>
               {app.tagline && (
                 <span lang={app.tagline.lang} className="line-clamp-2 text-meta text-ink-3">
                   {app.tagline.value}

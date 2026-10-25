@@ -72,6 +72,8 @@ const icons = {
   ),
   // Filled with currentColor once saved.
   bookmark: <path d="M6 4h12v16l-6-4-6 4z" />,
+  // 「我的关注」in the account menu: what you follow shows as #name, like the topic pages.
+  hash: <path d="M9.5 4 8 20M16 4l-1.5 16M4.5 9h15M4 15h15" />,
   // The account menu (「IFAI 账号菜单与通知」) and「登录的设备」(「IFAI 账号设置」).
   chevronRight: <path d="M9 6l6 6-6 6" />,
   upload: (
@@ -84,6 +86,12 @@ const icons = {
     <>
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </>
+  ),
+  appearance: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" />
     </>
   ),
   signOut: (
@@ -110,6 +118,15 @@ const icons = {
     <>
       <path d="M4 5h8M8 3v2M10 5c-.8 4-3 7-6 9M6 9c1.2 2.4 3.2 4.2 6 5.5" />
       <path d="m13 21 4-9 4 9M14.5 18h5" />
+    </>
+  ),
+  more: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={3} />,
+  reaction: (
+    <>
+      <path d="M18.73 10.93A8 8 0 1 1 13.07 5.27" />
+      <path d="M8 15.5c.9 1.1 1.9 1.6 3 1.6s2.1-.5 3-1.6" />
+      <path d="M8.5 11.2h.01M13.5 11.2h.01" strokeWidth={2.4} />
+      <path d="M19 2.5v5M16.5 5h5" />
     </>
   ),
   share: (

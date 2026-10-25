@@ -26,7 +26,12 @@ import * as migration_20261024_135122_daily_story_tags from './20261024_135122_d
 import * as migration_20261024_155932_daily_categories from './20261024_155932_daily_categories';
 import * as migration_20261024_181845_daily_tags from './20261024_181845_daily_tags';
 import * as migration_20261024_185906_daily_approved_at from './20261024_185906_daily_approved_at';
-import * as migration_20261025_024201_wiki from './20261025_024201_wiki';
+import * as migration_20261025_030735_r2_upload_columns from './20261025_030735_r2_upload_columns';
+import * as migration_20261025_032312_follows from './20261025_032312_follows';
+import * as migration_20261025_041212_rankings from './20261025_041212_rankings';
+import * as migration_20261025_041706_rankings_images from './20261025_041706_rankings_images';
+import * as migration_20261025_062756_circles from './20261025_062756_circles';
+import * as migration_20261025_143547_wiki from './20261025_143547_wiki';
 
 export const migrations = [
   {
@@ -170,8 +175,33 @@ export const migrations = [
     name: '20261024_185906_daily_approved_at',
   },
   {
-    up: migration_20261025_024201_wiki.up,
-    down: migration_20261025_024201_wiki.down,
-    name: '20261025_024201_wiki'
+    up: migration_20261025_030735_r2_upload_columns.up,
+    down: migration_20261025_030735_r2_upload_columns.down,
+    name: '20261025_030735_r2_upload_columns',
+  },
+  {
+    up: migration_20261025_032312_follows.up,
+    down: migration_20261025_032312_follows.down,
+    name: '20261025_032312_follows',
+  },
+  {
+    up: migration_20261025_041212_rankings.up,
+    down: migration_20261025_041212_rankings.down,
+    name: '20261025_041212_rankings',
+  },
+  {
+    up: migration_20261025_041706_rankings_images.up,
+    down: migration_20261025_041706_rankings_images.down,
+    name: '20261025_041706_rankings_images',
+  },
+  {
+    up: migration_20261025_062756_circles.up,
+    down: migration_20261025_062756_circles.down,
+    name: '20261025_062756_circles',
+  },
+  {
+    up: migration_20261025_143547_wiki.up,
+    down: migration_20261025_143547_wiki.down,
+    name: '20261025_143547_wiki'
   },
 ];

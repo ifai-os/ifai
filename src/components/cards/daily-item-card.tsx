@@ -23,10 +23,10 @@ export function DailyItemCard({ href, no, category, title, lang, summary, moreSo
 
   return (
     <li className="grid grid-cols-[32px_minmax(0,1fr)] gap-2 border-t border-line py-3.5">
-      <span className="pt-0.5 text-body font-semibold text-accent">{number}</span>
+      <span className="pt-0.5 text-body font-semibold text-accent-ink">{number}</span>
       <div className="flex flex-col gap-1">
         <span className="text-small text-ink-4">{category}</span>
-        <Link href={href} lang={lang} className="text-title text-ink hover:text-accent">
+        <Link href={href} lang={lang} className="text-title text-ink hover:text-accent-ink">
           {title}
         </Link>
         {summary && (

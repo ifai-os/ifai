@@ -59,7 +59,7 @@ export function SavedPage({ saved, signIn }: SavedPageProps) {
                 {saved.stories.map((story) => (
                   <li key={story.id} className="flex items-center gap-3 border-b border-surface-2 py-3">
                     <Link href={storyHref(story.slug)} className="group flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span lang={story.title.lang} className="line-clamp-2 text-body font-medium group-hover:text-accent">
+                      <span lang={story.title.lang} className="line-clamp-2 text-body font-medium group-hover:text-accent-ink">
                         {story.title.value}
                       </span>
                       <span className="text-small text-ink-4">
@@ -84,7 +84,7 @@ export function SavedPage({ saved, signIn }: SavedPageProps) {
                     <Link href={`/apps/${app.slug}`} className="group flex min-w-0 flex-1 items-center gap-3">
                       <AppTile name={app.name} slug={app.slug} logo={app.logo} size="md" />
                       <span className="flex min-w-0 flex-col gap-0.5">
-                        <span className="truncate text-body font-medium group-hover:text-accent">{app.name}</span>
+                        <span className="truncate text-body font-medium group-hover:text-accent-ink">{app.name}</span>
                         {app.tagline && (
                           <span lang={app.tagline.lang} className="truncate text-small text-ink-4">
                             {app.tagline.value}
@@ -110,7 +110,7 @@ export function SavedPage({ saved, signIn }: SavedPageProps) {
                     <Link href={skillHref(skill.slug)} className="group flex min-w-0 flex-1 items-center gap-3">
                       <SkillTile name={skill.name.value} slug={skill.slug} size="md" />
                       <span className="flex min-w-0 flex-col gap-0.5">
-                        <span lang={skill.name.lang} className="truncate text-body font-medium group-hover:text-accent">
+                        <span lang={skill.name.lang} className="truncate text-body font-medium group-hover:text-accent-ink">
                           {skill.name.value}
                         </span>
                         {skill.tagline && (

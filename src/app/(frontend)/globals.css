@@ -5,7 +5,28 @@
  * Components use these tokens only. Tailwind's default palette, type scale,
  * radii and shadows are cleared, so classes like text-gray-500 or rounded-lg
  * do not exist here. Need a new value? Add a token below and update the board.
+ *
+ * Dark mode (「设计令牌 · 深色」board) only swaps these variables, see the dark
+ * block in @layer base. On bg-ink use text-bg, not text-bg; red text uses
+ * accent-ink; menus and dialogs sit on overlay.
  */
+
+/*
+ * Dark when the reader picked it (data-theme="dark" on <html>, set from the
+ * IFAI_THEME cookie before first paint) or when the system is dark and they
+ * didn't pick light. Also gives a dark: variant for the odd exception.
+ */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
 @theme {
   /* ── Colors ─────────────────────────────────────────── */
   --color-*: initial;
@@ -13,7 +34,8 @@
   --color-black: #000000;
 
   --color-bg: #ffffff;
-  --color-accent: #da282a; /* logo tile, date badge, top-3 ranks, follow buttons */
+  --color-accent: #da282a; /* logo tile, date badge, follow buttons: backgrounds only */
+  --color-accent-ink: #da282a; /* red text: times, ranks, "try it"; lighter in dark mode */
   --color-accent-soft: #fbe3e3;
 
   --color-ink: #000000; /* titles, body, current nav item — 21:1 */
@@ -25,6 +47,7 @@
 
   --color-surface: #f7f7f9; /* card fill, inputs, grey blocks */
   --color-surface-2: #f0f0f3; /* light buttons, card borders */
+  --color-overlay: #ffffff; /* menus, popovers, dialogs; a step lighter than bg in dark mode */
   --color-line: #e4e4e5; /* dividers, outlined buttons, table frames */
   --color-hairline: rgb(0 0 0 / 0.05); /* between list items */
   --color-scrim: rgb(125 127 130 / 0.8); /* dialog backdrop */
@@ -112,6 +135,7 @@
   --shadow-*: initial;
   --shadow-float: 0 4px 4px rgb(0 0 0 / 0.03), 0 8px 32px rgb(0 0 0 / 0.14);
   --shadow-divider: 0 1px 0 0 var(--color-line);
+  --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.08); /* the picked option in a segmented control */
 
   /* ── Layout widths ─────────────────────────────────── */
   --container-nav: 1232px;
@@ -131,6 +155,11 @@
   :lang(ja) {
     --font-sans: -apple-system, system-ui, "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
     line-break: strict;
+  }
+  /* Chinese and Japanese break between characters, also inside a Korean page, whose keep-all they would inherit. */
+  :lang(zh),
+  :lang(ja) {
+    word-break: normal;
   }
   :lang(ko) {
     --font-sans: -apple-system, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -154,6 +183,53 @@
   :focus-visible {
     outline: 2px solid var(--color-link);
     outline-offset: 2px;
+  }
+
+  /* Dark values from the「设计令牌 · 深色」board; contrast measured on bg #1f1f22. */
+  :root {
+    @variant dark {
+      color-scheme: dark;
+      --color-bg: #1f1f22;
+      --color-surface: #28282a;
+      --color-surface-2: #39393c;
+      --color-overlay: #2c2c2f;
+      --color-line: #424245;
+      --color-hairline: rgb(255 255 255 / 0.06);
+      --color-scrim: rgb(7 7 12 / 0.8);
+      --color-ink: #e2e2e6; /* 12.7:1 */
+      --color-ink-2: #c6c6ca; /* 9.7:1 */
+      --color-ink-3: #b6b6ba; /* 8.1:1 */
+      --color-ink-4: #ababae; /* 7.2:1 */
+      --color-mute: #77777a;
+      --color-disabled: #5e5e61;
+      --color-accent-ink: #ff6d55; /* 5.9:1 */
+      --color-accent-soft: #3b2022;
+      --color-link: #5e93ff; /* 5.6:1 */
+      --color-star: #f0a040;
+      --color-up: #4fbf86;
+      --color-down: #ff7a6b;
+      --color-warn: #3a2c18;
+      --color-warn-ink: #f3c98b;
+      --color-success-soft: #1d3326;
+      --color-success-ink: #9fd8b4;
+      --color-info-soft: #163261;
+      --color-toast: #424245;
+      --color-night: #141416;
+      --color-tile-1: #3a3e4d;
+      --color-tile-2: #243242;
+      --color-tile-2-ink: #c5d4e8;
+      --color-tile-3: #423424;
+      --color-tile-3-ink: #e7d6c6;
+      --color-tile-4: #293d2c;
+      --color-tile-4-ink: #c7e6d1;
+      --color-tile-5: #2b2442;
+      --color-tile-5-ink: #cec8e4;
+      --color-tile-6: #423524;
+      --color-tile-6-ink: #f1d8bc;
+      --color-tile-7: #422424;
+      --color-tile-7-ink: #f1bcbc;
+      --shadow-float: 0 0 0 1px rgb(255 255 255 / 0.06), 0 8px 32px rgb(0 0 0 / 0.5);
+    }
   }
 }
 

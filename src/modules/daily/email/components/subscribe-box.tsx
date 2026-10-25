@@ -27,7 +27,7 @@ const looks: Record<SubscribeBoxVariant, { box: string; text: string; title: str
     row: 'flex flex-col gap-3',
     input: 'h-10 w-full rounded-pill border bg-bg px-3.5 text-meta',
     idle: 'border-line',
-    button: 'h-9 rounded-pill bg-ink px-4 text-meta font-medium text-white',
+    button: 'h-9 rounded-pill bg-ink px-4 text-meta font-medium text-bg',
   },
   card: {
     box: 'flex flex-col gap-3 rounded-card border border-line p-4.5',
@@ -38,7 +38,7 @@ const looks: Record<SubscribeBoxVariant, { box: string; text: string; title: str
     row: 'flex flex-col gap-2',
     input: 'h-11 w-full rounded-pill border bg-surface px-4 text-body',
     idle: 'border-surface-2',
-    button: 'h-11 rounded-btn bg-ink px-5 text-body font-medium text-white',
+    button: 'h-11 rounded-btn bg-ink px-5 text-body font-medium text-bg',
   },
   band: {
     box: 'flex flex-wrap items-center justify-between gap-x-8 gap-y-4 rounded-hero border border-line px-5 py-5 sm:px-7 sm:py-6',
@@ -49,7 +49,7 @@ const looks: Record<SubscribeBoxVariant, { box: string; text: string; title: str
     row: 'flex gap-2',
     input: 'h-11 min-w-0 flex-1 rounded-pill border bg-surface px-4 text-ui',
     idle: 'border-surface-2',
-    button: 'h-11 flex-none rounded-btn bg-ink px-5 text-ui font-medium text-white',
+    button: 'h-11 flex-none rounded-btn bg-ink px-5 text-ui font-medium text-bg',
   },
 }
 

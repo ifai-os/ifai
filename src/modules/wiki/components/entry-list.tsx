@@ -43,7 +43,7 @@ export function EntryList({ entries, numbered = false }: EntryListProps) {
           )}
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <Link href={entryHref(entry.slug)} lang={entry.title.lang} className="text-title font-medium after:absolute after:inset-0 hover:text-accent">
+              <Link href={entryHref(entry.slug)} lang={entry.title.lang} className="text-title font-medium after:absolute after:inset-0 hover:text-accent-ink">
                 {entry.title.value}
               </Link>
               <EntryTypeTag type={entry.type} />
@@ -80,7 +80,7 @@ export function EntryLinks({ entries }: { entries: EntryRef[] }) {
             className="group flex h-full flex-col gap-1 rounded-card border border-surface-2 px-4 py-3.5 transition-colors hover:border-line"
           >
             <span className="flex flex-wrap items-center gap-2">
-              <span lang={entry.title.lang} className="text-body font-medium group-hover:text-accent">
+              <span lang={entry.title.lang} className="text-body font-medium group-hover:text-accent-ink">
                 {entry.title.value}
               </span>
               <EntryTypeTag type={entry.type} />

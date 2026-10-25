@@ -23,12 +23,21 @@ import { AppReports } from './modules/apps/collections/AppReports'
 import { AppSubmissions } from './modules/apps/collections/AppSubmissions'
 import { Apps } from './modules/apps/collections/Apps'
 import { appsTables } from './modules/apps/schema'
+import { Circles } from './modules/circles/collections/Circles'
+import { circlesTables } from './modules/circles/schema'
 import { Posters } from './modules/daily/collections/posters'
 import { Sources } from './modules/daily/collections/sources'
 import { Stories } from './modules/daily/collections/stories'
 import { Subscribers } from './modules/daily/collections/subscribers'
 import { dailyEmailTables } from './modules/daily/email/schema'
 import { dailyTables } from './modules/daily/schema'
+import { followsTables } from './modules/follows/schema'
+import { ArenaAnswers } from './modules/rankings/collections/ArenaAnswers'
+import { ArenaImages } from './modules/rankings/collections/ArenaImages'
+import { ArenaModels } from './modules/rankings/collections/ArenaModels'
+import { ArenaPrompts } from './modules/rankings/collections/ArenaPrompts'
+import { Arenas } from './modules/rankings/collections/Arenas'
+import { rankingsTables } from './modules/rankings/schema'
 import { AgentHosts } from './modules/resources/collections/AgentHosts'
 import { Skills } from './modules/resources/collections/Skills'
 import { SkillSubmissions } from './modules/resources/collections/SkillSubmissions'
@@ -110,6 +119,12 @@ export default buildConfig({
     AgentHosts,
     SkillTags,
     SkillSubmissions,
+    Circles,
+    Arenas,
+    ArenaModels,
+    ArenaPrompts,
+    ArenaAnswers,
+    ArenaImages,
     WikiTopics,
     WikiEntries,
   ]),
@@ -143,7 +158,8 @@ export default buildConfig({
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
     // Our own Drizzle tables (Better Auth, model receipts, the daily module's raw_items and subscribe attempts,
-    // skill install events, saves, the admin log) join Payload's schema so migrations create and track them.
+    // skill install events, saves and follows, the admin log, the model arena's votes and snapshots) join Payload's
+    // schema so migrations create and track them.
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
@@ -156,7 +172,10 @@ export default buildConfig({
           ...resourcesTables,
           ...appsTables,
           ...savesTables,
+          ...followsTables,
+          ...circlesTables,
           ...adminLogTables,
+          ...rankingsTables,
         },
       }),
     ],
@@ -167,8 +186,12 @@ export default buildConfig({
   plugins: [
     s3Storage({
       enabled: r2Enabled,
+      // The storage columns (`prefix`, `_object_key`) exist with or without R2, so migrations made
+      // on a machine without R2 still match production.
+      alwaysInsertFields: true,
       collections: {
         media: { prefix: 'media' },
+        'arena-images': { prefix: 'arena' },
         // Downloads go to a short-lived R2 address; the site's own reads (the file viewer) stream through.
         'skill-versions': {
           prefix: 'skills',

@@ -134,7 +134,7 @@ export async function EntryView({ entry }: { entry: EntryDetail }) {
               <ol lang={entry.steps.lang} className="flex flex-col gap-4">
                 {entry.steps.value.map((step, index) => (
                   <li key={index} className="flex gap-3">
-                    <span aria-hidden="true" className="flex size-7 flex-none items-center justify-center rounded-pill bg-ink text-meta font-semibold text-white tabular-nums">
+                    <span aria-hidden="true" className="flex size-7 flex-none items-center justify-center rounded-pill bg-ink text-meta font-semibold text-bg tabular-nums">
                       {index + 1}
                     </span>
                     <span className="flex min-w-0 flex-col gap-1 pt-0.5">
@@ -228,7 +228,7 @@ export async function EntryView({ entry }: { entry: EntryDetail }) {
                           <Link href={`/apps/${app.slug}`} className={furtherRow}>
                             <AppTile name={app.name} slug={app.slug} logo={app.logo} size="md" />
                             <span className="flex min-w-0 flex-col">
-                              <span className="text-body font-medium group-hover:text-accent">{app.name}</span>
+                              <span className="text-body font-medium group-hover:text-accent-ink">{app.name}</span>
                               {app.tagline && (
                                 <span lang={app.tagline.lang} className="truncate text-meta text-ink-3">
                                   {app.tagline.value}
@@ -250,7 +250,7 @@ export async function EntryView({ entry }: { entry: EntryDetail }) {
                           <Link href={skillHref(skill.slug)} className={furtherRow}>
                             <SkillTile name={skill.name.value} slug={skill.slug} size="md" />
                             <span className="flex min-w-0 flex-col">
-                              <span lang={skill.name.lang} className="text-body font-medium group-hover:text-accent">
+                              <span lang={skill.name.lang} className="text-body font-medium group-hover:text-accent-ink">
                                 {skill.name.value}
                               </span>
                               {skill.tagline && (
@@ -271,7 +271,7 @@ export async function EntryView({ entry }: { entry: EntryDetail }) {
                     <ul className="flex flex-col">
                       {entry.stories.map((story) => (
                         <li key={story.slug} className="border-b border-hairline py-2.5 last:border-b-0">
-                          <Link href={storyHref(story.slug)} className="flex flex-col gap-0.5 hover:text-accent">
+                          <Link href={storyHref(story.slug)} className="flex flex-col gap-0.5 hover:text-accent-ink">
                             <span lang={story.title.lang} className="text-body">
                               {story.title.value}
                             </span>

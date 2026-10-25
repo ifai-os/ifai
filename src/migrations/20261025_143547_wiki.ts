@@ -1,12 +1,6 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
-  // This migration first ran as 20261024_183256_wiki, then was made again after the daily migrations of #60, with the
-  // same SQL. A database that ran it under that name (PR #65's preview) already has these tables: take over its record
-  // instead of creating them again. Nowhere else has that record.
-  const renamed = await db.execute(sql`DELETE FROM "payload_migrations" WHERE "name" = '20261024_183256_wiki'`)
-  if (renamed.rowCount) return
-
   await db.execute(sql`
    CREATE TYPE "public"."enum_wiki_entries_type" AS ENUM('concept', 'method');
   CREATE TYPE "public"."enum_wiki_entries_status" AS ENUM('draft', 'published');

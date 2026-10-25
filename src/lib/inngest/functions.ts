@@ -7,6 +7,7 @@ import { dailyEmailFunctions } from '@/modules/daily/email/jobs'
 import { dailyHeatFunctions } from '@/modules/daily/heat/jobs'
 import { dailyJudgeFunctions } from '@/modules/daily/judge/jobs'
 import { dailyWriteFunctions } from '@/modules/daily/write/jobs'
+import { rankingsFunctions } from '@/modules/rankings/jobs'
 import { resourcesFunctions } from '@/modules/resources/import/jobs'
 
 import { healthCheck } from './functions/health'
@@ -24,4 +25,5 @@ export const functions = [
   ...appsReviewFunctions,
   ...appsSubmissionFunctions,
   ...resourcesFunctions,
+  ...rankingsFunctions,
 ]

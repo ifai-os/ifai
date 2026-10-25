@@ -2693,6 +2693,546 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.follows": {
+      "name": "follows",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_type": {
+          "name": "target_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_key": {
+          "name": "target_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "follows_user_target_idx": {
+          "name": "follows_user_target_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "target_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "target_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "follows_target_idx": {
+          "name": "follows_target_idx",
+          "columns": [
+            {
+              "expression": "target_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "target_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "follows_user_id_auth_users_id_fk": {
+          "name": "follows_user_id_auth_users_id_fk",
+          "tableFrom": "follows",
+          "tableTo": "auth_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.circle_members": {
+      "name": "circle_members",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "circle_id": {
+          "name": "circle_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "circle_members_circle_user_idx": {
+          "name": "circle_members_circle_user_idx",
+          "columns": [
+            {
+              "expression": "circle_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "circle_members_user_idx": {
+          "name": "circle_members_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "circle_members_user_id_auth_users_id_fk": {
+          "name": "circle_members_user_id_auth_users_id_fk",
+          "tableFrom": "circle_members",
+          "tableTo": "auth_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.circle_posts": {
+      "name": "circle_posts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "circle_id": {
+          "name": "circle_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lang": {
+          "name": "lang",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'shown'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "circle_posts_created_idx": {
+          "name": "circle_posts_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "circle_posts_circle_idx": {
+          "name": "circle_posts_circle_idx",
+          "columns": [
+            {
+              "expression": "circle_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "circle_posts_user_created_idx": {
+          "name": "circle_posts_user_created_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "circle_posts_user_id_auth_users_id_fk": {
+          "name": "circle_posts_user_id_auth_users_id_fk",
+          "tableFrom": "circle_posts",
+          "tableTo": "auth_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.circle_post_reactions": {
+      "name": "circle_post_reactions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reaction": {
+          "name": "reaction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "circle_post_reactions_post_user_reaction_idx": {
+          "name": "circle_post_reactions_post_user_reaction_idx",
+          "columns": [
+            {
+              "expression": "post_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "reaction",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "circle_post_reactions_user_idx": {
+          "name": "circle_post_reactions_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "circle_post_reactions_post_id_circle_posts_id_fk": {
+          "name": "circle_post_reactions_post_id_circle_posts_id_fk",
+          "tableFrom": "circle_post_reactions",
+          "tableTo": "circle_posts",
+          "columnsFrom": [
+            "post_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "circle_post_reactions_user_id_auth_users_id_fk": {
+          "name": "circle_post_reactions_user_id_auth_users_id_fk",
+          "tableFrom": "circle_post_reactions",
+          "tableTo": "auth_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.circle_post_reports": {
+      "name": "circle_post_reports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reporter": {
+          "name": "reporter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "circle_post_reports_post_reporter_idx": {
+          "name": "circle_post_reports_post_reporter_idx",
+          "columns": [
+            {
+              "expression": "post_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "reporter",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "circle_post_reports_resolved_idx": {
+          "name": "circle_post_reports_resolved_idx",
+          "columns": [
+            {
+              "expression": "resolved_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "circle_post_reports_post_id_circle_posts_id_fk": {
+          "name": "circle_post_reports_post_id_circle_posts_id_fk",
+          "tableFrom": "circle_post_reports",
+          "tableTo": "circle_posts",
+          "columnsFrom": [
+            "post_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.admin_log": {
       "name": "admin_log",
       "schema": "",
@@ -2798,6 +3338,385 @@
         }
       },
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.arena_battles": {
+      "name": "arena_battles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "arena_id": {
+          "name": "arena_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prompt_id": {
+          "name": "prompt_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model_a_id": {
+          "name": "model_a_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model_b_id": {
+          "name": "model_b_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "answer_a_id": {
+          "name": "answer_a_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "answer_b_id": {
+          "name": "answer_b_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "page_locale": {
+          "name": "page_locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "voted_at": {
+          "name": "voted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "counted": {
+          "name": "counted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {
+        "arena_battles_arena_counted_idx": {
+          "name": "arena_battles_arena_counted_idx",
+          "columns": [
+            {
+              "expression": "arena_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "counted",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_battles_user_created_idx": {
+          "name": "arena_battles_user_created_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_battles_created_idx": {
+          "name": "arena_battles_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "arena_battles_user_id_auth_users_id_fk": {
+          "name": "arena_battles_user_id_auth_users_id_fk",
+          "tableFrom": "arena_battles",
+          "tableTo": "auth_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.arena_snapshots": {
+      "name": "arena_snapshots",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "arena_id": {
+          "name": "arena_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "week": {
+          "name": "week",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "computed_at": {
+          "name": "computed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "votes": {
+          "name": "votes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "method": {
+          "name": "method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "checksum": {
+          "name": "checksum",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "arena_snapshots_arena_week_idx": {
+          "name": "arena_snapshots_arena_week_idx",
+          "columns": [
+            {
+              "expression": "arena_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "week",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.arena_snapshot_rows": {
+      "name": "arena_snapshot_rows",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model_id": {
+          "name": "model_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rank": {
+          "name": "rank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provisional": {
+          "name": "provisional",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lower": {
+          "name": "lower",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "upper": {
+          "name": "upper",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "votes": {
+          "name": "votes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wins": {
+          "name": "wins",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "losses": {
+          "name": "losses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ties": {
+          "name": "ties",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cost_usd": {
+          "name": "cost_usd",
+          "type": "numeric(12, 6)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "arena_snapshot_rows_snapshot_idx": {
+          "name": "arena_snapshot_rows_snapshot_idx",
+          "columns": [
+            {
+              "expression": "snapshot_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_snapshot_rows_model_idx": {
+          "name": "arena_snapshot_rows_model_idx",
+          "columns": [
+            {
+              "expression": "model_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "arena_snapshot_rows_snapshot_id_arena_snapshots_id_fk": {
+          "name": "arena_snapshot_rows_snapshot_id_arena_snapshots_id_fk",
+          "tableFrom": "arena_snapshot_rows",
+          "tableTo": "arena_snapshots",
+          "columnsFrom": [
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -3035,6 +3954,19 @@
           "type": "serial",
           "primaryKey": true,
           "notNull": true
+        },
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'media'"
+        },
+        "_objectkey": {
+          "name": "_objectkey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
@@ -8562,6 +9494,19 @@
           "primaryKey": false,
           "notNull": false
         },
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'skills'"
+        },
+        "_objectkey": {
+          "name": "_objectkey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp(3) with time zone",
@@ -9578,8 +10523,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.wiki_topics": {
-      "name": "wiki_topics",
+    "public.circles": {
+      "name": "circles",
       "schema": "",
       "columns": {
         "id": {
@@ -9593,6 +10538,224 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "tone": {
+          "name": "tone",
+          "type": "enum_circles_tone",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'3'"
+        },
+        "order": {
+          "name": "order",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "shown": {
+          "name": "shown",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "circles_slug_idx": {
+          "name": "circles_slug_idx",
+          "columns": [
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "circles_updated_at_idx": {
+          "name": "circles_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "circles_created_at_idx": {
+          "name": "circles_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.circles_locales": {
+      "name": "circles_locales",
+      "schema": "",
+      "columns": {
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "_locale": {
+          "name": "_locale",
+          "type": "_locales",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "circles_locales_locale_parent_id_unique": {
+          "name": "circles_locales_locale_parent_id_unique",
+          "columns": [
+            {
+              "expression": "_locale",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "circles_locales_parent_id_idx": {
+          "name": "circles_locales_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "circles_locales_parent_id_fk": {
+          "name": "circles_locales_parent_id_fk",
+          "tableFrom": "circles_locales",
+          "tableTo": "circles",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.arenas": {
+      "name": "arenas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "enum_arenas_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "kind": {
+          "name": "kind",
+          "type": "enum_arenas_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'text'"
         },
         "order": {
           "name": "order",
@@ -9617,8 +10780,8 @@
         }
       },
       "indexes": {
-        "wiki_topics_slug_idx": {
-          "name": "wiki_topics_slug_idx",
+        "arenas_slug_idx": {
+          "name": "arenas_slug_idx",
           "columns": [
             {
               "expression": "slug",
@@ -9632,8 +10795,8 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_topics_updated_at_idx": {
-          "name": "wiki_topics_updated_at_idx",
+        "arenas_updated_at_idx": {
+          "name": "arenas_updated_at_idx",
           "columns": [
             {
               "expression": "updated_at",
@@ -9647,8 +10810,8 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_topics_created_at_idx": {
-          "name": "wiki_topics_created_at_idx",
+        "arenas_created_at_idx": {
+          "name": "arenas_created_at_idx",
           "columns": [
             {
               "expression": "created_at",
@@ -9670,8 +10833,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.wiki_topics_locales": {
-      "name": "wiki_topics_locales",
+    "public.arenas_locales": {
+      "name": "arenas_locales",
       "schema": "",
       "columns": {
         "name": {
@@ -9707,8 +10870,8 @@
         }
       },
       "indexes": {
-        "wiki_topics_locales_locale_parent_id_unique": {
-          "name": "wiki_topics_locales_locale_parent_id_unique",
+        "arenas_locales_locale_parent_id_unique": {
+          "name": "arenas_locales_locale_parent_id_unique",
           "columns": [
             {
               "expression": "_locale",
@@ -9728,8 +10891,8 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_topics_locales_parent_id_idx": {
-          "name": "wiki_topics_locales_parent_id_idx",
+        "arenas_locales_parent_id_idx": {
+          "name": "arenas_locales_parent_id_idx",
           "columns": [
             {
               "expression": "_parent_id",
@@ -9745,10 +10908,10 @@
         }
       },
       "foreignKeys": {
-        "wiki_topics_locales_parent_id_fk": {
-          "name": "wiki_topics_locales_parent_id_fk",
-          "tableFrom": "wiki_topics_locales",
-          "tableTo": "wiki_topics",
+        "arenas_locales_parent_id_fk": {
+          "name": "arenas_locales_parent_id_fk",
+          "tableFrom": "arenas_locales",
+          "tableTo": "arenas",
           "columnsFrom": [
             "_parent_id"
           ],
@@ -9765,8 +10928,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.wiki_topics_rels": {
-      "name": "wiki_topics_rels",
+    "public.arena_models": {
+      "name": "arena_models",
       "schema": "",
       "columns": {
         "id": {
@@ -9775,739 +10938,51 @@
           "primaryKey": true,
           "notNull": true
         },
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "path": {
-          "name": "path",
+        "name": {
+          "name": "name",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "wiki_entries_id": {
-          "name": "wiki_entries_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "wiki_topics_rels_order_idx": {
-          "name": "wiki_topics_rels_order_idx",
-          "columns": [
-            {
-              "expression": "order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_topics_rels_parent_idx": {
-          "name": "wiki_topics_rels_parent_idx",
-          "columns": [
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_topics_rels_path_idx": {
-          "name": "wiki_topics_rels_path_idx",
-          "columns": [
-            {
-              "expression": "path",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_topics_rels_wiki_entries_id_idx": {
-          "name": "wiki_topics_rels_wiki_entries_id_idx",
-          "columns": [
-            {
-              "expression": "wiki_entries_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "wiki_topics_rels_parent_fk": {
-          "name": "wiki_topics_rels_parent_fk",
-          "tableFrom": "wiki_topics_rels",
-          "tableTo": "wiki_topics",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "wiki_topics_rels_wiki_entries_fk": {
-          "name": "wiki_topics_rels_wiki_entries_fk",
-          "tableFrom": "wiki_topics_rels",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "wiki_entries_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.wiki_entries_examples": {
-      "name": "wiki_entries_examples",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
+        "openrouter_id": {
+          "name": "openrouter_id",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
+        "weights": {
+          "name": "weights",
+          "type": "enum_arena_models_weights",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "text": {
-          "name": "text",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "wiki_entries_examples_order_idx": {
-          "name": "wiki_entries_examples_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_examples_parent_id_idx": {
-          "name": "wiki_entries_examples_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_examples_locale_idx": {
-          "name": "wiki_entries_examples_locale_idx",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "wiki_entries_examples_parent_id_fk": {
-          "name": "wiki_entries_examples_parent_id_fk",
-          "tableFrom": "wiki_entries_examples",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.wiki_entries_steps": {
-      "name": "wiki_entries_steps",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
+        "region": {
+          "name": "region",
+          "type": "enum_arena_models_region",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
+        "license": {
+          "name": "license",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
-        "detail": {
-          "name": "detail",
+        "license_url": {
+          "name": "license_url",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
-        }
-      },
-      "indexes": {
-        "wiki_entries_steps_order_idx": {
-          "name": "wiki_entries_steps_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_steps_parent_id_idx": {
-          "name": "wiki_entries_steps_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_steps_locale_idx": {
-          "name": "wiki_entries_steps_locale_idx",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "wiki_entries_steps_parent_id_fk": {
-          "name": "wiki_entries_steps_parent_id_fk",
-          "tableFrom": "wiki_entries_steps",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.wiki_entries_contexts": {
-      "name": "wiki_entries_contexts",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "meaning": {
-          "name": "meaning",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "wiki_entries_contexts_order_idx": {
-          "name": "wiki_entries_contexts_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_contexts_parent_id_idx": {
-          "name": "wiki_entries_contexts_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_contexts_locale_idx": {
-          "name": "wiki_entries_contexts_locale_idx",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "wiki_entries_contexts_parent_id_fk": {
-          "name": "wiki_entries_contexts_parent_id_fk",
-          "tableFrom": "wiki_entries_contexts",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.wiki_entries_comparisons": {
-      "name": "wiki_entries_comparisons",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "entry_id": {
-          "name": "entry_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "difference": {
-          "name": "difference",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "wiki_entries_comparisons_order_idx": {
-          "name": "wiki_entries_comparisons_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_comparisons_parent_id_idx": {
-          "name": "wiki_entries_comparisons_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_comparisons_locale_idx": {
-          "name": "wiki_entries_comparisons_locale_idx",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_comparisons_entry_idx": {
-          "name": "wiki_entries_comparisons_entry_idx",
-          "columns": [
-            {
-              "expression": "entry_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "wiki_entries_comparisons_entry_id_wiki_entries_id_fk": {
-          "name": "wiki_entries_comparisons_entry_id_wiki_entries_id_fk",
-          "tableFrom": "wiki_entries_comparisons",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "entry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "wiki_entries_comparisons_parent_id_fk": {
-          "name": "wiki_entries_comparisons_parent_id_fk",
-          "tableFrom": "wiki_entries_comparisons",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.wiki_entries_sources": {
-      "name": "wiki_entries_sources",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "url": {
-          "name": "url",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "publisher": {
-          "name": "publisher",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "wiki_entries_sources_order_idx": {
-          "name": "wiki_entries_sources_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_sources_parent_id_idx": {
-          "name": "wiki_entries_sources_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "wiki_entries_sources_parent_id_fk": {
-          "name": "wiki_entries_sources_parent_id_fk",
-          "tableFrom": "wiki_entries_sources",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.wiki_entries": {
-      "name": "wiki_entries",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "slug": {
-          "name": "slug",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "enum_wiki_entries_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'concept'"
         },
         "status": {
           "name": "status",
-          "type": "enum_wiki_entries_status",
+          "type": "enum_arena_models_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'draft'"
-        },
-        "reviewed_at": {
-          "name": "reviewed_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "featured": {
-          "name": "featured",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "published_at": {
-          "name": "published_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
@@ -10525,11 +11000,11 @@
         }
       },
       "indexes": {
-        "wiki_entries_slug_idx": {
-          "name": "wiki_entries_slug_idx",
+        "arena_models_openrouter_id_idx": {
+          "name": "arena_models_openrouter_id_idx",
           "columns": [
             {
-              "expression": "slug",
+              "expression": "openrouter_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10540,23 +11015,8 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_entries_status_idx": {
-          "name": "wiki_entries_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_updated_at_idx": {
-          "name": "wiki_entries_updated_at_idx",
+        "arena_models_updated_at_idx": {
+          "name": "arena_models_updated_at_idx",
           "columns": [
             {
               "expression": "updated_at",
@@ -10570,8 +11030,8 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_entries_created_at_idx": {
-          "name": "wiki_entries_created_at_idx",
+        "arena_models_created_at_idx": {
+          "name": "arena_models_created_at_idx",
           "columns": [
             {
               "expression": "created_at",
@@ -10593,45 +11053,15 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.wiki_entries_locales": {
-      "name": "wiki_entries_locales",
+    "public.arena_models_locales": {
+      "name": "arena_models_locales",
       "schema": "",
       "columns": {
-        "title": {
-          "name": "title",
+        "org": {
+          "name": "org",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
-        },
-        "definition": {
-          "name": "definition",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "explanation": {
-          "name": "explanation",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "uses": {
-          "name": "uses",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "limitations": {
-          "name": "limitations",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "fact": {
-          "name": "fact",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         },
         "id": {
           "name": "id",
@@ -10654,8 +11084,8 @@
         }
       },
       "indexes": {
-        "wiki_entries_locales_locale_parent_id_unique": {
-          "name": "wiki_entries_locales_locale_parent_id_unique",
+        "arena_models_locales_locale_parent_id_unique": {
+          "name": "arena_models_locales_locale_parent_id_unique",
           "columns": [
             {
               "expression": "_locale",
@@ -10675,8 +11105,8 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_entries_locales_parent_id_idx": {
-          "name": "wiki_entries_locales_parent_id_idx",
+        "arena_models_locales_parent_id_idx": {
+          "name": "arena_models_locales_parent_id_idx",
           "columns": [
             {
               "expression": "_parent_id",
@@ -10692,10 +11122,10 @@
         }
       },
       "foreignKeys": {
-        "wiki_entries_locales_parent_id_fk": {
-          "name": "wiki_entries_locales_parent_id_fk",
-          "tableFrom": "wiki_entries_locales",
-          "tableTo": "wiki_entries",
+        "arena_models_locales_parent_id_fk": {
+          "name": "arena_models_locales_parent_id_fk",
+          "tableFrom": "arena_models_locales",
+          "tableTo": "arena_models",
           "columnsFrom": [
             "_parent_id"
           ],
@@ -10712,115 +11142,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.wiki_entries_texts": {
-      "name": "wiki_entries_texts",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "path": {
-          "name": "path",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "text": {
-          "name": "text",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "locale": {
-          "name": "locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "wiki_entries_texts_order_parent": {
-          "name": "wiki_entries_texts_order_parent",
-          "columns": [
-            {
-              "expression": "order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_texts_locale_parent": {
-          "name": "wiki_entries_texts_locale_parent",
-          "columns": [
-            {
-              "expression": "locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "wiki_entries_texts_parent_fk": {
-          "name": "wiki_entries_texts_parent_fk",
-          "tableFrom": "wiki_entries_texts",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.wiki_entries_rels": {
-      "name": "wiki_entries_rels",
+    "public.arena_models_rels": {
+      "name": "arena_models_rels",
       "schema": "",
       "columns": {
         "id": {
@@ -10847,40 +11170,16 @@
           "primaryKey": false,
           "notNull": true
         },
-        "wiki_topics_id": {
-          "name": "wiki_topics_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "wiki_entries_id": {
-          "name": "wiki_entries_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "apps_id": {
-          "name": "apps_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "skills_id": {
-          "name": "skills_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stories_id": {
-          "name": "stories_id",
+        "arenas_id": {
+          "name": "arenas_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         }
       },
       "indexes": {
-        "wiki_entries_rels_order_idx": {
-          "name": "wiki_entries_rels_order_idx",
+        "arena_models_rels_order_idx": {
+          "name": "arena_models_rels_order_idx",
           "columns": [
             {
               "expression": "order",
@@ -10894,8 +11193,8 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_entries_rels_parent_idx": {
-          "name": "wiki_entries_rels_parent_idx",
+        "arena_models_rels_parent_idx": {
+          "name": "arena_models_rels_parent_idx",
           "columns": [
             {
               "expression": "parent_id",
@@ -10909,8 +11208,8 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_entries_rels_path_idx": {
-          "name": "wiki_entries_rels_path_idx",
+        "arena_models_rels_path_idx": {
+          "name": "arena_models_rels_path_idx",
           "columns": [
             {
               "expression": "path",
@@ -10924,71 +11223,11 @@
           "method": "btree",
           "with": {}
         },
-        "wiki_entries_rels_wiki_topics_id_idx": {
-          "name": "wiki_entries_rels_wiki_topics_id_idx",
+        "arena_models_rels_arenas_id_idx": {
+          "name": "arena_models_rels_arenas_id_idx",
           "columns": [
             {
-              "expression": "wiki_topics_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_rels_wiki_entries_id_idx": {
-          "name": "wiki_entries_rels_wiki_entries_id_idx",
-          "columns": [
-            {
-              "expression": "wiki_entries_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_rels_apps_id_idx": {
-          "name": "wiki_entries_rels_apps_id_idx",
-          "columns": [
-            {
-              "expression": "apps_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_rels_skills_id_idx": {
-          "name": "wiki_entries_rels_skills_id_idx",
-          "columns": [
-            {
-              "expression": "skills_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "wiki_entries_rels_stories_id_idx": {
-          "name": "wiki_entries_rels_stories_id_idx",
-          "columns": [
-            {
-              "expression": "stories_id",
+              "expression": "arenas_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11001,10 +11240,10 @@
         }
       },
       "foreignKeys": {
-        "wiki_entries_rels_parent_fk": {
-          "name": "wiki_entries_rels_parent_fk",
-          "tableFrom": "wiki_entries_rels",
-          "tableTo": "wiki_entries",
+        "arena_models_rels_parent_fk": {
+          "name": "arena_models_rels_parent_fk",
+          "tableFrom": "arena_models_rels",
+          "tableTo": "arena_models",
           "columnsFrom": [
             "parent_id"
           ],
@@ -11014,64 +11253,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "wiki_entries_rels_wiki_topics_fk": {
-          "name": "wiki_entries_rels_wiki_topics_fk",
-          "tableFrom": "wiki_entries_rels",
-          "tableTo": "wiki_topics",
+        "arena_models_rels_arenas_fk": {
+          "name": "arena_models_rels_arenas_fk",
+          "tableFrom": "arena_models_rels",
+          "tableTo": "arenas",
           "columnsFrom": [
-            "wiki_topics_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "wiki_entries_rels_wiki_entries_fk": {
-          "name": "wiki_entries_rels_wiki_entries_fk",
-          "tableFrom": "wiki_entries_rels",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "wiki_entries_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "wiki_entries_rels_apps_fk": {
-          "name": "wiki_entries_rels_apps_fk",
-          "tableFrom": "wiki_entries_rels",
-          "tableTo": "apps",
-          "columnsFrom": [
-            "apps_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "wiki_entries_rels_skills_fk": {
-          "name": "wiki_entries_rels_skills_fk",
-          "tableFrom": "wiki_entries_rels",
-          "tableTo": "skills",
-          "columnsFrom": [
-            "skills_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "wiki_entries_rels_stories_fk": {
-          "name": "wiki_entries_rels_stories_fk",
-          "tableFrom": "wiki_entries_rels",
-          "tableTo": "stories",
-          "columnsFrom": [
-            "stories_id"
+            "arenas_id"
           ],
           "columnsTo": [
             "id"
@@ -11086,40 +11273,15 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public._wiki_entries_v_version_examples": {
-      "name": "_wiki_entries_v_version_examples",
+    "public.arena_prompts": {
+      "name": "arena_prompts",
       "schema": "",
       "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
         "id": {
           "name": "id",
           "type": "serial",
           "primaryKey": true,
           "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         },
         "text": {
           "name": "text",
@@ -11127,632 +11289,32 @@
           "primaryKey": false,
           "notNull": true
         },
-        "_uuid": {
-          "name": "_uuid",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "_wiki_entries_v_version_examples_order_idx": {
-          "name": "_wiki_entries_v_version_examples_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_examples_parent_id_idx": {
-          "name": "_wiki_entries_v_version_examples_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_examples_locale_idx": {
-          "name": "_wiki_entries_v_version_examples_locale_idx",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_wiki_entries_v_version_examples_parent_id_fk": {
-          "name": "_wiki_entries_v_version_examples_parent_id_fk",
-          "tableFrom": "_wiki_entries_v_version_examples",
-          "tableTo": "_wiki_entries_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._wiki_entries_v_version_steps": {
-      "name": "_wiki_entries_v_version_steps",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
+        "arena_id": {
+          "name": "arena_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
+        "lang": {
+          "name": "lang",
+          "type": "enum_arena_prompts_lang",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "detail": {
-          "name": "detail",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "_uuid": {
-          "name": "_uuid",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "_wiki_entries_v_version_steps_order_idx": {
-          "name": "_wiki_entries_v_version_steps_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_steps_parent_id_idx": {
-          "name": "_wiki_entries_v_version_steps_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_steps_locale_idx": {
-          "name": "_wiki_entries_v_version_steps_locale_idx",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_wiki_entries_v_version_steps_parent_id_fk": {
-          "name": "_wiki_entries_v_version_steps_parent_id_fk",
-          "tableFrom": "_wiki_entries_v_version_steps",
-          "tableTo": "_wiki_entries_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._wiki_entries_v_version_contexts": {
-      "name": "_wiki_entries_v_version_contexts",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "meaning": {
-          "name": "meaning",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_uuid": {
-          "name": "_uuid",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "_wiki_entries_v_version_contexts_order_idx": {
-          "name": "_wiki_entries_v_version_contexts_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_contexts_parent_id_idx": {
-          "name": "_wiki_entries_v_version_contexts_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_contexts_locale_idx": {
-          "name": "_wiki_entries_v_version_contexts_locale_idx",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_wiki_entries_v_version_contexts_parent_id_fk": {
-          "name": "_wiki_entries_v_version_contexts_parent_id_fk",
-          "tableFrom": "_wiki_entries_v_version_contexts",
-          "tableTo": "_wiki_entries_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._wiki_entries_v_version_comparisons": {
-      "name": "_wiki_entries_v_version_comparisons",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "entry_id": {
-          "name": "entry_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "difference": {
-          "name": "difference",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_uuid": {
-          "name": "_uuid",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "_wiki_entries_v_version_comparisons_order_idx": {
-          "name": "_wiki_entries_v_version_comparisons_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_comparisons_parent_id_idx": {
-          "name": "_wiki_entries_v_version_comparisons_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_comparisons_locale_idx": {
-          "name": "_wiki_entries_v_version_comparisons_locale_idx",
-          "columns": [
-            {
-              "expression": "_locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_comparisons_entry_idx": {
-          "name": "_wiki_entries_v_version_comparisons_entry_idx",
-          "columns": [
-            {
-              "expression": "entry_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_wiki_entries_v_version_comparisons_entry_id_wiki_entries_id_fk": {
-          "name": "_wiki_entries_v_version_comparisons_entry_id_wiki_entries_id_fk",
-          "tableFrom": "_wiki_entries_v_version_comparisons",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "entry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "_wiki_entries_v_version_comparisons_parent_id_fk": {
-          "name": "_wiki_entries_v_version_comparisons_parent_id_fk",
-          "tableFrom": "_wiki_entries_v_version_comparisons",
-          "tableTo": "_wiki_entries_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._wiki_entries_v_version_sources": {
-      "name": "_wiki_entries_v_version_sources",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "url": {
-          "name": "url",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "publisher": {
-          "name": "publisher",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "_uuid": {
-          "name": "_uuid",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "_wiki_entries_v_version_sources_order_idx": {
-          "name": "_wiki_entries_v_version_sources_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_version_sources_parent_id_idx": {
-          "name": "_wiki_entries_v_version_sources_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_wiki_entries_v_version_sources_parent_id_fk": {
-          "name": "_wiki_entries_v_version_sources_parent_id_fk",
-          "tableFrom": "_wiki_entries_v_version_sources",
-          "tableTo": "_wiki_entries_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._wiki_entries_v": {
-      "name": "_wiki_entries_v",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_slug": {
-          "name": "version_slug",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "version_type": {
-          "name": "version_type",
-          "type": "enum__wiki_entries_v_version_type",
+        "status": {
+          "name": "status",
+          "type": "enum_arena_prompts_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'concept'"
+          "default": "'active'"
         },
-        "version_status": {
-          "name": "version_status",
-          "type": "enum__wiki_entries_v_version_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'draft'"
-        },
-        "version_reviewed_at": {
-          "name": "version_reviewed_at",
-          "type": "timestamp(3) with time zone",
+        "note": {
+          "name": "note",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
-        },
-        "version_featured": {
-          "name": "version_featured",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "version_published_at": {
-          "name": "version_published_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_updated_at": {
-          "name": "version_updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_created_at": {
-          "name": "version_created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
@@ -11760,14 +11322,21 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {
-        "_wiki_entries_v_parent_idx": {
-          "name": "_wiki_entries_v_parent_idx",
+        "arena_prompts_arena_idx": {
+          "name": "arena_prompts_arena_idx",
           "columns": [
             {
-              "expression": "parent_id",
+              "expression": "arena_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11778,11 +11347,11 @@
           "method": "btree",
           "with": {}
         },
-        "_wiki_entries_v_version_version_slug_idx": {
-          "name": "_wiki_entries_v_version_version_slug_idx",
+        "arena_prompts_updated_at_idx": {
+          "name": "arena_prompts_updated_at_idx",
           "columns": [
             {
-              "expression": "version_slug",
+              "expression": "updated_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11793,11 +11362,177 @@
           "method": "btree",
           "with": {}
         },
-        "_wiki_entries_v_version_version_status_idx": {
-          "name": "_wiki_entries_v_version_version_status_idx",
+        "arena_prompts_created_at_idx": {
+          "name": "arena_prompts_created_at_idx",
           "columns": [
             {
-              "expression": "version_status",
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "arena_prompts_arena_id_arenas_id_fk": {
+          "name": "arena_prompts_arena_id_arenas_id_fk",
+          "tableFrom": "arena_prompts",
+          "tableTo": "arenas",
+          "columnsFrom": [
+            "arena_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.arena_answers": {
+      "name": "arena_answers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "hidden": {
+          "name": "hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "prompt_id": {
+          "name": "prompt_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model_id": {
+          "name": "model_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "arena_id": {
+          "name": "arena_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lang": {
+          "name": "lang",
+          "type": "enum_arena_answers_lang",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "enum_arena_answers_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "text": {
+          "name": "text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_id": {
+          "name": "image_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cut_off": {
+          "name": "cut_off",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "names_itself": {
+          "name": "names_itself",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "error": {
+          "name": "error",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cost_usd": {
+          "name": "cost_usd",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "input_tokens": {
+          "name": "input_tokens",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "output_tokens": {
+          "name": "output_tokens",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "generated_at": {
+          "name": "generated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "arena_answers_prompt_idx": {
+          "name": "arena_answers_prompt_idx",
+          "columns": [
+            {
+              "expression": "prompt_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11808,11 +11543,11 @@
           "method": "btree",
           "with": {}
         },
-        "_wiki_entries_v_version_version_updated_at_idx": {
-          "name": "_wiki_entries_v_version_version_updated_at_idx",
+        "arena_answers_model_idx": {
+          "name": "arena_answers_model_idx",
           "columns": [
             {
-              "expression": "version_updated_at",
+              "expression": "model_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11823,11 +11558,11 @@
           "method": "btree",
           "with": {}
         },
-        "_wiki_entries_v_version_version_created_at_idx": {
-          "name": "_wiki_entries_v_version_version_created_at_idx",
+        "arena_answers_arena_idx": {
+          "name": "arena_answers_arena_idx",
           "columns": [
             {
-              "expression": "version_created_at",
+              "expression": "arena_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11838,8 +11573,53 @@
           "method": "btree",
           "with": {}
         },
-        "_wiki_entries_v_created_at_idx": {
-          "name": "_wiki_entries_v_created_at_idx",
+        "arena_answers_status_idx": {
+          "name": "arena_answers_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_answers_image_idx": {
+          "name": "arena_answers_image_idx",
+          "columns": [
+            {
+              "expression": "image_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_answers_updated_at_idx": {
+          "name": "arena_answers_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_answers_created_at_idx": {
+          "name": "arena_answers_created_at_idx",
           "columns": [
             {
               "expression": "created_at",
@@ -11853,29 +11633,74 @@
           "method": "btree",
           "with": {}
         },
-        "_wiki_entries_v_updated_at_idx": {
-          "name": "_wiki_entries_v_updated_at_idx",
+        "prompt_model_idx": {
+          "name": "prompt_model_idx",
           "columns": [
             {
-              "expression": "updated_at",
+              "expression": "prompt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "model_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
-          "isUnique": false,
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}
         }
       },
       "foreignKeys": {
-        "_wiki_entries_v_parent_id_wiki_entries_id_fk": {
-          "name": "_wiki_entries_v_parent_id_wiki_entries_id_fk",
-          "tableFrom": "_wiki_entries_v",
-          "tableTo": "wiki_entries",
+        "arena_answers_prompt_id_arena_prompts_id_fk": {
+          "name": "arena_answers_prompt_id_arena_prompts_id_fk",
+          "tableFrom": "arena_answers",
+          "tableTo": "arena_prompts",
           "columnsFrom": [
-            "parent_id"
+            "prompt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "arena_answers_model_id_arena_models_id_fk": {
+          "name": "arena_answers_model_id_arena_models_id_fk",
+          "tableFrom": "arena_answers",
+          "tableTo": "arena_models",
+          "columnsFrom": [
+            "model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "arena_answers_arena_id_arenas_id_fk": {
+          "name": "arena_answers_arena_id_arenas_id_fk",
+          "tableFrom": "arena_answers",
+          "tableTo": "arenas",
+          "columnsFrom": [
+            "arena_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "arena_answers_image_id_arena_images_id_fk": {
+          "name": "arena_answers_image_id_arena_images_id_fk",
+          "tableFrom": "arena_answers",
+          "tableTo": "arena_images",
+          "columnsFrom": [
+            "image_id"
           ],
           "columnsTo": [
             "id"
@@ -11890,78 +11715,206 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public._wiki_entries_v_locales": {
-      "name": "_wiki_entries_v_locales",
+    "public.arena_images": {
+      "name": "arena_images",
       "schema": "",
       "columns": {
-        "version_title": {
-          "name": "version_title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "version_definition": {
-          "name": "version_definition",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_explanation": {
-          "name": "version_explanation",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_uses": {
-          "name": "version_uses",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_limitations": {
-          "name": "version_limitations",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version_fact": {
-          "name": "version_fact",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "id": {
           "name": "id",
           "type": "serial",
           "primaryKey": true,
           "notNull": true
         },
-        "_locale": {
-          "name": "_locale",
-          "type": "_locales",
-          "typeSchema": "public",
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "'arena'"
         },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
+        "_objectkey": {
+          "name": "_objectkey",
+          "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "url": {
+          "name": "url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "thumbnail_u_r_l": {
+          "name": "thumbnail_u_r_l",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filename": {
+          "name": "filename",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filesize": {
+          "name": "filesize",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "width": {
+          "name": "width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height": {
+          "name": "height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "focal_x": {
+          "name": "focal_x",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "focal_y": {
+          "name": "focal_y",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_url": {
+          "name": "sizes_thumb_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_width": {
+          "name": "sizes_thumb_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_height": {
+          "name": "sizes_thumb_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_mime_type": {
+          "name": "sizes_thumb_mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_filesize": {
+          "name": "sizes_thumb_filesize",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_filename": {
+          "name": "sizes_thumb_filename",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_url": {
+          "name": "sizes_vote_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_width": {
+          "name": "sizes_vote_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_height": {
+          "name": "sizes_vote_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_mime_type": {
+          "name": "sizes_vote_mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_filesize": {
+          "name": "sizes_vote_filesize",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_filename": {
+          "name": "sizes_vote_filename",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
-        "_wiki_entries_v_locales_locale_parent_id_unique": {
-          "name": "_wiki_entries_v_locales_locale_parent_id_unique",
+        "arena_images_updated_at_idx": {
+          "name": "arena_images_updated_at_idx",
           "columns": [
             {
-              "expression": "_locale",
+              "expression": "updated_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
-            },
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_images_created_at_idx": {
+          "name": "arena_images_created_at_idx",
+          "columns": [
             {
-              "expression": "_parent_id",
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_images_filename_idx": {
+          "name": "arena_images_filename_idx",
+          "columns": [
+            {
+              "expression": "filename",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11972,11 +11925,26 @@
           "method": "btree",
           "with": {}
         },
-        "_wiki_entries_v_locales_parent_id_idx": {
-          "name": "_wiki_entries_v_locales_parent_id_idx",
+        "arena_images_sizes_thumb_sizes_thumb_filename_idx": {
+          "name": "arena_images_sizes_thumb_sizes_thumb_filename_idx",
           "columns": [
             {
-              "expression": "_parent_id",
+              "expression": "sizes_thumb_filename",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_images_sizes_vote_sizes_vote_filename_idx": {
+          "name": "arena_images_sizes_vote_sizes_vote_filename_idx",
+          "columns": [
+            {
+              "expression": "sizes_vote_filename",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11988,395 +11956,7 @@
           "with": {}
         }
       },
-      "foreignKeys": {
-        "_wiki_entries_v_locales_parent_id_fk": {
-          "name": "_wiki_entries_v_locales_parent_id_fk",
-          "tableFrom": "_wiki_entries_v_locales",
-          "tableTo": "_wiki_entries_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._wiki_entries_v_texts": {
-      "name": "_wiki_entries_v_texts",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "path": {
-          "name": "path",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "text": {
-          "name": "text",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "locale": {
-          "name": "locale",
-          "type": "_locales",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "_wiki_entries_v_texts_order_parent": {
-          "name": "_wiki_entries_v_texts_order_parent",
-          "columns": [
-            {
-              "expression": "order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_texts_locale_parent": {
-          "name": "_wiki_entries_v_texts_locale_parent",
-          "columns": [
-            {
-              "expression": "locale",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_wiki_entries_v_texts_parent_fk": {
-          "name": "_wiki_entries_v_texts_parent_fk",
-          "tableFrom": "_wiki_entries_v_texts",
-          "tableTo": "_wiki_entries_v",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public._wiki_entries_v_rels": {
-      "name": "_wiki_entries_v_rels",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "path": {
-          "name": "path",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "wiki_topics_id": {
-          "name": "wiki_topics_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "wiki_entries_id": {
-          "name": "wiki_entries_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "apps_id": {
-          "name": "apps_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "skills_id": {
-          "name": "skills_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stories_id": {
-          "name": "stories_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "_wiki_entries_v_rels_order_idx": {
-          "name": "_wiki_entries_v_rels_order_idx",
-          "columns": [
-            {
-              "expression": "order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_rels_parent_idx": {
-          "name": "_wiki_entries_v_rels_parent_idx",
-          "columns": [
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_rels_path_idx": {
-          "name": "_wiki_entries_v_rels_path_idx",
-          "columns": [
-            {
-              "expression": "path",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_rels_wiki_topics_id_idx": {
-          "name": "_wiki_entries_v_rels_wiki_topics_id_idx",
-          "columns": [
-            {
-              "expression": "wiki_topics_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_rels_wiki_entries_id_idx": {
-          "name": "_wiki_entries_v_rels_wiki_entries_id_idx",
-          "columns": [
-            {
-              "expression": "wiki_entries_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_rels_apps_id_idx": {
-          "name": "_wiki_entries_v_rels_apps_id_idx",
-          "columns": [
-            {
-              "expression": "apps_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_rels_skills_id_idx": {
-          "name": "_wiki_entries_v_rels_skills_id_idx",
-          "columns": [
-            {
-              "expression": "skills_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "_wiki_entries_v_rels_stories_id_idx": {
-          "name": "_wiki_entries_v_rels_stories_id_idx",
-          "columns": [
-            {
-              "expression": "stories_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "_wiki_entries_v_rels_parent_fk": {
-          "name": "_wiki_entries_v_rels_parent_fk",
-          "tableFrom": "_wiki_entries_v_rels",
-          "tableTo": "_wiki_entries_v",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "_wiki_entries_v_rels_wiki_topics_fk": {
-          "name": "_wiki_entries_v_rels_wiki_topics_fk",
-          "tableFrom": "_wiki_entries_v_rels",
-          "tableTo": "wiki_topics",
-          "columnsFrom": [
-            "wiki_topics_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "_wiki_entries_v_rels_wiki_entries_fk": {
-          "name": "_wiki_entries_v_rels_wiki_entries_fk",
-          "tableFrom": "_wiki_entries_v_rels",
-          "tableTo": "wiki_entries",
-          "columnsFrom": [
-            "wiki_entries_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "_wiki_entries_v_rels_apps_fk": {
-          "name": "_wiki_entries_v_rels_apps_fk",
-          "tableFrom": "_wiki_entries_v_rels",
-          "tableTo": "apps",
-          "columnsFrom": [
-            "apps_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "_wiki_entries_v_rels_skills_fk": {
-          "name": "_wiki_entries_v_rels_skills_fk",
-          "tableFrom": "_wiki_entries_v_rels",
-          "tableTo": "skills",
-          "columnsFrom": [
-            "skills_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "_wiki_entries_v_rels_stories_fk": {
-          "name": "_wiki_entries_v_rels_stories_fk",
-          "tableFrom": "_wiki_entries_v_rels",
-          "tableTo": "stories",
-          "columnsFrom": [
-            "stories_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -12633,14 +12213,38 @@
           "primaryKey": false,
           "notNull": false
         },
-        "wiki_topics_id": {
-          "name": "wiki_topics_id",
+        "circles_id": {
+          "name": "circles_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "wiki_entries_id": {
-          "name": "wiki_entries_id",
+        "arenas_id": {
+          "name": "arenas_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "arena_models_id": {
+          "name": "arena_models_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "arena_prompts_id": {
+          "name": "arena_prompts_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "arena_answers_id": {
+          "name": "arena_answers_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "arena_images_id": {
+          "name": "arena_images_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -12917,11 +12521,11 @@
           "method": "btree",
           "with": {}
         },
-        "payload_locked_documents_rels_wiki_topics_id_idx": {
-          "name": "payload_locked_documents_rels_wiki_topics_id_idx",
+        "payload_locked_documents_rels_circles_id_idx": {
+          "name": "payload_locked_documents_rels_circles_id_idx",
           "columns": [
             {
-              "expression": "wiki_topics_id",
+              "expression": "circles_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -12932,11 +12536,71 @@
           "method": "btree",
           "with": {}
         },
-        "payload_locked_documents_rels_wiki_entries_id_idx": {
-          "name": "payload_locked_documents_rels_wiki_entries_id_idx",
+        "payload_locked_documents_rels_arenas_id_idx": {
+          "name": "payload_locked_documents_rels_arenas_id_idx",
           "columns": [
             {
-              "expression": "wiki_entries_id",
+              "expression": "arenas_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payload_locked_documents_rels_arena_models_id_idx": {
+          "name": "payload_locked_documents_rels_arena_models_id_idx",
+          "columns": [
+            {
+              "expression": "arena_models_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payload_locked_documents_rels_arena_prompts_id_idx": {
+          "name": "payload_locked_documents_rels_arena_prompts_id_idx",
+          "columns": [
+            {
+              "expression": "arena_prompts_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payload_locked_documents_rels_arena_answers_id_idx": {
+          "name": "payload_locked_documents_rels_arena_answers_id_idx",
+          "columns": [
+            {
+              "expression": "arena_answers_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payload_locked_documents_rels_arena_images_id_idx": {
+          "name": "payload_locked_documents_rels_arena_images_id_idx",
+          "columns": [
+            {
+              "expression": "arena_images_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -13157,12 +12821,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "payload_locked_documents_rels_wiki_topics_fk": {
-          "name": "payload_locked_documents_rels_wiki_topics_fk",
+        "payload_locked_documents_rels_circles_fk": {
+          "name": "payload_locked_documents_rels_circles_fk",
           "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "wiki_topics",
+          "tableTo": "circles",
           "columnsFrom": [
-            "wiki_topics_id"
+            "circles_id"
           ],
           "columnsTo": [
             "id"
@@ -13170,12 +12834,64 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "payload_locked_documents_rels_wiki_entries_fk": {
-          "name": "payload_locked_documents_rels_wiki_entries_fk",
+        "payload_locked_documents_rels_arenas_fk": {
+          "name": "payload_locked_documents_rels_arenas_fk",
           "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "wiki_entries",
+          "tableTo": "arenas",
           "columnsFrom": [
-            "wiki_entries_id"
+            "arenas_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_arena_models_fk": {
+          "name": "payload_locked_documents_rels_arena_models_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "arena_models",
+          "columnsFrom": [
+            "arena_models_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_arena_prompts_fk": {
+          "name": "payload_locked_documents_rels_arena_prompts_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "arena_prompts",
+          "columnsFrom": [
+            "arena_prompts_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_arena_answers_fk": {
+          "name": "payload_locked_documents_rels_arena_answers_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "arena_answers",
+          "columnsFrom": [
+            "arena_answers_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_arena_images_fk": {
+          "name": "payload_locked_documents_rels_arena_images_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "arena_images",
+          "columnsFrom": [
+            "arena_images_id"
           ],
           "columnsTo": [
             "id"
@@ -13894,36 +13610,97 @@
         "rejected"
       ]
     },
-    "public.enum_wiki_entries_type": {
-      "name": "enum_wiki_entries_type",
+    "public.enum_circles_tone": {
+      "name": "enum_circles_tone",
       "schema": "public",
       "values": [
-        "concept",
-        "method"
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
       ]
     },
-    "public.enum_wiki_entries_status": {
-      "name": "enum_wiki_entries_status",
+    "public.enum_arenas_status": {
+      "name": "enum_arenas_status",
       "schema": "public",
       "values": [
         "draft",
         "published"
       ]
     },
-    "public.enum__wiki_entries_v_version_type": {
-      "name": "enum__wiki_entries_v_version_type",
+    "public.enum_arenas_kind": {
+      "name": "enum_arenas_kind",
       "schema": "public",
       "values": [
-        "concept",
-        "method"
+        "text",
+        "image"
       ]
     },
-    "public.enum__wiki_entries_v_version_status": {
-      "name": "enum__wiki_entries_v_version_status",
+    "public.enum_arena_models_weights": {
+      "name": "enum_arena_models_weights",
+      "schema": "public",
+      "values": [
+        "open",
+        "closed"
+      ]
+    },
+    "public.enum_arena_models_region": {
+      "name": "enum_arena_models_region",
+      "schema": "public",
+      "values": [
+        "us",
+        "cn",
+        "eu",
+        "other"
+      ]
+    },
+    "public.enum_arena_models_status": {
+      "name": "enum_arena_models_status",
       "schema": "public",
       "values": [
         "draft",
-        "published"
+        "active",
+        "retired"
+      ]
+    },
+    "public.enum_arena_prompts_lang": {
+      "name": "enum_arena_prompts_lang",
+      "schema": "public",
+      "values": [
+        "en",
+        "zh-Hans",
+        "ja",
+        "ko"
+      ]
+    },
+    "public.enum_arena_prompts_status": {
+      "name": "enum_arena_prompts_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "retired"
+      ]
+    },
+    "public.enum_arena_answers_lang": {
+      "name": "enum_arena_answers_lang",
+      "schema": "public",
+      "values": [
+        "en",
+        "zh-Hans",
+        "ja",
+        "ko"
+      ]
+    },
+    "public.enum_arena_answers_status": {
+      "name": "enum_arena_answers_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "done",
+        "failed"
       ]
     }
   },
@@ -13937,6 +13714,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "33e3c2ce-9f9a-4571-ab50-47246f8dcaef",
+  "id": "59d53acf-d2fe-4ed0-a415-a2212dae53ce",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

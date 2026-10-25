@@ -7,8 +7,14 @@ import { localizePath, messagesFileName, type Locale } from '@/i18n/config'
 import type { ReportReason, ReviewStatus, TranslatedTexts, TranslationStatus } from '@/modules/apps/reviews/rules'
 import { appReviewReports, appReviews, appReviewTranslations } from '@/modules/apps/schema'
 import { normalizeEmail } from '@/modules/daily/email/address'
+import type { PostStatus, Reaction, ReportReason as PostReportReason } from '@/modules/circles/rules'
+import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from '@/modules/circles/schema'
 import { emailSends, type EmailSendStatus } from '@/modules/daily/email/schema'
-import { storyHref } from '@/modules/daily/public/list-params'
+import { listHref, storyHref, topicHref } from '@/modules/daily/public/list-params'
+import { isStoryTag } from '@/modules/daily/tags'
+import { readTopicNames } from '@/modules/daily/topic-names'
+import { follows } from '@/modules/follows/schema'
+import { followId, type FollowType } from '@/modules/follows/target'
 import { skillHref } from '@/modules/resources/public/list-params'
 import { saves } from '@/modules/saves/schema'
 import type { SaveType } from '@/modules/saves/target'
@@ -48,6 +54,8 @@ export type MemberExport = {
   /** Sign-in sessions, newest first; `current` is the one the export was made from. */
   sessions: { signedInAt: string; expiresAt: string; ipAddress: string | null; userAgent: string | null; current: boolean }[]
   saves: { type: SaveType; id: number; name: string | null; url: string | null; savedAt: string }[]
+  /** Industry tags and companies or products (by topic key) the member follows, newest first. */
+  follows: { type: FollowType; key: string; name: string | null; url: string | null; followedAt: string }[]
   reviews: {
     id: number
     app: ExportRef
@@ -99,6 +107,14 @@ export type MemberExport = {
     submittedAt: string
     lastEmail: { status: string; sentAt: string | null } | null
   }[]
+  /** The circles the member joined, newest first. */
+  circles: { circle: ExportRef; joinedAt: string }[]
+  /** Their posts in circles, newest first, hidden ones too. */
+  circlePosts: { id: number; circle: ExportRef; text: string; language: string; status: PostStatus; postedAt: string }[]
+  /** Their reactions to posts: on which post, not its text or author. */
+  circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string }[]
+  /** Posts by others the member reported: which one and why, not its text or author. */
+  circlePostReports: { post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null }[]
   /** The daily email subscription of the sign-in email, when it is verified and subscribed at some point. */
   dailyEmail: {
     email: string
@@ -131,6 +147,7 @@ export type MemberRecords = {
   accounts: { providerId: string; accountId: string; scope: string | null; createdAt: Date }[]
   sessions: { id: string; createdAt: Date; expiresAt: Date; ipAddress: string | null; userAgent: string | null }[]
   saves: { targetType: SaveType; targetId: number; createdAt: Date }[]
+  follows: { targetType: FollowType; targetKey: string; createdAt: Date }[]
   reviews: {
     id: number
     appId: number
@@ -146,6 +163,10 @@ export type MemberRecords = {
   appReports: AppReport[]
   appSubmissions: AppSubmission[]
   skillSubmissions: SkillSubmission[]
+  circleMembers: { circleId: number; createdAt: Date }[]
+  circlePosts: { id: number; circleId: number; body: string; lang: string; status: PostStatus; createdAt: Date }[]
+  circleReactions: { postId: number; circleId: number; reaction: Reaction; createdAt: Date }[]
+  circlePostReports: { postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
   subscriber: Subscriber | null
   sends: { localDate: string; locale: string; status: EmailSendStatus; storyCount: number | null; sentAt: Date | null }[]
 }
@@ -156,8 +177,8 @@ const link = (site: string, locale: Locale, path: `/${string}`) => `${site}${loc
 
 /**
  * How the file names each kind of thing: one per save type (a new save type does not compile
- * until it has one), plus app categories and daily stories. Deleted things are left out and keep
- * only their id.
+ * until it has one), plus app categories, daily stories and circles. Deleted things are left out
+ * and keep only their id.
  */
 const lookups = {
   app: async (payload, ids, locale, site) => {
@@ -212,10 +233,26 @@ const lookups = {
     // Pending, withdrawn and merged stories have no page.
     return docs.map((story) => ({ id: story.id, name: story.title, url: story.status === 'published' ? link(site, locale, storyHref(story.slug)) : null }))
   },
+  circle: async (payload, ids, locale, site) => {
+    const { docs } = await payload.find({
+      collection: 'circles',
+      where: { id: { in: ids } },
+      select: { name: true, slug: true, shown: true },
+      depth: 0,
+      pagination: false,
+      overrideAccess: true,
+      locale,
+    })
+    // A circle the owner took down has no page of its own.
+    return docs.map((circle) => ({ id: circle.id, name: circle.name, url: circle.shown ? link(site, locale, `/circles?circle=${circle.slug}`) : null }))
+  },
 } satisfies Record<SaveType, Lookup> & Record<string, Lookup>
 
 type RefKind = keyof typeof lookups
 export type ExportRefs = Record<RefKind, Map<number, ExportRef>>
+
+/** Names and addresses of what the member follows, by follow id (`tag-agents`, `topic-kimi`). */
+export type FollowRefs = Map<string, { name: string | null; url: string | null }>
 
 /** A relationship read at depth 0: the id, or the document when something populated it. */
 function idOf(value: number | { id: number } | null | undefined): number | null {
@@ -248,7 +285,22 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
   // Reports keep the reporter as `u:<member id>` (src/app/api/app-reports/new, src/app/api/reviews/report).
   const reporter = `u:${userId}`
   const collection = { sort: '-createdAt', depth: 0, pagination: false, overrideAccess: true } as const
-  const [accounts, sessions, saveRows, reviews, reviewReports, appReports, appSubmissions, skillSubmissions, subscribers] = await Promise.all([
+  const [
+    accounts,
+    sessions,
+    saveRows,
+    followRows,
+    reviews,
+    reviewReports,
+    appReports,
+    appSubmissions,
+    skillSubmissions,
+    memberships,
+    posts,
+    postReactions,
+    postReports,
+    subscribers,
+  ] = await Promise.all([
     db
       .select({ providerId: authAccounts.providerId, accountId: authAccounts.accountId, scope: authAccounts.scope, createdAt: authAccounts.createdAt })
       .from(authAccounts)
@@ -270,6 +322,11 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .from(saves)
       .where(eq(saves.userId, userId))
       .orderBy(desc(saves.createdAt), desc(saves.id)),
+    db
+      .select({ targetType: follows.targetType, targetKey: follows.targetKey, createdAt: follows.createdAt })
+      .from(follows)
+      .where(eq(follows.userId, userId))
+      .orderBy(desc(follows.createdAt), desc(follows.id)),
     db
       .select({
         id: appReviews.id,
@@ -299,6 +356,47 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     payload.find({ collection: 'app-reports', where: { reporter: { equals: reporter } }, ...collection }),
     payload.find({ collection: 'app-submissions', where: { submitterId: { equals: userId } }, ...collection }),
     payload.find({ collection: 'skill-submissions', where: { submitterId: { equals: userId } }, ...collection }),
+    db
+      .select({ circleId: circleMembers.circleId, createdAt: circleMembers.createdAt })
+      .from(circleMembers)
+      .where(eq(circleMembers.userId, userId))
+      .orderBy(desc(circleMembers.createdAt)),
+    db
+      .select({
+        id: circlePosts.id,
+        circleId: circlePosts.circleId,
+        body: circlePosts.body,
+        lang: circlePosts.lang,
+        status: circlePosts.status,
+        createdAt: circlePosts.createdAt,
+      })
+      .from(circlePosts)
+      .where(eq(circlePosts.userId, userId))
+      .orderBy(desc(circlePosts.createdAt), desc(circlePosts.id)),
+    db
+      .select({
+        postId: circlePostReactions.postId,
+        circleId: circlePosts.circleId,
+        reaction: circlePostReactions.reaction,
+        createdAt: circlePostReactions.createdAt,
+      })
+      .from(circlePostReactions)
+      .innerJoin(circlePosts, eq(circlePosts.id, circlePostReactions.postId))
+      .where(eq(circlePostReactions.userId, userId))
+      .orderBy(desc(circlePostReactions.createdAt), desc(circlePostReactions.id)),
+    // Posts are reported as `u:<member id>` too (src/app/api/circles/report).
+    db
+      .select({
+        postId: circlePostReports.postId,
+        circleId: circlePosts.circleId,
+        reason: circlePostReports.reason,
+        createdAt: circlePostReports.createdAt,
+        resolvedAt: circlePostReports.resolvedAt,
+      })
+      .from(circlePostReports)
+      .innerJoin(circlePosts, eq(circlePosts.id, circlePostReports.postId))
+      .where(eq(circlePostReports.reporter, reporter))
+      .orderBy(desc(circlePostReports.createdAt)),
     // The subscription is by address, not by account: only an address the member has shown is theirs.
     user.emailVerified
       ? payload.find({ collection: 'subscribers', where: { email: { equals: normalizeEmail(user.email) } }, depth: 0, limit: 1, overrideAccess: true })
@@ -339,18 +437,23 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     accounts,
     sessions,
     saves: saveRows,
+    follows: followRows,
     reviews,
     translations,
     reviewReports,
     appReports: appReports.docs,
     appSubmissions: appSubmissions.docs,
     skillSubmissions: skillSubmissions.docs,
+    circleMembers: memberships,
+    circlePosts: posts,
+    circleReactions: postReactions,
+    circlePostReports: postReports,
     subscriber,
     sends,
   }
 }
 
-/** Names and addresses for every app, Skill and category the records point at, in the page language. */
+/** Names and addresses for every app, Skill, category and circle the records point at, in the page language. */
 export async function readExportRefs(payload: Payload, records: MemberRecords, locale: Locale, site: string): Promise<ExportRefs> {
   const kinds = Object.keys(lookups) as RefKind[]
   const wanted = Object.fromEntries(kinds.map((kind) => [kind, new Set<number>()])) as Record<RefKind, Set<number>>
@@ -366,6 +469,7 @@ export async function readExportRefs(payload: Payload, records: MemberRecords, l
     want('category', idOf(submission.category))
   }
   for (const submission of records.skillSubmissions) want('skill', idOf(submission.skill))
+  for (const row of [...records.circleMembers, ...records.circlePosts, ...records.circleReactions, ...records.circlePostReports]) want('circle', row.circleId)
 
   const found = await Promise.all(
     kinds.map(async (kind) => {
@@ -377,11 +481,42 @@ export async function readExportRefs(payload: Payload, records: MemberRecords, l
   return Object.fromEntries(found) as ExportRefs
 }
 
+/**
+ * Names and addresses of the followed tags (in the page language) and companies and products (as
+ * their newest published story writes them); a company no published story is about now keeps
+ * only its key.
+ */
+export async function readFollowRefs(
+  payload: Payload,
+  records: MemberRecords,
+  { locale, site, tagName }: { locale: Locale; site: string; tagName: (tag: string) => string },
+): Promise<FollowRefs> {
+  const { drizzle: db } = payload.db as unknown as PostgresAdapter
+  const keys = records.follows.filter((row) => row.targetType === 'topic').map((row) => row.targetKey)
+  const topics = await readTopicNames(db, keys)
+  const refs: FollowRefs = new Map()
+  for (const { targetType: type, targetKey: key } of records.follows) {
+    const id = followId({ type, key })
+    if (type === 'tag') refs.set(id, isStoryTag(key) ? { name: tagName(key), url: link(site, locale, listHref({ tag: key })) } : { name: null, url: null })
+    else {
+      const topic = topics.get(key)
+      refs.set(id, topic ? { name: topic.name, url: link(site, locale, topicHref(key)) } : { name: null, url: null })
+    }
+  }
+  return refs
+}
+
 /** The file's contents: only the fields listed here, whatever else the records carry. */
 export function shapeMemberExport(
   records: MemberRecords,
   refs: ExportRefs,
-  { about, site, sessionId, now }: { about: string; site: string; sessionId: string | null; now: Date },
+  {
+    about,
+    site,
+    sessionId,
+    now,
+    followRefs = new Map(),
+  }: { about: string; site: string; sessionId: string | null; now: Date; followRefs?: FollowRefs },
 ): MemberExport {
   const ref = (kind: RefKind, id: number): ExportRef => refs[kind].get(id) ?? { id, name: null, url: null }
   const optionalRef = (kind: RefKind, id: number | null): ExportRef | null => (id === null ? null : ref(kind, id))
@@ -419,6 +554,10 @@ export function shapeMemberExport(
     saves: records.saves.map((save) => {
       const { name, url } = ref(save.targetType, save.targetId)
       return { type: save.targetType, id: save.targetId, name, url, savedAt: iso(save.createdAt) }
+    }),
+    follows: records.follows.map((row) => {
+      const { name, url } = followRefs.get(followId({ type: row.targetType, key: row.targetKey })) ?? { name: null, url: null }
+      return { type: row.targetType, key: row.targetKey, name, url, followedAt: iso(row.createdAt) }
     }),
     reviews: records.reviews.map((review) => {
       const translation = translations.get(review.id)
@@ -480,6 +619,28 @@ export function shapeMemberExport(
       submittedAt: submission.createdAt,
       lastEmail: lastEmail(submission.notifiedStatus, submission.notifiedAt),
     })),
+    circles: records.circleMembers.map((membership) => ({ circle: ref('circle', membership.circleId), joinedAt: iso(membership.createdAt) })),
+    circlePosts: records.circlePosts.map((post) => ({
+      id: post.id,
+      circle: ref('circle', post.circleId),
+      text: post.body,
+      language: post.lang,
+      status: post.status,
+      postedAt: iso(post.createdAt),
+    })),
+    circleReactions: records.circleReactions.map((reaction) => ({
+      post: reaction.postId,
+      circle: ref('circle', reaction.circleId),
+      reaction: reaction.reaction,
+      reactedAt: iso(reaction.createdAt),
+    })),
+    circlePostReports: records.circlePostReports.map((report) => ({
+      post: report.postId,
+      circle: ref('circle', report.circleId),
+      reason: report.reason,
+      reportedAt: iso(report.createdAt),
+      resolvedAt: isoOrNull(report.resolvedAt),
+    })),
     dailyEmail: subscriber
       ? {
           email: subscriber.email,
@@ -516,9 +677,13 @@ export async function exportMemberData(
 ): Promise<MemberExport | null> {
   const records = await readMemberRecords(payload, userId)
   if (!records) return null
-  const refs = await readExportRefs(payload, records, locale, site)
   const messages = (await import(`../../../messages/${messagesFileName(locale)}.json`)).default
+  const tags = createTranslator({ locale, messages, namespace: 'tags' })
+  const [refs, followRefs] = await Promise.all([
+    readExportRefs(payload, records, locale, site),
+    readFollowRefs(payload, records, { locale, site, tagName: (tag) => tags(tag as Parameters<typeof tags>[0]) }),
+  ])
   const t = createTranslator({ locale, messages, namespace: 'account' })
   const about = t('exportAbout', { email: records.user.email, time: utcMinute(now), url: link(site, locale, '/privacy') })
-  return shapeMemberExport(records, refs, { about, site, sessionId, now })
+  return shapeMemberExport(records, refs, { about, site, sessionId, now, followRefs })
 }

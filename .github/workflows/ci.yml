@@ -41,8 +41,9 @@ jobs:
       BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-used-anywhere-else
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_TELEMETRY_DISABLED: '1'
-      # Builds with every module up to phase three (the Wiki), so the smoke tests cover them before launch.
-      # Phase one's navigation is covered by the unit tests (tests/unit/site-config.test.ts).
+      # Builds with the phase-two and phase-three modules (圈子, 排行, Wiki), so the smoke tests cover them before
+      # launch. Phase one's navigation is covered by the unit tests (tests/unit/site-config.test.ts), and the
+      # preview smoke tests (deploy.yml) run against the preview's own phase, where the later modules stay hidden.
       NEXT_PUBLIC_SITE_PHASE: '3'
       # The subscribe boxes and endpoints, for the smoke tests. Without Resend the emails only go to the server log.
       DAILY_EMAIL_ENABLED: 'true'
@@ -79,11 +80,12 @@ jobs:
 
       # Stories first, so the apps seed can match the stories that mention the sample apps; the Wiki last,
       # so its entries can link the sample apps, Skills and stories.
-      - name: Sample stories, apps, Skills and Wiki entries for the smoke tests
+      - name: Sample stories, apps, Skills, rankings and Wiki entries for the smoke tests
         run: |
           pnpm payload run scripts/seed-stories.ts
           pnpm payload run scripts/seed-apps.ts
           pnpm payload run scripts/seed-skills.ts
+          pnpm payload run scripts/seed-rankings.ts
           pnpm payload run scripts/seed-wiki.ts
 
       - name: Build
@@ -97,6 +99,7 @@ jobs:
         env:
           E2E_ADMIN: '1'
           E2E_SAMPLE_APPS: '1'
+          E2E_SAMPLE_RANKINGS: '1'
           E2E_SAMPLE_SKILLS: '1'
           E2E_SAMPLE_STORIES: '1'
           E2E_SAMPLE_WIKI: '1'

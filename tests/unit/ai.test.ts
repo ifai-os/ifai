@@ -20,22 +20,29 @@ const usage = {
   outputTokens: { total: 20, text: 20, reasoning: undefined },
 }
 
-function setup({ env = {}, cost = 0.01, reply = 'ok', fail = false } = {}) {
+type Picture = { mediaType: string; data: string }
+
+function setup({ env = {}, cost = 0.01, reply = 'ok', fail = false, finish = 'stop' as 'stop' | 'length', pictures = [] as Picture[] } = {}) {
   const store = createMemoryReceiptStore()
   const calls: string[] = []
   const prompts: unknown[] = []
+  const options: unknown[] = []
   const ai = createAi({
     store,
     env: { MODEL_CALLS_ENABLED: 'true', ...env },
     languageModel: (model) =>
       new MockLanguageModelV4({
-        doGenerate: async (options) => {
+        doGenerate: async (call) => {
           calls.push(model)
-          prompts.push(options.prompt)
+          prompts.push(call.prompt)
+          options.push(call.providerOptions)
           if (fail) throw new Error('provider down')
           return {
-            content: [{ type: 'text', text: reply }],
-            finishReason: { unified: 'stop', raw: undefined },
+            content: [
+              { type: 'text', text: reply },
+              ...pictures.map((picture) => ({ type: 'file' as const, mediaType: picture.mediaType, data: { type: 'data' as const, data: picture.data } })),
+            ],
+            finishReason: { unified: finish, raw: undefined },
             usage,
             providerMetadata: { openrouter: { usage: { cost } } },
             warnings: [],
@@ -50,7 +57,7 @@ function setup({ env = {}, cost = 0.01, reply = 'ok', fail = false } = {}) {
         },
       }),
   })
-  return { ai, store, calls, prompts }
+  return { ai, store, calls, prompts, options }
 }
 
 const call = { purpose: 'assist' as const, instructions: 'Shorten it.', prompt: 'A long summary.' }
@@ -159,6 +166,63 @@ describe('ai client', () => {
     expect(result.output).toEqual({ score: 81, reason: 'launch' })
     const again = await ai.object({ purpose: 'score', instructions: 'Score it.', prompt: 'News.', schema })
     expect(again).toMatchObject({ reused: true, output: { score: 81 } })
+  })
+
+  it('answers an arena question with the contestant’s own model, one receipt per model', async () => {
+    const { ai, calls, store, prompts } = setup({ reply: 'Paris.' })
+    const question = { purpose: 'arena' as const, instructions: 'Answer directly.', prompt: 'Capital of France?', subject: 'arena-answers:1' }
+    const first = await ai.contest({ ...question, model: 'vendor/model-a' })
+    expect(first).toMatchObject({ output: { text: 'Paris.', cutOff: false }, model: 'vendor/model-a', reused: false })
+    await ai.contest({ ...question, model: 'vendor/model-b' })
+    await expect(ai.contest({ ...question, model: 'vendor/model-a' })).resolves.toMatchObject({ reused: true })
+    expect(calls).toEqual(['vendor/model-a', 'vendor/model-b'])
+    expect(store.rows.map((row) => [row.purpose, row.model])).toEqual([
+      ['arena', 'vendor/model-a'],
+      ['arena', 'vendor/model-b'],
+    ])
+    // Our own question, not outside text: no outside-data rule.
+    expect(JSON.stringify(prompts[0])).not.toContain('material to analyse')
+  })
+
+  it('says when an arena answer ran into the output limit, and obeys the switch', async () => {
+    const { ai } = setup({ finish: 'length' })
+    const question = { purpose: 'arena' as const, model: 'vendor/model-a', instructions: 'Answer.', prompt: 'Write a novel.', maxOutputTokens: 10 }
+    await expect(ai.contest(question)).resolves.toMatchObject({ output: { cutOff: true } })
+    const off = setup({ env: { MODEL_CALLS_ENABLED: 'false' } })
+    await expect(off.ai.contest(question)).rejects.toBeInstanceOf(ModelCallsDisabledError)
+  })
+
+  it('asks for a picture, keeps the first one before the receipt is done and never pays for it twice', async () => {
+    const png = Buffer.from('fake png').toString('base64')
+    const { ai, calls, store, options } = setup({ reply: 'Here you go.', cost: 0.04, pictures: [{ mediaType: 'image/png', data: png }, { mediaType: 'image/png', data: png }] })
+    const kept: Array<{ data: string; mediaType: string; receipt: string | undefined }> = []
+    const keep = async (image: { data: Uint8Array; mediaType: string }) => {
+      kept.push({ data: Buffer.from(image.data).toString('utf8'), mediaType: image.mediaType, receipt: store.rows[0]?.status })
+      return 31
+    }
+    const question = { purpose: 'arena' as const, model: 'vendor/painter', instructions: 'Draw one image.', prompt: 'A red bicycle in the rain.', keep }
+    await expect(ai.contestImage(question)).resolves.toMatchObject({ output: { image: 31 }, model: 'vendor/painter', reused: false })
+    expect(kept).toEqual([{ data: 'fake png', mediaType: 'image/png', receipt: 'pending' }])
+    expect(options[0]).toEqual({ openrouter: { modalities: ['image', 'text'] } })
+    expect(store.rows[0]).toMatchObject({ status: 'succeeded', output: { image: 31 }, costUsd: 0.04 })
+
+    await expect(ai.contestImage(question)).resolves.toMatchObject({ output: { image: 31 }, reused: true })
+    expect(calls).toHaveLength(1)
+    expect(kept).toHaveLength(1)
+  })
+
+  it('says when the model drew nothing, and pays again when the picture could not be kept', async () => {
+    const { ai } = setup({ reply: 'I cannot draw that.' })
+    const keep = async () => 1
+    const question = { purpose: 'arena' as const, model: 'vendor/painter', instructions: 'Draw.', prompt: 'A cat.', keep }
+    await expect(ai.contestImage(question)).resolves.toMatchObject({ output: { image: null } })
+
+    const broken = setup({ pictures: [{ mediaType: 'image/webp', data: 'AAAA' }] })
+    const failing = { ...question, keep: async () => Promise.reject(new Error('storage down')) }
+    await expect(broken.ai.contestImage(failing)).rejects.toThrow('storage down')
+    expect(broken.store.rows[0]).toMatchObject({ status: 'failed', error: 'storage down' })
+    await expect(broken.ai.contestImage({ ...question, keep: async () => 2 })).resolves.toMatchObject({ output: { image: 2 }, reused: false })
+    expect(broken.calls).toHaveLength(2)
   })
 
   it('embeds values with the embedding model', async () => {

@@ -35,8 +35,17 @@ export const embeddingPurposes = {
   embed: 'openai/text-embedding-3-small',
 } as const
 
+/**
+ * Purposes whose model comes with each call instead of from this file: the model arena's
+ * contestants (src/modules/rankings), which the site owner lists in the back office. Business
+ * code passes the contestant's OpenRouter ID from that list (`ai.contest`), never a model name of
+ * its own, and the call goes through the same receipts, switch and budget as every other.
+ */
+export const contestPurposes = ['arena'] as const
+
 export type TextPurpose = keyof typeof textPurposes
 export type EmbeddingPurpose = keyof typeof embeddingPurposes
+export type ContestPurpose = (typeof contestPurposes)[number]
 export type Purpose = TextPurpose | EmbeddingPurpose
 
 /**

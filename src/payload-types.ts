@@ -82,6 +82,12 @@ export interface Config {
     'agent-hosts': AgentHost;
     'skill-tags': SkillTag;
     'skill-submissions': SkillSubmission;
+    circles: Circle;
+    arenas: Arena;
+    'arena-models': ArenaModel;
+    'arena-prompts': ArenaPrompt;
+    'arena-answers': ArenaAnswer;
+    'arena-images': ArenaImage;
     'wiki-topics': WikiTopic;
     'wiki-entries': WikiEntry;
     'payload-kv': PayloadKv;
@@ -89,7 +95,11 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    'arena-images': {
+      answers: 'arena-answers';
+    };
+  };
   collectionsSelect: {
     admins: AdminsSelect<false> | AdminsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -106,6 +116,12 @@ export interface Config {
     'agent-hosts': AgentHostsSelect<false> | AgentHostsSelect<true>;
     'skill-tags': SkillTagsSelect<false> | SkillTagsSelect<true>;
     'skill-submissions': SkillSubmissionsSelect<false> | SkillSubmissionsSelect<true>;
+    circles: CirclesSelect<false> | CirclesSelect<true>;
+    arenas: ArenasSelect<false> | ArenasSelect<true>;
+    'arena-models': ArenaModelsSelect<false> | ArenaModelsSelect<true>;
+    'arena-prompts': ArenaPromptsSelect<false> | ArenaPromptsSelect<true>;
+    'arena-answers': ArenaAnswersSelect<false> | ArenaAnswersSelect<true>;
+    'arena-images': ArenaImagesSelect<false> | ArenaImagesSelect<true>;
     'wiki-topics': WikiTopicsSelect<false> | WikiTopicsSelect<true>;
     'wiki-entries': WikiEntriesSelect<false> | WikiEntriesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -186,6 +202,8 @@ export interface Admin {
 export interface Media {
   id: number;
   alt: string;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -880,6 +898,8 @@ export interface SkillVersion {
       }[]
     | null;
   changelog?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -993,6 +1013,220 @@ export interface SkillSubmission {
   adminNote?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Readers’ posts go live at once: hide one in the circle’s Posts tab.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circles".
+ */
+export interface Circle {
+  id: number;
+  /**
+   * Shown as “# name”.
+   */
+  name: string;
+  /**
+   * What people post here, for the circle’s card and search engines.
+   */
+  description?: string | null;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  /**
+   * The card’s color, from the design tokens.
+   */
+  tone: '0' | '1' | '2' | '3' | '4' | '5' | '6';
+  /**
+   * Smaller comes first.
+   */
+  order?: number | null;
+  /**
+   * Unticked, the circle and its posts leave the page and nobody can post in it. Nothing is deleted.
+   */
+  shown?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. The rankings are recomputed every Monday at 06:00 Shanghai time.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arenas".
+ */
+export interface Arena {
+  id: number;
+  /**
+   * The tab on the rankings page, e.g. “Coding”.
+   */
+  name: string;
+  /**
+   * What the questions in this arena ask for, under the tabs.
+   */
+  intro?: string | null;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  /**
+   * Draft arenas get answers but no votes and no rankings.
+   */
+  status: 'draft' | 'published';
+  /**
+   * Text answers, or one picture per answer. Fixed once the arena has questions.
+   */
+  kind: 'text' | 'image';
+  /**
+   * Smaller comes first; the first one is the rankings page itself.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * New contestants start in “Preparing”: their answers to every question of their arenas are generated first (see the Answers box on the right). Set them to “Competing” to put them into the votes.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-models".
+ */
+export interface ArenaModel {
+  id: number;
+  /**
+   * As the maker writes it, e.g. Kimi K2. Not translated.
+   */
+  name: string;
+  /**
+   * E.g. Anthropic, Moonshot AI. Write the Chinese name (月之暗面) in Simplified Chinese.
+   */
+  org: string;
+  /**
+   * From openrouter.ai/models, e.g. moonshotai/kimi-k2. Fixed once the model has answers.
+   */
+  openrouterId: string;
+  /**
+   * Open weights: the weights can be downloaded. Not the same as an open-source license.
+   */
+  weights: 'open' | 'closed';
+  /**
+   * Where the maker is based.
+   */
+  region: 'us' | 'cn' | 'eu' | 'other';
+  /**
+   * E.g. MIT, Llama 3.3 Community. Leave empty when unsure.
+   */
+  license?: string | null;
+  licenseUrl?: string | null;
+  arenas: (number | Arena)[];
+  /**
+   * Preparing: answers only. Competing: in the votes and rankings. Retired: out of both; its votes stay.
+   */
+  status: 'draft' | 'active' | 'retired';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Readers vote on the answers to these questions. Write each question in one language; Traditional Chinese pages show the Simplified ones converted. Questions are public, notes are not.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-prompts".
+ */
+export interface ArenaPrompt {
+  id: number;
+  /**
+   * Exactly what the models get. A real task readers would ask about; nothing about AI models themselves, nothing that needs the web or files. In an image arena, describe the picture to draw.
+   */
+  text: string;
+  arena: number | Arena;
+  /**
+   * The language the question is written in.
+   */
+  lang: 'en' | 'zh-Hans' | 'ja' | 'ko';
+  status: 'active' | 'retired';
+  /**
+   * What the question tests, where it came from.
+   */
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Generated ahead of the votes, one per question and model. Readers see an answer in a vote when it is done, not hidden, not cut off and does not name its model or maker. Hide an answer that should not be shown; votes already cast on it still count.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-answers".
+ */
+export interface ArenaAnswer {
+  id: number;
+  hidden?: boolean | null;
+  prompt: number | ArenaPrompt;
+  model: number | ArenaModel;
+  arena: number | Arena;
+  lang: 'en' | 'zh-Hans' | 'ja' | 'ko';
+  status: 'pending' | 'done' | 'failed';
+  text?: string | null;
+  /**
+   * Hide the answer if the picture has a signature, a watermark or a model or company name on it, or should not be shown.
+   */
+  image?: (number | null) | ArenaImage;
+  cutOff?: boolean | null;
+  namesItself?: boolean | null;
+  error?: string | null;
+  costUsd?: number | null;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  /**
+   * How often “Retry failed” sent it back.
+   */
+  attempts?: number | null;
+  generatedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The contestants’ pictures, stored by the answer job. To keep a picture out of the votes, hide its answer under Answers.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-images".
+ */
+export interface ArenaImage {
+  id: number;
+  answers?: {
+    docs?: (number | ArenaAnswer)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumb?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    vote?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately.
@@ -1224,6 +1458,30 @@ export interface PayloadLockedDocument {
         value: number | SkillSubmission;
       } | null)
     | ({
+        relationTo: 'circles';
+        value: number | Circle;
+      } | null)
+    | ({
+        relationTo: 'arenas';
+        value: number | Arena;
+      } | null)
+    | ({
+        relationTo: 'arena-models';
+        value: number | ArenaModel;
+      } | null)
+    | ({
+        relationTo: 'arena-prompts';
+        value: number | ArenaPrompt;
+      } | null)
+    | ({
+        relationTo: 'arena-answers';
+        value: number | ArenaAnswer;
+      } | null)
+    | ({
+        relationTo: 'arena-images';
+        value: number | ArenaImage;
+      } | null)
+    | ({
         relationTo: 'wiki-topics';
         value: number | WikiTopic;
       } | null)
@@ -1303,6 +1561,8 @@ export interface AdminsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1673,6 +1933,8 @@ export interface SkillVersionsSelect<T extends boolean = true> {
         id?: T;
       };
   changelog?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1731,6 +1993,132 @@ export interface SkillSubmissionsSelect<T extends boolean = true> {
   adminNote?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circles_select".
+ */
+export interface CirclesSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  slug?: T;
+  tone?: T;
+  order?: T;
+  shown?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arenas_select".
+ */
+export interface ArenasSelect<T extends boolean = true> {
+  name?: T;
+  intro?: T;
+  slug?: T;
+  status?: T;
+  kind?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-models_select".
+ */
+export interface ArenaModelsSelect<T extends boolean = true> {
+  name?: T;
+  org?: T;
+  openrouterId?: T;
+  weights?: T;
+  region?: T;
+  license?: T;
+  licenseUrl?: T;
+  arenas?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-prompts_select".
+ */
+export interface ArenaPromptsSelect<T extends boolean = true> {
+  text?: T;
+  arena?: T;
+  lang?: T;
+  status?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-answers_select".
+ */
+export interface ArenaAnswersSelect<T extends boolean = true> {
+  hidden?: T;
+  prompt?: T;
+  model?: T;
+  arena?: T;
+  lang?: T;
+  status?: T;
+  text?: T;
+  image?: T;
+  cutOff?: T;
+  namesItself?: T;
+  error?: T;
+  costUsd?: T;
+  inputTokens?: T;
+  outputTokens?: T;
+  attempts?: T;
+  generatedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-images_select".
+ */
+export interface ArenaImagesSelect<T extends boolean = true> {
+  answers?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumb?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        vote?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

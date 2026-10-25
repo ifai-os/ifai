@@ -242,7 +242,7 @@ export function AppDetailView({ app, signIn }: AppDetailViewProps) {
         <div className="sticky bottom-0 z-10 flex gap-2.5 border-t border-line bg-bg px-4 pt-2.5 pb-3.5 md:hidden">
           <SaveButton withCount className={`${barButton} ${outline} ${app.website ? '' : 'flex-1'}`} />
           {app.website && (
-            <OpenSiteLink slug={app.slug} className={`${barButton} flex-1 bg-ink text-white hover:bg-ink-2`}>
+            <OpenSiteLink slug={app.slug} className={`${barButton} flex-1 bg-ink text-bg hover:bg-ink-2`}>
               {t('openSite')}
               <Icon name="external" size={16} />
             </OpenSiteLink>
@@ -336,7 +336,7 @@ function Alternatives({ alternatives }: { alternatives: AppDetail['alternatives'
               <span className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2.5">
                 <AppTile name={alternative.name} slug={alternative.slug} logo={alternative.logo} size="md" />
                 <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="truncate text-body font-semibold group-hover:text-accent md:font-medium">
+                  <span className="truncate text-body font-semibold group-hover:text-accent-ink md:font-medium">
                     {alternative.name}
                   </span>
                   <span className="hidden text-small text-ink-4 md:block">

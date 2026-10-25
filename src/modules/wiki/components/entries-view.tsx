@@ -10,7 +10,7 @@ import { entryTypes, type EntryType } from '../rules'
 import { EntryList } from './entry-list'
 
 const chip = 'flex h-9 items-center rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors'
-const chipOn = 'border-ink bg-ink text-white'
+const chipOn = 'border-ink bg-ink text-bg'
 const chipOff = 'border-line bg-bg text-ink-2 hover:border-ink-4'
 
 /** 全部条目 (docs/specs/wiki.md「页面与路由」): every entry by name, one type at a time if asked, 30 a page. */

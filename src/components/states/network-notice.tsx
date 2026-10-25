@@ -84,7 +84,7 @@ export function NetworkNotice() {
     >
       {view !== 'hidden' && (
         <div
-          className={`pointer-events-auto flex min-h-12 max-w-full items-center gap-2.5 rounded-pill py-1.5 pr-1.5 pl-4 text-ui text-white shadow-float ${view === 'restored' ? 'bg-success-ink' : 'bg-toast'}`}
+          className={`pointer-events-auto flex min-h-12 max-w-full items-center gap-2.5 rounded-pill py-1.5 pr-1.5 pl-4 text-ui shadow-float ${view === 'restored' ? 'bg-success-ink text-bg' : 'bg-toast text-white'}`}
         >
           {view === 'offline' && <Icon name="offline" size={18} />}
           {view === 'reconnecting' && (
@@ -98,7 +98,7 @@ export function NetworkNotice() {
           <button
             type="button"
             onClick={action}
-            className="h-9 rounded-pill bg-white/16 px-3.5 text-meta font-medium whitespace-nowrap transition-colors hover:bg-white/24"
+            className="h-9 rounded-pill bg-current/16 px-3.5 text-meta font-medium whitespace-nowrap transition-colors hover:bg-current/24"
           >
             {actionLabel}
           </button>
