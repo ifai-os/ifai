@@ -1013,7 +1013,7 @@ export interface SkillSubmission {
   createdAt: string;
 }
 /**
- * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Readers’ posts go live at once: hide one in the circle’s Posts tab.
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Readers’ posts and comments go live at once: hide one in the circle’s Posts or Comments tab.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "circles".

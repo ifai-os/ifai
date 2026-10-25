@@ -6,6 +6,7 @@ import { isCrossSite } from '@/lib/same-origin'
 import { shanghaiDate } from '@/lib/shanghai-day'
 import { clientIp, visitorHash } from '@/lib/visitor'
 import { fail, notLaunched, reply } from '@/modules/circles/api'
+import { reportComment } from '@/modules/circles/comments'
 import { reportPost } from '@/modules/circles/data'
 import { circlesLaunched, shownCircleIds } from '@/modules/circles/public'
 import { parseReportInput } from '@/modules/circles/rules'
@@ -13,9 +14,10 @@ import { parseReportInput } from '@/modules/circles/rules'
 export const dynamic = 'force-dynamic'
 
 /**
- * POST /api/circles/report { post, reason } → { reported: true }. Any reader can report a post,
- * from IFAI's own pages: a member once per post, a visitor once per post a day (by the day's
- * visitor hash, as review reports count them). Nothing is hidden until the site owner looks.
+ * POST /api/circles/report { post, reason } or { comment, reason } → { reported: true }. Any
+ * reader can report a post or a comment, from IFAI's own pages: a member once each, a visitor
+ * once each a day (by the day's visitor hash, as review reports count them). Nobody can report
+ * their own. Nothing is hidden until the site owner looks.
  */
 export async function POST(request: NextRequest) {
   if (!circlesLaunched()) return notLaunched()
@@ -33,12 +35,14 @@ export async function POST(request: NextRequest) {
     reporter = `v:${visitorHash({ ip: clientIp(request.headers), userAgent, day: shanghaiDate(), secret })}`
   }
   const { payload } = await getDb()
-  const result = await reportPost(
-    payload,
-    { postId: input.post, reason: input.reason, reporter, userId: session?.user.id ?? null },
-    await shownCircleIds(),
-  )
+  const { target, reason } = input
+  const userId = session?.user.id ?? null
+  const circleIds = await shownCircleIds()
+  const result =
+    target.kind === 'post'
+      ? await reportPost(payload, { postId: target.id, reason, reporter, userId }, circleIds)
+      : await reportComment(payload, { commentId: target.id, reason, reporter, userId }, circleIds)
   if (result === 'not-found') return fail('not-found', 404)
-  if (result === 'own-post') return fail('own-post', 400)
+  if (result !== 'reported') return fail(result, 400)
   return reply({ reported: true })
 }

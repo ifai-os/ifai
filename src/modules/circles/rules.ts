@@ -1,4 +1,4 @@
-import { isLocale, type Locale } from '@/i18n/config'
+import { defaultLocale, isLocale, localePrefixes, type Locale } from '@/i18n/config'
 import { cleanText, parseId, textLength } from '@/modules/apps/reviews/rules'
 
 export { parseId }
@@ -46,6 +46,23 @@ export const mediaRules = {
   dailyVideos: 30,
 } as const
 
+/** Comments (docs/specs/circles.md rule 15): one level of replies, text cleaned and counted like posts. */
+export const commentRules = {
+  /** Characters (code points) in a comment. */
+  maxBody: 500,
+  /** Comments a member can write per Shanghai day; one they deleted no longer counts. */
+  dailyComments: 50,
+  /** Comments on the post per request, newest first. */
+  pageSize: 20,
+  /** Replies under a comment before「展开其余 N 条回复」, oldest first. */
+  repliesShown: 3,
+  /** Replies per request once a comment's are opened. */
+  repliesPageSize: 50,
+} as const
+
+/** Cards for apps and Skills on IFAI that a post links to (rule 17): at most this many. */
+export const maxLinkCards = 3
+
 /** The picture types a post takes, as the page and the server see them. */
 export const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
 
@@ -89,10 +106,11 @@ export const circleTones = [0, 1, 2, 3, 4, 5, 6] as const
 
 /**
  * 「推荐」: how a post from the last `hotDays` days ranks, from the people who reacted to it and
- * its comments (none until step 3), fading with age. Mirrors the SQL in ./data.ts.
+ * the people who commented on it (its author aside, each person once, so a flood of comments
+ * does not lift it), fading with age. Mirrors the SQL in ./data.ts.
  */
-export function hotScore({ people, comments = 0, hours }: { people: number; comments?: number; hours: number }): number {
-  return (people + 2 * comments + 1) / Math.pow(Math.max(hours, 0) + 2, 1.5)
+export function hotScore({ people, commenters = 0, hours }: { people: number; commenters?: number; hours: number }): number {
+  return (people + 2 * commenters + 1) / Math.pow(Math.max(hours, 0) + 2, 1.5)
 }
 
 /** The busiest circles today, for their「热议」badge: at most `hotCircles`, each with `hotFrom` posts or more. */
@@ -154,13 +172,40 @@ export function parseReactionInput(input: unknown): { post: number; reaction: Re
   return { post, reaction: fields.reaction, on: fields.on }
 }
 
-/** POST /api/circles/report { post, reason }. */
-export function parseReportInput(input: unknown): { post: number; reason: ReportReason } | null {
+/** What a reader can report: a post, or a comment under one. */
+export type ReportTarget = { kind: 'post' | 'comment'; id: number }
+
+/** POST /api/circles/report { post, reason } or { comment, reason }. */
+export function parseReportInput(input: unknown): { target: ReportTarget; reason: ReportReason } | null {
+  const fields = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
+  const reason = fields.reason
+  if (typeof reason !== 'string' || !(reportReasons as readonly string[]).includes(reason)) return null
+  if (fields.post !== undefined && fields.comment !== undefined) return null
+  const post = parseId(fields.post)
+  const comment = parseId(fields.comment)
+  const target: ReportTarget | null = post ? { kind: 'post', id: post } : comment ? { kind: 'comment', id: comment } : null
+  return target && { target, reason: reason as ReportReason }
+}
+
+export type CommentInput = { post: number; body: string; locale: Locale; replyTo: number | null }
+
+export type CommentInputError = 'invalid-post' | 'empty-body' | 'body-too-long' | 'invalid-locale' | 'invalid-reply'
+
+/**
+ * POST /api/circles/comments { post, body, locale, replyTo? }: `replyTo` is the comment or reply
+ * being answered; the page's language helps tell the comment's own, as for posts.
+ */
+export function parseCommentInput(input: unknown): { ok: true; value: CommentInput } | { ok: false; error: CommentInputError } {
   const fields = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
   const post = parseId(fields.post)
-  const reason = fields.reason
-  if (!post || typeof reason !== 'string' || !(reportReasons as readonly string[]).includes(reason)) return null
-  return { post, reason: reason as ReportReason }
+  if (!post) return { ok: false, error: 'invalid-post' }
+  const answered = fields.replyTo === undefined || fields.replyTo === null ? null : parseId(fields.replyTo)
+  if (answered === null && fields.replyTo !== undefined && fields.replyTo !== null) return { ok: false, error: 'invalid-reply' }
+  const body = typeof fields.body === 'string' ? cleanText(fields.body) : ''
+  if (!body) return { ok: false, error: 'empty-body' }
+  if (textLength(body) > commentRules.maxBody) return { ok: false, error: 'body-too-long' }
+  if (!isLocale(fields.locale)) return { ok: false, error: 'invalid-locale' }
+  return { ok: true, value: { post, body, locale: fields.locale, replyTo: answered } }
 }
 
 /** Someone shown on IFAI: a name (empty when they have none) and a tile tone, never an id or an email. */
@@ -231,6 +276,20 @@ export type VideoView = {
   cover: string | null
 }
 
+/** Text in the language it is written in, when that is known: app names are the same in every language. */
+export type LinkText = { value: string; lang?: string }
+
+/** A card for an app or a Skill on IFAI that a post links to (rule 17). */
+export type LinkCard =
+  | {
+      kind: 'app'
+      slug: string
+      name: string
+      tagline: LinkText | null
+      logo: { url: string; width: number | null; height: number | null } | null
+    }
+  | { kind: 'skill'; slug: string; name: LinkText; author: string; installs: number }
+
 export type PostView = {
   id: number
   circle: number
@@ -249,7 +308,52 @@ export type PostView = {
   /** None on a hidden post: its pictures are no longer public. */
   images: PostImage[]
   video: VideoView | null
+  /** Comments and replies everyone can see (rule 15). */
+  comments: number
+  /** The apps and Skills on IFAI it links to, as cards; filled in by ./link-cards.ts. */
+  links: LinkCard[]
 }
+
+export type CommentView = {
+  id: number
+  post: number
+  /** The comment it is listed under; null for a comment on the post itself. */
+  parent: number | null
+  /** Whom it answers when that is a reply rather than the comment it is under:「回复 林栖」. */
+  replyTo: PersonView | null
+  body: string
+  /** The language it is written in: a site locale, or `und`. */
+  lang: string
+  author: PersonView
+  /** The reader wrote it: they can delete it, not report it. */
+  mine: boolean
+  /** The site owner hid it; only its author gets it, with a note, and nobody can answer it. */
+  hidden: boolean
+  createdAt: string
+}
+
+/** A comment on the post with its first replies. */
+export type CommentThread = CommentView & {
+  replies: CommentView[]
+  /** All the replies the reader can see under it, the ones in `replies` included. */
+  replyCount: number
+}
+
+/** GET /api/circles/comments?post=45[&cursor=…] */
+export type CommentsPage = {
+  signedIn: boolean
+  /** Comments and replies everyone can see. */
+  count: number
+  comments: CommentThread[]
+  /** Pass as `cursor` for the next page; null when this was the last. */
+  next: number | null
+}
+
+/** GET /api/circles/comments?post=45&thread=12[&cursor=…] */
+export type RepliesPage = { replies: CommentView[]; next: number | null }
+
+/** POST /api/circles/comments; DELETE answers with the count alone. */
+export type CommentChange = { comment: CommentView; count: number }
 
 /** GET /api/circles/feed?tab=latest[&circle=3][&cursor=…] */
 export type FeedPage = {
@@ -271,6 +375,7 @@ export type CirclesChange = {
 
 export type CirclesError =
   | PostInputError
+  | CommentInputError
   | 'cross-site'
   | 'sign-in'
   | 'not-found'
@@ -280,6 +385,7 @@ export type CirclesError =
   | 'too-large'
   | 'invalid-image'
   | 'unsupported-video'
+  | 'own-comment'
 
 /** The reactions on one post, most people first, the picker's order breaking ties. */
 export function sortReactions(list: ReactionView[]): ReactionView[] {
@@ -336,4 +442,68 @@ export function linkify(text: string): ({ text: string } | { href: string; text:
   }
   if (last < text.length) parts.push({ text: text.slice(last) })
   return parts
+}
+
+/** A post or a comment on one line, cut to `length` characters (code points) with「…」: page titles, the back office. */
+export function excerpt(body: string, length = 60): string {
+  const characters = [...body.replace(/\s+/gu, ' ').trim()]
+  return characters.length > length ? `${characters.slice(0, length).join('')}…` : characters.join('')
+}
+
+/** A post's page, without the language prefix. */
+export const postPath = (id: number) => `/circles/p/${id}` as const
+
+/**
+ * The language a post's page is canonical in: the one it is written in, English when that is not
+ * one of the site's. The same post under another prefix is not another page (no hreflang).
+ */
+export function postLocale(post: Pick<PostView, 'lang'>): Locale {
+  return isLocale(post.lang) ? post.lang : defaultLocale
+}
+
+/**
+ * The values for the `circles.postTitle` message, the post page's title and its share sheet's:
+ *「林栖：正文的前 30 个字」, or「林栖在 # AI 绘画 发的动态」when the post has only pictures or a video.
+ */
+export function postTitleValues(post: Pick<PostView, 'body'>, name: string, circle: string) {
+  return { name, circle, excerpt: excerpt(post.body, 30), text: post.body.trim() ? 'yes' : 'no' }
+}
+
+export type SiteLink = { kind: 'app' | 'skill'; slug: string }
+
+const slugGroup = '([a-z0-9]+(?:-[a-z0-9]+)*)'
+const localePrefix = `(?:${Object.values(localePrefixes).join('|')})?`
+const appPath = new RegExp(`^${localePrefix}/apps/${slugGroup}/?$`)
+const skillPath = new RegExp(`^${localePrefix}/resources/skills/${slugGroup}(?:/v/[^/]+)?/?$`)
+
+/** Site links looked up per post: a few more than the cards, for links to apps that are not listed. */
+const maxSiteLinks = 10
+
+/**
+ * The apps and Skills on IFAI a post links to (rule 17), in the order they come, each once: an
+ * app's page or a Skill's (any version of it), with or without the language prefix. `origin` is
+ * the site's own (src/lib/site-url.ts); links to anywhere else stay plain links.
+ */
+export function siteLinks(body: string, origin: string): SiteLink[] {
+  let host: string
+  try {
+    host = new URL(origin).host
+  } catch {
+    return []
+  }
+  const found: SiteLink[] = []
+  const seen = new Set<string>()
+  for (const part of linkify(body)) {
+    if (!('href' in part)) continue
+    const url = new URL(part.href)
+    if (url.host !== host) continue
+    const app = appPath.exec(url.pathname)
+    const skill = app ? null : skillPath.exec(url.pathname)
+    const link: SiteLink | null = app ? { kind: 'app', slug: app[1] } : skill ? { kind: 'skill', slug: skill[1] } : null
+    if (!link || seen.has(`${link.kind}:${link.slug}`)) continue
+    seen.add(`${link.kind}:${link.slug}`)
+    found.push(link)
+    if (found.length === maxSiteLinks) break
+  }
+  return found
 }

@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgTable, serial, text, timestamp, uniqueIndex } from '@payloadcms/db-postgres/drizzle/pg-core'
+import { boolean, index, integer, pgTable, serial, text, timestamp, uniqueIndex, type AnyPgColumn } from '@payloadcms/db-postgres/drizzle/pg-core'
 
 import { authUsers } from '@/lib/auth/schema'
 
@@ -8,7 +8,8 @@ import { postStatuses, reactions, reportReasons, videoProviders } from './rules'
  * The circles module's own tables (docs/specs/circles.md「数据」): members write them all day, so
  * they are Drizzle tables rather than Payload collections; registered in payload.config.ts so
  * migrations create them. `circle_id` points at the `circles` collection. Deleting a member
- * deletes their memberships, posts and reactions; deleting a post deletes its reactions and reports.
+ * deletes their memberships, posts, reactions and comments; deleting a post deletes its
+ * reactions, reports and comments.
  * Pictures are the `circle-images` upload collection (./collections/CircleImages.ts).
  */
 
@@ -131,10 +132,63 @@ export const circlePostReports = pgTable(
   ],
 )
 
+/**
+ * A comment on a post (docs/specs/circles.md rule 15), shown at once and never edited; one level
+ * of replies. `parent_id` is the comment a reply is listed under (null on a comment on the post
+ * itself); `reply_to_id` is the reply it answers, when it answers one rather than the comment
+ * it is under, for「回复 林栖」. Deleting a comment deletes the replies under it; deleting a
+ * reply someone answered only drops their「回复 …」. `lang` as on posts.
+ */
+export const circleComments = pgTable(
+  'circle_comments',
+  {
+    id: serial('id').primaryKey(),
+    postId: integer('post_id')
+      .notNull()
+      .references(() => circlePosts.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    parentId: integer('parent_id').references((): AnyPgColumn => circleComments.id, { onDelete: 'cascade' }),
+    replyToId: integer('reply_to_id').references((): AnyPgColumn => circleComments.id, { onDelete: 'set null' }),
+    body: text('body').notNull(),
+    lang: text('lang').notNull(),
+    status: text('status', { enum: postStatuses }).default('shown').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('circle_comments_post_idx').on(table.postId, table.parentId, table.id),
+    index('circle_comments_parent_idx').on(table.parentId, table.id),
+    index('circle_comments_reply_to_idx').on(table.replyToId),
+    index('circle_comments_user_created_idx').on(table.userId, table.createdAt),
+  ],
+)
+
+/** A reader's「举报」of a comment, as for posts: once per reporter and comment. */
+export const circleCommentReports = pgTable(
+  'circle_comment_reports',
+  {
+    id: serial('id').primaryKey(),
+    commentId: integer('comment_id')
+      .notNull()
+      .references(() => circleComments.id, { onDelete: 'cascade' }),
+    reporter: text('reporter').notNull(),
+    reason: text('reason', { enum: reportReasons }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex('circle_comment_reports_comment_reporter_idx').on(table.commentId, table.reporter),
+    index('circle_comment_reports_resolved_idx').on(table.resolvedAt),
+  ],
+)
+
 export const circlesTables = {
   circle_videos: circleVideos,
   circle_members: circleMembers,
   circle_posts: circlePosts,
   circle_post_reactions: circlePostReactions,
   circle_post_reports: circlePostReports,
+  circle_comments: circleComments,
+  circle_comment_reports: circleCommentReports,
 }

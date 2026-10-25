@@ -15,6 +15,7 @@ const text = {
     summary: (shown: number, hidden: number) => `${shown} 条显示中${hidden > 0 ? `，${hidden} 条已隐藏` : ''}。只列最近 200 条。`,
     anonymous: '（没有名字）',
     reactions: (people: number) => `${people} 人回应`,
+    comments: (count: number) => `${count} 条评论`,
     hiddenBadge: '已隐藏',
     reported: (open: number, total: number) => (open > 0 ? `被举报 ${open} 次，待处理` : `被举报过 ${total} 次，已处理`),
     reasons: { spam: '广告或刷屏', abuse: '骚扰或冒犯', offTopic: '和这个圈子无关', other: '其他' } satisfies Record<ReportReason, string>,
@@ -38,6 +39,7 @@ const text = {
     summary: (shown: number, hidden: number) => `${shown} shown${hidden > 0 ? `, ${hidden} hidden` : ''}. Only the latest 200 are listed.`,
     anonymous: '(no name)',
     reactions: (people: number) => `${people} reacted`,
+    comments: (count: number) => `${count} ${count === 1 ? 'comment' : 'comments'}`,
     hiddenBadge: 'Hidden',
     reported: (open: number, total: number) => (open > 0 ? `Reported ${open} times, not dealt with` : `Reported ${total} times, dealt with`),
     reasons: { spam: 'spam or flooding', abuse: 'abusive', offTopic: 'not about this circle', other: 'other' } satisfies Record<ReportReason, string>,
@@ -76,7 +78,7 @@ const thumb = { display: 'block', width: 64, height: 64, objectFit: 'cover', bor
 
 type Change = { status: 'hidden' | 'shown' } | { keep: true }
 
-/** The「动态」tab of a circle: every post, newest first, with its pictures, video and reports; hide, show again, or keep a reported one. */
+/** The「动态」tab of a circle: every post, newest first, with its pictures, video, comment count and reports; hide, show again, or keep a reported one. */
 export function PostsPanel() {
   const { id } = useDocumentInfo()
   const { i18n } = useTranslation()
@@ -130,6 +132,7 @@ export function PostsPanel() {
           <p style={{ margin: 0 }}>
             {post.author.name || t.anonymous} <small>&lt;{post.author.email}&gt;</small> · <small>{when(post.createdAt)}</small>
             {post.reactions > 0 && <small> · {t.reactions(post.reactions)}</small>}
+            {post.comments > 0 && <small> · {t.comments(post.comments)}</small>}
             {post.status === 'hidden' && <strong> · {t.hiddenBadge}</strong>}
           </p>
           {post.body && (

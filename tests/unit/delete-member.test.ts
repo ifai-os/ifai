@@ -21,9 +21,9 @@ describe('deleteMemberData', () => {
       // Pictures for circle posts, posted or not; Payload deletes their files.
       { collection: 'circle-images', where: { uploader: { equals: 'member-1' } }, overrideAccess: true },
     ])
-    // Their reports of other members' reviews and posts, kept by `u:<id>` in app_review_reports and circle_post_reports.
-    expect(drizzleDelete.mock.calls.map(([table]) => getTableName(table))).toEqual(['app_review_reports', 'circle_post_reports'])
-    expect(where).toHaveBeenCalledTimes(2)
+    // Their reports of other members' reviews, posts and comments, kept by `u:<id>`.
+    expect(drizzleDelete.mock.calls.map(([table]) => getTableName(table))).toEqual(['app_review_reports', 'circle_post_reports', 'circle_comment_reports'])
+    expect(where).toHaveBeenCalledTimes(3)
   })
 
   it('stops at the first failure, so the account is kept and can be deleted again', async () => {

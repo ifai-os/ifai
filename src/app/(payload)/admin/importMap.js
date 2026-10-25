@@ -18,6 +18,7 @@ import { SubscriberOverview as SubscriberOverview_923ce44b0718105cb9207626c55c70
 import { ImportButton as ImportButton_732f6da2a57c9425424227b664ca593e } from '../../../modules/resources/admin/import-button'
 import { DescribePanel as DescribePanel_62e1fd9685e86a291070552a381d803d } from '../../../modules/resources/admin/describe-panel'
 import { PostsPanel as PostsPanel_04528d501dc004a7fa06c74166ce6fe5 } from '../../../modules/circles/admin/posts-panel'
+import { CommentsPanel as CommentsPanel_f1efdfcf23ac057dfdee4f3f02659eaf } from '../../../modules/circles/admin/comments-panel'
 import { PostReports as PostReports_b655b1d9e8a238e1dd8654ca6f144b07 } from '../../../modules/circles/admin/post-reports'
 import { SnapshotStatus as SnapshotStatus_5ae6b63efaca662215fabf9b06a0db06 } from '../../../modules/rankings/admin/snapshot-status'
 import { AnswersPanel as AnswersPanel_30251a44f6ba0b489a653addc8e3ce37 } from '../../../modules/rankings/admin/answers-panel'
@@ -53,6 +54,7 @@ export const importMap = {
   "/modules/resources/admin/import-button#ImportButton": ImportButton_732f6da2a57c9425424227b664ca593e,
   "/modules/resources/admin/describe-panel#DescribePanel": DescribePanel_62e1fd9685e86a291070552a381d803d,
   "/modules/circles/admin/posts-panel#PostsPanel": PostsPanel_04528d501dc004a7fa06c74166ce6fe5,
+  "/modules/circles/admin/comments-panel#CommentsPanel": CommentsPanel_f1efdfcf23ac057dfdee4f3f02659eaf,
   "/modules/circles/admin/post-reports#PostReports": PostReports_b655b1d9e8a238e1dd8654ca6f144b07,
   "/modules/rankings/admin/snapshot-status#SnapshotStatus": SnapshotStatus_5ae6b63efaca662215fabf9b06a0db06,
   "/modules/rankings/admin/answers-panel#AnswersPanel": AnswersPanel_30251a44f6ba0b489a653addc8e3ce37,

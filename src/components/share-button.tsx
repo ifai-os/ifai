@@ -12,10 +12,13 @@ type ShareButtonProps = {
   labels: { share: string; copied: string }
   /** Show an icon (a tick once copied) instead of the text, which stays for screen readers. */
   iconOnly?: boolean
+  iconSize?: number
+  /** What to share, when it is not this page: an address on this site such as "/en/circles/p/45". */
+  url?: string
 }
 
-/** Opens the system share sheet where there is one; elsewhere copies the page's address. */
-export function ShareButton({ title, className, labels, iconOnly = false }: ShareButtonProps) {
+/** Opens the system share sheet where there is one; elsewhere copies the page's address (or `url`). */
+export function ShareButton({ title, className, labels, iconOnly = false, iconSize = 20, url: path }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -25,7 +28,7 @@ export function ShareButton({ title, className, labels, iconOnly = false }: Shar
   }, [copied])
 
   async function share() {
-    const url = window.location.href
+    const url = path ? new URL(path, window.location.origin).href : window.location.href
     if (typeof navigator.share === 'function') {
       // Closing the sheet without sharing rejects; there is nothing to tell the reader.
       await navigator.share({ title, url }).catch(() => {})
@@ -44,7 +47,7 @@ export function ShareButton({ title, className, labels, iconOnly = false }: Shar
       <button type="button" onClick={share} className={className}>
         {iconOnly ? (
           <>
-            <Icon name={copied ? 'check' : 'share'} size={20} />
+            <Icon name={copied ? 'check' : 'share'} size={iconSize} />
             <span className="sr-only">{labels.share}</span>
           </>
         ) : copied ? (

@@ -41,8 +41,8 @@ export const Circles: CollectionConfig = {
       beforeListTable: ['/modules/circles/admin/post-reports#PostReports'],
     },
     description: {
-      en: 'Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Readers’ posts go live at once: hide one in the circle’s Posts tab.',
-      zh: '繁体中文由简体自动转换（OpenCC），不用手改；英语、日语、韩语分别填写。读者的动态直接发布，违规的在圈子的「动态」标签里隐藏。',
+      en: 'Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Readers’ posts and comments go live at once: hide one in the circle’s Posts or Comments tab.',
+      zh: '繁体中文由简体自动转换（OpenCC），不用手改；英语、日语、韩语分别填写。读者的动态和评论直接发布，违规的在圈子的「动态」「评论」标签里隐藏。',
     },
   },
   defaultSort: 'order',
@@ -98,6 +98,20 @@ export const Circles: CollectionConfig = {
               name: 'postsPanel',
               type: 'ui',
               admin: { components: { Field: '/modules/circles/admin/posts-panel#PostsPanel' } },
+            },
+          ],
+        },
+        {
+          label: { en: 'Comments', zh: '评论' },
+          description: {
+            en: 'Comments on the posts go live at once. Hiding one hides the replies under it too; reported ones are marked.',
+            zh: '动态下的评论直接发布。隐藏一条评论，它下面的回复也一起不显示；被举报的会标出来。',
+          },
+          fields: [
+            {
+              name: 'commentsPanel',
+              type: 'ui',
+              admin: { components: { Field: '/modules/circles/admin/comments-panel#CommentsPanel' } },
             },
           ],
         },

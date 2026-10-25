@@ -223,6 +223,7 @@ const loadCatalog = cached(
 type Catalog = Awaited<ReturnType<typeof loadCatalog>>
 
 type Entry = SkillCandidate & {
+  slug: string
   featured: boolean
   /** Its slug and its name in every language, for the site search's ordering. */
   names: string[]
@@ -293,6 +294,7 @@ function entries(catalog: Catalog): Entry[] {
     return [
       {
         id: skill.id,
+        slug: skill.slug,
         category: skill.category,
         // Joined with a character no search contains, so a search never matches across two fields.
         searchText: searchable(words.filter(Boolean).join('\u0001')),
@@ -387,6 +389,17 @@ export async function getHomeSkills(locale: Locale): Promise<{ featured: SkillLi
       .slice(0, homeSkillsShown)
       .map((entry) => entry.item(locale)),
   }
+}
+
+/**
+ * Listed Skills by slug, for cards elsewhere on IFAI (a circle post that links one,
+ * docs/specs/circles.md rule 17); slugs with no listed Skill are left out.
+ */
+export async function getSkillsBySlugs(slugs: string[], locale: Locale): Promise<SkillListItem[]> {
+  if (slugs.length === 0) return []
+  const wanted = new Set(slugs)
+  const { entries: all } = await getEntries()
+  return all.filter((entry) => wanted.has(entry.slug)).map((entry) => entry.item(locale))
 }
 
 /** The member's saved Skills for「我的收藏」, in the order given (newest save first); unpublished ones are left out. */
