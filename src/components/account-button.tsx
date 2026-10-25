@@ -100,6 +100,7 @@ export function AccountButton() {
           <div className="h-px bg-surface-2" />
           <nav aria-label={t('mine')} className="flex flex-col px-2 py-1.5">
             <MenuLink href="/me/saves" icon="bookmark" label={t('saves')} onClick={close} />
+            <MenuLink href="/me/following" icon="hash" label={t('following')} onClick={close} />
             <MenuLink href="/apps/submit#mine" icon="upload" label={t('submissions')} onClick={close} />
           </nav>
           <div className="h-px bg-surface-2" />

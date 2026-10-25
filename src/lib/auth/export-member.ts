@@ -10,7 +10,11 @@ import { normalizeEmail } from '@/modules/daily/email/address'
 import type { PostStatus, Reaction, ReportReason as PostReportReason } from '@/modules/circles/rules'
 import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from '@/modules/circles/schema'
 import { emailSends, type EmailSendStatus } from '@/modules/daily/email/schema'
-import { storyHref } from '@/modules/daily/public/list-params'
+import { listHref, storyHref, topicHref } from '@/modules/daily/public/list-params'
+import { isStoryTag } from '@/modules/daily/tags'
+import { readTopicNames } from '@/modules/daily/topic-names'
+import { follows } from '@/modules/follows/schema'
+import { followId, type FollowType } from '@/modules/follows/target'
 import { skillHref } from '@/modules/resources/public/list-params'
 import { saves } from '@/modules/saves/schema'
 import type { SaveType } from '@/modules/saves/target'
@@ -50,6 +54,8 @@ export type MemberExport = {
   /** Sign-in sessions, newest first; `current` is the one the export was made from. */
   sessions: { signedInAt: string; expiresAt: string; ipAddress: string | null; userAgent: string | null; current: boolean }[]
   saves: { type: SaveType; id: number; name: string | null; url: string | null; savedAt: string }[]
+  /** Industry tags and companies or products (by topic key) the member follows, newest first. */
+  follows: { type: FollowType; key: string; name: string | null; url: string | null; followedAt: string }[]
   reviews: {
     id: number
     app: ExportRef
@@ -141,6 +147,7 @@ export type MemberRecords = {
   accounts: { providerId: string; accountId: string; scope: string | null; createdAt: Date }[]
   sessions: { id: string; createdAt: Date; expiresAt: Date; ipAddress: string | null; userAgent: string | null }[]
   saves: { targetType: SaveType; targetId: number; createdAt: Date }[]
+  follows: { targetType: FollowType; targetKey: string; createdAt: Date }[]
   reviews: {
     id: number
     appId: number
@@ -244,6 +251,9 @@ const lookups = {
 type RefKind = keyof typeof lookups
 export type ExportRefs = Record<RefKind, Map<number, ExportRef>>
 
+/** Names and addresses of what the member follows, by follow id (`tag-agents`, `topic-kimi`). */
+export type FollowRefs = Map<string, { name: string | null; url: string | null }>
+
 /** A relationship read at depth 0: the id, or the document when something populated it. */
 function idOf(value: number | { id: number } | null | undefined): number | null {
   if (value == null) return null
@@ -279,6 +289,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     accounts,
     sessions,
     saveRows,
+    followRows,
     reviews,
     reviewReports,
     appReports,
@@ -311,6 +322,11 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .from(saves)
       .where(eq(saves.userId, userId))
       .orderBy(desc(saves.createdAt), desc(saves.id)),
+    db
+      .select({ targetType: follows.targetType, targetKey: follows.targetKey, createdAt: follows.createdAt })
+      .from(follows)
+      .where(eq(follows.userId, userId))
+      .orderBy(desc(follows.createdAt), desc(follows.id)),
     db
       .select({
         id: appReviews.id,
@@ -421,6 +437,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     accounts,
     sessions,
     saves: saveRows,
+    follows: followRows,
     reviews,
     translations,
     reviewReports,
@@ -464,11 +481,42 @@ export async function readExportRefs(payload: Payload, records: MemberRecords, l
   return Object.fromEntries(found) as ExportRefs
 }
 
+/**
+ * Names and addresses of the followed tags (in the page language) and companies and products (as
+ * their newest published story writes them); a company no published story is about now keeps
+ * only its key.
+ */
+export async function readFollowRefs(
+  payload: Payload,
+  records: MemberRecords,
+  { locale, site, tagName }: { locale: Locale; site: string; tagName: (tag: string) => string },
+): Promise<FollowRefs> {
+  const { drizzle: db } = payload.db as unknown as PostgresAdapter
+  const keys = records.follows.filter((row) => row.targetType === 'topic').map((row) => row.targetKey)
+  const topics = await readTopicNames(db, keys)
+  const refs: FollowRefs = new Map()
+  for (const { targetType: type, targetKey: key } of records.follows) {
+    const id = followId({ type, key })
+    if (type === 'tag') refs.set(id, isStoryTag(key) ? { name: tagName(key), url: link(site, locale, listHref({ tag: key })) } : { name: null, url: null })
+    else {
+      const topic = topics.get(key)
+      refs.set(id, topic ? { name: topic.name, url: link(site, locale, topicHref(key)) } : { name: null, url: null })
+    }
+  }
+  return refs
+}
+
 /** The file's contents: only the fields listed here, whatever else the records carry. */
 export function shapeMemberExport(
   records: MemberRecords,
   refs: ExportRefs,
-  { about, site, sessionId, now }: { about: string; site: string; sessionId: string | null; now: Date },
+  {
+    about,
+    site,
+    sessionId,
+    now,
+    followRefs = new Map(),
+  }: { about: string; site: string; sessionId: string | null; now: Date; followRefs?: FollowRefs },
 ): MemberExport {
   const ref = (kind: RefKind, id: number): ExportRef => refs[kind].get(id) ?? { id, name: null, url: null }
   const optionalRef = (kind: RefKind, id: number | null): ExportRef | null => (id === null ? null : ref(kind, id))
@@ -506,6 +554,10 @@ export function shapeMemberExport(
     saves: records.saves.map((save) => {
       const { name, url } = ref(save.targetType, save.targetId)
       return { type: save.targetType, id: save.targetId, name, url, savedAt: iso(save.createdAt) }
+    }),
+    follows: records.follows.map((row) => {
+      const { name, url } = followRefs.get(followId({ type: row.targetType, key: row.targetKey })) ?? { name: null, url: null }
+      return { type: row.targetType, key: row.targetKey, name, url, followedAt: iso(row.createdAt) }
     }),
     reviews: records.reviews.map((review) => {
       const translation = translations.get(review.id)
@@ -625,9 +677,13 @@ export async function exportMemberData(
 ): Promise<MemberExport | null> {
   const records = await readMemberRecords(payload, userId)
   if (!records) return null
-  const refs = await readExportRefs(payload, records, locale, site)
   const messages = (await import(`../../../messages/${messagesFileName(locale)}.json`)).default
+  const tags = createTranslator({ locale, messages, namespace: 'tags' })
+  const [refs, followRefs] = await Promise.all([
+    readExportRefs(payload, records, locale, site),
+    readFollowRefs(payload, records, { locale, site, tagName: (tag) => tags(tag as Parameters<typeof tags>[0]) }),
+  ])
   const t = createTranslator({ locale, messages, namespace: 'account' })
   const about = t('exportAbout', { email: records.user.email, time: utcMinute(now), url: link(site, locale, '/privacy') })
-  return shapeMemberExport(records, refs, { about, site, sessionId, now })
+  return shapeMemberExport(records, refs, { about, site, sessionId, now, followRefs })
 }
