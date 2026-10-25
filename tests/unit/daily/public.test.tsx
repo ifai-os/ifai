@@ -312,6 +312,7 @@ describe('a story’s page', () => {
     )
     expect(html).toContain(`href="/en/daily/tag/hardware"`)
     expect(html).toContain(`>${en.tags.hardware}`)
+    expect(html).toContain(`>${en.daily.tagsNote}<`)
     expect(html).toContain(`>${en.daily.entityKinds.product}<`)
     expect(html).toContain('href="/en/apps/apple-intelligence"')
     expect(html).toContain('href="/en/daily/topic/apple"')

@@ -101,6 +101,8 @@ test.describe('with the sample apps', () => {
   })
 
   test("an app's page shows its skeleton while it comes in over a slow connection", async ({ page, context }) => {
+    // As when the reader clicks before the list has prefetched the app.
+    await page.route(/\/en\/apps\/[^/?]+\?_rsc=/, (route) => (route.request().headers()['next-router-prefetch'] ? route.abort() : route.fallback()))
     await page.goto('/en/apps', { waitUntil: 'networkidle' })
     const cdp = await context.newCDPSession(page)
     await cdp.send('Network.enable')
@@ -111,6 +113,17 @@ test.describe('with the sample apps', () => {
     await expect(skeleton).toBeVisible()
     await expect(page.getByRole('heading', { level: 1, name: 'Kitecode' })).toBeVisible({ timeout: 20_000 })
     await expect(skeleton).toHaveCount(0)
+  })
+
+  test('the apps the list shows are prefetched, so they open without waiting on the server', async ({ page }) => {
+    await page.goto('/en/apps', { waitUntil: 'networkidle' })
+    const fetched: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('_rsc=') && !request.headers()['next-router-prefetch']) fetched.push(new URL(request.url()).pathname)
+    })
+    await page.getByRole('main').getByRole('table').getByRole('link', { name: appLink('Kitecode') }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Kitecode' })).toBeVisible()
+    expect(fetched).toEqual([])
   })
 
   test('column headings sort the list through the address', async ({ page }) => {

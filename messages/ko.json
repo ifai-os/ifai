@@ -1030,6 +1030,7 @@
     "similar": "비슷한 사건",
     "similarNote": "과거의 비슷한 일로, 이해를 돕습니다.",
     "tags": "업계 태그",
+    "tagsNote": "같은 분야의 뉴스 보기",
     "entities": "관련 기업과 제품",
     "entityKinds": {
       "company": "기업",

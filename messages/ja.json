@@ -1030,6 +1030,7 @@
     "similar": "似た出来事",
     "similarNote": "過去の似た出来事。理解の手がかりに。",
     "tags": "業界タグ",
+    "tagsNote": "同じ分野のニュースを見る",
     "entities": "関連する企業と製品",
     "entityKinds": {
       "company": "企業",
