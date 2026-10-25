@@ -3,11 +3,16 @@
 import { useTranslations } from 'next-intl'
 import { useEffect, useId, useRef, useState } from 'react'
 
-import { Icon } from '@/components/icon'
+import { MemberAvatar, memberName } from '@/components/account/member-avatar'
+import { Icon, type IconName } from '@/components/icon'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth/client'
 
-/** Sign-in link for visitors; initial + small menu for signed-in users. Reads the session on the client so pages stay static. */
+/**
+ * Sign-in link for visitors; for members, their avatar and the account menu of「IFAI 账号菜单与通知」
+ * (docs/specs/account.md): who they are, their saves and submissions, settings and signing out.
+ * Reads the session on the client so pages stay static.
+ */
 export function AccountButton() {
   const t = useTranslations('header')
   const { data: session } = authClient.useSession()
@@ -49,7 +54,8 @@ export function AccountButton() {
     )
   }
 
-  const initial = (user.name || user.email).trim().charAt(0).toUpperCase()
+  const name = memberName(user)
+  const close = () => setOpen(false)
 
   async function signOut() {
     setOpen(false)
@@ -69,39 +75,53 @@ export function AccountButton() {
         onClick={() => setOpen((value) => !value)}
         className="flex size-11 items-center justify-center"
       >
-        <span className="flex size-8 items-center justify-center rounded-pill bg-ink text-meta font-semibold text-white">
-          {initial}
-        </span>
+        <MemberAvatar userId={user.id} name={name} size="sm" />
       </button>
       {open && (
         <div
           id={menuId}
-          className="absolute right-0 top-12 z-30 flex w-60 flex-col gap-1 rounded-tile bg-bg p-1.5 shadow-float"
+          className="absolute top-12 right-0 z-30 flex w-75 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-card border border-hairline bg-bg shadow-float"
         >
-          <p className="truncate px-2.5 py-2 text-meta text-ink-4">{user.email}</p>
-          <Link
-            href="/me/saves"
-            onClick={() => setOpen(false)}
-            className="flex h-10 items-center rounded-thumb px-2.5 text-ui text-ink hover:bg-surface"
-          >
-            {t('saves')}
+          <Link href="/me/account" onClick={close} className="flex items-center gap-3 px-5 py-4.5 text-ink hover:bg-surface">
+            <MemberAvatar userId={user.id} name={name} size="md" />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="truncate text-body font-semibold">{name}</span>
+              <span className="truncate text-small text-ink-4">{user.email}</span>
+            </span>
+            <span className="text-ink-4">
+              <Icon name="chevronRight" size={18} />
+            </span>
           </Link>
-          <Link
-            href="/me/account"
-            onClick={() => setOpen(false)}
-            className="flex h-10 items-center rounded-thumb px-2.5 text-ui text-ink hover:bg-surface"
-          >
-            {t('accountPage')}
-          </Link>
-          <button
-            type="button"
-            onClick={signOut}
-            className="flex h-10 items-center rounded-thumb px-2.5 text-left text-ui text-ink hover:bg-surface"
-          >
-            {t('signOut')}
-          </button>
+          <div className="h-px bg-surface-2" />
+          <nav aria-label={t('mine')} className="flex flex-col px-2 py-1.5">
+            <MenuLink href="/me/saves" icon="bookmark" label={t('saves')} onClick={close} />
+            <MenuLink href="/apps/submit#mine" icon="upload" label={t('submissions')} onClick={close} />
+          </nav>
+          <div className="h-px bg-surface-2" />
+          <div className="flex px-2 pt-0.5 pb-1">
+            <Link href="/me/account" onClick={close} className={footerItem}>
+              <Icon name="settings" size={22} />
+              {t('accountPage')}
+            </Link>
+            <button type="button" onClick={signOut} className={footerItem}>
+              <Icon name="signOut" size={22} />
+              {t('signOut')}
+            </button>
+          </div>
         </div>
       )}
     </div>
+  )
+}
+
+const footerItem =
+  'flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-tile px-1 pt-3.5 pb-3 text-center text-meta text-ink-2 hover:bg-surface hover:text-ink'
+
+function MenuLink({ href, icon, label, onClick }: { href: `/${string}`; icon: IconName; label: string; onClick: () => void }) {
+  return (
+    <Link href={href} onClick={onClick} className="flex h-12 items-center gap-3.5 rounded-tile px-3 text-body text-ink hover:bg-surface">
+      <Icon name={icon} size={22} />
+      {label}
+    </Link>
   )
 }
