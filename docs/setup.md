@@ -27,7 +27,7 @@ pnpm dev                 # http://localhost:3000
 3. 在 Connect 面板选分支，复制**带连接池**的连接串（主机名里有 `-pooler`）：
    - `dev` 分支 → 本地 `.env` 的 `DATABASE_URI`
    - `main` 分支 → Vercel Production 环境的 `DATABASE_URI`
-4. 预览库不用手动建：每个 PR 由 GitHub Actions 从 `main` 分支复制出 `preview/pr-<编号>`，PR 关闭后删除（见第 3 步）。`main` 的预览用一个长期分支 `preview/main`：第一次部署时复制出来，之后每次合并只跑迁移，里面的数据一直留着。免费版每个项目最多 10 个分支，同时开着的 PR 别太多；关掉的 PR 如果分支没删掉（例如那次运行失败了），在 Neon 控制台 → Branches 里手动删。
+4. 预览库不用手动建：每个 PR 由 GitHub Actions 从 `main` 分支复制出 `preview/pr-<编号>`，PR 关闭后删除（见第 3 步）。`main` 的预览用一个长期分支 `preview/main`：第一次部署时复制出来，之后每次合并只跑迁移，里面的数据一直留着。免费版每个项目最多 10 个分支，同时开着的 PR 别太多；关掉的 PR 如果分支没删掉（例如那次运行失败了），下一次合并进 `main` 或关闭别的 PR 时，Deploy 会把所有 PR 已关闭的 `preview/pr-<编号>` 一并删掉；急着腾名额也可以在 Neon 控制台 → Branches 里手动删。
 5. pgvector 不用手动开：迁移 `model_receipts_pgvector` 会执行 `CREATE EXTENSION IF NOT EXISTS vector`（Neon 支持）。
 
 ## 3. Vercel（部署与预览环境）
@@ -35,7 +35,7 @@ pnpm dev                 # http://localhost:3000
 部署不走 Vercel 的 Git 集成：Vercel Hobby 不能导入私有组织下的仓库，所以由 GitHub Actions（`.github/workflows/deploy.yml`）用 Vercel CLI 构建并部署。
 
 - 推送到 `main`（合并 PR）→ 部署 `main` 的预览：连长期的 Neon 分支 `preview/main`（构建前先跑迁移），部署完把固定地址 `https://ifai-preview-ifai1.vercel.app` 指向这次部署，所以这个地址总是 `main` 最新的样子。打开 `PRODUCTION_DEPLOY` 之后（见第 3 条）同时部署生产环境。
-- 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。复用的分支上如果跑过这次提交里已经没有的迁移（PR 合并 `main` 后重新生成了迁移，旧名字的那个已经在库里跑过），就先把分支从它的父分支（Neon 的默认分支）重置，再迁移；这个 PR 预览里点出来的数据会清掉，`preview/main` 和生产不受影响。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
+- 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。复用的分支上如果跑过这次提交里已经没有的迁移（PR 合并 `main` 后重新生成了迁移，旧名字的那个已经在库里跑过），就先删掉这个分支、再从 Neon 的默认分支重新复制一份（和第一次建分支一样），再迁移。不用 Neon 的「从父分支重置」，因为它也占一个分支名额，名额满了会报 `branches limit exceeded`；这个 PR 预览里点出来的数据会清掉，`preview/main` 和生产不受影响。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
 - PR 关闭或合并 → 删掉它的 Neon 分支。
 - 想给预览加示例数据：Actions → **Seed preview** → Run workflow（手动运行）。PR 编号留空时往 `main` 的预览（`preview/main`）写 `main` 的示例；填了编号就往那个 PR 的预览（`preview/pr-<编号>`）写这个 PR 最新提交里的示例，只接受本仓库开着的 PR，分支还没建（预览还没部署过）就报错，不会新建。写入的是和 CI 冒烟测试一样的示例新闻、应用和 Skill，写完清掉 Vercel 的数据缓存，页面马上就能看到。可以重复运行，只覆盖示例本身，不动别的数据。示例的图片和 Skill 的 Zip 上传到预览专用的存储桶 `ifai-media-preview`（Vercel 的 Preview 环境也用它），密钥是仓库的 Secrets `R2_PREVIEW_ACCESS_KEY_ID`、`R2_PREVIEW_SECRET_ACCESS_KEY`，令牌只能读写这一个桶；Account ID 和桶名写在 workflow 里，可以用仓库变量 `R2_PREVIEW_ACCOUNT_ID`、`R2_PREVIEW_BUCKET` 覆盖。没有这两个 Secrets 时示例新闻没有配图（视频照常能播），示例 Skill 的 Zip 也下载不了。注意：填 PR 编号时跑的是那个 PR 自己的脚本，它能拿到这把预览桶的密钥，所以只接受本仓库的 PR。这个 workflow 合并进 `main` 之前，要在「Use workflow from」里选带它的分支才会出现 PR 编号这一栏。
 
