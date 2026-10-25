@@ -9,6 +9,7 @@ import { withCleanName } from '@/lib/auth/nickname'
 import { authProviders } from '@/lib/auth/providers'
 import { databaseUrl } from '@/lib/db/url'
 import { siteUrl } from '@/lib/site-url'
+import { newHandle } from '@/modules/profiles/handles'
 
 const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
 const githubEnabled = Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET)
@@ -117,6 +118,15 @@ export const auth = betterAuth({
   verification: {
     modelName: 'auth_verifications',
     fields: { expiresAt: 'expires_at', ...timestamps },
+  },
+
+  databaseHooks: {
+    user: {
+      create: {
+        // Every member has a page address from the start (docs/specs/circles.md rule 18); they choose their own in「设置」.
+        before: async (user) => ({ data: { ...user, handle: newHandle() } }),
+      },
+    },
   },
 
   hooks: {

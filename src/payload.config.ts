@@ -45,6 +45,7 @@ import { SkillSubmissions } from './modules/resources/collections/SkillSubmissio
 import { SkillTags } from './modules/resources/collections/SkillTags'
 import { SkillVersions } from './modules/resources/collections/SkillVersions'
 import { resourcesTables } from './modules/resources/db/schema'
+import { profilesTables } from './modules/profiles/schema'
 import { savesTables } from './modules/saves/schema'
 
 const filename = fileURLToPath(import.meta.url)
@@ -172,6 +173,7 @@ export default buildConfig({
           ...savesTables,
           ...followsTables,
           ...circlesTables,
+          ...profilesTables,
           ...adminLogTables,
           ...rankingsTables,
         },

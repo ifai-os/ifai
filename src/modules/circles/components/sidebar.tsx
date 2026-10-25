@@ -6,8 +6,9 @@ import { tileTones } from '@/components/cards/initial-tile'
 import { Link } from '@/i18n/navigation'
 
 import { useCircles } from './circles-provider'
+import { PeopleToFollow } from './people-to-follow'
 
-/** Beside the feed (below it on phones): the reader's circles and the circle guidelines. 「值得关注的人」comes with following members. */
+/** Beside the feed (below it on phones): the reader's circles,「值得关注的人」and the circle guidelines. */
 export function CirclesSidebar() {
   const t = useTranslations('circles')
   const { byId, joined, overview, signedIn } = useCircles()
@@ -54,6 +55,8 @@ export function CirclesSidebar() {
           <p className="py-2 text-meta text-ink-4">{signedIn ? t('noCircles') : t('noCirclesVisitor')}</p>
         )}
       </section>
+
+      <PeopleToFollow />
 
       <section aria-labelledby="circle-rules" className="flex flex-col gap-2 px-1">
         <h2 id="circle-rules" className="text-title font-medium">

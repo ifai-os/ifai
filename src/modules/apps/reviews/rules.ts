@@ -130,6 +130,18 @@ export type ReviewView = {
 /** The member's own review, which they see even when the site owner has hidden it. */
 export type OwnReview = ReviewView & { hidden: boolean }
 
+/** A review on its author's page (docs/specs/circles.md「/u/[handle]」): which app it is about instead of who wrote it. */
+export type MemberReview = {
+  id: number
+  app: number
+  rating: number
+  body: string
+  lang: string
+  createdAt: string
+  /** Only its author sees it, with a note. */
+  hidden: boolean
+}
+
 /** GET /api/reviews?app=12[&before=345] */
 export type ReviewsPage = {
   signedIn: boolean

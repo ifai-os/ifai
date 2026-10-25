@@ -11,7 +11,7 @@ import type { AuthProviders } from '@/lib/auth/providers'
 import type { CircleView, CirclesError, ReportReason, ReportTarget } from '../rules'
 
 /** What a visitor pressed before being asked to sign in: it names the dialog. */
-export type SignInReason = 'join' | 'post' | 'react' | 'comment'
+export type SignInReason = 'join' | 'post' | 'react' | 'comment' | 'follow'
 
 type CirclesSessionValue = {
   circles: CircleView[]
@@ -34,10 +34,13 @@ export function useCirclesSession(): CirclesSessionValue {
   return value
 }
 
-export async function request<T>(url: string, init?: RequestInit): Promise<{ status: number; data: T | null; error?: CirclesError }> {
+export async function request<T, E extends string = CirclesError>(
+  url: string,
+  init?: RequestInit,
+): Promise<{ status: number; data: T | null; error?: E }> {
   const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(loadTimeoutMs), ...init }).catch(() => null)
   if (!response) return { status: 0, data: null }
-  const data = (await response.json().catch(() => null)) as (T & { error?: CirclesError }) | null
+  const data = (await response.json().catch(() => null)) as (T & { error?: E }) | null
   return response.ok && data ? { status: response.status, data } : { status: response.status, data: null, error: data?.error }
 }
 
@@ -56,9 +59,9 @@ type CirclesSessionProviderProps = {
 }
 
 /**
- * What the circles page and a post's page share (docs/specs/circles.md): the circles readers can
- * see, who is reading, the sign-in dialog for a visitor who pressed something only members can
- * do, and reporting a post or a comment.
+ * What the circles page, a post's page and members' pages share (docs/specs/circles.md): the
+ * circles readers can see, who is reading, the sign-in dialog for a visitor who pressed something
+ * only members can do, and reporting a post or a comment.
  */
 export function CirclesSessionProvider({ circles, signIn, afterSignIn, children }: CirclesSessionProviderProps) {
   const t = useTranslations('circles')
@@ -85,6 +88,7 @@ export function CirclesSessionProvider({ circles, signIn, afterSignIn, children 
     post: t('signInPost'),
     react: t('signInReact'),
     comment: t('signInComment'),
+    follow: t('signInFollow'),
   }
 
   return (

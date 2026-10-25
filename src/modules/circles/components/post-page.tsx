@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from 'react'
 
 import { Link, useRouter } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
+import { FollowsProvider } from '@/modules/profiles/components/follows'
 
 import type { CircleView, CirclesChange, CommentsPage, PostView, ReactionView, ReportTarget } from '../rules'
 import { CirclesSessionProvider, request, useCirclesSession } from './circles-session'
@@ -32,7 +33,9 @@ export function PostPage({ circles, signIn, ...page }: PostPageProps) {
   const t = useTranslations('circles')
   return (
     <CirclesSessionProvider circles={circles} signIn={signIn} afterSignIn={t('afterSignInPost')}>
-      <PostPageContent {...page} />
+      <FollowsProvider>
+        <PostPageContent {...page} />
+      </FollowsProvider>
     </CirclesSessionProvider>
   )
 }

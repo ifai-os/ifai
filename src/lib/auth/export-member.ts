@@ -1,8 +1,10 @@
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { desc, eq, inArray } from '@payloadcms/db-postgres/drizzle'
+import { alias } from '@payloadcms/db-postgres/drizzle/pg-core'
 import { createTranslator } from 'next-intl'
 import type { Payload } from 'payload'
 
+import { isLaunched } from '@/config/site'
 import { localizePath, messagesFileName, type Locale } from '@/i18n/config'
 import type { ReportReason, ReviewStatus, TranslatedTexts, TranslationStatus } from '@/modules/apps/reviews/rules'
 import { appReviewReports, appReviews, appReviewTranslations } from '@/modules/apps/schema'
@@ -17,6 +19,8 @@ import { isStoryTag } from '@/modules/daily/tags'
 import { readTopicNames } from '@/modules/daily/topic-names'
 import { follows } from '@/modules/follows/schema'
 import { followId, type FollowType } from '@/modules/follows/target'
+import { profilePath } from '@/modules/profiles/rules'
+import { memberFollows, memberOldHandles, memberProfiles } from '@/modules/profiles/schema'
 import { skillHref } from '@/modules/resources/public/list-params'
 import { saves } from '@/modules/saves/schema'
 import type { SaveType } from '@/modules/saves/target'
@@ -35,6 +39,9 @@ import { authAccounts, authSessions, authUsers } from './schema'
 
 /** Something on IFAI the data points at: its name in the page language and, while readers can open it, its address. */
 export type ExportRef = { id: number; name: string | null; url: string | null }
+
+/** Another member in the follows: their page address and link, never their id or email. */
+export type ExportPerson = { handle: string | null; url: string | null; since: string }
 
 export type MemberExport = {
   /** One sentence in the page language: whose data, when, and where the privacy policy explains it. */
@@ -109,6 +116,24 @@ export type MemberExport = {
     submittedAt: string
     lastEmail: { status: string; sentAt: string | null } | null
   }[]
+  /**
+   * Their page (docs/specs/circles.md「/u/[handle]」): its address and link (while the circles are
+   * open), the line about themselves and its language, their site, when they last chose an
+   * address, and the addresses they had before, which still lead to their page.
+   */
+  profile: {
+    handle: string | null
+    url: string | null
+    bio: string
+    bioLanguage: string | null
+    website: string | null
+    handleChangedAt: string | null
+    oldHandles: { handle: string; changedAt: string }[]
+  }
+  /** The people the member follows, newest first: their address and page. */
+  following: ExportPerson[]
+  /** The people who follow the member, newest first; anyone can see these on their page. */
+  followers: ExportPerson[]
   /** The circles the member joined, newest first. */
   circles: { circle: ExportRef; joinedAt: string }[]
   /** Their posts in circles, newest first, hidden ones too (a hidden post's pictures no longer open). */
@@ -166,9 +191,15 @@ export type MemberRecords = {
     name: string
     image: string | null
     uiLocale: string | null
+    handle: string | null
     createdAt: Date
     updatedAt: Date
   }
+  /** Saved from the settings form; null until the member first saves it. */
+  profile: { bio: string; bioLang: string | null; website: string | null; handleChangedAt: Date | null } | null
+  oldHandles: { handle: string; createdAt: Date }[]
+  following: { handle: string | null; createdAt: Date }[]
+  followers: { handle: string | null; createdAt: Date }[]
   accounts: { providerId: string; accountId: string; scope: string | null; createdAt: Date }[]
   sessions: { id: string; createdAt: Date; expiresAt: Date; ipAddress: string | null; userAgent: string | null }[]
   saves: { targetType: SaveType; targetId: number; createdAt: Date }[]
@@ -320,6 +351,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       name: authUsers.name,
       image: authUsers.image,
       uiLocale: authUsers.uiLocale,
+      handle: authUsers.handle,
       createdAt: authUsers.createdAt,
       updatedAt: authUsers.updatedAt,
     })
@@ -327,6 +359,9 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     .where(eq(authUsers.id, userId))
     .limit(1)
   if (!user) return null
+  // The other member in each follow: who they follow, who follows them.
+  const followee = alias(authUsers, 'followee')
+  const follower = alias(authUsers, 'follower')
 
   // Reports keep the reporter as `u:<member id>` (src/app/api/app-reports/new, src/app/api/reviews/report).
   const reporter = `u:${userId}`
@@ -347,6 +382,10 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     postReports,
     comments,
     commentReports,
+    profiles,
+    oldHandles,
+    following,
+    followers,
     subscribers,
   ] = await Promise.all([
     db
@@ -476,6 +515,33 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .innerJoin(circlePosts, eq(circlePosts.id, circleComments.postId))
       .where(eq(circleCommentReports.reporter, reporter))
       .orderBy(desc(circleCommentReports.createdAt)),
+    db
+      .select({
+        bio: memberProfiles.bio,
+        bioLang: memberProfiles.bioLang,
+        website: memberProfiles.website,
+        handleChangedAt: memberProfiles.handleChangedAt,
+      })
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, userId))
+      .limit(1),
+    db
+      .select({ handle: memberOldHandles.handle, createdAt: memberOldHandles.createdAt })
+      .from(memberOldHandles)
+      .where(eq(memberOldHandles.userId, userId))
+      .orderBy(desc(memberOldHandles.createdAt)),
+    db
+      .select({ handle: followee.handle, createdAt: memberFollows.createdAt })
+      .from(memberFollows)
+      .innerJoin(followee, eq(followee.id, memberFollows.followeeId))
+      .where(eq(memberFollows.followerId, userId))
+      .orderBy(desc(memberFollows.id)),
+    db
+      .select({ handle: follower.handle, createdAt: memberFollows.createdAt })
+      .from(memberFollows)
+      .innerJoin(follower, eq(follower.id, memberFollows.followerId))
+      .where(eq(memberFollows.followeeId, userId))
+      .orderBy(desc(memberFollows.id)),
     // The subscription is by address, not by account: only an address the member has shown is theirs.
     user.emailVerified
       ? payload.find({ collection: 'subscribers', where: { email: { equals: normalizeEmail(user.email) } }, depth: 0, limit: 1, overrideAccess: true })
@@ -515,6 +581,10 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
 
   return {
     user,
+    profile: profiles[0] ?? null,
+    oldHandles,
+    following,
+    followers,
     accounts,
     sessions,
     saves: saveRows,
@@ -614,9 +684,23 @@ export function shapeMemberExport(
     sessionId,
     now,
     followRefs = new Map(),
-  }: { about: string; site: string; sessionId: string | null; now: Date; followRefs?: FollowRefs },
+    profileUrl,
+  }: {
+    about: string
+    site: string
+    sessionId: string | null
+    now: Date
+    followRefs?: FollowRefs
+    /** A member's page in the page language; null while the circles, which the pages come with, are closed. */
+    profileUrl: (handle: string) => string | null
+  },
 ): MemberExport {
   const ref = (kind: RefKind, id: number): ExportRef => refs[kind].get(id) ?? { id, name: null, url: null }
+  const person = (row: { handle: string | null; createdAt: Date }): ExportPerson => ({
+    handle: row.handle,
+    url: row.handle ? profileUrl(row.handle) : null,
+    since: iso(row.createdAt),
+  })
   const optionalRef = (kind: RefKind, id: number | null): ExportRef | null => (id === null ? null : ref(kind, id))
   const translations = new Map(records.translations.map((row) => [row.reviewId, row]))
   const lastEmail = (status: string | null | undefined, sentAt: string | null | undefined) => (status ? { status, sentAt: sentAt ?? null } : null)
@@ -717,6 +801,17 @@ export function shapeMemberExport(
       submittedAt: submission.createdAt,
       lastEmail: lastEmail(submission.notifiedStatus, submission.notifiedAt),
     })),
+    profile: {
+      handle: user.handle,
+      url: user.handle ? profileUrl(user.handle) : null,
+      bio: records.profile?.bio ?? '',
+      bioLanguage: records.profile?.bio ? records.profile.bioLang : null,
+      website: records.profile?.website ?? null,
+      handleChangedAt: isoOrNull(records.profile?.handleChangedAt),
+      oldHandles: records.oldHandles.map((old) => ({ handle: old.handle, changedAt: iso(old.createdAt) })),
+    },
+    following: records.following.map(person),
+    followers: records.followers.map(person),
     circles: records.circleMembers.map((membership) => ({ circle: ref('circle', membership.circleId), joinedAt: iso(membership.createdAt) })),
     circlePosts: records.circlePosts.map((post) => ({
       id: post.id,
@@ -803,5 +898,6 @@ export async function exportMemberData(
   ])
   const t = createTranslator({ locale, messages, namespace: 'account' })
   const about = t('exportAbout', { email: records.user.email, time: utcMinute(now), url: link(site, locale, '/privacy') })
-  return shapeMemberExport(records, refs, { about, site, sessionId, now, followRefs })
+  const profileUrl = (handle: string) => (isLaunched('circles') ? link(site, locale, profilePath(handle)) : null)
+  return shapeMemberExport(records, refs, { about, site, sessionId, now, followRefs, profileUrl })
 }

@@ -1,5 +1,5 @@
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
-import { and, count, countDistinct, desc, eq, gte, inArray, isNull, lt, ne, or, sql, type SQL } from '@payloadcms/db-postgres/drizzle'
+import { and, count, countDistinct, desc, eq, gte, inArray, isNull, lt, max, ne, or, sql, type SQL } from '@payloadcms/db-postgres/drizzle'
 import { alias } from '@payloadcms/db-postgres/drizzle/pg-core'
 import type { Payload } from 'payload'
 
@@ -7,12 +7,15 @@ import { toneFor } from '@/components/cards/initial-tile'
 import { authUsers } from '@/lib/auth/schema'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
 import { cleanName } from '@/modules/apps/reviews/rules'
+import { followedAmong } from '@/modules/profiles/data'
+import { memberFollows } from '@/modules/profiles/schema'
 
 import {
   circleRules,
   hotCircleIds,
   sortReactions,
   type CirclesOverview,
+  type AuthorView,
   type FeedTab,
   type PersonView,
   type PostStatus,
@@ -35,6 +38,8 @@ import { circleComments, circleMembers, circlePostReactions, circlePostReports, 
 const drizzleOf = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
 
 const person = (userId: string, name: string): PersonView => ({ name: cleanName(name), tone: toneFor(userId) })
+
+const author = (userId: string, name: string, handle: string | null): AuthorView => ({ ...person(userId, name), handle })
 
 /** Everyone's shown posts, and the reader's own hidden ones, in the circles readers can see. */
 function readable(circleIds: number[], userId: string | null): SQL | undefined {
@@ -169,6 +174,7 @@ const postColumns = {
   videoId: circlePosts.videoId,
   createdAt: circlePosts.createdAt,
   name: authUsers.name,
+  handle: authUsers.handle,
 }
 
 type PostRow = {
@@ -181,12 +187,13 @@ type PostRow = {
   videoId: number | null
   createdAt: Date
   name: string
+  handle: string | null
 }
 
 async function toViews(payload: Payload, rows: PostRow[], userId: string | null): Promise<PostView[]> {
   // A hidden post's pictures are no longer public, and its video and comments go with them.
   const shown = rows.filter((row) => row.status === 'shown')
-  const [reacted, { byPost }, videos, comments] = await Promise.all([
+  const [reacted, { byPost }, videos, comments, followed] = await Promise.all([
     reactionsFor(
       payload,
       rows.map((row) => row.id),
@@ -198,13 +205,19 @@ async function toViews(payload: Payload, rows: PostRow[], userId: string | null)
       payload,
       shown.map((row) => row.id),
     ),
+    followedAmong(
+      payload,
+      userId,
+      rows.map((row) => row.userId),
+    ),
   ])
   return rows.map((row) => ({
     id: row.id,
     circle: row.circleId,
     body: row.body,
     lang: row.lang,
-    author: person(row.userId, row.name),
+    author: author(row.userId, row.name, row.handle),
+    following: followed.has(row.userId),
     mine: row.userId === userId,
     hidden: row.status === 'hidden',
     createdAt: row.createdAt.toISOString(),
@@ -222,29 +235,42 @@ export type FeedQuery = {
   circleIds: number[]
   /** Only this circle (one of `circleIds`). */
   circle: number | null
-  /** From the last page: an id for 最新 and 我的圈子, how many were read for 推荐. */
+  /** From the last page: an id for 最新, 关注, 我的圈子 and a member's posts, how many were read for 推荐. */
   cursor: number | null
   userId: string | null
+  /** Only this member's posts, newest first, whatever the tab: their page's「动态」. */
+  authorId?: string | null
 }
 
 /**
- * One page of a feed: 最新 newest first; 我的圈子 the same, in the circles the member joined
- * (nothing for a visitor); 推荐 the last `hotDays` days by ./rules.ts hotScore, which the SQL
- * here mirrors (commenters are people with a shown comment, the author aside). 推荐 pages by
- * position, so a post that moves up meanwhile can come twice; the page drops repeats.
+ * One page of a feed: 最新 newest first; 关注 the same, by the people the member follows, and
+ * 我的圈子 in the circles they joined (both nothing for a visitor); 推荐 the last `hotDays` days
+ * by ./rules.ts hotScore, which the SQL here mirrors (commenters are people with a shown comment,
+ * the author aside). 推荐 pages by position, so a post that moves up meanwhile can come twice;
+ * the page drops repeats. With `authorId`, one member's posts newest first.
  */
 export async function feedPage(payload: Payload, query: FeedQuery, now = new Date()): Promise<{ posts: PostView[]; next: number | null }> {
-  const { tab, circle, cursor, userId } = query
+  const { circle, cursor, userId, authorId = null } = query
+  const tab = authorId ? 'latest' : query.tab
   const circleIds = circle === null ? query.circleIds : query.circleIds.filter((id) => id === circle)
-  if (circleIds.length === 0 || (tab === 'mine' && !userId)) return { posts: [], next: null }
+  if (circleIds.length === 0 || ((tab === 'mine' || tab === 'following') && !userId)) return { posts: [], next: null }
   const db = drizzleOf(payload)
   const size = circleRules.pageSize
   const where = [readable(circleIds, userId)]
+  if (authorId) where.push(eq(circlePosts.userId, authorId))
   if (tab === 'mine' && userId) {
     where.push(
       inArray(
         circlePosts.circleId,
         db.select({ id: circleMembers.circleId }).from(circleMembers).where(eq(circleMembers.userId, userId)),
+      ),
+    )
+  }
+  if (tab === 'following' && userId) {
+    where.push(
+      inArray(
+        circlePosts.userId,
+        db.select({ id: memberFollows.followeeId }).from(memberFollows).where(eq(memberFollows.followerId, userId)),
       ),
     )
   }
@@ -281,6 +307,68 @@ export async function feedPage(payload: Payload, query: FeedQuery, now = new Dat
     .limit(size + 1)
   const page = rows.slice(0, size)
   return { posts: await toViews(payload, page, userId), next: rows.length > size ? page[page.length - 1].id : null }
+}
+
+export type AuthorStats = {
+  /** Their shown posts in the circles readers can see. */
+  posts: number
+  /** Their hidden posts there, which only they see on their page. */
+  hidden: number
+  /** What others gave those shown posts: reactions, and comments and replies counted as on the posts (commentCounts). */
+  reactions: number
+  comments: number
+  /** The circles they posted in (rule 22), most posts first, the latest post breaking ties. */
+  circles: { id: number; posts: number }[]
+}
+
+/**
+ * The numbers on a member's page (docs/specs/circles.md「/u/[handle]」): their posts everyone can
+ * see, what others gave them, and the circles they posted in.
+ */
+export async function authorStats(payload: Payload, userId: string, circleIds: number[]): Promise<AuthorStats> {
+  if (circleIds.length === 0) return { posts: 0, hidden: 0, reactions: 0, comments: 0, circles: [] }
+  const db = drizzleOf(payload)
+  const theirs = and(eq(circlePosts.userId, userId), inArray(circlePosts.circleId, circleIds))
+  const shown = and(theirs, eq(circlePosts.status, 'shown'))
+  const [byCircle, [hidden], [reactions], [comments]] = await Promise.all([
+    db
+      .select({ circleId: circlePosts.circleId, posts: count(), last: max(circlePosts.id) })
+      .from(circlePosts)
+      .where(shown)
+      .groupBy(circlePosts.circleId),
+    db
+      .select({ count: count() })
+      .from(circlePosts)
+      .where(and(theirs, eq(circlePosts.status, 'hidden'))),
+    db
+      .select({ count: count() })
+      .from(circlePostReactions)
+      .innerJoin(circlePosts, eq(circlePosts.id, circlePostReactions.postId))
+      .where(and(shown, ne(circlePostReactions.userId, userId))),
+    db
+      .select({ count: count() })
+      .from(circleComments)
+      .innerJoin(circlePosts, eq(circlePosts.id, circleComments.postId))
+      .leftJoin(parentComment, eq(parentComment.id, circleComments.parentId))
+      .where(
+        and(
+          shown,
+          eq(circleComments.status, 'shown'),
+          or(isNull(circleComments.parentId), eq(parentComment.status, 'shown')),
+          ne(circleComments.userId, userId),
+        ),
+      ),
+  ])
+  const circles = byCircle
+    .map((row) => ({ id: row.circleId, posts: Number(row.posts), last: Number(row.last ?? 0) }))
+    .sort((a, b) => b.posts - a.posts || b.last - a.last)
+  return {
+    posts: circles.reduce((sum, circle) => sum + circle.posts, 0),
+    hidden: Number(hidden?.count ?? 0),
+    reactions: Number(reactions?.count ?? 0),
+    comments: Number(comments?.count ?? 0),
+    circles: circles.map(({ id, posts }) => ({ id, posts })),
+  }
 }
 
 /** One post as its author or a reader gets it; null when they cannot see it. */

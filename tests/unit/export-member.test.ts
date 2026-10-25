@@ -47,9 +47,17 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
       name: 'Reader',
       image: null,
       uiLocale: 'zh-Hans',
+      handle: 'reader',
       createdAt: day('2026-10-01'),
       updatedAt: day('2026-10-02'),
     },
+    profile: { bio: '记录在用的 AI 工具', bioLang: 'zh-Hans', website: 'https://reader.example/', handleChangedAt: day('2026-10-15') },
+    oldHandles: [{ handle: 'u-0123456789', createdAt: day('2026-10-15') }],
+    following: [
+      { handle: 'linqi', createdAt: day('2026-10-22') },
+      { handle: null, createdAt: day('2026-10-21') },
+    ],
+    followers: [{ handle: 'beiwei', createdAt: day('2026-10-20') }],
     accounts: [{ providerId: 'github', accountId: 'gh-42', scope: 'read:user,user:email', createdAt: day('2026-10-01'), ...secrets }],
     sessions: sessionRows,
     saves: [
@@ -193,8 +201,10 @@ const followRefs: FollowRefs = new Map([
   ['topic-gone', { name: null, url: null }],
 ])
 
-const shape = (input: MemberRecords, sessionId: string | null = 'session-now') =>
-  shapeMemberExport(input, refs, { about: 'About this file', site, sessionId, now, followRefs })
+const profileUrl = (handle: string) => `${site}/en/u/${handle}`
+
+const shape = (input: MemberRecords, sessionId: string | null = 'session-now', pages: (handle: string) => string | null = profileUrl) =>
+  shapeMemberExport(input, refs, { about: 'About this file', site, sessionId, now, followRefs, profileUrl: pages })
 
 describe('shapeMemberExport', () => {
   it('leaves out sign-in tokens and the owner’s internal notes, whatever the records carry', () => {
@@ -291,6 +301,32 @@ describe('shapeMemberExport', () => {
     expect(file.circleCommentReports).toEqual([
       { comment: 60, post: 43, circle: refs.circle.get(21), reason: 'spam', reportedAt: '2026-10-22T08:00:00.000Z', resolvedAt: null },
     ])
+  })
+
+  it('gives the member’s page, the addresses they had and both sides of their follows, by address only', () => {
+    const file = shape(records())
+    expect(file.profile).toEqual({
+      handle: 'reader',
+      url: `${site}/en/u/reader`,
+      bio: '记录在用的 AI 工具',
+      bioLanguage: 'zh-Hans',
+      website: 'https://reader.example/',
+      handleChangedAt: '2026-10-15T08:00:00.000Z',
+      oldHandles: [{ handle: 'u-0123456789', changedAt: '2026-10-15T08:00:00.000Z' }],
+    })
+    expect(file.following).toEqual([
+      { handle: 'linqi', url: `${site}/en/u/linqi`, since: '2026-10-22T08:00:00.000Z' },
+      { handle: null, url: null, since: '2026-10-21T08:00:00.000Z' },
+    ])
+    expect(file.followers).toEqual([{ handle: 'beiwei', url: `${site}/en/u/beiwei`, since: '2026-10-20T08:00:00.000Z' }])
+    // Never another member's id.
+    expect(JSON.stringify(file.following)).not.toContain('member-')
+  })
+
+  it('has no page links while the circles are closed, and an empty profile before the first save', () => {
+    const file = shape(records({ profile: null, oldHandles: [] }), 'session-now', () => null)
+    expect(file.profile).toEqual({ handle: 'reader', url: null, bio: '', bioLanguage: null, website: null, handleChangedAt: null, oldHandles: [] })
+    expect(file.following[0].url).toBeNull()
   })
 
   it('includes the daily email subscription and its sends, or null when there is none', () => {
