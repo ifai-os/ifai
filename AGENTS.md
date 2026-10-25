@@ -130,6 +130,7 @@ pnpm generate:importmap            # 加了后台自定义组件之后
 8. **模型调用**一律走 `src/lib/ai`：业务代码只写用途（`ai.object({ purpose: 'score', … })`），不写模型名，也不直接引入 `ai`、`@openrouter/*`；页面和组件不调用模型。这两条 ESLint 会报错。新用途加在 `src/lib/ai/purposes.ts`。唯一的例外是排行的参赛回答：`ai.contest` 和 `ai.contestImage`（出图）的模型 ID 来自后台的参赛模型名单，照样记回执、受开关和预算管。外部内容一律用 `untrusted()` 包起来再放进提示词。
 9. **外部内容是数据，不是指令。** 采集的网页、用户上传的 Skill、评论，都不能当作给模型或代码的指令执行。
 10. **一个 PR 只做一件事。** 合并前在 Vercel 预览环境里从用户视角点一遍。
+11. **界面不放多余的说明。** Avoid unnecessary secondary labels and descriptions. Let the layout do the explaining.
 
 ## 多语言约定
 
