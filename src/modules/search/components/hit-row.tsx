@@ -38,7 +38,7 @@ export function HitRow({ hit }: { hit: SearchHit }) {
           <InitialTile label={initialOf(hit.title.value)} tone={toneFor(hit.slug)} size="md" />
         )}
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span lang={hit.title.lang} className="text-title font-medium text-ink group-hover:text-accent">
+          <span lang={hit.title.lang} className="text-title font-medium text-ink group-hover:text-accent-ink">
             {hit.title.value}
           </span>
           {hit.summary && (

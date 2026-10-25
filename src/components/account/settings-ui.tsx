@@ -51,5 +51,5 @@ export const rowButton = {
   secondary:
     'inline-flex h-8.5 items-center justify-center rounded-btn border border-line bg-bg px-3.5 text-meta font-medium whitespace-nowrap text-ink transition-colors hover:border-ink-4 disabled:cursor-not-allowed disabled:opacity-50',
   primary:
-    'inline-flex h-8.5 items-center justify-center rounded-btn bg-ink px-3.5 text-meta font-medium whitespace-nowrap text-white transition-colors hover:bg-ink-2 disabled:opacity-60',
+    'inline-flex h-8.5 items-center justify-center rounded-btn bg-ink px-3.5 text-meta font-medium whitespace-nowrap text-bg transition-colors hover:bg-ink-2 disabled:opacity-60',
 } as const

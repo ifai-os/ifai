@@ -25,7 +25,7 @@ export function Newcomers({ apps, now }: { apps: HeatedApp[]; now: Date }) {
           <li key={app.id}>
             <Link href={`/apps/${app.slug}`} className="group flex items-center gap-2.5 py-1.5">
               <AppTile name={app.name} slug={app.slug} logo={app.logo} size="sm" />
-              <span className="min-w-0 flex-1 truncate text-ui group-hover:text-accent">{app.name}</span>
+              <span className="min-w-0 flex-1 truncate text-ui group-hover:text-accent-ink">{app.name}</span>
               <span className="flex-none text-small text-ink-4">
                 {app.listedAt && t('addedDays', { days: daysSince(app.listedAt, now) })}
                 {app.heat?.change7d ? (

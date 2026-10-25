@@ -40,11 +40,11 @@ export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId:
               {story.title.value}
             </span>
           ) : (
-            <Link href={storyHref(story.slug)} lang={story.title.lang} className="text-ink-2 hover:text-accent">
+            <Link href={storyHref(story.slug)} lang={story.title.lang} className="text-ink-2 hover:text-accent-ink">
               {story.title.value}
             </Link>
           )}
-          {current && <span className="rounded-tag bg-ink px-1.5 text-small font-medium text-white">{t('thisStory')}</span>}
+          {current && <span className="rounded-tag bg-ink px-1.5 text-small font-medium text-bg">{t('thisStory')}</span>}
         </span>
       </li>
     )
@@ -54,9 +54,9 @@ export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId:
   return (
     <section aria-labelledby="topic" className="flex flex-col gap-4 border-t border-line pt-8">
       <h2 id="topic" className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-h2">
-        <Icon name="clock" size={20} className="text-accent" />
+        <Icon name="clock" size={20} className="text-accent-ink" />
         {t('topic')}
-        <Link href={topicHref(topic.key)} className="text-body font-normal text-ink-4 hover:text-accent">
+        <Link href={topicHref(topic.key)} className="text-body font-normal text-ink-4 hover:text-accent-ink">
           {topic.name}
         </Link>
       </h2>
@@ -87,7 +87,7 @@ export function SimilarStories({ stories }: { stories: StoryItem[] }) {
             <Link href={storyHref(story.slug)} className="group grid grid-cols-[112px_minmax(0,1fr)] gap-3 py-3">
               <LocalTime iso={story.publishedAt} style="date" className="text-meta text-ink-4 tabular-nums" />
               <span className="flex flex-col gap-1">
-                <span lang={story.title.lang} className="text-body font-medium group-hover:text-accent">
+                <span lang={story.title.lang} className="text-body font-medium group-hover:text-accent-ink">
                   {story.title.value}
                 </span>
                 <span className="text-small text-ink-4">{names(story.category)}</span>
@@ -116,7 +116,7 @@ export function TagList({ tags }: { tags: StoryTag[] }) {
       <ul className="flex flex-col rounded-tile border border-line px-4 py-1">
         {tags.map((tag, index) => (
           <li key={tag} className={index ? 'border-t border-surface-2' : undefined}>
-            <Link href={listHref({ tag })} className="flex min-h-11 items-center justify-between gap-2 text-ui hover:text-accent">
+            <Link href={listHref({ tag })} className="flex min-h-11 items-center justify-between gap-2 text-ui hover:text-accent-ink">
               {names(tag)}
               <span aria-hidden="true" className="text-ink-4">
                 ›
@@ -153,7 +153,7 @@ export function EntityList({ entities }: { entities: StoryEntityItem[] }) {
                 {initialOf(entity.name)}
               </span>
               <span className="flex min-w-0 flex-col">
-                <span className="truncate text-ui font-medium group-hover:text-accent">{entity.name}</span>
+                <span className="truncate text-ui font-medium group-hover:text-accent-ink">{entity.name}</span>
                 <span className="text-small text-ink-4">{t(`entityKinds.${entity.kind}`)}</span>
               </span>
             </Link>

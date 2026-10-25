@@ -41,7 +41,7 @@ export function StoryCard({ story, serverToday, category, tryIt = false }: Story
           <span>{card('moreSources', { count: story.moreReports })}</span>
         </p>
         <h2 lang={story.title.lang} className="text-h3">
-          <Link href={storyHref(story.slug)} className="hover:text-accent">
+          <Link href={storyHref(story.slug)} className="hover:text-accent-ink">
             {story.title.value}
           </Link>
         </h2>
@@ -52,7 +52,7 @@ export function StoryCard({ story, serverToday, category, tryIt = false }: Story
         )}
         {tryIt && story.tryIt && (
           <p lang={story.tryIt.lang} className="rounded-tile bg-surface px-3.5 py-2.5 text-ui text-ink-2">
-            <span className="font-medium text-accent">{t('tryIt')}</span> {story.tryIt.value}
+            <span className="font-medium text-accent-ink">{t('tryIt')}</span> {story.tryIt.value}
           </p>
         )}
       </article>

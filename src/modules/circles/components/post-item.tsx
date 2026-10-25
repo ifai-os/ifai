@@ -127,7 +127,7 @@ function ReactionBar({ post }: { post: PostView }) {
             id={pickerId}
             role="group"
             aria-label={t('reactionsGroup')}
-            className="absolute bottom-10 left-0 z-10 flex items-center gap-0.5 rounded-card border border-hairline bg-bg px-2 py-1.5 whitespace-nowrap shadow-float"
+            className="absolute bottom-10 left-0 z-10 flex items-center gap-0.5 rounded-card border border-hairline bg-overlay px-2 py-1.5 whitespace-nowrap shadow-float"
           >
             {reactions.map((reaction) => (
               <button
@@ -234,7 +234,7 @@ function MoreMenu({ post, name, reported, onReport }: { post: PostView; name: st
         <Icon name="more" size={18} />
       </button>
       {open && (
-        <div id={menuId} className="absolute top-10 right-0 z-10 flex w-max min-w-36 flex-col rounded-tile border border-hairline bg-bg p-1 shadow-float">
+        <div id={menuId} className="absolute top-10 right-0 z-10 flex w-max min-w-36 flex-col rounded-tile border border-hairline bg-overlay p-1 shadow-float">
           {post.mine ? (
             confirming ? (
               <div role="group" aria-label={t('deleteConfirm')} className="flex flex-col gap-1 p-2">

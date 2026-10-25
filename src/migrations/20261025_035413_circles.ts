@@ -164,7 +164,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "circle_post_reports" CASCADE;
   DROP TABLE "circles" CASCADE;
   DROP TABLE "circles_locales" CASCADE;
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_circles_fk";
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_circles_fk";
   
   DROP INDEX "payload_locked_documents_rels_circles_id_idx";
   ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "circles_id";

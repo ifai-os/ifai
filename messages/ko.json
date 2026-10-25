@@ -25,7 +25,8 @@
     "submissions": "내 제출",
     "accountPage": "계정 설정",
     "signOut": "로그아웃",
-    "search": "검색"
+    "search": "검색",
+    "appearance": "화면 모드"
   },
   "home": {
     "todayAI": "오늘의 AI",
@@ -722,7 +723,7 @@
       "profile": "프로필",
       "sign-in": "계정 및 로그인",
       "notifications": "알림",
-      "language": "언어",
+      "language": "화면 모드와 언어",
       "data": "데이터 및 계정"
     },
     "avatarNote": "프로필 이미지는 닉네임의 첫 글자예요.",
@@ -795,7 +796,9 @@
     "signInAgain": "로그인한 지 하루가 넘었어요. 본인 확인을 위해 로그아웃한 뒤 다시 로그인하고 삭제해 주세요.",
     "signInAgainButton": "로그아웃하고 다시 로그인",
     "deleted": "계정이 삭제되었어요. IFAI를 이용해 주셔서 감사합니다.",
-    "home": "홈으로 돌아가기"
+    "home": "홈으로 돌아가기",
+    "appearanceLabel": "화면 모드",
+    "appearanceNote": "시스템 설정을 따르면 컴퓨터나 휴대폰이 다크 모드일 때 IFAI도 어둡게 바뀝니다."
   },
   "reviews": {
     "title": "리뷰",
@@ -1176,6 +1179,12 @@
     "data": "데이터 분석",
     "productivity": "업무 효율",
     "life": "생활"
+  },
+  "theme": {
+    "label": "화면 모드",
+    "system": "시스템 설정",
+    "light": "라이트",
+    "dark": "다크"
   },
   "circles": {
     "title": "서클",

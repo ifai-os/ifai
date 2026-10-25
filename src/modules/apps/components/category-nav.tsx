@@ -36,7 +36,7 @@ export function CategoryNav({ categories, total, current, q, board }: CategoryNa
                 aria-current={active ? 'page' : undefined}
                 className={`flex h-8.5 items-center gap-2.5 rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors md:h-10 md:rounded-none md:border-0 md:px-0 md:text-body md:font-medium ${
                   active
-                    ? 'border-ink bg-ink text-white md:bg-transparent md:text-ink'
+                    ? 'border-ink bg-ink text-bg md:bg-transparent md:text-ink'
                     : 'border-line bg-bg text-ink-2 hover:border-ink-4 md:text-ink-4 md:hover:text-ink'
                 }`}
               >

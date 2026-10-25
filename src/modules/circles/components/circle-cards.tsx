@@ -85,7 +85,7 @@ function CircleCard({ circle, stats, selected }: { circle: CircleView; stats: Ci
           aria-pressed={isJoined}
           aria-label={t('joinName', { name: circle.name })}
           className={`h-7.5 flex-none rounded-pill px-3 text-small font-medium disabled:opacity-60 ${
-            isJoined ? 'bg-white/70 text-current' : 'bg-ink text-white hover:bg-ink-2'
+            isJoined ? 'bg-bg/70 text-current' : 'bg-ink text-bg hover:bg-ink-2'
           }`}
         >
           {isJoined ? t('joined') : t('join')}
