@@ -84,6 +84,7 @@ export interface Config {
     'skill-submissions': SkillSubmission;
     circles: Circle;
     articles: Article;
+    'article-images': ArticleImage;
     arenas: Arena;
     'arena-models': ArenaModel;
     'arena-prompts': ArenaPrompt;
@@ -117,6 +118,7 @@ export interface Config {
     'skill-submissions': SkillSubmissionsSelect<false> | SkillSubmissionsSelect<true>;
     circles: CirclesSelect<false> | CirclesSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    'article-images': ArticleImagesSelect<false> | ArticleImagesSelect<true>;
     arenas: ArenasSelect<false> | ArenasSelect<true>;
     'arena-models': ArenaModelsSelect<false> | ArenaModelsSelect<true>;
     'arena-prompts': ArenaPromptsSelect<false> | ArenaPromptsSelect<true>;
@@ -1064,6 +1066,7 @@ export interface Article {
    * About 2 : 1, at least 1360 px wide. Optional.
    */
   cover?: (number | null) | Media;
+  coverImage?: (number | null) | ArticleImage;
   /**
    * Second-level headings make the table of contents (two or more). Links open in a new tab.
    */
@@ -1117,8 +1120,51 @@ export interface Article {
    */
   readingMinutes?: number | null;
   featuredAt?: string | null;
+  author?: string | null;
+  markdown?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "article-images".
+ */
+export interface ArticleImage {
+  id: number;
+  uploader: string;
+  article?: number | null;
+  public?: boolean | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumb?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. The rankings are recomputed every Monday at 06:00 Shanghai time.
@@ -1390,6 +1436,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'articles';
         value: number | Article;
+      } | null)
+    | ({
+        relationTo: 'article-images';
+        value: number | ArticleImage;
       } | null)
     | ({
         relationTo: 'arenas';
@@ -1938,6 +1988,7 @@ export interface ArticlesSelect<T extends boolean = true> {
   title?: T;
   summary?: T;
   cover?: T;
+  coverImage?: T;
   body?: T;
   tags?:
     | T
@@ -1953,8 +2004,56 @@ export interface ArticlesSelect<T extends boolean = true> {
   publishedAt?: T;
   readingMinutes?: T;
   featuredAt?: T;
+  author?: T;
+  markdown?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "article-images_select".
+ */
+export interface ArticleImagesSelect<T extends boolean = true> {
+  uploader?: T;
+  article?: T;
+  public?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumb?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

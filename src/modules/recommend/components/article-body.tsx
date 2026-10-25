@@ -1,6 +1,6 @@
 import { RichText, type JSXConverters, type JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
 
-import type { Media } from '@/payload-types'
+import type { ArticleImage, Media } from '@/payload-types'
 
 import { headingAnchor, type RichNode, type RichText as Body } from '../rules'
 
@@ -20,7 +20,7 @@ export function safeHref(url: unknown): string | null {
 }
 
 /** Anchors of the second-level headings, by their place among the body's top-level blocks. */
-function converters(anchors: Map<number, string>): JSXConvertersFunction {
+function converters(anchors: Map<number, string>, ugc: boolean): JSXConvertersFunction {
   return ({ defaultConverters }) =>
     ({
       ...defaultConverters,
@@ -48,23 +48,23 @@ function converters(anchors: Map<number, string>): JSXConvertersFunction {
         const href = safeHref((args.node.fields as { url?: unknown } | undefined)?.url)
         if (!href) return <>{children(args)}</>
         return (
-          <a href={href} target="_blank" rel="noopener" className="text-link hover:underline">
+          <a href={href} target="_blank" rel={ugc ? 'nofollow ugc noopener' : 'noopener'} className="text-link hover:underline">
             {children(args)}
           </a>
         )
       },
       upload: ({ node }: Rendered) => {
-        const media = node.value as Media | number | undefined
+        const media = node.value as Media | ArticleImage | number | undefined
         if (!media || typeof media !== 'object' || !media.url) return null
         const caption = typeof node.fields?.caption === 'string' ? node.fields.caption.trim() : ''
         const image = media.sizes?.card?.url && (media.width ?? 0) > 1400 ? media.sizes.card : media
         return (
           <figure className="mb-8 flex flex-col items-center">
-            {/* An editor's own upload, served as it is: R2 or ./media, not through the image optimizer. */}
+            {/* An upload, served as it is: R2 or a local folder, not through the image optimizer. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={image.url ?? media.url}
-              alt={media.alt ?? ''}
+              alt={'alt' in media ? (media.alt ?? '') : ''}
               width={image.width ?? undefined}
               height={image.height ?? undefined}
               loading="lazy"
@@ -92,9 +92,9 @@ function converters(anchors: Map<number, string>): JSXConvertersFunction {
 /**
  * An article's body (「文章详情页」board): 17 px at 1.8, 32 px between blocks, headings, lists,
  * quotes, figures with captions and code blocks. Second-level headings get the anchors the table
- * of contents links to (`#s1` …).
+ * of contents links to (`#s1` …). Links in a reader's article are `nofollow ugc` (rule 18).
  */
-export function ArticleBody({ body, lang }: { body: Body; lang: string }) {
+export function ArticleBody({ body, lang, ugc = false }: { body: Body; lang: string; ugc?: boolean }) {
   if (!body?.root) return null
   const anchors = new Map<number, string>()
   for (const [index, node] of (body.root.children ?? []).entries()) {
@@ -108,7 +108,7 @@ export function ArticleBody({ body, lang }: { body: Body; lang: string }) {
       className="text-body-article wrap-anywhere [&_code]:rounded-tag [&_code]:bg-surface [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.9em] [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-[1em] [&_strong]:font-bold"
     >
       {/* RichText's types want Lexical's own editor state; ours is the same JSON, read loosely. */}
-      <RichText data={body as never} converters={converters(anchors)} disableContainer disableIndent disableTextAlign />
+      <RichText data={body as never} converters={converters(anchors, ugc)} disableContainer disableIndent disableTextAlign />
     </div>
   )
 }

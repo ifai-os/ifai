@@ -10,6 +10,7 @@ import type { ArticleDetail } from '../list'
 import { articleHref, listHref } from '../rules'
 import { ArticleBody } from './article-body'
 import { Byline } from './byline'
+import { ReportArticle } from './report-article'
 
 /** The table of contents shows from two second-level headings up (docs/specs/recommend.md 规则 8). */
 const tocFrom = 2
@@ -59,11 +60,11 @@ export function ArticleDetailView({ article }: { article: ArticleDetail }) {
               {article.title}
             </h1>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-meta">
-              <Byline size={24} />
+              <Byline author={article.author} size={24} />
               <span className="text-small text-ink-4">{t('minutes', { count: article.minutes })}</span>
             </div>
             {article.coverFull && (
-              // eslint-disable-next-line @next/next/no-img-element -- an editor's upload, served as it is (R2 or ./media)
+              // eslint-disable-next-line @next/next/no-img-element -- an upload, served as it is (R2 or a local folder)
               <img
                 src={article.coverFull.url}
                 alt={article.coverFull.alt}
@@ -88,7 +89,7 @@ export function ArticleDetailView({ article }: { article: ArticleDetail }) {
           </header>
 
           <div className="mt-10">
-            <ArticleBody body={article.body} lang={article.lang} />
+            <ArticleBody body={article.body} lang={article.lang} ugc={article.author !== null} />
           </div>
 
           <footer className="mt-10 flex flex-col gap-6 border-t border-surface-2 pt-6">
@@ -107,8 +108,9 @@ export function ArticleDetailView({ article }: { article: ArticleDetail }) {
                 ))}
               </ul>
             )}
-            <div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <ShareButton title={article.title} className={buttonClass('secondary')} labels={{ share: t('share'), copied: t('copied') }} />
+              {article.author && <ReportArticle articleId={article.id} />}
             </div>
           </footer>
         </article>

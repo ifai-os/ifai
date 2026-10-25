@@ -40,6 +40,8 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { ModerationPanel as ModerationPanel_639f7ccbcc9c316ef68cf42d6fc6ddfb } from '../../../modules/recommend/admin/moderation-panel'
+import { OpenReports as OpenReports_99816e0da1278b5aab5e2a6604b77a33 } from '../../../modules/recommend/admin/open-reports'
 import { SnapshotStatus as SnapshotStatus_5ae6b63efaca662215fabf9b06a0db06 } from '../../../modules/rankings/admin/snapshot-status'
 import { AnswersPanel as AnswersPanel_30251a44f6ba0b489a653addc8e3ce37 } from '../../../modules/rankings/admin/answers-panel'
 import { UiLanguageSwitch as UiLanguageSwitch_1ab148fae9b2f4a257e97088aafad126 } from '../../../admin/ui-language/switch'
@@ -96,6 +98,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#HeadingFeatureClient": HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "/modules/recommend/admin/moderation-panel#ModerationPanel": ModerationPanel_639f7ccbcc9c316ef68cf42d6fc6ddfb,
+  "/modules/recommend/admin/open-reports#OpenReports": OpenReports_99816e0da1278b5aab5e2a6604b77a33,
   "/modules/rankings/admin/snapshot-status#SnapshotStatus": SnapshotStatus_5ae6b63efaca662215fabf9b06a0db06,
   "/modules/rankings/admin/answers-panel#AnswersPanel": AnswersPanel_30251a44f6ba0b489a653addc8e3ce37,
   "/admin/ui-language/switch#UiLanguageSwitch": UiLanguageSwitch_1ab148fae9b2f4a257e97088aafad126,

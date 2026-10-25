@@ -3,7 +3,7 @@ import { desc, eq, inArray } from '@payloadcms/db-postgres/drizzle'
 import { createTranslator } from 'next-intl'
 import type { Payload } from 'payload'
 
-import { localizePath, messagesFileName, type Locale } from '@/i18n/config'
+import { isLocale, localizePath, messagesFileName, type Locale } from '@/i18n/config'
 import type { ReportReason, ReviewStatus, TranslatedTexts, TranslationStatus } from '@/modules/apps/reviews/rules'
 import { appReviewReports, appReviews, appReviewTranslations } from '@/modules/apps/schema'
 import { normalizeEmail } from '@/modules/daily/email/address'
@@ -14,6 +14,9 @@ import { listHref, storyHref, topicHref } from '@/modules/daily/public/list-para
 import { isStoryTag } from '@/modules/daily/tags'
 import { readTopicNames } from '@/modules/daily/topic-names'
 import { follows } from '@/modules/follows/schema'
+import { articleHref, type ArticleStatus } from '@/modules/recommend/rules'
+import { articleReports } from '@/modules/recommend/schema'
+import type { ReportReason as ArticleReportReason } from '@/modules/recommend/writing'
 import { followId, type FollowType } from '@/modules/follows/target'
 import { skillHref } from '@/modules/resources/public/list-params'
 import { saves } from '@/modules/saves/schema'
@@ -115,6 +118,23 @@ export type MemberExport = {
   circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string }[]
   /** Posts by others the member reported: which one and why, not its text or author. */
   circlePostReports: { post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null }[]
+  /** Their articles (推荐), newest first, drafts and hidden ones too, as the Markdown they wrote. */
+  articles: {
+    id: number
+    title: string
+    summary: string | null
+    text: string
+    language: string
+    channel: string
+    tags: string[]
+    status: ArticleStatus
+    writtenAt: string
+    publishedAt: string | null
+    updatedAt: string
+    url: string | null
+  }[]
+  /** Articles by others the member reported: which one and why, not its text or author. */
+  articleReports: { article: number; reason: ArticleReportReason; reportedAt: string; resolvedAt: string | null }[]
   /** The daily email subscription of the sign-in email, when it is verified and subscribed at some point. */
   dailyEmail: {
     email: string
@@ -167,6 +187,20 @@ export type MemberRecords = {
   circlePosts: { id: number; circleId: number; body: string; lang: string; status: PostStatus; createdAt: Date }[]
   circleReactions: { postId: number; circleId: number; reaction: Reaction; createdAt: Date }[]
   circlePostReports: { postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
+  articles: {
+    id: number
+    title: string
+    summary: string | null
+    markdown: string | null
+    lang: string
+    channel: string
+    tags: string[]
+    status: ArticleStatus
+    createdAt: string
+    publishedAt: string | null
+    updatedAt: string
+  }[]
+  articleReports: { articleId: number; reason: ArticleReportReason; createdAt: Date; resolvedAt: Date | null }[]
   subscriber: Subscriber | null
   sends: { localDate: string; locale: string; status: EmailSendStatus; storyCount: number | null; sentAt: Date | null }[]
 }
@@ -299,6 +333,8 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     posts,
     postReactions,
     postReports,
+    articles,
+    articleReportRows,
     subscribers,
   ] = await Promise.all([
     db
@@ -397,6 +433,18 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .innerJoin(circlePosts, eq(circlePosts.id, circlePostReports.postId))
       .where(eq(circlePostReports.reporter, reporter))
       .orderBy(desc(circlePostReports.createdAt)),
+    payload.find({
+      collection: 'articles',
+      where: { author: { equals: userId } },
+      ...collection,
+      select: { title: true, summary: true, markdown: true, lang: true, channel: true, tags: true, status: true, createdAt: true, publishedAt: true, updatedAt: true },
+    }),
+    // Articles are reported as `u:<member id>` too (src/app/api/recommend/report).
+    db
+      .select({ articleId: articleReports.articleId, reason: articleReports.reason, createdAt: articleReports.createdAt, resolvedAt: articleReports.resolvedAt })
+      .from(articleReports)
+      .where(eq(articleReports.reporter, reporter))
+      .orderBy(desc(articleReports.createdAt)),
     // The subscription is by address, not by account: only an address the member has shown is theirs.
     user.emailVerified
       ? payload.find({ collection: 'subscribers', where: { email: { equals: normalizeEmail(user.email) } }, depth: 0, limit: 1, overrideAccess: true })
@@ -448,6 +496,20 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     circlePosts: posts,
     circleReactions: postReactions,
     circlePostReports: postReports,
+    articles: articles.docs.map((article) => ({
+      id: article.id,
+      title: article.title,
+      summary: article.summary ?? null,
+      markdown: article.markdown ?? null,
+      lang: article.lang,
+      channel: article.channel,
+      tags: (article.tags ?? []).map((row) => row.tag),
+      status: article.status,
+      createdAt: article.createdAt,
+      publishedAt: article.publishedAt ?? null,
+      updatedAt: article.updatedAt,
+    })),
+    articleReports: articleReportRows,
     subscriber,
     sends,
   }
@@ -637,6 +699,27 @@ export function shapeMemberExport(
     circlePostReports: records.circlePostReports.map((report) => ({
       post: report.postId,
       circle: ref('circle', report.circleId),
+      reason: report.reason,
+      reportedAt: iso(report.createdAt),
+      resolvedAt: isoOrNull(report.resolvedAt),
+    })),
+    articles: records.articles.map((article) => ({
+      id: article.id,
+      title: article.title,
+      summary: article.summary,
+      text: article.markdown ?? '',
+      language: article.lang,
+      channel: article.channel,
+      tags: article.tags,
+      status: article.status,
+      writtenAt: article.createdAt,
+      publishedAt: article.publishedAt,
+      updatedAt: article.updatedAt,
+      // A published article's page is the one in its own language (docs/specs/recommend.md rule 6).
+      url: article.status === 'published' && isLocale(article.lang) ? link(site, article.lang, articleHref(article.id)) : null,
+    })),
+    articleReports: records.articleReports.map((report) => ({
+      article: report.articleId,
       reason: report.reason,
       reportedAt: iso(report.createdAt),
       resolvedAt: isoOrNull(report.resolvedAt),

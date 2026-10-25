@@ -21,3 +21,20 @@ export function SearchLink() {
     </Link>
   )
 }
+
+/** The pen beside the magnifier (docs/specs/recommend.md「页面与路由」): writing an article, from phase two. */
+export function WriteLink() {
+  const t = useTranslations('header')
+  const current = usePathname().startsWith('/recommend/write')
+
+  return (
+    <Link
+      href="/recommend/write"
+      aria-label={t('write')}
+      aria-current={current ? 'page' : undefined}
+      className="flex size-11 flex-none items-center justify-center text-ink transition-colors hover:text-accent-ink"
+    >
+      <Icon name="pen" size={20} />
+    </Link>
+  )
+}

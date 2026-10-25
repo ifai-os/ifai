@@ -19,7 +19,11 @@ export type ArticleCard = {
   updatedAt: string
   /** When it was picked (规则 2), with the reason; null when it is not. */
   pick: { at: string; reason: string } | null
+  /** The member who wrote it (rule 16): a name (empty when they have none) and a tile tone, never an id; null for the site owner's. */
+  author: ArticleAuthor | null
 }
+
+export type ArticleAuthor = { name: string; tone: number }
 
 export type ArticleDetail = ArticleCard & {
   coverFull: (ArticleImage & { alt: string }) | null
