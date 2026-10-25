@@ -163,6 +163,9 @@ export default buildConfig({
   plugins: [
     s3Storage({
       enabled: r2Enabled,
+      // The storage columns (`prefix`, `_object_key`) exist with or without R2, so migrations made
+      // on a machine without R2 still match production.
+      alwaysInsertFields: true,
       collections: {
         media: { prefix: 'media' },
         // Downloads go to a short-lived R2 address; the site's own reads (the file viewer) stream through.
