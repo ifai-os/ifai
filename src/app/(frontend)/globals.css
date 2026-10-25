@@ -7,7 +7,7 @@
  * do not exist here. Need a new value? Add a token below and update the board.
  *
  * Dark mode (「设计令牌 · 深色」board) only swaps these variables, see the dark
- * block in @layer base. On bg-ink use text-bg, not text-white; red text uses
+ * block in @layer base. On bg-ink use text-bg, not text-bg; red text uses
  * accent-ink; menus and dialogs sit on overlay.
  */
 

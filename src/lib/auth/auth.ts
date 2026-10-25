@@ -1,9 +1,12 @@
 import { betterAuth } from 'better-auth'
+import { APIError, createAuthMiddleware } from 'better-auth/api'
 import { nextCookies } from 'better-auth/next-js'
 import { magicLink } from 'better-auth/plugins'
 import { Pool } from 'pg'
 
 import { sendMagicLinkEmail } from '@/lib/auth/email'
+import { withCleanName } from '@/lib/auth/nickname'
+import { authProviders } from '@/lib/auth/providers'
 import { databaseUrl } from '@/lib/db/url'
 import { siteUrl } from '@/lib/site-url'
 
@@ -101,12 +104,29 @@ export const auth = betterAuth({
       refreshTokenExpiresAt: 'refresh_token_expires_at',
       ...timestamps,
     },
-    // Same verified email from Google and GitHub → one member.
-    accountLinking: { enabled: true, trustedProviders: ['google', 'github'] },
+    // Same verified email from Google and GitHub → one member. From「设置」(docs/specs/account.md) a
+    // member can also connect a Google or GitHub account under another address, and disconnect
+    // their last one while an email link can still sign them in.
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['google', 'github'],
+      allowDifferentEmails: true,
+      allowUnlinkingAll: authProviders().email,
+    },
   },
   verification: {
     modelName: 'auth_verifications',
     fields: { expiresAt: 'expires_at', ...timestamps },
+  },
+
+  hooks: {
+    // The nickname, from「设置」or the review dialog (./nickname.ts).
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== '/update-user') return
+      const body = withCleanName(ctx.body)
+      if (body === 'empty') throw new APIError('BAD_REQUEST', { code: 'INVALID_NAME', message: 'The name is empty' })
+      if (body) return { context: { body } }
+    }),
   },
 
   plugins: [
