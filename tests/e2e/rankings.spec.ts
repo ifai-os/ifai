@@ -132,6 +132,10 @@ test.describe('with the sample rankings', () => {
     await expect(page.getByRole('region', { name: en.rankings.topTen.replace('{arena}', 'Coding') })).toBeVisible()
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(6)
 
+    await arenas.getByRole('link', { name: 'Image generation' }).click()
+    await expect(page).toHaveURL(/\/en\/rankings\/image$/)
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(4)
+
     await page.goto('/en/rankings/text?weights=open')
     await expect(page).toHaveURL(/\/en\/rankings\?weights=open$/)
     expect((await page.goto('/en/rankings/no-such-arena'))?.status()).toBe(404)
@@ -151,6 +155,30 @@ test.describe('with the sample rankings', () => {
   test('a page language without questions gets English ones', async ({ page }) => {
     await openVote(page, '/ja/rankings/vote?arena=coding')
     await expect(page.getByRole('region', { name: ja.rankingsVote.question }).locator('p[lang]')).toHaveAttribute('lang', 'en')
+  })
+
+  test('the image arena shows two pictures to vote on, and only the files are public', async ({ page, request }) => {
+    await openVote(page, '/en/rankings/vote?arena=image')
+    await expect(page.getByText(en.rankingsVote.introImage)).toBeVisible()
+    await expect(page.getByRole('region', { name: en.rankingsVote.description })).toBeVisible()
+    for (const alt of [en.rankingsVote.imageA, en.rankingsVote.imageB]) {
+      const picture = page.getByRole('img', { name: alt })
+      await expect(picture).toBeVisible()
+      await expect.poll(() => picture.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true)
+      const box = await picture.boundingBox()
+      expect(box?.height).toBeLessThanOrEqual(601)
+
+      // The full picture opens in a new tab; its name says nothing about the model.
+      const link = page.getByRole('link', { name: `${alt} ${en.rankingsVote.newTab}` })
+      await expect(link).toHaveAttribute('target', '_blank')
+      const href = (await link.getAttribute('href')) ?? ''
+      expect(href).toMatch(/^\/api\/arena-images\/file\/[0-9a-f]{24}\.png(\?prefix=arena)?$/)
+      const file = await request.get(href)
+      expect(file.status()).toBe(200)
+      expect(file.headers()['content-type']).toBe('image/png')
+    }
+    // Which pictures exist, and when each was made, stays in the back office.
+    expect((await request.get('/api/arena-images')).status()).toBe(403)
   })
 
   test('a visitor reads the answers and is asked to sign in to vote', async ({ page }) => {

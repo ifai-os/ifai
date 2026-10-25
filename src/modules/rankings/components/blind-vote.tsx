@@ -13,7 +13,8 @@ import { authClient } from '@/lib/auth/client'
 import type { AuthProviders } from '@/lib/auth/providers'
 
 import type { Battle, RevealedModel } from '../battles'
-import { outcomes, type Outcome } from '../rules'
+import { outcomes, type ArenaKind, type Outcome } from '../rules'
+import { AnswerImage } from './answer-image'
 import { AnswerText } from './answer-text'
 
 type Reveal = { counted: boolean; models: { a: RevealedModel; b: RevealedModel } }
@@ -29,6 +30,8 @@ type State =
 type BlindVoteProps = {
   /** The arena's slug. */
   arena: string
+  /** Text answers, or pictures. */
+  kind: ArenaKind
   /** The arena's rankings, for「看排行」. */
   boardHref: `/${string}`
   signIn: AuthProviders
@@ -38,11 +41,11 @@ const sides = ['a', 'b'] as const
 
 /**
  * The blind vote (docs/specs/rankings.md「页面与路由」): a question with two anonymous answers,
- * four buttons, then who wrote which. Questions are loaded in the browser, so the page itself
- * is the same for everyone. Visitors see questions too; voting asks them to sign in, and they
- * come back to a new question.
+ * text or pictures, four buttons, then who wrote which. Questions are loaded in the browser, so
+ * the page itself is the same for everyone. Visitors see questions too; voting asks them to sign
+ * in, and they come back to a new question.
  */
-export function BlindVote({ arena, boardHref, signIn }: BlindVoteProps) {
+export function BlindVote({ arena, kind, boardHref, signIn }: BlindVoteProps) {
   const t = useTranslations('rankingsVote')
   const locale = useLocale()
   const id = useId()
@@ -131,7 +134,7 @@ export function BlindVote({ arena, boardHref, signIn }: BlindVoteProps) {
     else setState({ kind: 'ready', battle, sending: null, error: t('voteFailed') })
   }
 
-  if (state.kind === 'loading') return <VoteSkeleton label={t('loading')} />
+  if (state.kind === 'loading') return <VoteSkeleton kind={kind} label={t('loading')} />
   if (state.kind === 'failed') return <LoadFailed onRetry={() => next()} />
   if (state.kind === 'empty' || state.kind === 'limit') {
     const empty = state.kind === 'empty'
@@ -158,7 +161,7 @@ export function BlindVote({ arena, boardHref, signIn }: BlindVoteProps) {
       <section aria-labelledby={`${id}-question`} className="flex flex-col gap-2 rounded-hero border border-surface-2 bg-surface p-5 md:p-6">
         <div className="flex items-baseline justify-between gap-3">
           <h2 id={`${id}-question`} className="text-small text-ink-4">
-            {t('question')}
+            {t(kind === 'image' ? 'description' : 'question')}
           </h2>
           {!revealed && (
             <button type="button" onClick={() => next()} className="text-meta text-link hover:underline">
@@ -174,6 +177,7 @@ export function BlindVote({ arena, boardHref, signIn }: BlindVoteProps) {
       <div className="grid items-start gap-4 md:grid-cols-2">
         {sides.map((side, index) => {
           const model = revealed?.reveal.models[side]
+          const answer = battle.answers[index]
           return (
             <section
               key={side}
@@ -192,9 +196,13 @@ export function BlindVote({ arena, boardHref, signIn }: BlindVoteProps) {
                   </p>
                 )}
               </div>
-              <div role="region" aria-labelledby={`${id}-${side}`} tabIndex={0} className="rounded-thumb md:max-h-150 md:overflow-y-auto md:pr-1">
-                <AnswerText text={battle.answers[index].text} lang={battle.answers[index].lang} />
-              </div>
+              {answer.kind === 'image' ? (
+                <AnswerImage image={answer.image} alt={t(side === 'a' ? 'imageA' : 'imageB')} newTab={t('newTab')} />
+              ) : (
+                <div role="region" aria-labelledby={`${id}-${side}`} tabIndex={0} className="rounded-thumb md:max-h-150 md:overflow-y-auto md:pr-1">
+                  <AnswerText text={answer.text} lang={answer.lang} />
+                </div>
+              )}
             </section>
           )
         })}
@@ -250,8 +258,8 @@ export function BlindVote({ arena, boardHref, signIn }: BlindVoteProps) {
   )
 }
 
-/** The question and two answers as shimmering blocks, shown after 300 ms so a fast answer never flashes one. */
-function VoteSkeleton({ label }: { label: string }) {
+/** The question and two answers (or pictures) as shimmering blocks, shown after 300 ms so a fast answer never flashes one. */
+function VoteSkeleton({ kind, label }: { kind: ArenaKind; label: string }) {
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), skeletonDelayMs)
@@ -268,9 +276,11 @@ function VoteSkeleton({ label }: { label: string }) {
         {sides.map((side) => (
           <div key={side} className="flex flex-col gap-3 rounded-card border border-surface-2 p-4 md:p-5">
             <SkeletonLine text="text-title" width="30%" />
-            {[92, 80, 86, 64].map((width) => (
-              <Skeleton key={width} className="h-3" style={{ width: `${width}%` }} />
-            ))}
+            {kind === 'image' ? (
+              <Skeleton className="aspect-square w-full max-w-150 self-center" />
+            ) : (
+              [92, 80, 86, 64].map((width) => <Skeleton key={width} className="h-3" style={{ width: `${width}%` }} />)
+            )}
           </div>
         ))}
       </div>

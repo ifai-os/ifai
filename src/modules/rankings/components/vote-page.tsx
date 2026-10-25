@@ -21,10 +21,10 @@ export async function VotePage({ arena, arenas }: VotePageProps) {
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 pt-5 pb-10 md:gap-6 md:pt-8">
       <header className="flex flex-col gap-1.5">
         <h1 className="text-h2 md:text-h1">{t('title')}</h1>
-        <p className="max-w-160 text-ui text-ink-3">{t('intro')}</p>
+        <p className="max-w-160 text-ui text-ink-3">{t(arena.kind === 'image' ? 'introImage' : 'intro')}</p>
       </header>
       <ArenaTabs arenas={arenas} current={arena.slug} hrefOf={(item) => voteHref(slugOf(item))} />
-      <BlindVote key={arena.slug} arena={arena.slug} boardHref={boardHref(slugOf(arena))} signIn={authProviders()} />
+      <BlindVote key={arena.slug} arena={arena.slug} kind={arena.kind} boardHref={boardHref(slugOf(arena))} signIn={authProviders()} />
     </main>
   )
 }

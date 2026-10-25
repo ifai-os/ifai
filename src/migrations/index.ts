@@ -29,6 +29,7 @@ import * as migration_20261024_185906_daily_approved_at from './20261024_185906_
 import * as migration_20261025_030735_r2_upload_columns from './20261025_030735_r2_upload_columns';
 import * as migration_20261025_032312_follows from './20261025_032312_follows';
 import * as migration_20261025_041212_rankings from './20261025_041212_rankings';
+import * as migration_20261025_041706_rankings_images from './20261025_041706_rankings_images';
 
 export const migrations = [
   {
@@ -184,6 +185,11 @@ export const migrations = [
   {
     up: migration_20261025_041212_rankings.up,
     down: migration_20261025_041212_rankings.down,
-    name: '20261025_041212_rankings'
+    name: '20261025_041212_rankings',
+  },
+  {
+    up: migration_20261025_041706_rankings_images.up,
+    down: migration_20261025_041706_rankings_images.down,
+    name: '20261025_041706_rankings_images'
   },
 ];
