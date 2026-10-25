@@ -225,7 +225,7 @@ function ProfileMenu({ handle, name }: { handle: string; name: string }) {
         <Icon name={copied ? 'check' : 'more'} size={18} />
       </button>
       {open && (
-        <div id={menuId} className="absolute top-11 right-0 z-10 flex w-max min-w-42 flex-col rounded-tile border border-hairline bg-bg p-1.5 shadow-float">
+        <div id={menuId} className="absolute top-11 right-0 z-10 flex w-max min-w-42 flex-col rounded-tile border border-hairline bg-overlay p-1.5 shadow-float">
           <button type="button" onClick={copyLink} className="flex min-h-10 w-full items-center rounded-thumb px-2.5 text-left text-ui hover:bg-surface">
             {t('copyLink')}
           </button>
