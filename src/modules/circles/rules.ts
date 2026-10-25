@@ -1,5 +1,6 @@
 import { defaultLocale, isLocale, localePrefixes, type Locale } from '@/i18n/config'
 import { cleanText, parseId, textLength } from '@/modules/apps/reviews/rules'
+import { isHandle, isMemberReportReason, normalizeHandle, type MemberReportReason } from '@/modules/profiles/rules'
 
 export { parseId }
 
@@ -183,12 +184,21 @@ export function parseReactionInput(input: unknown): { post: number; reaction: Re
 /** What a reader can report: a post, or a comment under one. */
 export type ReportTarget = { kind: 'post' | 'comment'; id: number }
 
-/** POST /api/circles/report { post, reason } or { comment, reason }. */
-export function parseReportInput(input: unknown): { target: ReportTarget; reason: ReportReason } | null {
+/** A member a reader reports, at their address (docs/specs/circles.md rule 24): the reasons are their own. */
+export type MemberReportTarget = { kind: 'member'; handle: string }
+
+export type ReportInput = { target: ReportTarget; reason: ReportReason } | { member: string; reason: MemberReportReason }
+
+/** POST /api/circles/report { post, reason }, { comment, reason } or { member, reason }: one of the three. */
+export function parseReportInput(input: unknown): ReportInput | null {
   const fields = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
   const reason = fields.reason
+  if (['post', 'comment', 'member'].filter((key) => fields[key] !== undefined).length !== 1) return null
+  if (fields.member !== undefined) {
+    const handle = typeof fields.member === 'string' ? normalizeHandle(fields.member) : ''
+    return isHandle(handle) && isMemberReportReason(reason) ? { member: handle, reason } : null
+  }
   if (typeof reason !== 'string' || !(reportReasons as readonly string[]).includes(reason)) return null
-  if (fields.post !== undefined && fields.comment !== undefined) return null
   const post = parseId(fields.post)
   const comment = parseId(fields.comment)
   const target: ReportTarget | null = post ? { kind: 'post', id: post } : comment ? { kind: 'comment', id: comment } : null
@@ -401,6 +411,7 @@ export type CirclesError =
   | 'invalid-image'
   | 'unsupported-video'
   | 'own-comment'
+  | 'own-profile'
 
 /** The reactions on one post, most people first, the picker's order breaking ties. */
 export function sortReactions(list: ReactionView[]): ReactionView[] {

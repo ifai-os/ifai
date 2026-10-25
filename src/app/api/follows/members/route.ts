@@ -6,26 +6,28 @@ import { isCrossSite } from '@/lib/same-origin'
 import { fail, notLaunched, reply } from '@/modules/circles/api'
 import { circlesLaunched } from '@/modules/circles/public'
 import { setFollow } from '@/modules/profiles/data'
-import { parseFollowInput, type FollowChange, type ProfilesError } from '@/modules/profiles/rules'
+import { parseHandleSwitch, type FollowChange, type ProfilesError } from '@/modules/profiles/rules'
 
 export const dynamic = 'force-dynamic'
 
-const statusOf: Record<'not-found' | 'own-profile' | 'daily-limit' | 'too-many', number> = {
+const statusOf: Record<'not-found' | 'own-profile' | 'daily-limit' | 'too-many' | 'blocked', number> = {
   'not-found': 404,
   'own-profile': 422,
   'daily-limit': 429,
   'too-many': 429,
+  blocked: 403,
 }
 
 /**
  * POST /api/follows/members { handle, on } → FollowChange: the member follows someone or stops
  * (docs/specs/circles.md rule 20); an address they had before works too. Members only, from
- * IFAI's own pages; with the circles, like the pages that have the button.
+ * IFAI's own pages; with the circles, like the pages that have the button. Not between two
+ * members when one blocked the other (rule 23).
  */
 export async function POST(request: NextRequest) {
   if (!circlesLaunched()) return notLaunched()
   if (isCrossSite(request)) return fail('cross-site', 403)
-  const input = parseFollowInput(await request.json().catch(() => null))
+  const input = parseHandleSwitch(await request.json().catch(() => null))
   if (!input) return fail('invalid-request', 400)
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) return fail('sign-in', 401)

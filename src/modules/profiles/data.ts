@@ -1,5 +1,5 @@
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
-import { and, count, desc, eq, gte, inArray, lt, ne } from '@payloadcms/db-postgres/drizzle'
+import { and, count, desc, eq, gte, inArray, isNull, lt } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 
 import { toneFor } from '@/components/cards/initial-tile'
@@ -8,6 +8,7 @@ import { detectLanguage } from '@/lib/i18n/detect'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
 import { cleanName } from '@/modules/apps/reviews/rules'
 
+import { blockedAmong, blockedBetween } from './blocks'
 import {
   checkHandle,
   nextHandleChange,
@@ -40,7 +41,7 @@ export type FoundMember = { userId: string; handle: string; moved: boolean }
 
 /**
  * The member an address belongs to: whose it is now or, when it is one they had before (`moved`),
- * who has it kept and under which address they are now.
+ * who has it kept and under which address they are now. One the site owner took away leads nowhere.
  */
 export async function findByHandle(payload: Payload, handle: string): Promise<FoundMember | null> {
   const db = drizzleOf(payload)
@@ -50,7 +51,7 @@ export async function findByHandle(payload: Payload, handle: string): Promise<Fo
     .select({ id: authUsers.id, handle: authUsers.handle })
     .from(memberOldHandles)
     .innerJoin(authUsers, eq(authUsers.id, memberOldHandles.userId))
-    .where(eq(memberOldHandles.handle, handle))
+    .where(and(eq(memberOldHandles.handle, handle), isNull(memberOldHandles.retiredAt)))
     .limit(1)
   return old?.handle ? { userId: old.id, handle: old.handle, moved: true } : null
 }
@@ -119,8 +120,9 @@ export type SaveProfileResult =
 
 /**
  * Saves the fields the member sent (rules 18 and 19). A new address must be free: nobody has it
- * now and nobody had it before, unless it was theirs; the first change is free, then one every
- * `handleChangeDays`. The old address is kept for them, so it keeps leading to their page.
+ * now and nobody had it before, unless it was theirs and the site owner did not take it away
+ * (rule 24); the first change is free, then one every `handleChangeDays`. The old address is kept
+ * for them, so it keeps leading to their page.
  */
 export async function saveProfile(payload: Payload, userId: string, input: ProfileInput, now = new Date()): Promise<SaveProfileResult> {
   const db = drizzleOf(payload)
@@ -135,11 +137,12 @@ export async function saveProfile(payload: Payload, userId: string, input: Profi
     const next = nextHandleChange(current.handleChangedAt, now)
     if (next) return { status: 'handle-too-soon', nextChange: next.toISOString() }
     const [kept] = await db
-      .select({ userId: memberOldHandles.userId })
+      .select({ userId: memberOldHandles.userId, retiredAt: memberOldHandles.retiredAt })
       .from(memberOldHandles)
-      .where(and(eq(memberOldHandles.handle, handle), ne(memberOldHandles.userId, userId)))
+      .where(eq(memberOldHandles.handle, handle))
       .limit(1)
-    if (kept) return { status: 'handle-taken' }
+    if (kept?.retiredAt) return { status: 'reserved-handle' }
+    if (kept && kept.userId !== userId) return { status: 'handle-taken' }
   }
 
   const values: Partial<typeof memberProfiles.$inferInsert> = {}
@@ -195,12 +198,13 @@ export async function followedAmong(payload: Payload, followerId: string | null,
   return new Set(rows.map((row) => row.id))
 }
 
-export type FollowResult = { status: 'done'; change: FollowChange } | { status: 'not-found' | 'own-profile' | 'daily-limit' | 'too-many' }
+export type FollowResult = { status: 'done'; change: FollowChange } | { status: 'not-found' | 'own-profile' | 'daily-limit' | 'too-many' | 'blocked' }
 
 /**
  * Follows the member at `handle` (one they had before also works) or stops following them.
  * Following again someone already followed changes nothing; a new follow counts towards
- * `dailyFollows` a Shanghai day and `maxFollowing` in all (rule 20).
+ * `dailyFollows` a Shanghai day and `maxFollowing` in all (rule 20). Nobody follows someone they
+ * blocked or who blocked them (rule 23).
  */
 export async function setFollow(
   payload: Payload,
@@ -214,6 +218,7 @@ export async function setFollow(
   const db = drizzleOf(payload)
   const pair = and(eq(memberFollows.followerId, followerId), eq(memberFollows.followeeId, target.userId))
   if (on) {
+    if (await blockedBetween(payload, followerId, target.userId)) return { status: 'blocked' }
     const [existing] = await db.select({ id: memberFollows.id }).from(memberFollows).where(pair).limit(1)
     if (!existing) {
       const [[today], [total]] = await Promise.all([
@@ -236,7 +241,8 @@ export async function setFollow(
 
 /**
  * One page of the people who follow the member (`followers`) or whom they follow (`following`),
- * the latest first, after the follow `before` when given; each says whether the reader follows them.
+ * the latest first, after the follow `before` when given; each says whether the reader follows
+ * them and whether one of the two blocked the other.
  */
 export async function peoplePage(
   payload: Payload,
@@ -262,11 +268,8 @@ export async function peoplePage(
     .orderBy(desc(memberFollows.id))
     .limit(size + 1)
   const page = rows.slice(0, size)
-  const followed = await followedAmong(
-    payload,
-    readerId,
-    page.map((row) => row.userId),
-  )
+  const ids = page.map((row) => row.userId)
+  const [followed, blocked] = await Promise.all([followedAmong(payload, readerId, ids), blockedAmong(payload, readerId, ids)])
   return {
     people: page.flatMap((row) =>
       row.handle
@@ -279,6 +282,7 @@ export async function peoplePage(
               bioLang: row.bioLang,
               following: followed.has(row.userId),
               self: row.userId === readerId,
+              blocked: blocked.has(row.userId),
             },
           ]
         : [],

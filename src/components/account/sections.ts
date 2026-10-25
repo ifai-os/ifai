@@ -1,15 +1,24 @@
+import { isLaunched, sitePhase, type Phase } from '@/config/site'
 import { localizePath, type Locale } from '@/i18n/config'
 
 /**
  * The「设置」page's sections (docs/specs/account.md), in the order of its menu. Circles adds
- * its own (privacy, notifications on the site) here when it gets to them.
+ * 「隐私」(docs/specs/circles.md: whom one blocked; later its switches) and, later, notifications
+ * on the site.
  */
-export const settingsSections = ['profile', 'sign-in', 'notifications', 'language', 'data'] as const
-export type SettingsSection = (typeof settingsSections)[number]
+const allSections = ['profile', 'sign-in', 'notifications', 'privacy', 'language', 'data'] as const
+export type SettingsSection = (typeof allSections)[number]
 
-/** `?section=`; anything else is the first section. */
-export function parseSection(value: unknown): SettingsSection {
-  return settingsSections.find((section) => section === value) ?? 'profile'
+/** The sections in this phase:「隐私」comes with the circles. */
+export function sectionsFor(phase: Phase): SettingsSection[] {
+  return allSections.filter((section) => section !== 'privacy' || isLaunched('circles', phase))
+}
+
+export const settingsSections: readonly SettingsSection[] = sectionsFor(sitePhase)
+
+/** `?section=`, among the sections there are; anything else is the first section. */
+export function parseSection(value: unknown, sections: readonly SettingsSection[] = settingsSections): SettingsSection {
+  return sections.find((section) => section === value) ?? 'profile'
 }
 
 /** The section's address without the language prefix, for `Link` and the router. */

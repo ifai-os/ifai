@@ -7,6 +7,7 @@ import { toneFor } from '@/components/cards/initial-tile'
 import { authUsers } from '@/lib/auth/schema'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
 import { cleanName } from '@/modules/apps/reviews/rules'
+import { blockedAmong, notBlocked } from '@/modules/profiles/blocks'
 
 import { commentCounts, shownPost } from './data'
 import { commentRules, type AuthorView, type CommentThread, type CommentView, type PersonView, type PostStatus, type ReportReason } from './rules'
@@ -17,7 +18,9 @@ import { circleCommentReports, circleComments } from './schema'
  * one level of replies, newest comments first and their replies oldest first. Like ./data.ts it
  * works on the Payload instance it is given. A reader sees shown comments and their own hidden
  * ones; a hidden comment takes the replies under it out of sight, except for its own author.
- * Only a shown post in a circle readers can see has comments to read or write.
+ * Only a shown post in a circle readers can see has comments to read or write. A member and
+ * someone they blocked or were blocked by see none of each other's comments, nor the replies under
+ * them, and cannot comment on each other's posts or reply to each other (rule 23).
  */
 
 const drizzleOf = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
@@ -70,10 +73,10 @@ function selectComments(payload: Payload) {
     .leftJoin(answeredAuthor, eq(answeredAuthor.id, answered.userId))
 }
 
-/** Shown comments, and the reader's own hidden ones. */
+/** Shown comments, and the reader's own hidden ones; none by someone they blocked or were blocked by. */
 function seenBy(userId: string | null): SQL | undefined {
   const shown = eq(circleComments.status, 'shown')
-  return userId ? or(shown, eq(circleComments.userId, userId)) : shown
+  return userId ? and(or(shown, eq(circleComments.userId, userId)), notBlocked(circleComments.userId, userId)) : shown
 }
 
 function toView(row: CommentRow, userId: string | null): CommentView {
@@ -91,8 +94,8 @@ function toView(row: CommentRow, userId: string | null): CommentView {
   }
 }
 
-async function countFor(payload: Payload, postId: number): Promise<number> {
-  return (await commentCounts(payload, [postId])).get(postId) ?? 0
+async function countFor(payload: Payload, postId: number, readerId: string | null): Promise<number> {
+  return (await commentCounts(payload, [postId], readerId)).get(postId) ?? 0
 }
 
 export type CommentsQuery = {
@@ -112,7 +115,7 @@ export async function commentsPage(
   payload: Payload,
   { postId, circleIds, userId, cursor }: CommentsQuery,
 ): Promise<{ count: number; comments: CommentThread[]; next: number | null } | null> {
-  if (!(await shownPost(payload, postId, circleIds))) return null
+  if (!(await shownPost(payload, postId, circleIds, userId))) return null
   const db = drizzleOf(payload)
   const size = commentRules.pageSize
   const rows = await selectComments(payload)
@@ -150,7 +153,7 @@ export async function commentsPage(
     replies: replies.filter((reply) => reply.parentId === row.id).map((reply) => toView(reply, userId)),
     replyCount: replyCounts.get(row.id) ?? 0,
   }))
-  return { count: await countFor(payload, postId), comments, next: rows.length > size ? page[page.length - 1].id : null }
+  return { count: await countFor(payload, postId, userId), comments, next: rows.length > size ? page[page.length - 1].id : null }
 }
 
 /**
@@ -161,7 +164,7 @@ export async function threadReplies(
   payload: Payload,
   { postId, threadId, circleIds, userId, cursor }: CommentsQuery & { threadId: number },
 ): Promise<{ replies: CommentView[]; next: number | null } | null> {
-  if (!(await shownPost(payload, postId, circleIds))) return null
+  if (!(await shownPost(payload, postId, circleIds, userId))) return null
   const db = drizzleOf(payload)
   const [thread] = await db
     .select({ id: circleComments.id })
@@ -178,10 +181,20 @@ export async function threadReplies(
   return { replies: page.map((row) => toView(row, userId)), next: rows.length > size ? page[page.length - 1].id : null }
 }
 
-/** A comment everyone can see on this post: shown, and not under a hidden one. */
-async function publicComment(payload: Payload, commentId: number, postId?: number): Promise<{ id: number; postId: number; parentId: number | null; userId: string } | null> {
+/** A comment everyone can see on this post: shown, and not under a hidden one; with the author of the comment it is under. */
+async function publicComment(
+  payload: Payload,
+  commentId: number,
+  postId?: number,
+): Promise<{ id: number; postId: number; parentId: number | null; userId: string; parentUserId: string | null } | null> {
   const [comment] = await drizzleOf(payload)
-    .select({ id: circleComments.id, postId: circleComments.postId, parentId: circleComments.parentId, userId: circleComments.userId })
+    .select({
+      id: circleComments.id,
+      postId: circleComments.postId,
+      parentId: circleComments.parentId,
+      userId: circleComments.userId,
+      parentUserId: parentComment.userId,
+    })
     .from(circleComments)
     .leftJoin(parentComment, eq(parentComment.id, circleComments.parentId))
     .where(
@@ -203,7 +216,8 @@ export type CreateCommentResult =
 /**
  * Publishes the member's comment on a post readers can see, or their reply: answering a comment
  * puts the reply under it, answering a reply puts it under the same comment and names whom it
- * answers. At most `dailyComments` a Shanghai day; one they deleted no longer counts.
+ * answers. At most `dailyComments` a Shanghai day; one they deleted no longer counts. Not on the
+ * post of someone they blocked or were blocked by, nor in reply to them or under their comment.
  */
 export async function createComment(
   payload: Payload,
@@ -212,7 +226,7 @@ export async function createComment(
   now = new Date(),
 ): Promise<CreateCommentResult> {
   const { postId, userId, body, lang, replyTo } = comment
-  if (!(await shownPost(payload, postId, circleIds))) return { status: 'not-found' }
+  if (!(await shownPost(payload, postId, circleIds, userId))) return { status: 'not-found' }
   const db = drizzleOf(payload)
   const [today] = await db
     .select({ count: count() })
@@ -225,12 +239,14 @@ export async function createComment(
   if (replyTo !== null) {
     const target = await publicComment(payload, replyTo, postId)
     if (!target) return { status: 'invalid-reply' }
+    const people = target.parentUserId === null ? [target.userId] : [target.userId, target.parentUserId]
+    if ((await blockedAmong(payload, userId, people)).size > 0) return { status: 'invalid-reply' }
     parentId = target.parentId ?? target.id
     replyToId = target.parentId === null ? null : target.id
   }
   const [created] = await db.insert(circleComments).values({ postId, userId, parentId, replyToId, body, lang }).returning({ id: circleComments.id })
   const [row] = await selectComments(payload).where(eq(circleComments.id, created.id)).limit(1)
-  return { status: 'created', comment: toView(row, userId), count: await countFor(payload, postId) }
+  return { status: 'created', comment: toView(row, userId), count: await countFor(payload, postId, userId) }
 }
 
 /**
@@ -243,7 +259,7 @@ export async function deleteComment(payload: Payload, commentId: number, userId:
     .where(and(eq(circleComments.id, commentId), eq(circleComments.userId, userId)))
     .returning({ postId: circleComments.postId })
   if (!deleted) return null
-  return { postId: deleted.postId, count: await countFor(payload, deleted.postId) }
+  return { postId: deleted.postId, count: await countFor(payload, deleted.postId, userId) }
 }
 
 export type CommentReportResult = 'reported' | 'not-found' | 'own-comment'

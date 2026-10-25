@@ -24,6 +24,7 @@ const statusOf: Record<Exclude<ProfilesError, 'cross-site' | 'sign-in'>, number>
   'own-profile': 422,
   'daily-limit': 429,
   'too-many': 429,
+  blocked: 403,
 }
 
 /**

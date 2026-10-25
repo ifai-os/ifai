@@ -80,6 +80,17 @@ describe('circles: post input', () => {
     expect(parseReportInput({ reason: 'spam' })).toBeNull()
   })
 
+  it('reads a report of a member: their address in any case, and the reasons for members (rule 24)', () => {
+    expect(parseReportInput({ member: ' Lin-Qi ', reason: 'impersonation' })).toEqual({ member: 'lin-qi', reason: 'impersonation' })
+    expect(parseReportInput({ member: 'lin-qi', reason: 'profile' })).toEqual({ member: 'lin-qi', reason: 'profile' })
+    // A post's reasons are not a member's, and the other way round.
+    expect(parseReportInput({ member: 'lin-qi', reason: 'offTopic' })).toBeNull()
+    expect(parseReportInput({ post: 9, reason: 'impersonation' })).toBeNull()
+    expect(parseReportInput({ member: 'li', reason: 'spam' })).toBeNull()
+    expect(parseReportInput({ member: 7, reason: 'spam' })).toBeNull()
+    expect(parseReportInput({ member: 'lin-qi', post: 9, reason: 'spam' })).toBeNull()
+  })
+
   it('reads the tab from the address: 推荐 when there is none', () => {
     expect(parseTab(null)).toBe('hot')
     expect(parseTab('')).toBe('hot')

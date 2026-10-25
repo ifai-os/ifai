@@ -5,10 +5,13 @@ import {
   daysSince,
   generatedHandlePattern,
   isHandle,
+  isMemberReportReason,
+  memberReportReasons,
   nextHandleChange,
   normalizeHandle,
   parseBefore,
-  parseFollowInput,
+  parseHandleSwitch,
+  parseMemberReportAction,
   parseProfileInput,
   parseProfileTab,
   parseWebsite,
@@ -119,11 +122,11 @@ describe('profiles: the line about oneself and the site', () => {
 
 describe('profiles: following', () => {
   it('reads a follow in any case, and nothing else', () => {
-    expect(parseFollowInput({ handle: 'LinQi', on: true })).toEqual({ handle: 'linqi', on: true })
-    expect(parseFollowInput({ handle: 'linqi', on: false })).toEqual({ handle: 'linqi', on: false })
-    expect(parseFollowInput({ handle: 'linqi', on: 'yes' })).toBeNull()
-    expect(parseFollowInput({ handle: 'a', on: true })).toBeNull()
-    expect(parseFollowInput(null)).toBeNull()
+    expect(parseHandleSwitch({ handle: 'LinQi', on: true })).toEqual({ handle: 'linqi', on: true })
+    expect(parseHandleSwitch({ handle: 'linqi', on: false })).toEqual({ handle: 'linqi', on: false })
+    expect(parseHandleSwitch({ handle: 'linqi', on: 'yes' })).toBeNull()
+    expect(parseHandleSwitch({ handle: 'a', on: true })).toBeNull()
+    expect(parseHandleSwitch(null)).toBeNull()
   })
 
   it('suggests the people others answered most, never the reader or someone they follow', () => {
@@ -133,6 +136,35 @@ describe('profiles: following', () => {
       { exclude: new Set(['me', 'followed']), limit: 3 },
     )
     expect(ranked.map((item) => item.userId)).toEqual(['recent', 'busy', 'liked'])
+  })
+})
+
+describe('profiles: blocking and reports (rules 23, 24)', () => {
+  it('reads a block as it reads a follow', () => {
+    expect(parseHandleSwitch({ handle: ' Lin-Qi', on: true })).toEqual({ handle: 'lin-qi', on: true })
+    expect(parseHandleSwitch({ handle: 'lin-qi' })).toBeNull()
+  })
+
+  it('knows the five reasons to report a member', () => {
+    expect(memberReportReasons).toEqual(['impersonation', 'profile', 'spam', 'abuse', 'other'])
+    expect(isMemberReportReason('impersonation')).toBe(true)
+    expect(isMemberReportReason('offTopic')).toBe(false)
+    expect(isMemberReportReason('toString')).toBe(false)
+    expect(isMemberReportReason(undefined)).toBe(false)
+  })
+
+  it('reads what the site owner does: any of the three, or keeping them', () => {
+    expect(parseMemberReportAction({ keep: true })).toEqual({ keep: true })
+    expect(parseMemberReportAction({ resetHandle: true })).toEqual({ clearProfile: false, resetHandle: true, resetName: false })
+    expect(parseMemberReportAction({ clearProfile: true, resetName: true, resetHandle: 'yes' })).toEqual({
+      clearProfile: true,
+      resetHandle: false,
+      resetName: true,
+    })
+    // Nothing chosen is nothing to do.
+    expect(parseMemberReportAction({ clearProfile: false })).toBeNull()
+    expect(parseMemberReportAction({ keep: 'true' })).toBeNull()
+    expect(parseMemberReportAction(null)).toBeNull()
   })
 })
 

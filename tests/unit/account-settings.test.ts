@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { memberName } from '@/components/account/member-avatar'
-import { parseSection, sectionHref, sectionPath, settingsSections } from '@/components/account/sections'
+import { parseSection, sectionHref, sectionPath, sectionsFor, settingsSections } from '@/components/account/sections'
 import { describeDevice, deviceLabel } from '@/lib/auth/devices'
 import { withCleanName } from '@/lib/auth/nickname'
 import { dailyEmailState } from '@/lib/auth/settings'
@@ -56,6 +56,13 @@ describe('the settings sections', () => {
   it('reads ?section=, and anything else is the profile', () => {
     for (const section of settingsSections) expect(parseSection(section)).toBe(section)
     for (const value of [undefined, '', 'privacy', 'Profile', ['data']]) expect(parseSection(value)).toBe('profile')
+  })
+
+  it('has「隐私」after the notifications once the circles are there', () => {
+    expect(sectionsFor(1)).toEqual(['profile', 'sign-in', 'notifications', 'language', 'data'])
+    expect(sectionsFor(2)).toEqual(['profile', 'sign-in', 'notifications', 'privacy', 'language', 'data'])
+    expect(parseSection('privacy', sectionsFor(2))).toBe('privacy')
+    expect(parseSection('privacy', sectionsFor(1))).toBe('profile')
   })
 
   it('makes the addresses Link and Better Auth take', () => {

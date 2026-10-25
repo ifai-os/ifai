@@ -6,13 +6,17 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon'
 
-import { reportReasons, type ReportReason, type ReportTarget } from '../rules'
+import { memberReportReasons, type MemberReportReason } from '@/modules/profiles/rules'
+
+import { reportReasons, type MemberReportTarget, type ReportReason, type ReportTarget } from '../rules'
 import { useCirclesSession } from './circles-session'
 
-type ReportDialogProps = { target: ReportTarget | null; onClose: () => void; onReported: (target: ReportTarget) => void }
+type Target = ReportTarget | MemberReportTarget
 
-/** 「举报」: why, then a thank-you. Opens for one post or comment at a time. */
-export function ReportDialog({ target, onClose, onReported }: ReportDialogProps) {
+type ReportDialogProps<T extends Target> = { target: T | null; onClose: () => void; onReported: (target: T) => void }
+
+/** 「举报」: why, then a thank-you. Opens for one post, comment or member at a time. */
+export function ReportDialog<T extends Target>({ target, onClose, onReported }: ReportDialogProps<T>) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const open = target !== null
@@ -31,17 +35,32 @@ export function ReportDialog({ target, onClose, onReported }: ReportDialogProps)
       onClose={onClose}
       className="m-auto w-[calc(100%-32px)] max-w-90 overflow-visible rounded-dialog bg-overlay p-0 text-ink shadow-float backdrop:bg-scrim"
     >
-      {target && <ReportForm key={`${target.kind}-${target.id}`} target={target} titleId={titleId} onClose={onClose} onReported={onReported} />}
+      {target && (
+        <ReportForm
+          key={`${target.kind}-${target.kind === 'member' ? target.handle : target.id}`}
+          target={target}
+          titleId={titleId}
+          onClose={onClose}
+          onReported={onReported}
+        />
+      )}
     </dialog>
   )
 }
 
-function ReportForm({ target, titleId, onClose, onReported }: Omit<ReportDialogProps, 'target'> & { target: ReportTarget; titleId: string }) {
+function ReportForm<T extends Target>({ target, titleId, onClose, onReported }: Omit<ReportDialogProps<T>, 'target'> & { target: T; titleId: string }) {
   const t = useTranslations('circles')
   const states = useTranslations('states')
   const { report } = useCirclesSession()
   const comment = target.kind === 'comment'
-  const [reason, setReason] = useState<ReportReason | null>(null)
+  const member = target.kind === 'member'
+  // A member is reported for other reasons than a post or a comment (rule 24).
+  const reasons: readonly (ReportReason | MemberReportReason)[] = member ? memberReportReasons : reportReasons
+  const [reason, setReason] = useState<ReportReason | MemberReportReason | null>(null)
+  const label = (value: ReportReason | MemberReportReason) => {
+    if (member) return t(`memberReasons.${value as MemberReportReason}`)
+    return comment && value === 'offTopic' ? t('offTopicComment') : t(`reasons.${value as ReportReason}`)
+  }
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'failed'>('idle')
 
   async function send(event: FormEvent<HTMLFormElement>) {
@@ -56,7 +75,7 @@ function ReportForm({ target, titleId, onClose, onReported }: Omit<ReportDialogP
   return (
     <div className="relative flex flex-col gap-3 p-5">
       <h2 id={titleId} className="pr-8 text-title font-semibold">
-        {comment ? t('reportCommentTitle') : t('reportTitle')}
+        {member ? t('reportMemberTitle') : comment ? t('reportCommentTitle') : t('reportTitle')}
       </h2>
       {state === 'done' ? (
         <>
@@ -69,10 +88,10 @@ function ReportForm({ target, titleId, onClose, onReported }: Omit<ReportDialogP
         </>
       ) : (
         <form onSubmit={send} className="flex flex-col gap-3">
-          <p className="text-meta text-ink-3">{comment ? t('reportCommentBody') : t('reportBody')}</p>
+          <p className="text-meta text-ink-3">{member ? t('reportMemberBody') : comment ? t('reportCommentBody') : t('reportBody')}</p>
           <fieldset className="flex flex-col">
             <legend className="pb-1 text-meta font-medium text-ink-2">{t('reportReason')}</legend>
-            {reportReasons.map((value) => (
+            {reasons.map((value) => (
               <label key={value} className="flex min-h-10 cursor-pointer items-center gap-2.5 text-ui">
                 <input
                   type="radio"
@@ -82,7 +101,7 @@ function ReportForm({ target, titleId, onClose, onReported }: Omit<ReportDialogP
                   onChange={() => setReason(value)}
                   className="size-4 accent-ink"
                 />
-                {comment && value === 'offTopic' ? t('offTopicComment') : t(`reasons.${value}`)}
+                {label(value)}
               </label>
             ))}
           </fieldset>
