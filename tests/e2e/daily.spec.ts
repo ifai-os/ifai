@@ -161,8 +161,17 @@ test.describe('with the sample stories', () => {
       // 2026-10-20T08:15Z is 17:15 in Tokyo, still October 20.
       await expect(row.locator('time[datetime="2026-10-20T08:15:00.000Z"]')).toHaveText(/5:15\sPM/)
       await expect(page.getByRole('heading', { level: 2, name: 'Tuesday, October 20' })).toBeVisible()
-      // The newest sample story came out five minutes ago, so the first group is today.
-      await expect(page.locator('[id^="day-"]').first()).toHaveText(en.daily.today)
+      // The newest story leads the first group, under its Tokyo date. The samples go in minutes before
+      // the tests, but a run around 15:00 UTC (Tokyo midnight) can put that date on Tokyo's yesterday.
+      const tokyoDay = (at: Date) => at.toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
+      const first = page.locator('section[aria-labelledby^="day-"]').first()
+      const newest = await first.locator('time[datetime]').first().getAttribute('datetime')
+      const key = tokyoDay(new Date(newest!))
+      await expect(first).toHaveAttribute('aria-labelledby', `day-${key}`)
+      const today = tokyoDay(new Date())
+      const yesterday = tokyoDay(new Date(Date.now() - 86_400_000))
+      expect([today, yesterday]).toContain(key)
+      await expect(first.getByRole('heading', { level: 2 })).toHaveText(key === today ? en.daily.today : en.daily.yesterday)
     })
   })
 
