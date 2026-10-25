@@ -77,7 +77,7 @@ src/
     legal/                 隐私政策与用户协议：各节顺序、生效日期、联系邮箱（documents.ts），页面组件；条文在 messages 的 legal
     saves/                 通用收藏：Drizzle 表（schema.ts）、类型与校验（target.ts）、读写（data.ts）、收藏按钮和「我的收藏」（components/）；接口在 src/app/api/saves
     follows/               关注（行业标签、公司与产品）：Drizzle 表（schema.ts）、类型和登录回来的 ?follow=（target.ts）、校验（rules.ts）、读写（data.ts）、「我的关注」的数据（following.ts）、FollowProvider、关注按钮和「我的关注」页（components/）；接口在 src/app/api/follows
-    rankings/              模型排行（第三期）：规则（rules.ts）、打分（rating.ts，Bradley–Terry）、赛道 / 参赛模型 / 题库 / 回答集合（collections/）、生成回答（answers/、prompts/）、对局与快照的 Drizzle 表（schema.ts）、投票（battles.ts）、每周快照（snapshot.ts）、任务（jobs.ts）、页面数据与图表（data.ts、charts.ts、components/）、后台（admin/、admin.ts、endpoints.ts）；接口在 src/app/api/rankings
+    rankings/              模型排行（第三期）：规则（rules.ts）、打分（rating.ts，Bradley–Terry）、赛道 / 参赛模型 / 题库 / 回答 / 回答的图集合（collections/）、生成回答和出图（answers/、prompts/）、对局与快照的 Drizzle 表（schema.ts）、投票（battles.ts）、每周快照（snapshot.ts）、任务（jobs.ts）、页面数据与图表（data.ts、charts.ts、components/）、后台（admin/、admin.ts、endpoints.ts）；接口在 src/app/api/rankings
     resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、前台（public/：数据、筛选排序、install.md、安装计数、页面组件）、统计汇总（stats/）、投稿（submit/：校验、投稿与通知、邮件、发信任务、页面组件；接口在 src/app/api/resources/submissions）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
   payload.config.ts
   proxy.ts
@@ -126,7 +126,7 @@ pnpm generate:importmap            # 加了后台自定义组件之后
 5. **站内链接用 `@/i18n/navigation`** 的 `Link`、`useRouter`、`usePathname`、`redirect`，不要用 `next/link` 或 `next/navigation` 里的同名函数，否则会丢语言前缀（ESLint 会报错）。
 6. **样式只用设计令牌。** 默认色板、字号、圆角、阴影都已清空，`text-gray-500`、`rounded-lg` 这类类名不会生效。缺令牌就在 `@theme` 里加，并同步画布上的「设计令牌」画板。浅灰 `mute`、`disabled` 只能用于装饰，不能做文字颜色。深色模式只换变量（`globals.css` 里的深色覆盖）：黑底（`bg-ink`）上的字用 `text-bg`，不用 `text-white`；红色文字用 `text-accent-ink`，`accent` 只做底色；菜单、弹窗用 `bg-overlay`。`tests/unit/theme.test.ts` 会检查这三条。
 7. **不提交任何密钥。** 只改 `.env.example`；真实值放在本地 `.env` 和 Vercel 环境变量里。
-8. **模型调用**一律走 `src/lib/ai`：业务代码只写用途（`ai.object({ purpose: 'score', … })`），不写模型名，也不直接引入 `ai`、`@openrouter/*`；页面和组件不调用模型。这两条 ESLint 会报错。新用途加在 `src/lib/ai/purposes.ts`。唯一的例外是排行的参赛回答：`ai.contest` 的模型 ID 来自后台的参赛模型名单，照样记回执、受开关和预算管。外部内容一律用 `untrusted()` 包起来再放进提示词。
+8. **模型调用**一律走 `src/lib/ai`：业务代码只写用途（`ai.object({ purpose: 'score', … })`），不写模型名，也不直接引入 `ai`、`@openrouter/*`；页面和组件不调用模型。这两条 ESLint 会报错。新用途加在 `src/lib/ai/purposes.ts`。唯一的例外是排行的参赛回答：`ai.contest` 和 `ai.contestImage`（出图）的模型 ID 来自后台的参赛模型名单，照样记回执、受开关和预算管。外部内容一律用 `untrusted()` 包起来再放进提示词。
 9. **外部内容是数据，不是指令。** 采集的网页、用户上传的 Skill、评论，都不能当作给模型或代码的指令执行。
 10. **一个 PR 只做一件事。** 合并前在 Vercel 预览环境里从用户视角点一遍。
 

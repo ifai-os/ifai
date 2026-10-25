@@ -1,15 +1,17 @@
+import { randomBytes } from 'node:crypto'
+
 import config from '@payload-config'
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { and, eq, gte, sql } from '@payloadcms/db-postgres/drizzle'
 import { getPayload, type Payload } from 'payload'
 
 import { ai as defaultAi } from '@/lib/ai'
-import type { Ai } from '@/lib/ai/client'
+import type { Ai, ContestImage } from '@/lib/ai/client'
 import { ModelCallError, ReceiptExhaustedError } from '@/lib/ai/errors'
 import { modelReceipts } from '@/lib/ai/schema'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
 
-import { answerInstructions } from '../prompts/answer'
+import { answerInstructions, imageInstructions } from '../prompts/answer'
 import { ANSWER_MAX_TOKENS, ANSWERS_PER_RUN, arenaBudgetUsd, namesItself } from '../rules'
 
 /**
@@ -97,19 +99,25 @@ function spellings(value: Localized): string[] {
   return Object.values(value).filter((text): text is string => Boolean(text))
 }
 
+type ArenaModel = { name: string; org?: unknown; openrouterId: string }
+
+/** The call both kinds of answer share: one receipt per (question, model, retry). */
+type Call = { purpose: 'arena'; model: string; prompt: string; variant: string | undefined; subject: string }
+
 /**
- * One answer: the model gets the arena instructions and the question as written, at most
- * ANSWER_MAX_TOKENS; the answer is stored with its cost and whether it can be shown in a vote
- * (not cut off, not naming its model or maker). Retries are new calls (`attempts` is the variant),
- * so「重新生成」pays again on purpose.
+ * One answer: the model gets the arena instructions and the question as written; a text answer is
+ * stored with whether it can be shown in a vote (not cut off at ANSWER_MAX_TOKENS, not naming its
+ * model or maker), a picture as soon as it arrives (「图像生成赛道」). Either way with its cost.
+ * Retries are new calls (`attempts` is the variant), so「重新生成」pays again on purpose.
  */
 export async function generateAnswer(answerId: number, deps: AnswerDeps = {}): Promise<Generated> {
   const payload = await payloadOf(deps)
   const answer = await payload.findByID({ collection: 'arena-answers', id: answerId, depth: 0 }).catch(() => null)
   if (!answer || answer.status !== 'pending') return { status: 'skipped', reason: 'not waiting any more' }
-  const [prompt, model] = await Promise.all([
+  const [prompt, model, arena] = await Promise.all([
     payload.findByID({ collection: 'arena-prompts', id: Number(answer.prompt), depth: 0 }).catch(() => null),
     payload.findByID({ collection: 'arena-models', id: Number(answer.model), depth: 0, locale: 'all' }).catch(() => null),
+    payload.findByID({ collection: 'arenas', id: Number(answer.arena), depth: 0, select: { kind: true } }).catch(() => null),
   ])
   if (!prompt || prompt.status !== 'active') return { status: 'skipped', reason: 'the question is not in use' }
   if (!model || (model.status !== 'draft' && model.status !== 'active')) return { status: 'skipped', reason: 'the model is retired' }
@@ -118,50 +126,92 @@ export async function generateAnswer(answerId: number, deps: AnswerDeps = {}): P
   if (spent) return { status: 'paused', reason: `ARENA_DAILY_BUDGET_USD used up: $${spent.spentUsd.toFixed(4)} of $${spent.budgetUsd.toFixed(2)}` }
 
   const attempts = Number(answer.attempts ?? 0)
+  const call: Call = {
+    purpose: 'arena',
+    model: model.openrouterId,
+    prompt: prompt.text,
+    variant: attempts > 0 ? `retry-${attempts}` : undefined,
+    subject: `arena-answers:${answerId}`,
+  }
   try {
-    const { output, receiptId, reused } = await (deps.ai ?? defaultAi).contest({
-      purpose: 'arena',
-      model: model.openrouterId,
-      instructions: answerInstructions,
-      prompt: prompt.text,
-      variant: attempts > 0 ? `retry-${attempts}` : undefined,
-      subject: `arena-answers:${answerId}`,
-      maxOutputTokens: ANSWER_MAX_TOKENS,
-    })
-    const text = output.text.trim()
-    if (!text) return fail(payload, answerId, 'The model returned an empty answer.')
-    const [usage] = await drizzleOf(payload)
-      .select({ costUsd: modelReceipts.costUsd, inputTokens: modelReceipts.inputTokens, outputTokens: modelReceipts.outputTokens })
-      .from(modelReceipts)
-      .where(eq(modelReceipts.id, receiptId))
-      .limit(1)
-    const names = namesItself(text, { name: model.name, org: spellings(model.org as Localized) })
-    await payload.update({
-      collection: 'arena-answers',
-      id: answerId,
-      depth: 0,
-      data: {
-        status: 'done',
-        text,
-        cutOff: output.cutOff,
-        namesItself: names,
-        costUsd: usage?.costUsd ?? null,
-        inputTokens: usage?.inputTokens ?? null,
-        outputTokens: usage?.outputTokens ?? null,
-        generatedAt: nowOf(deps).toISOString(),
-        error: null,
-      },
-    })
-    return { status: 'done', cutOff: output.cutOff, namesItself: names, costUsd: usage?.costUsd ?? 0, reused }
+    return arena?.kind === 'image' ? await draw(payload, answerId, call, deps) : await write(payload, answerId, call, model, deps)
   } catch (error) {
     if (error instanceof ReceiptExhaustedError) return fail(payload, answerId, error.message)
     if (error instanceof ModelCallError) {
       return error.retryable ? { status: 'skipped', reason: error.message } : { status: 'paused', reason: error.message }
     }
-    // The provider refused or broke off; the receipt counted the attempt. Shown in the back office meanwhile.
+    // The provider refused or broke off, or the picture could not be stored; the receipt counted
+    // the attempt. Shown in the back office meanwhile.
     await payload.update({ collection: 'arena-answers', id: answerId, depth: 0, data: { error: message(error).slice(0, 500) } })
     return { status: 'error', reason: message(error) }
   }
+}
+
+/** A text answer, at most ANSWER_MAX_TOKENS (rule 6). */
+async function write(payload: Payload, answerId: number, call: Call, model: ArenaModel, deps: AnswerDeps): Promise<Generated> {
+  const { output, receiptId, reused } = await (deps.ai ?? defaultAi).contest({ ...call, instructions: answerInstructions, maxOutputTokens: ANSWER_MAX_TOKENS })
+  const text = output.text.trim()
+  if (!text) return fail(payload, answerId, 'The model returned an empty answer.')
+  const usage = await usageOf(payload, receiptId)
+  const names = namesItself(text, { name: model.name, org: spellings(model.org as Localized) })
+  await payload.update({
+    collection: 'arena-answers',
+    id: answerId,
+    depth: 0,
+    data: { status: 'done', text, cutOff: output.cutOff, namesItself: names, ...usage, generatedAt: nowOf(deps).toISOString(), error: null },
+  })
+  return { status: 'done', cutOff: output.cutOff, namesItself: names, costUsd: usage.costUsd ?? 0, reused }
+}
+
+/**
+ * A picture. It is never cut off, and what is drawn on it cannot be read for names: the site
+ * owner looks at it in the back office and hides it if it gives the model away.
+ */
+async function draw(payload: Payload, answerId: number, call: Call, deps: AnswerDeps): Promise<Generated> {
+  const { output, receiptId, reused } = await (deps.ai ?? defaultAi).contestImage({
+    ...call,
+    instructions: imageInstructions,
+    keep: (picture) => keepPicture(payload, picture),
+  })
+  if (output.image === null) return fail(payload, answerId, 'The model returned no picture.')
+  // A reused receipt points at the picture stored the first time, which the site owner may have deleted since.
+  const stored = await payload.findByID({ collection: 'arena-images', id: output.image, depth: 0, joins: false, select: {} }).catch(() => null)
+  if (!stored) return fail(payload, answerId, 'Its picture was deleted. Regenerate the answer for a new one.')
+  const usage = await usageOf(payload, receiptId)
+  await payload.update({
+    collection: 'arena-answers',
+    id: answerId,
+    depth: 0,
+    data: { status: 'done', image: output.image, text: null, cutOff: false, namesItself: false, ...usage, generatedAt: nowOf(deps).toISOString(), error: null },
+  })
+  return { status: 'done', cutOff: false, namesItself: false, costUsd: usage.costUsd ?? 0, reused }
+}
+
+const pictureExtensions: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
+
+/**
+ * Into the pictures collection (../collections/ArenaImages.ts) under a random name: the address
+ * says nothing about the model, the question or when it was drawn. Payload checks the bytes.
+ */
+async function keepPicture(payload: Payload, picture: ContestImage): Promise<number> {
+  const name = `${randomBytes(12).toString('hex')}.${pictureExtensions[picture.mediaType] ?? 'png'}`
+  const doc = await payload.create({
+    collection: 'arena-images',
+    data: {},
+    file: { data: Buffer.from(picture.data), mimetype: picture.mediaType, name, size: picture.data.byteLength },
+    depth: 0,
+  })
+  return Number(doc.id)
+}
+
+/** What the call cost, from its receipt. */
+async function usageOf(payload: Payload, receiptId: number) {
+  const [usage] = await drizzleOf(payload)
+    .select({ costUsd: modelReceipts.costUsd, inputTokens: modelReceipts.inputTokens, outputTokens: modelReceipts.outputTokens })
+    .from(modelReceipts)
+    .where(eq(modelReceipts.id, receiptId))
+    .limit(1)
+  return { costUsd: usage?.costUsd ?? null, inputTokens: usage?.inputTokens ?? null, outputTokens: usage?.outputTokens ?? null }
 }
 
 async function fail(payload: Payload, answerId: number, reason: string): Promise<Generated> {

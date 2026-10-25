@@ -1,11 +1,29 @@
-import { APIError, type CollectionBeforeDeleteHook, type CollectionConfig } from 'payload'
+import { APIError, type CollectionBeforeChangeHook, type CollectionBeforeDeleteHook, type CollectionConfig } from 'payload'
 
+import { rejectField } from '@/lib/field-error'
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
 import { refreshRankingsAfterChange, refreshRankingsAfterDelete } from '../cache'
 import { snapshotEndpoints } from '../endpoints'
-import { arenaStatuses, reservedArenaSlugs } from '../rules'
+import { arenaKinds, arenaStatuses, reservedArenaSlugs } from '../rules'
 import { adminMessage, isAdmin, rankingsAdminGroup, slugField } from './shared'
+
+/** Its questions were answered in the arena's kind (text or pictures): once it has any, the kind stays. */
+const keepKindOfUsedArenas: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+  if (operation !== 'update' || !originalDoc || data.kind === undefined || data.kind === originalDoc.kind) return data
+  const { totalDocs } = await req.payload.count({ collection: 'arena-prompts', where: { arena: { equals: originalDoc.id } }, req })
+  if (totalDocs > 0) {
+    rejectField(
+      'arenas',
+      'kind',
+      adminMessage(req, {
+        en: 'This arena already has questions, so its kind cannot change. Add a new arena for the other kind.',
+        zh: '这个赛道已经有题目了，种类不能再改。要另一种，就新建一个赛道。',
+      }),
+    )
+  }
+  return data
+}
 
 /** An arena with questions has answers and votes behind it: take it off the site instead. */
 const keepUsedArenas: CollectionBeforeDeleteHook = async ({ id, req }) => {
@@ -24,9 +42,10 @@ const keepUsedArenas: CollectionBeforeDeleteHook = async ({ id, req }) => {
 }
 
 /**
- * The arenas of the model rankings (docs/specs/rankings.md): 文本 and 编程 come with the
- * migration. Only published arenas appear on the site and get weekly snapshots; answers are
- * generated for draft ones too, so an arena can be ready before it opens.
+ * The arenas of the model rankings (docs/specs/rankings.md): 文本 and 编程 come with the first
+ * migration, 图像生成 (answers are pictures) with the second. Only published arenas appear on the
+ * site and get weekly snapshots; answers are generated for draft ones too, so an arena can be
+ * ready before it opens.
  */
 export const Arenas: CollectionConfig = {
   slug: 'arenas',
@@ -54,6 +73,7 @@ export const Arenas: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
+    beforeChange: [keepKindOfUsedArenas],
     afterChange: [syncHantFromHans(['name', 'intro']), refreshRankingsAfterChange],
     beforeDelete: [keepUsedArenas],
     afterDelete: [refreshRankingsAfterDelete],
@@ -97,6 +117,24 @@ export const Arenas: CollectionConfig = {
         description: {
           en: 'Draft arenas get answers but no votes and no rankings.',
           zh: '准备中的赛道会生成回答，但不出题投票、不算排行。',
+        },
+      },
+    },
+    {
+      name: 'kind',
+      type: 'select',
+      required: true,
+      defaultValue: 'text',
+      options: [
+        { value: arenaKinds[0], label: { en: 'Text', zh: '文字' } },
+        { value: arenaKinds[1], label: { en: 'Image', zh: '图像' } },
+      ],
+      label: { en: 'Kind', zh: '种类' },
+      admin: {
+        position: 'sidebar',
+        description: {
+          en: 'Text answers, or one picture per answer. Fixed once the arena has questions.',
+          zh: '回答是文字，还是每份一张图。有了题目以后不能改。',
         },
       },
     },
