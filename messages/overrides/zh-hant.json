@@ -365,5 +365,8 @@
   },
   "rankingsVote": {
     "newTab": "（在新分頁開啟原圖）"
+  },
+  "recommend": {
+    "description": "來自實踐的 AI 長文：踩坑經驗、教學、評測和觀點，附編輯精選。"
   }
 }

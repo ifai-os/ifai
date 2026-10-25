@@ -83,6 +83,7 @@ export interface Config {
     'skill-tags': SkillTag;
     'skill-submissions': SkillSubmission;
     circles: Circle;
+    articles: Article;
     arenas: Arena;
     'arena-models': ArenaModel;
     'arena-prompts': ArenaPrompt;
@@ -115,6 +116,7 @@ export interface Config {
     'skill-tags': SkillTagsSelect<false> | SkillTagsSelect<true>;
     'skill-submissions': SkillSubmissionsSelect<false> | SkillSubmissionsSelect<true>;
     circles: CirclesSelect<false> | CirclesSelect<true>;
+    articles: ArticlesSelect<false> | ArticlesSelect<true>;
     arenas: ArenasSelect<false> | ArenasSelect<true>;
     'arena-models': ArenaModelsSelect<false> | ArenaModelsSelect<true>;
     'arena-prompts': ArenaPromptsSelect<false> | ArenaPromptsSelect<true>;
@@ -1046,6 +1048,79 @@ export interface Circle {
   createdAt: string;
 }
 /**
+ * An article is in the one language it is written in: the content-language picker above does not apply. Published articles show under Latest; tick “Picked” and give a reason to put one under Recommended and at the top of the page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles".
+ */
+export interface Article {
+  id: number;
+  title: string;
+  /**
+   * One or two sentences under the title in lists and for search engines.
+   */
+  summary?: string | null;
+  /**
+   * About 2 : 1, at least 1360 px wide. Optional.
+   */
+  cover?: (number | null) | Media;
+  /**
+   * Second-level headings make the table of contents (two or more). Links open in a new tab.
+   */
+  body: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Up to 5, each up to 20 characters, e.g. RAG. Readers click one to see the articles with it.
+   */
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Hidden articles are off the site; their address answers “not found”.
+   */
+  status: 'draft' | 'published' | 'hidden';
+  /**
+   * The article’s address in this language is the one search engines keep.
+   */
+  lang: 'en' | 'zh-Hans' | 'zh-Hant' | 'ja' | 'ko';
+  channel: 'models' | 'agents' | 'coding' | 'prompts' | 'images' | 'design' | 'career';
+  /**
+   * Picked articles show under Recommended, newest pick first; the last three at the top of the page.
+   */
+  featured?: boolean | null;
+  /**
+   * One line in the article’s language, shown with it. Picking is not an endorsement.
+   */
+  featuredReason?: string | null;
+  /**
+   * Set the first time it is published.
+   */
+  publishedAt?: string | null;
+  /**
+   * Counted from the body when it is saved.
+   */
+  readingMinutes?: number | null;
+  featuredAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. The rankings are recomputed every Monday at 06:00 Shanghai time.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1311,6 +1386,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'circles';
         value: number | Circle;
+      } | null)
+    | ({
+        relationTo: 'articles';
+        value: number | Article;
       } | null)
     | ({
         relationTo: 'arenas';
@@ -1848,6 +1927,32 @@ export interface CirclesSelect<T extends boolean = true> {
   tone?: T;
   order?: T;
   shown?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles_select".
+ */
+export interface ArticlesSelect<T extends boolean = true> {
+  title?: T;
+  summary?: T;
+  cover?: T;
+  body?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  status?: T;
+  lang?: T;
+  channel?: T;
+  featured?: T;
+  featuredReason?: T;
+  publishedAt?: T;
+  readingMinutes?: T;
+  featuredAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

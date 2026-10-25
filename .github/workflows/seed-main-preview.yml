@@ -123,7 +123,9 @@ jobs:
       # The R2 keys are the previews' own bucket (ifai-media-preview, the same one Vercel's Preview
       # environment uses), scoped to that bucket only: with them the stories' pictures and the Skills'
       # Zips go where the preview can serve them. Without the secrets the stories go without pictures.
-      - name: Sample stories, apps and Skills
+      # The sample articles only show once the preview is built for phase two; branches from before
+      # the recommend module have no script for them.
+      - name: Sample stories, apps, Skills and articles
         env:
           DATABASE_URI: ${{ steps.neon.outputs.database_url }}
           SEED_PREVIEW_MAIN: '1'
@@ -136,6 +138,7 @@ jobs:
           pnpm payload run scripts/seed-apps.ts
           pnpm payload run scripts/seed-stories.ts
           pnpm payload run scripts/seed-skills.ts
+          if [ -f scripts/seed-articles.ts ]; then pnpm payload run scripts/seed-articles.ts; fi
 
   # Pages keep what they read for up to an hour, and the samples were written from here, so the site
   # never heard about them. Clearing Vercel's data cache makes them show up right away. (It is the whole

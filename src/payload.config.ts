@@ -38,6 +38,7 @@ import { ArenaModels } from './modules/rankings/collections/ArenaModels'
 import { ArenaPrompts } from './modules/rankings/collections/ArenaPrompts'
 import { Arenas } from './modules/rankings/collections/Arenas'
 import { rankingsTables } from './modules/rankings/schema'
+import { Articles } from './modules/recommend/collections/Articles'
 import { AgentHosts } from './modules/resources/collections/AgentHosts'
 import { Skills } from './modules/resources/collections/Skills'
 import { SkillSubmissions } from './modules/resources/collections/SkillSubmissions'
@@ -118,6 +119,7 @@ export default buildConfig({
     SkillTags,
     SkillSubmissions,
     Circles,
+    Articles,
     Arenas,
     ArenaModels,
     ArenaPrompts,
