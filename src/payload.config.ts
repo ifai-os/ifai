@@ -29,6 +29,7 @@ import { Stories } from './modules/daily/collections/stories'
 import { Subscribers } from './modules/daily/collections/subscribers'
 import { dailyEmailTables } from './modules/daily/email/schema'
 import { dailyTables } from './modules/daily/schema'
+import { followsTables } from './modules/follows/schema'
 import { ArenaAnswers } from './modules/rankings/collections/ArenaAnswers'
 import { ArenaModels } from './modules/rankings/collections/ArenaModels'
 import { ArenaPrompts } from './modules/rankings/collections/ArenaPrompts'
@@ -148,8 +149,8 @@ export default buildConfig({
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
     // Our own Drizzle tables (Better Auth, model receipts, the daily module's raw_items and subscribe attempts,
-    // skill install events, saves, the admin log, the model arena's votes and snapshots) join Payload's schema
-    // so migrations create and track them.
+    // skill install events, saves and follows, the admin log, the model arena's votes and snapshots) join Payload's
+    // schema so migrations create and track them.
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
@@ -162,6 +163,7 @@ export default buildConfig({
           ...resourcesTables,
           ...appsTables,
           ...savesTables,
+          ...followsTables,
           ...adminLogTables,
           ...rankingsTables,
         },
