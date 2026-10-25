@@ -296,6 +296,16 @@
       "unsubscribe": "取消訂閱"
     }
   },
+  "circles": {
+    "composerLabel": "發布動態",
+    "publish": "發布",
+    "publishing": "發布中…",
+    "postedIn": "發布於 <circle># {name}</circle>",
+    "reactionNames": {
+      "like": "讚"
+    },
+    "failed": "動態沒有載入出來。"
+  },
   "legal": {
     "privacy": {
       "intro": "IFAI（ifai.io）是一個 AI 資訊、應用和資源網站。這一頁說明你使用網站時我們收集哪些資訊、為什麼收集、交給誰處理、保留多久，以及你可以怎麼做。我們只收集網站運作需要的資訊。",

@@ -160,6 +160,9 @@ function bodyChoice(action: string, body: Record<string, unknown>): string | nul
       return body.delist === true ? 'delist' : 'resolve'
     case 'apps:mentions':
       return body.removed === true ? 'remove' : body.removed === false ? 'restore' : null
+    case 'circles:posts':
+      if (body.keep === true) return 'keep'
+      return typeof body.status === 'string' && SHORT_VALUE.test(body.status) ? body.status : null
     default:
       return null
   }

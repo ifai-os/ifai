@@ -7,6 +7,8 @@ import { localizePath, messagesFileName, type Locale } from '@/i18n/config'
 import type { ReportReason, ReviewStatus, TranslatedTexts, TranslationStatus } from '@/modules/apps/reviews/rules'
 import { appReviewReports, appReviews, appReviewTranslations } from '@/modules/apps/schema'
 import { normalizeEmail } from '@/modules/daily/email/address'
+import type { PostStatus, Reaction, ReportReason as PostReportReason } from '@/modules/circles/rules'
+import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from '@/modules/circles/schema'
 import { emailSends, type EmailSendStatus } from '@/modules/daily/email/schema'
 import { listHref, storyHref, topicHref } from '@/modules/daily/public/list-params'
 import { isStoryTag } from '@/modules/daily/tags'
@@ -105,6 +107,14 @@ export type MemberExport = {
     submittedAt: string
     lastEmail: { status: string; sentAt: string | null } | null
   }[]
+  /** The circles the member joined, newest first. */
+  circles: { circle: ExportRef; joinedAt: string }[]
+  /** Their posts in circles, newest first, hidden ones too. */
+  circlePosts: { id: number; circle: ExportRef; text: string; language: string; status: PostStatus; postedAt: string }[]
+  /** Their reactions to posts: on which post, not its text or author. */
+  circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string }[]
+  /** Posts by others the member reported: which one and why, not its text or author. */
+  circlePostReports: { post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null }[]
   /** The daily email subscription of the sign-in email, when it is verified and subscribed at some point. */
   dailyEmail: {
     email: string
@@ -153,6 +163,10 @@ export type MemberRecords = {
   appReports: AppReport[]
   appSubmissions: AppSubmission[]
   skillSubmissions: SkillSubmission[]
+  circleMembers: { circleId: number; createdAt: Date }[]
+  circlePosts: { id: number; circleId: number; body: string; lang: string; status: PostStatus; createdAt: Date }[]
+  circleReactions: { postId: number; circleId: number; reaction: Reaction; createdAt: Date }[]
+  circlePostReports: { postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
   subscriber: Subscriber | null
   sends: { localDate: string; locale: string; status: EmailSendStatus; storyCount: number | null; sentAt: Date | null }[]
 }
@@ -163,8 +177,8 @@ const link = (site: string, locale: Locale, path: `/${string}`) => `${site}${loc
 
 /**
  * How the file names each kind of thing: one per save type (a new save type does not compile
- * until it has one), plus app categories and daily stories. Deleted things are left out and keep
- * only their id.
+ * until it has one), plus app categories, daily stories and circles. Deleted things are left out
+ * and keep only their id.
  */
 const lookups = {
   app: async (payload, ids, locale, site) => {
@@ -219,6 +233,19 @@ const lookups = {
     // Pending, withdrawn and merged stories have no page.
     return docs.map((story) => ({ id: story.id, name: story.title, url: story.status === 'published' ? link(site, locale, storyHref(story.slug)) : null }))
   },
+  circle: async (payload, ids, locale, site) => {
+    const { docs } = await payload.find({
+      collection: 'circles',
+      where: { id: { in: ids } },
+      select: { name: true, slug: true, shown: true },
+      depth: 0,
+      pagination: false,
+      overrideAccess: true,
+      locale,
+    })
+    // A circle the owner took down has no page of its own.
+    return docs.map((circle) => ({ id: circle.id, name: circle.name, url: circle.shown ? link(site, locale, `/circles?circle=${circle.slug}`) : null }))
+  },
 } satisfies Record<SaveType, Lookup> & Record<string, Lookup>
 
 type RefKind = keyof typeof lookups
@@ -258,8 +285,22 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
   // Reports keep the reporter as `u:<member id>` (src/app/api/app-reports/new, src/app/api/reviews/report).
   const reporter = `u:${userId}`
   const collection = { sort: '-createdAt', depth: 0, pagination: false, overrideAccess: true } as const
-  const [accounts, sessions, saveRows, followRows, reviews, reviewReports, appReports, appSubmissions, skillSubmissions, subscribers] =
-    await Promise.all([
+  const [
+    accounts,
+    sessions,
+    saveRows,
+    followRows,
+    reviews,
+    reviewReports,
+    appReports,
+    appSubmissions,
+    skillSubmissions,
+    memberships,
+    posts,
+    postReactions,
+    postReports,
+    subscribers,
+  ] = await Promise.all([
     db
       .select({ providerId: authAccounts.providerId, accountId: authAccounts.accountId, scope: authAccounts.scope, createdAt: authAccounts.createdAt })
       .from(authAccounts)
@@ -315,6 +356,47 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     payload.find({ collection: 'app-reports', where: { reporter: { equals: reporter } }, ...collection }),
     payload.find({ collection: 'app-submissions', where: { submitterId: { equals: userId } }, ...collection }),
     payload.find({ collection: 'skill-submissions', where: { submitterId: { equals: userId } }, ...collection }),
+    db
+      .select({ circleId: circleMembers.circleId, createdAt: circleMembers.createdAt })
+      .from(circleMembers)
+      .where(eq(circleMembers.userId, userId))
+      .orderBy(desc(circleMembers.createdAt)),
+    db
+      .select({
+        id: circlePosts.id,
+        circleId: circlePosts.circleId,
+        body: circlePosts.body,
+        lang: circlePosts.lang,
+        status: circlePosts.status,
+        createdAt: circlePosts.createdAt,
+      })
+      .from(circlePosts)
+      .where(eq(circlePosts.userId, userId))
+      .orderBy(desc(circlePosts.createdAt), desc(circlePosts.id)),
+    db
+      .select({
+        postId: circlePostReactions.postId,
+        circleId: circlePosts.circleId,
+        reaction: circlePostReactions.reaction,
+        createdAt: circlePostReactions.createdAt,
+      })
+      .from(circlePostReactions)
+      .innerJoin(circlePosts, eq(circlePosts.id, circlePostReactions.postId))
+      .where(eq(circlePostReactions.userId, userId))
+      .orderBy(desc(circlePostReactions.createdAt), desc(circlePostReactions.id)),
+    // Posts are reported as `u:<member id>` too (src/app/api/circles/report).
+    db
+      .select({
+        postId: circlePostReports.postId,
+        circleId: circlePosts.circleId,
+        reason: circlePostReports.reason,
+        createdAt: circlePostReports.createdAt,
+        resolvedAt: circlePostReports.resolvedAt,
+      })
+      .from(circlePostReports)
+      .innerJoin(circlePosts, eq(circlePosts.id, circlePostReports.postId))
+      .where(eq(circlePostReports.reporter, reporter))
+      .orderBy(desc(circlePostReports.createdAt)),
     // The subscription is by address, not by account: only an address the member has shown is theirs.
     user.emailVerified
       ? payload.find({ collection: 'subscribers', where: { email: { equals: normalizeEmail(user.email) } }, depth: 0, limit: 1, overrideAccess: true })
@@ -362,12 +444,16 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     appReports: appReports.docs,
     appSubmissions: appSubmissions.docs,
     skillSubmissions: skillSubmissions.docs,
+    circleMembers: memberships,
+    circlePosts: posts,
+    circleReactions: postReactions,
+    circlePostReports: postReports,
     subscriber,
     sends,
   }
 }
 
-/** Names and addresses for every app, Skill and category the records point at, in the page language. */
+/** Names and addresses for every app, Skill, category and circle the records point at, in the page language. */
 export async function readExportRefs(payload: Payload, records: MemberRecords, locale: Locale, site: string): Promise<ExportRefs> {
   const kinds = Object.keys(lookups) as RefKind[]
   const wanted = Object.fromEntries(kinds.map((kind) => [kind, new Set<number>()])) as Record<RefKind, Set<number>>
@@ -383,6 +469,7 @@ export async function readExportRefs(payload: Payload, records: MemberRecords, l
     want('category', idOf(submission.category))
   }
   for (const submission of records.skillSubmissions) want('skill', idOf(submission.skill))
+  for (const row of [...records.circleMembers, ...records.circlePosts, ...records.circleReactions, ...records.circlePostReports]) want('circle', row.circleId)
 
   const found = await Promise.all(
     kinds.map(async (kind) => {
@@ -531,6 +618,28 @@ export function shapeMemberExport(
       replyFromIFAI: submission.reply ?? null,
       submittedAt: submission.createdAt,
       lastEmail: lastEmail(submission.notifiedStatus, submission.notifiedAt),
+    })),
+    circles: records.circleMembers.map((membership) => ({ circle: ref('circle', membership.circleId), joinedAt: iso(membership.createdAt) })),
+    circlePosts: records.circlePosts.map((post) => ({
+      id: post.id,
+      circle: ref('circle', post.circleId),
+      text: post.body,
+      language: post.lang,
+      status: post.status,
+      postedAt: iso(post.createdAt),
+    })),
+    circleReactions: records.circleReactions.map((reaction) => ({
+      post: reaction.postId,
+      circle: ref('circle', reaction.circleId),
+      reaction: reaction.reaction,
+      reactedAt: iso(reaction.createdAt),
+    })),
+    circlePostReports: records.circlePostReports.map((report) => ({
+      post: report.postId,
+      circle: ref('circle', report.circleId),
+      reason: report.reason,
+      reportedAt: iso(report.createdAt),
+      resolvedAt: isoOrNull(report.resolvedAt),
     })),
     dailyEmail: subscriber
       ? {

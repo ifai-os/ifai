@@ -82,6 +82,11 @@ describe('admin log: endpoint bodies and actions', () => {
     expect(endpointAction('apps', '/:id/reports', { id: '5' }, { resolve: 'all' })?.action).toBe('apps:reports/resolve')
     expect(endpointAction('apps', '/:id/mentions/:mentionId', { id: '5', mentionId: '2' }, { removed: false })?.action).toBe('apps:mentions/restore')
     expect(endpointAction('app-submissions', '/:id/handling', { id: '5' }, { action: 'duplicate' })?.action).toBe('app-submissions:handling/duplicate')
+    expect(endpointAction('circles', '/:id/posts/:postId', { id: '2', postId: '9' }, { status: 'hidden' })).toEqual({
+      action: 'circles:posts/hidden',
+      params: { postId: '9' },
+    })
+    expect(endpointAction('circles', '/:id/posts/:postId', { id: '2', postId: '9' }, { keep: true })?.action).toBe('circles:posts/keep')
   })
 
   it('logs nothing for endpoints that write nothing', () => {
@@ -96,6 +101,7 @@ describe('admin log: endpoint bodies and actions', () => {
       'apps:/:id/reports': [{ delist: true }, { resolve: 'all' }],
       'apps:/:id/mentions/:mentionId': [{ removed: true }, { removed: false }],
       'app-submissions:/:id/handling': [{ action: 'draft' }, { action: 'duplicate' }],
+      'circles:/:id/posts/:postId': [{ status: 'hidden' }, { status: 'shown' }, { keep: true }],
     }
     const reviewActions = ['edit', 'publish', 'correct', 'reject', 'later', 'withdraw', 'merge', 'keep-separate', 'rewrite']
     const actions: string[] = []
@@ -103,7 +109,9 @@ describe('admin log: endpoint bodies and actions', () => {
       for (const endpoint of Array.isArray(collection.endpoints) ? collection.endpoints : []) {
         // Payload's own REST endpoints are logged by the collection hooks instead.
         if (!endpoint.custom?.adminLog) continue
-        const params = endpoint.path.includes(':action') ? reviewActions.map((action) => ({ id: '1', action, reviewId: '2', mentionId: '3' })) : [{ id: '1', reviewId: '2', mentionId: '3' }]
+        const params = endpoint.path.includes(':action')
+          ? reviewActions.map((action) => ({ id: '1', action, reviewId: '2', mentionId: '3' }))
+          : [{ id: '1', reviewId: '2', mentionId: '3', postId: '4' }]
         for (const routeParams of params) {
           for (const body of bodies[`${collection.slug}:${endpoint.path}`] ?? [{}]) {
             const described = endpointAction(collection.slug, endpoint.path, routeParams, body)

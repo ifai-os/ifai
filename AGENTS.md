@@ -79,6 +79,7 @@ src/
     follows/               关注（行业标签、公司与产品）：Drizzle 表（schema.ts）、类型和登录回来的 ?follow=（target.ts）、校验（rules.ts）、读写（data.ts）、「我的关注」的数据（following.ts）、FollowProvider、关注按钮和「我的关注」页（components/）；接口在 src/app/api/follows
     rankings/              模型排行（第三期）：规则（rules.ts）、打分（rating.ts，Bradley–Terry）、赛道 / 参赛模型 / 题库 / 回答 / 回答的图集合（collections/）、生成回答和出图（answers/、prompts/）、对局与快照的 Drizzle 表（schema.ts）、投票（battles.ts）、每周快照（snapshot.ts）、任务（jobs.ts）、页面数据与图表（data.ts、charts.ts、components/）、后台（admin/、admin.ts、endpoints.ts）；接口在 src/app/api/rankings
     resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、前台（public/：数据、筛选排序、install.md、安装计数、页面组件）、统计汇总（stats/）、投稿（submit/：校验、投稿与通知、邮件、发信任务、页面组件；接口在 src/app/api/resources/submissions）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
+    circles/               圈子（第二期，src/config/site.ts 的 isLaunched('circles') 管上不上线）：集合（collections/）、规则与类型（rules.ts）、Drizzle 表（schema.ts）、读写（data.ts）、页面取数和缓存（public.ts、cache.ts）、接口共用的回复（api.ts）、后台读写与接口（admin.ts、endpoints.ts、admin/）、页面组件（components/）；接口在 src/app/api/circles
   payload.config.ts
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko
