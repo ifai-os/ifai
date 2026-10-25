@@ -122,6 +122,8 @@ test.describe('members’ pages', () => {
       )
       await member.query(`insert into member_follows (follower_id, followee_id) select $1, id from auth_users where id like $2`, [member.id, `${bulk}-%`])
       await page.goto(`/en/u/${other.handle}`)
+      // A press while the page is still reading the session does nothing: wait for the account menu.
+      await expect(page.getByRole('button', { name: en.header.account })).toBeVisible()
       await page.getByRole('button', { name: followName }).click()
       await expect(page.getByRole('main').getByRole('alert')).toHaveText(p.followDailyLimit.replace('{limit}', '200'))
       await expect(page.getByRole('button', { name: followName })).toHaveAttribute('aria-pressed', 'false')
