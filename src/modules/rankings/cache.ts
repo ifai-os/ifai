@@ -1,13 +1,15 @@
 import { revalidateTag } from 'next/cache'
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, PayloadRequest } from 'payload'
 
+import { dataTag } from '@/lib/data-cache'
+
 /** Every cached rankings query carries this tag, so a new snapshot or an edit refreshes every rankings page. */
 export const rankingsCacheTag = 'rankings'
 
 /** Expire the cached rankings pages now: the weekly job's new snapshot, an arena or model saved in the back office. */
 export function refreshRankingsCache(onError: (error: unknown) => void = (error) => console.warn('Could not refresh the rankings pages', error)) {
   try {
-    revalidateTag(rankingsCacheTag, { expire: 0 })
+    revalidateTag(dataTag(rankingsCacheTag), { expire: 0 })
   } catch (error) {
     // Scripts and migrations run outside Next.js, where there is no page cache to refresh.
     if (error instanceof Error && error.message.includes('static generation store missing')) return

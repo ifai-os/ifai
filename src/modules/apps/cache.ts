@@ -1,6 +1,8 @@
 import { revalidateTag } from 'next/cache'
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, PayloadRequest } from 'payload'
 
+import { dataTag } from '@/lib/data-cache'
+
 /** Every cached apps query carries this tag, so one change refreshes every apps page. */
 export const appsCacheTag = 'apps'
 
@@ -10,7 +12,7 @@ export const appsCacheTag = 'apps'
  */
 export function refreshAppsCache(onError: (error: unknown) => void = (error) => console.warn('Could not refresh the apps pages', error)) {
   try {
-    revalidateTag(appsCacheTag, { expire: 0 })
+    revalidateTag(dataTag(appsCacheTag), { expire: 0 })
   } catch (error) {
     // Scripts and migrations run outside Next.js, where there is no page cache to refresh.
     if (error instanceof Error && error.message.includes('static generation store missing')) return

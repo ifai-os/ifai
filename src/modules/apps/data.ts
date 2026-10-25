@@ -1,9 +1,9 @@
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { cache } from 'react'
 
 import type { Locale } from '@/i18n/config'
+import { cached } from '@/lib/data-cache'
 import { inAnyLanguage } from '@/lib/i18n/localized'
 import type { StoryCategory } from '@/modules/daily/categories'
 import { isStoryCategory } from '@/modules/daily/public/story-item'
@@ -176,7 +176,7 @@ async function payload() {
   return getPayload({ config })
 }
 
-const loadCategories = unstable_cache(
+const loadCategories = cached(
   async (locale: Locale) => {
     const { docs } = await (await payload()).find({
       collection: 'app-categories',
@@ -192,7 +192,7 @@ const loadCategories = unstable_cache(
   cacheOptions,
 )
 
-const loadCounts = unstable_cache(
+const loadCounts = cached(
   async (categoryIds: number[]) => {
     const client = await payload()
     const count = async (where: Where) =>
@@ -240,7 +240,7 @@ async function findCandidates({ categoryId, q }: Filter): Promise<Candidate[]> {
 }
 
 // Searches are not cached: every query would be its own cache entry.
-const findCandidatesCached = unstable_cache(findCandidates, ['apps-candidates'], cacheOptions)
+const findCandidatesCached = cached(findCandidates, ['apps-candidates'], cacheOptions)
 
 /** The published apps with these ids, in this order; unpublished ones are simply missing. */
 async function findAppsInOrder(ids: number[]): Promise<RawApp[]> {
@@ -259,9 +259,9 @@ async function findAppsInOrder(ids: number[]): Promise<RawApp[]> {
   return ids.map((id) => byId.get(id)).filter((doc) => doc !== undefined)
 }
 
-const findAppsByIds = unstable_cache(findAppsInOrder, ['apps-by-id'], cacheOptions)
+const findAppsByIds = cached(findAppsInOrder, ['apps-by-id'], cacheOptions)
 
-const findApp = unstable_cache(
+const findApp = cached(
   async (slug: string) => {
     const { docs } = await (await payload()).find({
       collection: 'apps',

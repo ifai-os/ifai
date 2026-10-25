@@ -3,8 +3,9 @@ import path from 'node:path'
 
 import config from '@payload-config'
 import { unzipSync } from 'fflate'
-import { unstable_cache } from 'next/cache'
 import { createLocalReq, getPayload } from 'payload'
+
+import { cached } from '@/lib/data-cache'
 
 import { PACKAGE_LIMITS, utf8 } from '../package/types'
 
@@ -70,7 +71,7 @@ function looksBinary(data: Uint8Array): boolean {
  * One file of a version, as text. A version's Zip never changes once published (rule 2), so
  * the result is cached by the Zip's sha256 and the path, with no expiry.
  */
-export const readPackageFile = unstable_cache(
+export const readPackageFile = cached(
   async (filename: string, _sha256: string, filePath: string): Promise<PackageFileText> => {
     const zip = await readStoredZip(filename)
     // Not cached: storage may only be unreachable for now.

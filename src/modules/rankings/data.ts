@@ -1,7 +1,7 @@
 import { and, count, desc, eq, inArray, isNotNull, lt } from '@payloadcms/db-postgres/drizzle'
-import { unstable_cache } from 'next/cache'
 
 import type { Locale } from '@/i18n/config'
+import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
 
 import { rankingsCacheTag } from './cache'
@@ -20,7 +20,7 @@ const cacheOptions = { tags: [rankingsCacheTag], revalidate: 3600 }
 export type PublicArena = { id: number; slug: string; name: string; intro: string | null }
 
 /** The published arenas in their order, in the page's language (English where one is missing). */
-export const getArenas = unstable_cache(
+export const getArenas = cached(
   async (locale: Locale): Promise<PublicArena[]> => {
     const { payload } = await getDb()
     const { docs } = await payload.find({
@@ -77,7 +77,7 @@ export type Board = {
 const emptyBoard: Board = { week: null, computedAt: null, rows: [], trend: [], newcomers: [] }
 
 /** An arena's latest snapshot, its last 12 weeks and its newcomers, models in the page's language. */
-export const getBoard = unstable_cache(
+export const getBoard = cached(
   async (arenaId: number, locale: Locale): Promise<Board> => {
     const { payload, db } = await getDb()
     const snapshots = await db
@@ -176,7 +176,7 @@ export const getBoard = unstable_cache(
 )
 
 /** Counted votes in an arena now (rule 14): the number in the page heading. */
-export const getCountedVotes = unstable_cache(
+export const getCountedVotes = cached(
   async (arenaId: number): Promise<number> => {
     const { db } = await getDb()
     const [row] = await db
