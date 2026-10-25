@@ -1063,5 +1063,11 @@
     "data": "データ分析",
     "productivity": "仕事効率化",
     "life": "暮らし"
+  },
+  "theme": {
+    "label": "外観",
+    "system": "システム設定",
+    "light": "ライト",
+    "dark": "ダーク"
   }
 }

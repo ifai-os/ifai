@@ -1063,5 +1063,11 @@
     "data": "数据分析",
     "productivity": "办公效率",
     "life": "生活服务"
+  },
+  "theme": {
+    "label": "外观",
+    "system": "跟随系统",
+    "light": "浅色",
+    "dark": "深色"
   }
 }

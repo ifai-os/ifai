@@ -25,7 +25,7 @@ export function CategoryNav({ current }: { current: StoryCategory | null }) {
                 href={listHref({ category: item.key })}
                 aria-current={active ? 'page' : undefined}
                 className={`flex h-8.5 items-center gap-2 rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors ${
-                  active ? 'border-ink bg-ink text-white' : 'border-line bg-bg text-ink-2 hover:border-ink-4'
+                  active ? 'border-ink bg-ink text-bg' : 'border-line bg-bg text-ink-2 hover:border-ink-4'
                 }`}
               >
                 {item.name}

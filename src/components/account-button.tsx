@@ -42,7 +42,7 @@ export function AccountButton() {
       <Link
         href="/sign-in"
         aria-label={t('signIn')}
-        className="flex size-11 items-center justify-center text-ink transition-colors hover:text-accent"
+        className="flex size-11 items-center justify-center text-ink transition-colors hover:text-accent-ink"
       >
         <Icon name="user" size={20} />
       </Link>
@@ -69,14 +69,14 @@ export function AccountButton() {
         onClick={() => setOpen((value) => !value)}
         className="flex size-11 items-center justify-center"
       >
-        <span className="flex size-8 items-center justify-center rounded-pill bg-ink text-meta font-semibold text-white">
+        <span className="flex size-8 items-center justify-center rounded-pill bg-ink text-meta font-semibold text-bg">
           {initial}
         </span>
       </button>
       {open && (
         <div
           id={menuId}
-          className="absolute right-0 top-12 z-30 flex w-60 flex-col gap-1 rounded-tile bg-bg p-1.5 shadow-float"
+          className="absolute right-0 top-12 z-30 flex w-60 flex-col gap-1 rounded-tile bg-overlay p-1.5 shadow-float"
         >
           <p className="truncate px-2.5 py-2 text-meta text-ink-4">{user.email}</p>
           <Link

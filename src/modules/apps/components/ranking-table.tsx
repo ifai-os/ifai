@@ -89,7 +89,7 @@ export function RankingTable({ apps, board, sort, category, q, heatDay, showSite
               >
                 <td
                   className={`py-3 text-center text-body font-semibold tabular-nums md:py-3.5 md:pl-4 md:text-left ${
-                    app.place <= 3 ? 'text-accent' : 'text-ink-4'
+                    app.place <= 3 ? 'text-accent-ink' : 'text-ink-4'
                   }`}
                 >
                   {app.place}
@@ -98,7 +98,7 @@ export function RankingTable({ apps, board, sort, category, q, heatDay, showSite
                   <Link href={`/apps/${app.slug}`} className="group flex min-w-0 items-center gap-3">
                     <AppTile name={app.name} slug={app.slug} logo={app.logo} />
                     <span className="flex min-w-0 flex-col gap-0.5">
-                      <span className="truncate text-title font-semibold group-hover:text-accent md:text-body md:font-medium">
+                      <span className="truncate text-title font-semibold group-hover:text-accent-ink md:text-body md:font-medium">
                         {app.name}
                       </span>
                       {app.tagline && (

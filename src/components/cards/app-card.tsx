@@ -29,11 +29,11 @@ export function AppCard({ href, name, icon, category, description, descriptionLa
       <span className="flex items-center gap-3">
         {icon}
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-title font-semibold group-hover:text-accent">{name}</span>
+          <span className="truncate text-title font-semibold group-hover:text-accent-ink">{name}</span>
           {category && <span className="text-small text-ink-4">{category}</span>}
         </span>
         {rank !== null && (
-          <span className={`text-body font-semibold ${rank <= 3 ? 'text-accent' : 'text-ink-4'}`}>
+          <span className={`text-body font-semibold ${rank <= 3 ? 'text-accent-ink' : 'text-ink-4'}`}>
             <span aria-hidden="true">#{rank}</span>
             <span className="sr-only">{t('rank', { rank })}</span>
           </span>

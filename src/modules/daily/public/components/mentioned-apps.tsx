@@ -36,7 +36,7 @@ export function MentionedApps({ apps, serverToday }: MentionedAppsProps) {
           <li key={app.id} className="min-w-0">
             <Link
               href={`/apps/${app.slug}`}
-              className="flex flex-col items-center gap-1.5 rounded-tile bg-surface px-1.5 py-2.5 text-small text-ink hover:text-accent"
+              className="flex flex-col items-center gap-1.5 rounded-tile bg-surface px-1.5 py-2.5 text-small text-ink hover:text-accent-ink"
             >
               <AppTile name={app.name} slug={app.slug} logo={app.logo} size="md" />
               <span className="w-full truncate text-center">{app.name}</span>

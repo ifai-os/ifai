@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl'
 
 import { Logo } from '@/components/brand/logo'
+import { ThemePicker } from '@/components/theme-picker'
 import { Link } from '@/i18n/navigation'
 import { feedPath } from '@/modules/daily/public/list-params'
 import { legalHref } from '@/modules/legal/documents'
@@ -24,6 +25,7 @@ export function SiteFooter() {
         <Link href={feedPath} className="hover:text-ink">
           {t('rss')}
         </Link>
+        <ThemePicker className="w-full sm:ml-auto sm:w-auto" />
       </div>
     </footer>
   )

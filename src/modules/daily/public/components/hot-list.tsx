@@ -26,14 +26,14 @@ export function HotList({ stories }: { stories: HotStory[] }) {
       <ol>
         {stories.map((story, index) => (
           <li key={story.id} className="relative grid grid-cols-[20px_minmax(0,1fr)] gap-2 border-b border-hairline py-3">
-            <span aria-hidden="true" className={`text-meta font-semibold tabular-nums ${index < 3 ? 'text-accent' : 'text-ink-4'}`}>
+            <span aria-hidden="true" className={`text-meta font-semibold tabular-nums ${index < 3 ? 'text-accent-ink' : 'text-ink-4'}`}>
               {index + 1}
             </span>
             <span className="flex min-w-0 flex-col gap-1">
               <Link
                 href={storyHref(story.slug)}
                 lang={story.title.lang}
-                className="line-clamp-2 text-meta text-ink after:absolute after:inset-0 hover:text-accent"
+                className="line-clamp-2 text-meta text-ink after:absolute after:inset-0 hover:text-accent-ink"
               >
                 {story.title.value}
               </Link>

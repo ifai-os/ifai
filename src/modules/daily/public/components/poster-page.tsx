@@ -88,11 +88,11 @@ export function PosterPageView({ snapshot, locale, neighbours }: Props) {
             <ol className="flex flex-col">
               {snapshot.entries.map((entry, index) => (
                 <li key={entry.id} className="grid grid-cols-[32px_minmax(0,1fr)] gap-2 border-t border-surface-2 py-3">
-                  <span className={`pt-0.5 text-meta tabular-nums ${index === 0 ? 'font-semibold text-accent' : 'text-ink-4'}`}>
+                  <span className={`pt-0.5 text-meta tabular-nums ${index === 0 ? 'font-semibold text-accent-ink' : 'text-ink-4'}`}>
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <div className="flex min-w-0 flex-col gap-1">
-                    <Link href={storyHref(entry.slug)} lang={entry.title[locale].lang} className="text-body font-medium hover:text-accent">
+                    <Link href={storyHref(entry.slug)} lang={entry.title[locale].lang} className="text-body font-medium hover:text-accent-ink">
                       {entry.title[locale].value}
                     </Link>
                     <span className="text-small text-ink-4">

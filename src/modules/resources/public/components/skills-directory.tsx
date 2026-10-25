@@ -18,7 +18,7 @@ import { ViewSwitch } from './view-switch'
 type SkillsDirectoryProps = { locale: Locale; params: SkillListParams & { page: number } }
 
 const chip = 'flex h-8.5 items-center gap-1.5 rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors'
-const chipOn = 'border-ink bg-ink text-white'
+const chipOn = 'border-ink bg-ink text-bg'
 const chipOff = 'border-line bg-bg text-ink-2 hover:border-ink-4'
 
 /**
@@ -119,10 +119,10 @@ export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) 
                     {overview.risers.map(({ skill, rise }, index) => (
                       <li key={skill.id}>
                         <Link href={skillHref(skill.slug)} className="group flex min-h-8 items-center gap-2 text-ui">
-                          <span aria-hidden="true" className="w-3 flex-none font-semibold text-accent tabular-nums">
+                          <span aria-hidden="true" className="w-3 flex-none font-semibold text-accent-ink tabular-nums">
                             {index + 1}
                           </span>
-                          <span lang={skill.name.lang} className="min-w-0 flex-1 truncate group-hover:text-accent">
+                          <span lang={skill.name.lang} className="min-w-0 flex-1 truncate group-hover:text-accent-ink">
                             {skill.name.value}
                           </span>
                           <span className="flex-none text-meta text-ink-4 tabular-nums">{rise === null ? t('risers.new') : t('risers.rise', { rise })}</span>
@@ -147,7 +147,7 @@ export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) 
                       href={skillsHref({ ...keep, category: item.slug })}
                       aria-current={active ? 'page' : undefined}
                       className={`flex h-8.5 items-center gap-2.5 rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors md:h-10 md:rounded-none md:border-0 md:px-0 md:text-body md:font-medium ${
-                        active ? 'border-ink bg-ink text-white md:bg-transparent md:text-ink' : 'border-line bg-bg text-ink-2 hover:border-ink-4 md:text-ink-4 md:hover:text-ink'
+                        active ? 'border-ink bg-ink text-bg md:bg-transparent md:text-ink' : 'border-line bg-bg text-ink-2 hover:border-ink-4 md:text-ink-4 md:hover:text-ink'
                       }`}
                     >
                       <span aria-hidden="true" className={`hidden size-1.5 flex-none rounded-pill md:block ${active ? 'bg-accent' : ''}`} />
@@ -326,10 +326,10 @@ export async function SkillsDirectory({ locale, params }: SkillsDirectoryProps) 
                   {overview.mostInstalled.map((skill, index) => (
                     <li key={skill.id}>
                       <Link href={skillHref(skill.slug)} className="group flex min-h-10 items-center gap-2.5 text-ui">
-                        <span aria-hidden="true" className={`w-4 flex-none font-semibold tabular-nums ${index < 3 ? 'text-accent' : 'text-ink-4'}`}>
+                        <span aria-hidden="true" className={`w-4 flex-none font-semibold tabular-nums ${index < 3 ? 'text-accent-ink' : 'text-ink-4'}`}>
                           {index + 1}
                         </span>
-                        <span lang={skill.name.lang} className="min-w-0 flex-1 truncate group-hover:text-accent">
+                        <span lang={skill.name.lang} className="min-w-0 flex-1 truncate group-hover:text-accent-ink">
                           {skill.name.value}
                         </span>
                         <span className="flex-none text-meta text-ink-4 tabular-nums">{format.number(skill.installs, { notation: 'compact' })}</span>

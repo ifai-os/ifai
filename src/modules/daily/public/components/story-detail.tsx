@@ -53,7 +53,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
       <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
         <article className="flex w-full max-w-read min-w-0 flex-col gap-6">
           <header className="flex flex-col gap-3">
-            <p className="text-meta font-medium text-accent">{names(story.category)}</p>
+            <p className="text-meta font-medium text-accent-ink">{names(story.category)}</p>
             <h1 lang={story.title.lang} className="text-h1 wrap-anywhere md:text-h1-article">
               {story.title.value}
             </h1>
@@ -78,7 +78,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
 
           {story.tryIt && (
             <section aria-labelledby="try-it" className="flex flex-col gap-1.5 rounded-card bg-surface px-5 py-4">
-              <h2 id="try-it" className="text-ui font-semibold text-accent">
+              <h2 id="try-it" className="text-ui font-semibold text-accent-ink">
                 {t('tryIt')}
               </h2>
               <p lang={story.tryIt.lang} className="text-body whitespace-pre-line text-ink-2">
@@ -104,7 +104,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
                   <li key={`${source.url}-${index}`} className="grid grid-cols-[32px_minmax(0,1fr)] gap-2 border-t border-surface-2 py-3">
                     <span className="pt-0.5 text-meta text-ink-4 tabular-nums">[{index + 1}]</span>
                     <div className="flex min-w-0 flex-col gap-1">
-                      <a href={source.url} target="_blank" rel="noopener" className="text-body font-medium wrap-anywhere hover:text-accent">
+                      <a href={source.url} target="_blank" rel="noopener" className="text-body font-medium wrap-anywhere hover:text-accent-ink">
                         {source.name}
                         <span className="sr-only">{t('newTab')}</span>
                       </a>
@@ -143,7 +143,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
                   <li key={other.id} className="border-t border-line py-3">
                     <Link href={storyHref(other.slug)} className="flex flex-col gap-1">
                       <LocalTime iso={other.publishedAt} style="date" className="text-small text-ink-4" />
-                      <span lang={other.title.lang} className="text-ui font-medium hover:text-accent">
+                      <span lang={other.title.lang} className="text-ui font-medium hover:text-accent-ink">
                         {other.title.value}
                       </span>
                     </Link>

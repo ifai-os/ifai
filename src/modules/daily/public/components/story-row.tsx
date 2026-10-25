@@ -17,14 +17,14 @@ export function StoryRow({ story, category }: { story: StoryItem; category: stri
     <li>
       <article className="flex flex-col gap-1.5 border-t border-line py-4 md:py-5">
         <p className="flex flex-wrap items-center gap-x-2 text-meta text-ink-4">
-          <LocalTime iso={story.publishedAt} style="time" className="font-medium text-accent tabular-nums" />
+          <LocalTime iso={story.publishedAt} style="time" className="font-medium text-accent-ink tabular-nums" />
           <span aria-hidden="true">·</span>
           <span>{category}</span>
           <span aria-hidden="true">·</span>
           <span>{card('moreSources', { count: story.moreReports })}</span>
         </p>
         <h3 lang={story.title.lang} className="text-title md:text-h3">
-          <Link href={storyHref(story.slug)} className="text-ink hover:text-accent">
+          <Link href={storyHref(story.slug)} className="text-ink hover:text-accent-ink">
             {story.title.value}
           </Link>
         </h3>
@@ -35,7 +35,7 @@ export function StoryRow({ story, category }: { story: StoryItem; category: stri
         )}
         {story.tryIt && (
           <p lang={story.tryIt.lang} className="mt-1 rounded-tile bg-surface px-3.5 py-2.5 text-ui text-ink-2">
-            <span className="font-medium text-accent">{t('tryIt')}</span> {story.tryIt.value}
+            <span className="font-medium text-accent-ink">{t('tryIt')}</span> {story.tryIt.value}
           </p>
         )}
       </article>

@@ -35,7 +35,7 @@ export function SkillCard({ href, name, nameLang, author, description, descripti
       <div className="flex items-center gap-3">
         {icon}
         <div className="flex min-w-0 flex-col gap-0.5">
-          <Link href={href} lang={nameLang} className="truncate text-body font-semibold hover:text-accent">
+          <Link href={href} lang={nameLang} className="truncate text-body font-semibold hover:text-accent-ink">
             {name}
           </Link>
           <span className="truncate text-small text-ink-4">{author}</span>

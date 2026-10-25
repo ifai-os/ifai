@@ -41,7 +41,7 @@ export function ReviewDialog({ open, onClose, ...form }: ReviewDialogProps) {
       ref={ref}
       aria-labelledby={titleId}
       onClose={onClose}
-      className="m-auto max-h-[calc(100dvh-32px)] w-[calc(100%-32px)] max-w-115 overflow-y-auto rounded-dialog bg-bg p-0 text-ink shadow-float backdrop:bg-scrim"
+      className="m-auto max-h-[calc(100dvh-32px)] w-[calc(100%-32px)] max-w-115 overflow-y-auto rounded-dialog bg-overlay p-0 text-ink shadow-float backdrop:bg-scrim"
     >
       {open && <ReviewForm {...form} titleId={titleId} onClose={onClose} />}
     </dialog>
