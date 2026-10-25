@@ -156,6 +156,12 @@ test.describe('the circles', () => {
       expect(exported.circleReactions).toMatchObject([{ post: theirs, reaction: 'insight' }])
       expect(exported.circlePostReports).toMatchObject([{ post: theirs, reason: 'offTopic', resolvedAt: null }])
       expect(JSON.stringify(exported)).not.toContain('A watercolor fox')
+      // The settings page says what the download and deleting the account take from the circles.
+      const settings = await context.newPage()
+      await settings.goto('/en/me/account?section=data')
+      await expect(settings.getByText(en.account.exportCircles)).toBeVisible()
+      await expect(settings.getByText(en.account.deleteCircles)).toBeVisible()
+      await settings.close()
 
       // Hidden by the site owner: gone for others, still there for its author, with a note.
       await member.query(`update circle_posts set status = 'hidden' where id = $1`, [theirs])
