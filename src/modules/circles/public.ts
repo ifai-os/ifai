@@ -11,6 +11,7 @@ import { circlesCacheTag } from './cache'
 import { commentsPage } from './comments'
 import { circlesOverview, postView } from './data'
 import { withLinkCards } from './link-cards'
+import { suggestionCandidates, type SuggestionCandidate } from './people'
 import { parseId, type CircleView, type CirclesOverview, type CommentsPage, type PostView } from './rules'
 
 /** Circles launch in phase two: until then their page and API answer 404 (docs/specs/circles.md「页面与路由」). */
@@ -68,6 +69,20 @@ const loadOverview = cached(
 
 export async function getOverview(ids: number[]): Promise<CirclesOverview> {
   return loadOverview(ids)
+}
+
+/** 「值得关注的人」before each reader's follows are taken out: worked out every ten minutes (docs/specs/circles.md rule 21). */
+const loadCandidates = cached(
+  async (ids: number[]): Promise<SuggestionCandidate[]> => {
+    const { payload } = await getDb()
+    return suggestionCandidates(payload, ids)
+  },
+  ['circles-people'],
+  { revalidate: 600 },
+)
+
+export async function getSuggestionCandidates(ids: number[]): Promise<SuggestionCandidate[]> {
+  return loadCandidates(ids)
 }
 
 export type PostPageData = {

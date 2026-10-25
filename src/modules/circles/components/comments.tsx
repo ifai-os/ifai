@@ -9,6 +9,7 @@ import { LoadFailed } from '@/components/states/load-failed'
 import { Skeleton } from '@/components/states/skeleton'
 import { skeletonDelayMs } from '@/components/states/timing'
 import { cleanText, textLength } from '@/modules/apps/reviews/rules'
+import { ProfileLink } from '@/modules/profiles/components/profile-link'
 
 import { commentRules, type CirclesError, type CommentChange, type CommentsPage, type CommentThread, type CommentView, type RepliesPage } from '../rules'
 import { json, request, useCirclesSession } from './circles-session'
@@ -262,11 +263,15 @@ function CommentItem({ comment, open, replyCount, reported, onReport, onReply, o
   const isReply = comment.parent !== null
   return (
     <div className="flex gap-3">
-      <PersonAvatar name={name} tone={comment.author.tone} size={isReply ? 'sm' : 'md'} />
+      <ProfileLink handle={comment.author.handle} twin className="flex-none self-start rounded-pill">
+        <PersonAvatar name={name} tone={comment.author.tone} size={isReply ? 'sm' : 'md'} />
+      </ProfileLink>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start gap-2">
           <p className="min-w-0 flex-1 pt-1.5 text-meta text-ink-2">
-            <span className="font-medium wrap-anywhere">{comment.mine ? t('youNamed', { name }) : name}</span>
+            <ProfileLink handle={comment.author.handle} className="font-medium wrap-anywhere hover:underline">
+              {comment.mine ? t('youNamed', { name }) : name}
+            </ProfileLink>
             <span aria-hidden="true" className="text-ink-4">
               {' · '}
             </span>

@@ -92,9 +92,17 @@ export type PostStatus = (typeof postStatuses)[number]
 export const reportReasons = ['spam', 'abuse', 'offTopic', 'other'] as const
 export type ReportReason = (typeof reportReasons)[number]
 
-/** 推荐 (the default), 最新, 我的圈子. 关注 comes with following members (step 4). */
-export const feedTabs = ['hot', 'latest', 'mine'] as const
+/** 推荐 (the default), 最新, 关注 (people the reader follows, step 4), 我的圈子. */
+export const feedTabs = ['hot', 'latest', 'following', 'mine'] as const
 export type FeedTab = (typeof feedTabs)[number]
+
+/** Inside one circle: 关注 and 我的圈子 span every circle, so only these two. */
+export const circleTabs = ['hot', 'latest'] as const satisfies readonly FeedTab[]
+
+/** The tab shown for the one asked: inside a circle, 推荐 stands in for the two it has not. */
+export function shownTab(asked: FeedTab, inCircle: boolean): FeedTab {
+  return inCircle && !(circleTabs as readonly FeedTab[]).includes(asked) ? 'hot' : asked
+}
 
 export function parseTab(value: unknown): FeedTab | null {
   if (value === null || value === undefined || value === '') return 'hot'
@@ -211,6 +219,9 @@ export function parseCommentInput(input: unknown): { ok: true; value: CommentInp
 /** Someone shown on IFAI: a name (empty when they have none) and a tile tone, never an id or an email. */
 export type PersonView = { name: string; tone: number }
 
+/** Who wrote a post or a comment, with the address of their page (docs/specs/circles.md rule 18). */
+export type AuthorView = PersonView & { handle: string | null }
+
 /** A circle as the page shows it; the numbers come from ./data.ts, the rest from the collection. */
 export type CircleView = {
   id: number
@@ -297,7 +308,9 @@ export type PostView = {
   body: string
   /** The language it is written in: a site locale, or `und`. */
   lang: string
-  author: PersonView
+  author: AuthorView
+  /** The reader follows its author (rule 20). */
+  following: boolean
   /** The reader wrote it: they can delete it, not report it. */
   mine: boolean
   /** The site owner hid it; only its author gets it, with a note. */
@@ -324,7 +337,7 @@ export type CommentView = {
   body: string
   /** The language it is written in: a site locale, or `und`. */
   lang: string
-  author: PersonView
+  author: AuthorView
   /** The reader wrote it: they can delete it, not report it. */
   mine: boolean
   /** The site owner hid it; only its author gets it, with a note, and nobody can answer it. */
@@ -355,7 +368,7 @@ export type RepliesPage = { replies: CommentView[]; next: number | null }
 /** POST /api/circles/comments; DELETE answers with the count alone. */
 export type CommentChange = { comment: CommentView; count: number }
 
-/** GET /api/circles/feed?tab=latest[&circle=3][&cursor=…] */
+/** GET /api/circles/feed?tab=latest[&circle=3][&cursor=…], or ?author=linqi for one member's page. */
 export type FeedPage = {
   signedIn: boolean
   posts: PostView[]
@@ -364,6 +377,8 @@ export type FeedPage = {
   /** On the first page only: the circles' numbers and the reader's circles. */
   overview?: CirclesOverview
   joined?: number[]
+  /** On the first page of 关注: how many people the reader follows, for what the empty feed says. */
+  follows?: number
 }
 
 /** POST /api/circles/posts, POST /api/circles/members, DELETE /api/circles/posts. */

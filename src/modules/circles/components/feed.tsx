@@ -10,19 +10,18 @@ import { StateShell } from '@/components/states/state-shell'
 import { skeletonDelayMs } from '@/components/states/timing'
 import { Link } from '@/i18n/navigation'
 
-import { feedTabs, type FeedTab, type PostView } from '../rules'
+import { circleTabs, feedTabs, type FeedTab, type PostView } from '../rules'
 import { useCircles } from './circles-provider'
 import { PostItem } from './post-item'
 import { ReportDialog } from './report-dialog'
 
-/** 「推荐 / 最新 / 我的圈子」and the posts under them, 20 at a time. */
+/** 「推荐 / 最新 / 关注 / 我的圈子」and the posts under them, 20 at a time. */
 export function Feed() {
   const t = useTranslations('circles')
   const { tab, setTab, circle, status, posts, hasMore, loadingMore, moreFailed, loadMore, retry } = useCircles()
   const [reporting, setReporting] = useState<PostView | null>(null)
   const [reported, setReported] = useState<ReadonlySet<number>>(new Set())
-  // 我的圈子 is every circle the reader joined; inside one circle there is no such tab.
-  const tabs = circle ? feedTabs.filter((item) => item !== 'mine') : feedTabs
+  const tabs: readonly FeedTab[] = circle ? circleTabs : feedTabs
 
   // Arrow keys move between the tabs, as in an app's page (src/modules/apps/components/detail-tabs.tsx).
   function onKeyDown(event: KeyboardEvent, index: number) {
@@ -47,10 +46,13 @@ export function Feed() {
           </Link>
         </div>
       )}
-      <div role="tablist" aria-label={t('feedLabel')} className="flex gap-7 border-b border-line">
-        {tabs.map((item, index) => (
-          <TabButton key={item} tab={item} selected={item === tab} onSelect={setTab} onKeyDown={(event) => onKeyDown(event, index)} />
-        ))}
+      {/* On phones the four tabs can be wider than the screen (Japanese, English): they scroll, like the circle cards. */}
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div role="tablist" aria-label={t('feedLabel')} className="flex min-w-max gap-7 border-b border-line">
+          {tabs.map((item, index) => (
+            <TabButton key={item} tab={item} selected={item === tab} onSelect={setTab} onKeyDown={(event) => onKeyDown(event, index)} />
+          ))}
+        </div>
       </div>
 
       <div role="tabpanel" id={panelId} aria-labelledby={tabId(tab)} className="flex flex-col">
@@ -124,25 +126,42 @@ function TabButton({ tab, selected, onSelect, onKeyDown }: TabButtonProps) {
   )
 }
 
-/** 我的圈子 for a visitor asks them to sign in; for a member in no circle, to join some; otherwise the first post is theirs to write. */
+/**
+ * 我的圈子 and 关注 ask a visitor to sign in; then 我的圈子 asks a member in no circle to join some,
+ * 关注 says who to follow or that the people followed have not posted; otherwise the first post is
+ * theirs to write.
+ */
 function EmptyFeed() {
   const t = useTranslations('circles')
-  const { tab, circle, signedIn, askToSignIn } = useCircles()
-  return (
-    <div className="pt-4">
-      {tab === 'mine' && !circle ? (
-        signedIn ? (
-          <StateShell icon="circles" title={t('mineEmptyTitle')} body={t('mineEmptyBody')} />
-        ) : (
-          <StateShell icon="circles" title={t('mineEmptyTitle')} body={t('mineSignIn')}>
-            <Button onClick={() => askToSignIn('join')}>{t('signIn')}</Button>
+  const { tab, circle, signedIn, follows, askToSignIn } = useCircles()
+  return <div className="pt-4">{emptyState()}</div>
+
+  function emptyState() {
+    if (tab === 'mine' && !circle) {
+      return signedIn ? (
+        <StateShell icon="circles" title={t('mineEmptyTitle')} body={t('mineEmptyBody')} />
+      ) : (
+        <StateShell icon="circles" title={t('mineEmptyTitle')} body={t('mineSignIn')}>
+          <Button onClick={() => askToSignIn('join')}>{t('signIn')}</Button>
+        </StateShell>
+      )
+    }
+    if (tab === 'following' && !circle) {
+      if (!signedIn) {
+        return (
+          <StateShell icon="user" title={t('mineEmptyTitle')} body={t('followingSignIn')}>
+            <Button onClick={() => askToSignIn('follow')}>{t('signIn')}</Button>
           </StateShell>
         )
+      }
+      return follows === 0 ? (
+        <StateShell icon="user" title={t('followingNoneTitle')} body={t('followingNoneBody')} />
       ) : (
-        <StateShell icon="message" title={t('emptyTitle')} body={circle ? t('emptyCircleBody', { name: circle.name }) : t('emptyBody')} />
-      )}
-    </div>
-  )
+        <StateShell icon="user" title={t('followingQuietTitle')} body={t('followingQuietBody')} />
+      )
+    }
+    return <StateShell icon="message" title={t('emptyTitle')} body={circle ? t('emptyCircleBody', { name: circle.name }) : t('emptyBody')} />
+  }
 }
 
 function FeedSkeleton() {

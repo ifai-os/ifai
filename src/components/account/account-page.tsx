@@ -10,6 +10,7 @@ import { Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
 import type { DailyEmailState, LinkedAccount, SignedInDevice } from '@/lib/auth/settings'
 import { SubscribeBox } from '@/modules/daily/email/components/subscribe-box'
+import type { ProfileSettings } from '@/modules/profiles/rules'
 
 import { DeleteAccount } from './delete-account'
 import { ExportData } from './export-data'
@@ -23,7 +24,7 @@ import { SignedInDevices } from './signed-in-devices'
 
 /** What the open section needs; the page reads only that. */
 export type SettingsView =
-  | { section: 'profile' }
+  | { section: 'profile'; profile: ProfileSettings | null; siteHost: string }
   | { section: 'sign-in'; accounts: LinkedAccount[]; devices: SignedInDevice[]; result: LinkResult | null }
   | { section: 'notifications'; dailyEmail: DailyEmailState; subscribing: boolean }
   | { section: 'language' }
@@ -92,7 +93,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
       return (
         <>
           {title}
-          <ProfileForm userId={member.id} name={member.name} email={member.email} />
+          <ProfileForm userId={member.id} name={member.name} email={member.email} profile={view.profile} siteHost={view.siteHost} />
         </>
       )
 

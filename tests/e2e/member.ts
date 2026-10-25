@@ -13,10 +13,13 @@ export async function createMember(baseURL: string, name = 'Smoke test member', 
   await client.connect()
   const id = randomUUID()
   const token = randomBytes(24).toString('base64url')
-  await client.query(`insert into auth_users (id, name, email, email_verified) values ($1, $2, $3, true)`, [
+  // The page address every member has, of the kind IFAI gives (src/modules/profiles/handles.ts).
+  const handle = `u-${randomBytes(5).toString('hex')}`
+  await client.query(`insert into auth_users (id, name, email, email_verified, handle) values ($1, $2, $3, true, $4)`, [
     id,
     name,
     `smoke-${id}@example.com`,
+    handle,
   ])
   // `created_at` is when they signed in: deleting the account wants a sign-in from the last day.
   await client.query(
@@ -28,6 +31,7 @@ export async function createMember(baseURL: string, name = 'Smoke test member', 
   return {
     id,
     email: `smoke-${id}@example.com`,
+    handle,
     cookie: {
       name: 'better-auth.session_token',
       value: encodeURIComponent(`${token}.${signature}`),

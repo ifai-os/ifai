@@ -6,9 +6,11 @@ import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, 
 
 import type { Locale } from '@/i18n/config'
 import { useRouter } from '@/i18n/navigation'
+import { FollowsProvider } from '@/modules/profiles/components/follows'
 
 import {
   parseTab,
+  shownTab,
   type CircleView,
   type CirclesChange,
   type CirclesError,
@@ -24,8 +26,8 @@ import { PostActionsContext, useReact } from './post-actions'
 
 type Status = 'loading' | 'ready' | 'failed'
 
-/** A first page and what came after it, for one tab, circle and reader (`key`). */
-type Feed = { key: string; posts: PostView[]; next: number | null; loadedAt: number }
+/** A first page and what came after it, for one tab, circle and reader (`key`); `follows` on 关注. */
+type Feed = { key: string; posts: PostView[]; next: number | null; loadedAt: number; follows: number | null }
 
 /** What sending the post form came to: done, or why not. */
 export type PublishResult = 'ok' | 'sign-in' | 'failed' | CirclesError
@@ -50,6 +52,8 @@ type CirclesContextValue = ReturnType<typeof useCirclesSession> & {
   circle: CircleView | null
   status: Status
   posts: PostView[]
+  /** On 关注: how many people the reader follows, for what an empty feed says. */
+  follows: number | null
   hasMore: boolean
   loadingMore: boolean
   moreFailed: boolean
@@ -98,9 +102,7 @@ export function CirclesProvider({ overview: initialOverview, children }: Circles
 
   const slug = searchParams.get('circle')
   const circle = (slug && circles.find((item) => item.slug === slug)) || null
-  // 我的圈子 is every circle the reader joined; inside one circle it is just 推荐.
-  const asked = parseTab(searchParams.get('tab')) ?? 'hot'
-  const tab = circle && asked === 'mine' ? 'hot' : asked
+  const tab = shownTab(parseTab(searchParams.get('tab')) ?? 'hot', circle !== null)
 
   const [overview, setOverview] = useState(initialOverview)
   const [joined, setJoined] = useState<number[]>([])
@@ -145,7 +147,7 @@ export function CirclesProvider({ overview: initialOverview, children }: Circles
         setFailedKey(key)
         return
       }
-      setFeed({ key, posts: data.posts, next: data.next, loadedAt: Date.now() })
+      setFeed({ key, posts: data.posts, next: data.next, loadedAt: Date.now(), follows: data.follows ?? null })
       if (data.overview) setOverview(data.overview)
       if (data.joined) setJoined(data.joined)
       setMoreFailed(false)
@@ -294,6 +296,12 @@ export function CirclesProvider({ overview: initialOverview, children }: Circles
     void load()
   }, [load])
 
+  // Following someone from an empty 关注 (on a post elsewhere, or in「值得关注的人」) brings their posts.
+  const emptyFollowing = tab === 'following' && current !== null && current.posts.length === 0
+  const onFollowsChange = useCallback(() => {
+    if (emptyFollowing) void load()
+  }, [emptyFollowing, load])
+
   return (
     <CirclesContext
       value={{
@@ -304,6 +312,7 @@ export function CirclesProvider({ overview: initialOverview, children }: Circles
         circle,
         status,
         posts: current?.posts ?? [],
+        follows: current?.follows ?? null,
         hasMore: next !== null,
         loadingMore,
         moreFailed,
@@ -316,7 +325,9 @@ export function CirclesProvider({ overview: initialOverview, children }: Circles
         lookUpVideo,
       }}
     >
-      <PostActionsContext value={actions}>{children}</PostActionsContext>
+      <PostActionsContext value={actions}>
+        <FollowsProvider onChange={onFollowsChange}>{children}</FollowsProvider>
+      </PostActionsContext>
     </CirclesContext>
   )
 }

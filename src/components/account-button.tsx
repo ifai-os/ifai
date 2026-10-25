@@ -6,13 +6,15 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { MemberAvatar, memberName } from '@/components/account/member-avatar'
 import { Icon, type IconName } from '@/components/icon'
 import { ThemePicker } from '@/components/theme-picker'
+import { isLaunched } from '@/config/site'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth/client'
+import { profilePath } from '@/modules/profiles/rules'
 
 /**
  * Sign-in link for visitors; for members, their avatar and the account menu of「IFAI 账号菜单与通知」
- * (docs/specs/account.md): who they are, their saves and submissions, settings and signing out.
- * Reads the session on the client so pages stay static.
+ * (docs/specs/account.md): who they are (with the circles,「@地址 · 我的主页」to their page), their
+ * saves and submissions, settings and signing out. Reads the session on the client so pages stay static.
  */
 export function AccountButton() {
   const t = useTranslations('header')
@@ -57,6 +59,7 @@ export function AccountButton() {
   }
 
   const name = memberName(user)
+  const handle = isLaunched('circles') ? (user.handle ?? null) : null
   const close = () => setOpen(false)
 
   async function signOut() {
@@ -87,11 +90,11 @@ export function AccountButton() {
           id={menuId}
           className="absolute top-12 right-0 z-30 flex w-75 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-card border border-hairline bg-overlay shadow-float"
         >
-          <Link href="/me/account" onClick={close} className="flex items-center gap-3 px-5 py-4.5 text-ink hover:bg-surface">
+          <Link href={handle ? profilePath(handle) : '/me/account'} onClick={close} className="flex items-center gap-3 px-5 py-4.5 text-ink hover:bg-surface">
             <MemberAvatar userId={user.id} name={name} size="md" />
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="truncate text-body font-semibold">{name}</span>
-              <span className="truncate text-small text-ink-4">{user.email}</span>
+              <span className="truncate text-small text-ink-4">{handle ? t('profileLine', { handle }) : user.email}</span>
             </span>
             <span className="text-ink-4">
               <Icon name="chevronRight" size={18} />

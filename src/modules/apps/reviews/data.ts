@@ -1,5 +1,5 @@
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
-import { and, count, desc, eq, gte, lt, ne, sum } from '@payloadcms/db-postgres/drizzle'
+import { and, count, desc, eq, gte, inArray, lt, ne, sql, sum } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 
 import { toneFor } from '@/components/cards/initial-tile'
@@ -12,6 +12,7 @@ import {
   cleanName,
   reviewRules,
   summarize,
+  type MemberReview,
   type OwnReview,
   type ReportReason,
   type ReviewsPage,
@@ -141,6 +142,62 @@ export async function reviewsPage(
     reviews: page.map((row) => toView(row, locale)),
     next: rows.length > reviewRules.pageSize ? page[page.length - 1].id : null,
   }
+}
+
+/**
+ * One page of a member's reviews for their page (docs/specs/circles.md「/u/[handle]」): of the
+ * apps `appIds` (the published ones), newest first, older than `before` when given; with `own`,
+ * their hidden ones too.
+ */
+export async function memberReviews(
+  payload: Payload,
+  { userId, appIds, own, before, size }: { userId: string; appIds: number[]; own: boolean; before: number | null; size: number },
+): Promise<{ reviews: MemberReview[]; next: number | null }> {
+  if (appIds.length === 0) return { reviews: [], next: null }
+  const rows = await drizzleOf(payload)
+    .select({
+      id: appReviews.id,
+      appId: appReviews.appId,
+      rating: appReviews.rating,
+      body: appReviews.body,
+      lang: appReviews.lang,
+      status: appReviews.status,
+      createdAt: appReviews.createdAt,
+    })
+    .from(appReviews)
+    .where(
+      and(
+        eq(appReviews.userId, userId),
+        inArray(appReviews.appId, appIds),
+        own ? undefined : eq(appReviews.status, 'shown'),
+        before ? lt(appReviews.id, before) : undefined,
+      ),
+    )
+    .orderBy(desc(appReviews.id))
+    .limit(size + 1)
+  const page = rows.slice(0, size)
+  return {
+    reviews: page.map((row) => ({
+      id: row.id,
+      app: row.appId,
+      rating: row.rating,
+      body: row.body,
+      lang: row.lang,
+      createdAt: row.createdAt.toISOString(),
+      hidden: row.status === 'hidden',
+    })),
+    next: rows.length > size ? page[page.length - 1].id : null,
+  }
+}
+
+/** How many reviews of the apps `appIds` the member wrote: those everyone sees, and all of them. */
+export async function memberReviewCounts(payload: Payload, userId: string, appIds: number[]): Promise<{ shown: number; all: number }> {
+  if (appIds.length === 0) return { shown: 0, all: 0 }
+  const [row] = await drizzleOf(payload)
+    .select({ all: count(), shown: sql<number>`count(*) filter (where ${appReviews.status} = 'shown')` })
+    .from(appReviews)
+    .where(and(eq(appReviews.userId, userId), inArray(appReviews.appId, appIds)))
+  return { shown: Number(row?.shown ?? 0), all: Number(row?.all ?? 0) }
 }
 
 export type SaveReviewResult =

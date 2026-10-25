@@ -17,6 +17,7 @@ import {
   postLocale,
   postPath,
   postTitleValues,
+  shownTab,
   siteLinks,
   sortReactions,
   toggleReaction,
@@ -84,7 +85,15 @@ describe('circles: post input', () => {
     expect(parseTab('')).toBe('hot')
     expect(parseTab('latest')).toBe('latest')
     expect(parseTab('mine')).toBe('mine')
-    expect(parseTab('following')).toBeNull()
+    expect(parseTab('following')).toBe('following')
+    expect(parseTab('friends')).toBeNull()
+  })
+
+  it('shows 推荐 inside a circle for the tabs that span every circle', () => {
+    expect(shownTab('following', true)).toBe('hot')
+    expect(shownTab('mine', true)).toBe('hot')
+    expect(shownTab('latest', true)).toBe('latest')
+    expect(shownTab('following', false)).toBe('following')
   })
 })
 

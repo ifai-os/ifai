@@ -9,7 +9,7 @@ import { shanghaiDayStart } from '@/lib/shanghai-day'
 import { cleanName } from '@/modules/apps/reviews/rules'
 
 import { commentCounts, shownPost } from './data'
-import { commentRules, type CommentThread, type CommentView, type PersonView, type PostStatus, type ReportReason } from './rules'
+import { commentRules, type AuthorView, type CommentThread, type CommentView, type PersonView, type PostStatus, type ReportReason } from './rules'
 import { circleCommentReports, circleComments } from './schema'
 
 /**
@@ -23,6 +23,8 @@ import { circleCommentReports, circleComments } from './schema'
 const drizzleOf = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
 
 const person = (userId: string, name: string): PersonView => ({ name: cleanName(name), tone: toneFor(userId) })
+
+const author = (userId: string, name: string, handle: string | null): AuthorView => ({ ...person(userId, name), handle })
 
 const answered = alias(circleComments, 'answered_comment')
 const answeredAuthor = alias(authUsers, 'answered_author')
@@ -38,6 +40,7 @@ const commentColumns = {
   status: circleComments.status,
   createdAt: circleComments.createdAt,
   name: authUsers.name,
+  handle: authUsers.handle,
   answeredUserId: answered.userId,
   answeredName: answeredAuthor.name,
 }
@@ -52,6 +55,7 @@ type CommentRow = {
   status: PostStatus
   createdAt: Date
   name: string
+  handle: string | null
   answeredUserId: string | null
   answeredName: string | null
 }
@@ -80,7 +84,7 @@ function toView(row: CommentRow, userId: string | null): CommentView {
     replyTo: row.answeredUserId !== null && row.answeredName !== null ? person(row.answeredUserId, row.answeredName) : null,
     body: row.body,
     lang: row.lang,
-    author: person(row.userId, row.name),
+    author: author(row.userId, row.name, row.handle),
     mine: row.userId === userId,
     hidden: row.status === 'hidden',
     createdAt: row.createdAt.toISOString(),

@@ -9,6 +9,8 @@ import { ShareButton } from '@/components/share-button'
 import { localizePath, type Locale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 import { AppTile } from '@/modules/apps/components/app-tile'
+import { FollowButton } from '@/modules/profiles/components/follows'
+import { ProfileLink } from '@/modules/profiles/components/profile-link'
 import { SkillTile } from '@/modules/resources/public/components/skill-tile'
 
 import { linkify, postTitleValues, reactionEmoji, reactions, type LinkCard, type PostView, type Reaction, type ReactionView } from '../rules'
@@ -26,13 +28,16 @@ type PostItemProps = {
   onReport: () => void
   /** On the post's own page: an article whose time is not a link to itself. */
   page?: boolean
+  /** 「关注」on the others' posts; not on a member's own page, which has it at the top. */
+  follow?: boolean
 }
 
 /**
- * One post: who and when, in which circle, the text, its pictures or video, cards for the apps and
- * Skills it links to, the reactions, comments and sharing, and「更多」(delete one's own, report the others).
+ * One post: who (to their page) and when, in which circle,「关注」, the text, its pictures or video,
+ * cards for the apps and Skills it links to, the reactions, comments and sharing, and「更多」
+ * (delete one's own, report the others).
  */
-export function PostItem({ post, reported, onReport, page = false }: PostItemProps) {
+export function PostItem({ post, reported, onReport, page = false, follow = true }: PostItemProps) {
   const t = useTranslations('circles')
   const { byId } = useCirclesSession()
   const { remove } = usePostActions()
@@ -44,9 +49,13 @@ export function PostItem({ post, reported, onReport, page = false }: PostItemPro
   return (
     <Wrapper className={`flex flex-col gap-3 ${page ? '' : 'border-b border-hairline py-5'}`}>
       <div className="flex items-center gap-2.5">
-        <PersonAvatar name={name} tone={post.author.tone} />
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-ui font-medium wrap-anywhere">{post.mine ? t('youNamed', { name }) : name}</span>
+        <ProfileLink handle={post.author.handle} twin className="flex-none rounded-pill">
+          <PersonAvatar name={name} tone={post.author.tone} />
+        </ProfileLink>
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+          <ProfileLink handle={post.author.handle} className="max-w-full text-ui font-medium wrap-anywhere hover:underline">
+            {post.mine ? t('youNamed', { name }) : name}
+          </ProfileLink>
           <span className="text-small text-ink-4">
             {page ? (
               <PostTime iso={post.createdAt} />
@@ -70,6 +79,9 @@ export function PostItem({ post, reported, onReport, page = false }: PostItemPro
             )}
           </span>
         </div>
+        {follow && !post.mine && post.author.handle && (
+          <FollowButton handle={post.author.handle} name={name} initial={post.following} look="outline" />
+        )}
         <MoreMenu
           label={t('moreName', { name })}
           mine={post.mine}

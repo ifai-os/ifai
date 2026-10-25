@@ -1,14 +1,15 @@
 import type { Locale } from '@/i18n/config'
 import { absoluteUrl, breadcrumbs, pageUrl, type JsonLdObject } from '@/lib/structured-data'
+import { profilePath } from '@/modules/profiles/rules'
 
-import { postLocale, postPath, type CircleView, type CommentsPage, type CommentView, type PersonView, type PostView } from './rules'
+import { postLocale, postPath, type AuthorView, type CircleView, type CommentsPage, type CommentView, type PostView } from './rules'
 
 type Labels = { home: string; circles: string; title: string; anonymous: string }
 
 /**
  * A post's page as a DiscussionForumPosting with its first page of comments, plus its trail
  * (首页 › 圈子 › # 圈子名 › 这条动态). Hidden comments, which only their authors see, are left
- * out. Everything here is on the page itself (src/lib/structured-data.tsx).
+ * out. Everything here is on the page itself (src/lib/structured-data.tsx); authors link to their pages.
  */
 export function postJsonLd(
   { post, circle, comments }: { post: PostView; circle: CircleView; comments: CommentsPage | null },
@@ -16,7 +17,11 @@ export function postJsonLd(
   labels: Labels,
 ): JsonLdObject[] {
   const url = pageUrl(postLocale(post), postPath(post.id))
-  const person = (author: PersonView) => ({ '@type': 'Person', name: author.name || labels.anonymous })
+  const person = (author: AuthorView) => ({
+    '@type': 'Person',
+    name: author.name || labels.anonymous,
+    url: author.handle ? pageUrl(postLocale(post), profilePath(author.handle)) : null,
+  })
   const shown = <T extends CommentView>(list: T[]) => list.filter((comment) => !comment.hidden)
   const comment = (item: CommentView): JsonLdObject => ({
     '@type': 'Comment',

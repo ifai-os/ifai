@@ -487,6 +487,21 @@ export async function getAppsBySlugs(slugs: string[], locale: Locale): Promise<A
   return docs.map((doc) => toListItem(doc, locale, categories))
 }
 
+/**
+ * Published apps by id, for a member's reviews on their page (docs/specs/circles.md「/u/[handle]」);
+ * ids with no published app are left out.
+ */
+export async function getAppsByIds(ids: number[], locale: Locale): Promise<AppListItem[]> {
+  if (ids.length === 0) return []
+  const [docs, categories] = await Promise.all([findAppsByIds([...new Set(ids)].sort((a, b) => a - b)), categoryMap(locale)])
+  return docs.map((doc) => toListItem(doc, locale, categories))
+}
+
+/** The ids of every published app: elsewhere on IFAI, only reviews of these show. */
+export async function getPublishedAppIds(): Promise<number[]> {
+  return (await findCandidatesCached({ categoryId: null, q: '' })).map((app) => app.id)
+}
+
 /** Where「打开网站」goes: the published app's id and website; null when there is no such app or no usable website. */
 export async function getVisitTarget(slug: string): Promise<{ appId: number; website: string } | null> {
   const doc = await findApp(slug)
