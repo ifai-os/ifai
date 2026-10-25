@@ -1,20 +1,20 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 
-import { ButtonLink } from '@/components/button'
+import { buttonClass } from '@/components/button'
 import { EmptyState } from '@/components/states/empty-state'
+import { ListLink, ListNavigationProvider, ListResults } from '@/components/states/list-navigation'
 import type { Locale } from '@/i18n/config'
-import { Link } from '@/i18n/navigation'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
 
-import type { StoryCategory } from '../../categories'
+import type { StoryTag } from '../../tags'
 import { SubscribeBox } from '../../email/components/subscribe-box'
 import { subscribingOpen } from '../../email/delivery'
-import { hotStories, hottestStory, latestPoster, listStories, mentionedApps, sourceCount } from '../data'
+import { hotStories, hottestStory, latestPoster, listStories, mentionedApps } from '../data'
 import { listHref } from '../list-params'
 import { CategoryNav } from './category-nav'
 import { DailyFeed } from './daily-feed'
-import { TodayBadge, UpdatedStat } from './hero-bits'
+import { DailyFeedSkeleton } from './daily-skeletons'
 import { HotList } from './hot-list'
 import { HottestCard } from './hottest-card'
 import { MentionedApps } from './mentioned-apps'
@@ -22,25 +22,26 @@ import { PosterCard } from './poster-card'
 
 type DailyListProps = {
   locale: Locale
-  /** The category being shown; null for every story. */
-  category: StoryCategory | null
+  /** The industry tag being shown (`/daily/tag/<tag>`), if any; null for every story. */
+  tag?: StoryTag | null
   page: number
 }
 
 /**
- * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): header with today's hottest story
- * and the latest「每日 AI 大事」poster (first page of every story only), categories, stories by
- * day and earlier pages, and beside them the apps in today's news and the hottest events of the
- * last 48 hours. The email subscribe box sits under the poster on wide screens (in the poster's
- * place when there is none) and after the stories on phones and tablets.
+ * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): 「头条」and the latest「每日 AI 大事」
+ * poster (first page of every story only), then under a line the categories (each has its own page,
+ * ./category-page.tsx), stories by day and earlier pages, and the apps in today's news and the
+ * hottest events of the last 48 hours. The email subscribe box sits under the poster on wide
+ * screens (in the poster's place when there is none) and after the stories on phones and tablets.
+ * A tag's page is the same list without the first row and the categories.
  */
-export async function DailyList({ locale, category, page }: DailyListProps) {
-  const front = !category && page === 1
-  const [t, names, result, sources, hottest, poster, hot, apps] = await Promise.all([
+export async function DailyList({ locale, tag = null, page }: DailyListProps) {
+  const front = !tag && page === 1
+  const [t, names, tagNames, result, hottest, poster, hot, apps] = await Promise.all([
     getTranslations('daily'),
     getTranslations('categories'),
-    listStories({ locale, category, page }),
-    sourceCount(),
+    getTranslations('tags'),
+    listStories({ locale, tag, page }),
     front ? hottestStory(locale) : null,
     front ? latestPoster() : null,
     hotStories(locale),
@@ -51,98 +52,97 @@ export async function DailyList({ locale, category, page }: DailyListProps) {
 
   const subscribe = subscribingOpen()
   const serverToday = dayKey(new Date(), serverTimeZone)
-  const latest = result.stories[0]?.publishedAt ?? null
+  const firstRow = Boolean(hottest || poster)
   const pill =
-    'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-5 text-ui font-medium text-ink transition-colors hover:border-ink-4'
+    'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-6 text-meta text-ink-2 transition-colors hover:border-ink-4'
 
   return (
-    <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 pt-5 pb-16 md:gap-7 md:pt-8 md:pb-24">
-      {/* The board's row: header, hottest story and poster share it 1 : 2 : 1 and wrap when there is no room. */}
-      <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
-        <header
-          className={`flex items-start gap-4 rounded-hero border border-surface-2 bg-surface px-5 py-5 md:grow md:basis-54 md:gap-6 md:px-8 md:py-7 ${
-            hottest ? 'md:flex-col md:gap-5' : 'md:items-center'
+    <ListNavigationProvider>
+      <main id="main" className="mx-auto flex w-full max-w-240 flex-col gap-5 px-4 pt-5 pb-16 md:gap-10 md:pt-8 md:pb-24">
+        {tag ? <h1 className="text-h1">{t('tagTitle', { tag: tagNames(tag) })}</h1> : <h1 className="sr-only">{t('title')}</h1>}
+        {/* The board's first row: 「头条」and the poster share it 2 : 1 and wrap when there is no room.
+            Without them only the subscribe box is left, which wide screens show here. */}
+        {(firstRow || subscribe) && (
+          <div className={`flex-col gap-4 md:flex-row md:flex-wrap ${firstRow ? 'flex' : 'hidden lg:flex'}`}>
+            {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
+            {poster ? (
+              <div className={`flex flex-col gap-4 ${hottest ? 'md:grow md:basis-54' : 'md:w-side md:flex-none'}`}>
+                <PosterCard poster={poster} locale={locale} />
+                {subscribe && (
+                  <div className="hidden lg:block">
+                    <SubscribeBox variant="column" />
+                  </div>
+                )}
+              </div>
+            ) : (
+              subscribe && (
+                <div className={`hidden lg:block ${hottest ? 'lg:grow lg:basis-54' : 'lg:w-side lg:flex-none'}`}>
+                  <SubscribeBox variant="column" />
+                </div>
+              )
+            )}
+          </div>
+        )}
+
+        {/* The board's second part, under a line: the categories (140), the stories and the column beside
+            them (200), 48 apart; what doesn't fit wraps under, as on the board. Phones stack them, the
+            categories as chips. */}
+        <div
+          className={`flex flex-col gap-5 md:flex-row md:flex-wrap md:items-start md:gap-x-12 md:gap-y-10 ${
+            firstRow ? 'md:border-t md:border-line md:pt-6' : subscribe ? 'lg:border-t lg:border-line lg:pt-6' : ''
           }`}
         >
-          <TodayBadge serverToday={serverToday} />
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <h1 className="text-h2 md:text-display">{category ? names(category) : t('title')}</h1>
-            <p className="text-meta text-ink-3 md:text-body">{t('intro')}</p>
-            <p className="flex flex-wrap gap-x-2 text-small text-ink-4 md:text-meta">
-              <span>{t('sourceCount', { count: sources })}</span>
-              {latest && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <UpdatedStat iso={latest} />
-                </>
+          {!tag && (
+            <div className="md:basis-35">
+              <CategoryNav current={null} />
+            </div>
+          )}
+
+          <div className="flex min-w-0 flex-col gap-6 md:grow-999 md:basis-105">
+            <ListResults skeleton={<DailyFeedSkeleton count={Math.min(Math.max(result.stories.length, 3), 6)} />}>
+              {result.stories.length > 0 ? (
+                <DailyFeed stories={result.stories} serverToday={serverToday} />
+              ) : tag ? (
+                <EmptyState title={t('emptyCategoryTitle')} body={t('emptyCategoryBody')}>
+                  <ListLink href="/daily" className={buttonClass('secondary')}>
+                    {t('allStories')}
+                  </ListLink>
+                </EmptyState>
+              ) : (
+                <EmptyState title={t('emptyTitle')} body={t('emptyBody')} />
               )}
-            </p>
-          </div>
-        </header>
-        {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
-        {poster ? (
-          <div className="flex flex-col gap-4 md:grow md:basis-54">
-            <PosterCard poster={poster} locale={locale} />
+            </ListResults>
+
+            {(page > 1 || page < result.pages) && (
+              <nav aria-label={t('pages')} className="flex flex-wrap justify-center gap-3">
+                {page > 1 && (
+                  <ListLink rel="prev" href={listHref({ tag, page: page - 1 })} className={pill}>
+                    {t('loadNewer')}
+                  </ListLink>
+                )}
+                {page < result.pages && (
+                  <ListLink rel="next" href={listHref({ tag, page: page + 1 })} className={pill}>
+                    {t('loadEarlier')}
+                  </ListLink>
+                )}
+              </nav>
+            )}
+
             {subscribe && (
-              <div className="hidden lg:block">
-                <SubscribeBox variant="column" />
+              <div className="lg:hidden">
+                <SubscribeBox variant="card" />
               </div>
             )}
           </div>
-        ) : (
-          subscribe && (
-            <div className="hidden lg:block lg:w-side lg:flex-none">
-              <SubscribeBox variant="column" />
-            </div>
-          )
-        )}
-      </div>
 
-      <CategoryNav current={category} />
-
-      <div className="flex flex-col gap-12 lg:flex-row lg:items-start">
-        <div className="flex min-w-0 flex-1 flex-col gap-5 md:gap-7">
-          {result.stories.length > 0 ? (
-            <DailyFeed stories={result.stories} serverToday={serverToday} />
-          ) : category ? (
-            <EmptyState title={t('emptyCategoryTitle')} body={t('emptyCategoryBody')}>
-              <ButtonLink href="/daily" variant="secondary">
-                {t('allStories')}
-              </ButtonLink>
-            </EmptyState>
-          ) : (
-            <EmptyState title={t('emptyTitle')} body={t('emptyBody')} />
-          )}
-
-          {(page > 1 || page < result.pages) && (
-            <nav aria-label={t('pages')} className="flex flex-wrap justify-center gap-3 pt-2">
-              {page > 1 && (
-                <Link rel="prev" href={listHref({ category, page: page - 1 })} className={pill}>
-                  {t('loadNewer')}
-                </Link>
-              )}
-              {page < result.pages && (
-                <Link rel="next" href={listHref({ category, page: page + 1 })} className={pill}>
-                  {t('loadEarlier')}
-                </Link>
-              )}
-            </nav>
-          )}
-
-          {subscribe && (
-            <div className="lg:hidden">
-              <SubscribeBox variant="card" />
-            </div>
+          {(hot.length > 0 || apps.length > 0) && (
+            <aside className="flex flex-col gap-8 max-md:mt-7 md:grow md:basis-50">
+              <MentionedApps apps={apps} serverToday={serverToday} />
+              {hot.length > 0 && <HotList stories={hot} />}
+            </aside>
           )}
         </div>
-
-        {(hot.length > 0 || apps.length > 0) && (
-          <aside className="flex flex-col gap-8 lg:w-side lg:flex-none">
-            <MentionedApps apps={apps} serverToday={serverToday} />
-            {hot.length > 0 && <HotList stories={hot} />}
-          </aside>
-        )}
-      </div>
-    </main>
+      </main>
+    </ListNavigationProvider>
   )
 }

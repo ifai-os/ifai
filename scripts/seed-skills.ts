@@ -1,7 +1,7 @@
 /**
  * Sample Skills for local development and the CI smoke tests (tests/e2e/resources.spec.ts).
  * The Skills are fictional and harmless (Markdown only, no scripts). Runs only against a
- * database on this machine, or main's preview when asked (./seed-target.ts), so it can never put
+ * database on this machine, or a preview when asked (./seed-target.ts), so it can never put
  * sample Skills on a real site. Safe to run again: sample Skills are matched by slug and rebuilt
  * with their versions.
  *

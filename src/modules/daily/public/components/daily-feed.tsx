@@ -1,6 +1,6 @@
 'use client'
 
-import { useFormatter, useTranslations } from 'next-intl'
+import { useFormatter, useLocale, useTranslations } from 'next-intl'
 
 import { DateBadge } from '@/components/cards/date-badge'
 import { useReaderTimeZone, useReaderToday } from '@/components/local-time'
@@ -21,27 +21,30 @@ export function DailyFeed({ stories, serverToday }: DailyFeedProps) {
   const t = useTranslations('daily')
   const names = useTranslations('categories')
   const format = useFormatter()
+  const locale = useLocale()
   const timeZone = useReaderTimeZone()
   const today = useReaderToday(serverToday)
   const groups = groupByDay(stories, (story) => story.publishedAt, timeZone)
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {groups.map((group) => {
         const relative = relativeDay(group.key, today)
-        const date = format.dateTime(group.date, { month: 'long', day: 'numeric', weekday: 'long', timeZone: 'UTC' })
+        // Chinese and Japanese run date and weekday together (「10月20日星期二」); the board has a space between.
+        const date = /^(zh|ja)/.test(locale)
+          ? `${format.dateTime(group.date, { month: 'long', day: 'numeric', timeZone: 'UTC' })} ${format.dateTime(group.date, { weekday: 'long', timeZone: 'UTC' })}`
+          : format.dateTime(group.date, { month: 'long', day: 'numeric', weekday: 'long', timeZone: 'UTC' })
         return (
-          <section key={group.key} aria-labelledby={`day-${group.key}`} className="flex flex-col gap-2">
-            <header className="flex items-center gap-3">
+          <section key={group.key} aria-labelledby={`day-${group.key}`} className="flex flex-col">
+            {/* 「IFAI 日报（新版）」: the calendar tile, then the day and its count on one line, all centred;
+                8 above, 16 down to the first story's line. */}
+            <header className="flex items-center gap-3 pt-2 pb-4">
               <DateBadge date={group.date} size="sm" />
-              <div className="flex min-w-0 flex-col">
-                <h2 id={`day-${group.key}`} className="text-h3 font-semibold">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-3">
+                <h2 id={`day-${group.key}`} className="text-h3">
                   {relative ? t(relative) : date}
                 </h2>
-                <span className="text-small text-ink-4">
-                  {relative && <span>{date} · </span>}
-                  {t('groupCount', { count: group.items.length })}
-                </span>
+                <span className="text-meta text-ink-4">{t('groupCount', { count: group.items.length })}</span>
               </div>
             </header>
             <ol>

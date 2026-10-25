@@ -1,5 +1,6 @@
 /** Shapes the review endpoints return and the admin screen renders (types only; no server code). */
 import type { StoryCategory } from '../categories'
+import type { StoryMediaKind } from '../media'
 import type { PosterDesk } from '../poster/types'
 import type { SourceRole, StoryStatus } from '../story-fields'
 import type { AnalysisFlag } from '../judge/rules'
@@ -12,13 +13,21 @@ export type StorySourceInput = {
   publishedAt?: string | null
 }
 
-/** What the editor can change on a story (simplified Chinese, category, sources). */
+/** The story's picture or video as the panel edits it; the picture itself is changed in its Payload page. */
+export type MediaInput = {
+  kind: StoryMediaKind
+  videoUrl: string
+  credit: string
+}
+
+/** What the editor can change on a story (simplified Chinese, category, sources, picture or video). */
 export type Edits = {
   title: string
   summary: string
   tryIt: string
   category: StoryCategory
   sources: StorySourceInput[]
+  media: MediaInput
 }
 
 export type DuplicateCandidate = {
@@ -95,6 +104,9 @@ export type ReviewDetail = {
   original: { name: string; url: string; publishedAt: string | null } | null
   hans: LocaleText
   sources: StorySourceInput[]
+  media: MediaInput
+  /** The story's picture (a video's cover), for the preview; null when there is none. */
+  mediaImage: { id: number; url: string } | null
   texts: Partial<Record<RewrittenLocale | 'zh-Hant', LocaleText>>
   localeStatus: LocaleStatus
   hansHash: string

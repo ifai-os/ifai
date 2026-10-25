@@ -183,14 +183,20 @@
     "breadcrumb": "目前位置",
     "filterLabel": "依分類篩選",
     "newTab": "（在新分頁開啟）",
-    "intro": "AI 從各個信源裡篩選、去重，編輯審核後立即發布。時間按你所在的時區顯示。",
     "emptyTitle": "還沒有發布新聞",
     "emptyBody": "第一批新聞正在審核，很快會出現在這裡。",
     "publishedAt": "首次發布",
     "roles": {
       "report": "報導"
     },
-    "outlets": "{count, plural, other {# 家報導}}"
+    "outlets": "{count, plural, other {# 家報導}}",
+    "showMore": "檢視更多（{count} 則）",
+    "topicNote": "這個話題的歷次新聞，最新的在上面。",
+    "thisStory": "本則",
+    "similarNote": "過去類似的事，幫助理解這一則。",
+    "topicCount": "{count, plural, other {# 則新聞}}",
+    "topicEarlier": "載入更早的新聞（{count} 則）",
+    "categoryWeek": "近 7 天 {count, plural, other {# 則}}"
   },
   "resources": {
     "emptyBody": "第一批 Skill 正在檢測和審核，很快會出現在這裡。",
@@ -259,8 +265,8 @@
     }
   },
   "subscribe": {
-    "title": "每天早上 8 點，把 AI 日報寄到你的信箱",
-    "note": "依你選擇的語言，在你所在時區的早上 8 點寄送，隨時可以取消訂閱",
+    "title": "每天早上 8 點收 AI 日報",
+    "note": "依你的時區寄送，隨時取消訂閱",
     "email": "你的電子郵件",
     "invalid": "請輸入有效的電子郵件地址",
     "failed": "訂閱失敗，請稍後再試"
@@ -342,5 +348,9 @@
     "boardNote": "分數按兩兩對比結果擬合得出：平均水準是 1000 分，差 100 分大約是 64% 對 36% 的勝率；信賴區間重疊的模型可以視為同一水準。計分的票不足 {votes, number} 的模型標為「暫定」，不排名次、不進前 10。",
     "trend": "分數走勢 · 近 {weeks} 週",
     "trendChart": "近 {weeks} 週閉源第一和開放權重第一的分數走勢。"
+  },
+  "tags": {
+    "agents": "AI代理",
+    "on-device": "裝置端AI"
   }
 }

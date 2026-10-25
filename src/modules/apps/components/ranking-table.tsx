@@ -1,5 +1,6 @@
 import { useFormatter, useTranslations } from 'next-intl'
 
+import { ListLink } from '@/components/states/list-navigation'
 import { Link } from '@/i18n/navigation'
 
 import { daysSince, trendDays, type Board, type Sort } from '../boards'
@@ -45,14 +46,14 @@ export function RankingTable({ apps, board, sort, category, q, heatDay, showSite
         aria-sort={active ? (ascending ? 'ascending' : 'descending') : undefined}
         className={`px-2 py-2 text-right font-medium md:py-3 ${className}`}
       >
-        <Link
+        <ListLink
           href={listHref({ category, q, board, sort: column })}
           scroll={false}
           className={`inline-flex items-center gap-1 whitespace-nowrap hover:text-ink ${active ? 'text-ink' : ''}`}
         >
           {t(`columns.${column}`)}
           <span aria-hidden="true">{active ? (ascending ? '↑' : '↓') : '↕'}</span>
-        </Link>
+        </ListLink>
       </th>
     )
   }

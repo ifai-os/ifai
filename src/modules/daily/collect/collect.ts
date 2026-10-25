@@ -135,6 +135,7 @@ export async function fetchContent(itemId: number): Promise<ContentResult> {
       .set({
         content: article.text,
         links: article.links,
+        media: article.media,
         summary: item.summary ?? article.excerpt ?? null,
         publishedAt,
         language: article.lang?.slice(0, 2).toLowerCase() || item.language,
