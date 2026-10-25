@@ -20,7 +20,7 @@ const usage = {
   outputTokens: { total: 20, text: 20, reasoning: undefined },
 }
 
-function setup({ env = {}, cost = 0.01, reply = 'ok', fail = false } = {}) {
+function setup({ env = {}, cost = 0.01, reply = 'ok', fail = false, finish = 'stop' as 'stop' | 'length' } = {}) {
   const store = createMemoryReceiptStore()
   const calls: string[] = []
   const prompts: unknown[] = []
@@ -35,7 +35,7 @@ function setup({ env = {}, cost = 0.01, reply = 'ok', fail = false } = {}) {
           if (fail) throw new Error('provider down')
           return {
             content: [{ type: 'text', text: reply }],
-            finishReason: { unified: 'stop', raw: undefined },
+            finishReason: { unified: finish, raw: undefined },
             usage,
             providerMetadata: { openrouter: { usage: { cost } } },
             warnings: [],
@@ -159,6 +159,30 @@ describe('ai client', () => {
     expect(result.output).toEqual({ score: 81, reason: 'launch' })
     const again = await ai.object({ purpose: 'score', instructions: 'Score it.', prompt: 'News.', schema })
     expect(again).toMatchObject({ reused: true, output: { score: 81 } })
+  })
+
+  it('answers an arena question with the contestant’s own model, one receipt per model', async () => {
+    const { ai, calls, store, prompts } = setup({ reply: 'Paris.' })
+    const question = { purpose: 'arena' as const, instructions: 'Answer directly.', prompt: 'Capital of France?', subject: 'arena-answers:1' }
+    const first = await ai.contest({ ...question, model: 'vendor/model-a' })
+    expect(first).toMatchObject({ output: { text: 'Paris.', cutOff: false }, model: 'vendor/model-a', reused: false })
+    await ai.contest({ ...question, model: 'vendor/model-b' })
+    await expect(ai.contest({ ...question, model: 'vendor/model-a' })).resolves.toMatchObject({ reused: true })
+    expect(calls).toEqual(['vendor/model-a', 'vendor/model-b'])
+    expect(store.rows.map((row) => [row.purpose, row.model])).toEqual([
+      ['arena', 'vendor/model-a'],
+      ['arena', 'vendor/model-b'],
+    ])
+    // Our own question, not outside text: no outside-data rule.
+    expect(JSON.stringify(prompts[0])).not.toContain('material to analyse')
+  })
+
+  it('says when an arena answer ran into the output limit, and obeys the switch', async () => {
+    const { ai } = setup({ finish: 'length' })
+    const question = { purpose: 'arena' as const, model: 'vendor/model-a', instructions: 'Answer.', prompt: 'Write a novel.', maxOutputTokens: 10 }
+    await expect(ai.contest(question)).resolves.toMatchObject({ output: { cutOff: true } })
+    const off = setup({ env: { MODEL_CALLS_ENABLED: 'false' } })
+    await expect(off.ai.contest(question)).rejects.toBeInstanceOf(ModelCallsDisabledError)
   })
 
   it('embeds values with the embedding model', async () => {

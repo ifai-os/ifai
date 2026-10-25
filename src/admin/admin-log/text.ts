@@ -68,6 +68,9 @@ const zh = {
     'circles:posts/hidden': '圈子动态：隐藏',
     'circles:posts/shown': '圈子动态：重新显示',
     'circles:posts/keep': '圈子动态：举报不成立',
+    'arenas:snapshot-run': '赛道：现在重算排行',
+    'arena-models:generate': '参赛模型：现在生成回答',
+    'arena-models:retry-failed': '参赛模型：重新生成失败和不能用的回答',
   } as Record<string, string>,
 }
 
@@ -140,6 +143,9 @@ const en: LogText = {
     'circles:posts/hidden': 'Circle post: hide',
     'circles:posts/shown': 'Circle post: show again',
     'circles:posts/keep': 'Circle post: reports were wrong',
+    'arenas:snapshot-run': 'Arenas: recompute the rankings now',
+    'arena-models:generate': 'Contestant: generate answers now',
+    'arena-models:retry-failed': 'Contestant: redo failed and unusable answers',
   },
 }
 

@@ -6,7 +6,7 @@ import type { AdminViewServerProps } from 'payload'
 import type { CSSProperties, ReactNode } from 'react'
 
 import { loadModelUsage, type About, type ModelUsage } from './data'
-import { periodFrom, periods, sumDays } from './rules'
+import { isContestPurpose, periodFrom, periods, sumDays } from './rules'
 import { usageText, type UsageText } from './text'
 
 const OPENROUTER_ACTIVITY = 'https://openrouter.ai/activity'
@@ -254,7 +254,7 @@ function Purposes({ data, t, adminRoute }: Props & { adminRoute: string }) {
                   </td>
                   <td style={{ ...cell, whiteSpace: 'nowrap' }}>{row.module ? t.purposes.modules[row.module] : '—'}</td>
                   <td style={cell}>
-                    {row.model ? <code style={{ fontSize: '0.8rem' }}>{row.model}</code> : '—'}
+                    {row.model ? <code style={{ fontSize: '0.8rem' }}>{row.model}</code> : isContestPurpose(row.purpose) ? t.purposes.perContestant : '—'}
                     {row.changed && (
                       <span title={t.purposes.changedHint} style={{ marginLeft: '0.4em', color: 'var(--theme-warning-700)', whiteSpace: 'nowrap' }}>
                         {t.purposes.changed}

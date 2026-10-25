@@ -3,11 +3,12 @@ import type { SitemapPage, SitemapSection } from '@/lib/sitemap'
 import { appsSitemap } from '@/modules/apps/sitemap'
 import { legalDocuments, legalHref } from '@/modules/legal/documents'
 import { dailySitemap } from '@/modules/daily/public/sitemap'
+import { rankingsSitemap } from '@/modules/rankings/sitemap'
 import { resourcesSitemap } from '@/modules/resources/public/sitemap'
 
 /** Every indexable page, by sitemap section: list pages together, then each module's items. */
 export async function sitemapPages(): Promise<Record<SitemapSection, SitemapPage[]>> {
-  const [daily, apps, resources] = await Promise.all([dailySitemap(), appsSitemap(), resourcesSitemap()])
+  const [daily, apps, resources, rankings] = await Promise.all([dailySitemap(), appsSitemap(), resourcesSitemap(), rankingsSitemap()])
   // The circles page from phase two; its circle filters and tabs are noindex.
   const circles: SitemapPage[] = isLaunched('circles') ? [{ path: '/circles' }] : []
   return {
@@ -15,6 +16,7 @@ export async function sitemapPages(): Promise<Record<SitemapSection, SitemapPage
       { path: '/', lastModified: daily.stories[0]?.lastModified },
       ...daily.pages,
       ...apps.pages,
+      ...rankings,
       ...resources.pages,
       ...circles,
       ...legalDocuments.map((document) => ({ path: legalHref[document] })),

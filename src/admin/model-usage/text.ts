@@ -3,7 +3,7 @@ import type { Module, SubjectKind } from './rules'
 // The back office is for the site owner; its text follows Payload's own admin language (zh / en).
 const zh = {
   title: '模型用量',
-  intro: '日报、应用、资源三个模块的模型调用都记在这里。日期按上海时间算，和每日预算一致。',
+  intro: '日报、应用、资源、排行四个模块的模型调用都记在这里。日期按上海时间算，和每日预算一致。',
   money: (usd: number) => (usd > 0 && usd < 0.0001 ? '<$0.0001' : `$${usd.toFixed(usd > 0 && usd < 0.01 ? 4 : 2)}`),
   number: (value: number) => value.toLocaleString('zh-CN'),
   today: {
@@ -44,6 +44,7 @@ const zh = {
     purpose: '用途',
     module: '模块',
     model: '模型',
+    perContestant: '各参赛模型',
     changed: '已改',
     changedHint: '用环境变量 AI_MODEL_<用途> 换过模型',
     succeeded: '成功',
@@ -63,8 +64,9 @@ const zh = {
       profile: '应用资料草稿',
       translate: '评价翻译',
       describe: 'Skill 说明草稿',
+      arena: '排行：参赛模型的回答',
     } as Record<string, string>,
-    modules: { daily: '日报', apps: '应用', resources: '资源' } satisfies Record<Module, string>,
+    modules: { daily: '日报', apps: '应用', resources: '资源', rankings: '排行' } satisfies Record<Module, string>,
   },
   problems: {
     heading: '要处理的调用',
@@ -79,13 +81,14 @@ const zh = {
     failed: '失败',
     stuck: '卡住',
     exhausted: '不再自动重试',
-    exhaustedHint: '已经试满 3 次，要到对应的地方手动重来（审核页、应用的「资料草稿」或「评价」、Skill 版本的「生成说明草稿」）。',
+    exhaustedHint: '已经试满 3 次，要到对应的地方手动重来（审核页、应用的「资料草稿」或「评价」、Skill 版本的「生成说明草稿」、参赛模型的「重试失败的」）。',
     kinds: {
       stories: '新闻',
       raw_items: '报道',
       apps: '应用',
       app_reviews: '应用评价',
       'skill-versions': 'Skill 版本',
+      'arena-answers': '排行回答',
     } satisfies Record<SubjectKind, string>,
     original: '原文',
   },
@@ -96,7 +99,7 @@ type Text = typeof zh
 
 const en: Text = {
   title: 'Model usage',
-  intro: 'Every model call from the daily, apps and resources modules. Days are Shanghai days, the same as the daily budget.',
+  intro: 'Every model call from the daily, apps, resources and rankings modules. Days are Shanghai days, the same as the daily budget.',
   money: zh.money,
   number: (value) => value.toLocaleString('en-US'),
   today: {
@@ -137,6 +140,7 @@ const en: Text = {
     purpose: 'Purpose',
     module: 'Module',
     model: 'Model',
+    perContestant: 'Each contestant',
     changed: 'changed',
     changedHint: 'Model swapped with the AI_MODEL_<PURPOSE> environment variable',
     succeeded: 'Succeeded',
@@ -156,8 +160,9 @@ const en: Text = {
       profile: 'App profile drafts',
       translate: 'Review translation',
       describe: 'Skill description drafts',
+      arena: 'Rankings: contestants’ answers',
     },
-    modules: { daily: 'Daily', apps: 'Apps', resources: 'Resources' },
+    modules: { daily: 'Daily', apps: 'Apps', resources: 'Resources', rankings: 'Rankings' },
   },
   problems: {
     heading: 'Calls to look at',
@@ -173,13 +178,14 @@ const en: Text = {
     stuck: 'Stuck',
     exhausted: 'no more automatic retries',
     exhaustedHint:
-      'Tried 3 times; start it again where it came from (the review screen, an app’s profile draft or reviews, a Skill version’s description draft).',
+      'Tried 3 times; start it again where it came from (the review screen, an app’s profile draft or reviews, a Skill version’s description draft, a contestant’s “Retry failed”).',
     kinds: {
       stories: 'Story',
       raw_items: 'Report',
       apps: 'App',
       app_reviews: 'App review',
       'skill-versions': 'Skill version',
+      'arena-answers': 'Arena answer',
     },
     original: 'original',
   },

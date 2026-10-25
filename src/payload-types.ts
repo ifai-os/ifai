@@ -83,6 +83,10 @@ export interface Config {
     'skill-tags': SkillTag;
     'skill-submissions': SkillSubmission;
     circles: Circle;
+    arenas: Arena;
+    'arena-models': ArenaModel;
+    'arena-prompts': ArenaPrompt;
+    'arena-answers': ArenaAnswer;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -106,6 +110,10 @@ export interface Config {
     'skill-tags': SkillTagsSelect<false> | SkillTagsSelect<true>;
     'skill-submissions': SkillSubmissionsSelect<false> | SkillSubmissionsSelect<true>;
     circles: CirclesSelect<false> | CirclesSelect<true>;
+    arenas: ArenasSelect<false> | ArenasSelect<true>;
+    'arena-models': ArenaModelsSelect<false> | ArenaModelsSelect<true>;
+    'arena-prompts': ArenaPromptsSelect<false> | ArenaPromptsSelect<true>;
+    'arena-answers': ArenaAnswersSelect<false> | ArenaAnswersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1032,6 +1040,132 @@ export interface Circle {
   createdAt: string;
 }
 /**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. The rankings are recomputed every Monday at 06:00 Shanghai time.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arenas".
+ */
+export interface Arena {
+  id: number;
+  /**
+   * The tab on the rankings page, e.g. “Coding”.
+   */
+  name: string;
+  /**
+   * What the questions in this arena ask for, under the tabs.
+   */
+  intro?: string | null;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  /**
+   * Draft arenas get answers but no votes and no rankings.
+   */
+  status: 'draft' | 'published';
+  /**
+   * Smaller comes first; the first one is the rankings page itself.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * New contestants start in “Preparing”: their answers to every question of their arenas are generated first (see the Answers box on the right). Set them to “Competing” to put them into the votes.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-models".
+ */
+export interface ArenaModel {
+  id: number;
+  /**
+   * As the maker writes it, e.g. Kimi K2. Not translated.
+   */
+  name: string;
+  /**
+   * E.g. Anthropic, Moonshot AI. Write the Chinese name (月之暗面) in Simplified Chinese.
+   */
+  org: string;
+  /**
+   * From openrouter.ai/models, e.g. moonshotai/kimi-k2. Fixed once the model has answers.
+   */
+  openrouterId: string;
+  /**
+   * Open weights: the weights can be downloaded. Not the same as an open-source license.
+   */
+  weights: 'open' | 'closed';
+  /**
+   * Where the maker is based.
+   */
+  region: 'us' | 'cn' | 'eu' | 'other';
+  /**
+   * E.g. MIT, Llama 3.3 Community. Leave empty when unsure.
+   */
+  license?: string | null;
+  licenseUrl?: string | null;
+  arenas: (number | Arena)[];
+  /**
+   * Preparing: answers only. Competing: in the votes and rankings. Retired: out of both; its votes stay.
+   */
+  status: 'draft' | 'active' | 'retired';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Readers vote on the answers to these questions. Write each question in one language; Traditional Chinese pages show the Simplified ones converted. Questions are public, notes are not.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-prompts".
+ */
+export interface ArenaPrompt {
+  id: number;
+  /**
+   * Exactly what the models get. A real task readers would ask about; nothing about AI models themselves, nothing that needs the web or files.
+   */
+  text: string;
+  arena: number | Arena;
+  /**
+   * The language the question is written in.
+   */
+  lang: 'en' | 'zh-Hans' | 'ja' | 'ko';
+  status: 'active' | 'retired';
+  /**
+   * What the question tests, where it came from.
+   */
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Generated ahead of the votes, one per question and model. Readers see an answer in a vote when it is done, not hidden, not cut off and does not name its model or maker. Hide an answer that should not be shown; votes already cast on it still count.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-answers".
+ */
+export interface ArenaAnswer {
+  id: number;
+  hidden?: boolean | null;
+  prompt: number | ArenaPrompt;
+  model: number | ArenaModel;
+  arena: number | Arena;
+  lang: 'en' | 'zh-Hans' | 'ja' | 'ko';
+  status: 'pending' | 'done' | 'failed';
+  text?: string | null;
+  cutOff?: boolean | null;
+  namesItself?: boolean | null;
+  error?: string | null;
+  costUsd?: number | null;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  /**
+   * How often “Retry failed” sent it back.
+   */
+  attempts?: number | null;
+  generatedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1118,6 +1252,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'circles';
         value: number | Circle;
+      } | null)
+    | ({
+        relationTo: 'arenas';
+        value: number | Arena;
+      } | null)
+    | ({
+        relationTo: 'arena-models';
+        value: number | ArenaModel;
+      } | null)
+    | ({
+        relationTo: 'arena-prompts';
+        value: number | ArenaPrompt;
+      } | null)
+    | ({
+        relationTo: 'arena-answers';
+        value: number | ArenaAnswer;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1635,6 +1785,72 @@ export interface CirclesSelect<T extends boolean = true> {
   tone?: T;
   order?: T;
   shown?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arenas_select".
+ */
+export interface ArenasSelect<T extends boolean = true> {
+  name?: T;
+  intro?: T;
+  slug?: T;
+  status?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-models_select".
+ */
+export interface ArenaModelsSelect<T extends boolean = true> {
+  name?: T;
+  org?: T;
+  openrouterId?: T;
+  weights?: T;
+  region?: T;
+  license?: T;
+  licenseUrl?: T;
+  arenas?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-prompts_select".
+ */
+export interface ArenaPromptsSelect<T extends boolean = true> {
+  text?: T;
+  arena?: T;
+  lang?: T;
+  status?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-answers_select".
+ */
+export interface ArenaAnswersSelect<T extends boolean = true> {
+  hidden?: T;
+  prompt?: T;
+  model?: T;
+  arena?: T;
+  lang?: T;
+  status?: T;
+  text?: T;
+  cutOff?: T;
+  namesItself?: T;
+  error?: T;
+  costUsd?: T;
+  inputTokens?: T;
+  outputTokens?: T;
+  attempts?: T;
+  generatedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

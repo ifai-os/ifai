@@ -28,7 +28,8 @@ import * as migration_20261024_181845_daily_tags from './20261024_181845_daily_t
 import * as migration_20261024_185906_daily_approved_at from './20261024_185906_daily_approved_at';
 import * as migration_20261025_030735_r2_upload_columns from './20261025_030735_r2_upload_columns';
 import * as migration_20261025_032312_follows from './20261025_032312_follows';
-import * as migration_20261025_041947_circles from './20261025_041947_circles';
+import * as migration_20261025_041212_rankings from './20261025_041212_rankings';
+import * as migration_20261025_042611_circles from './20261025_042611_circles';
 
 export const migrations = [
   {
@@ -182,8 +183,13 @@ export const migrations = [
     name: '20261025_032312_follows',
   },
   {
-    up: migration_20261025_041947_circles.up,
-    down: migration_20261025_041947_circles.down,
-    name: '20261025_041947_circles'
+    up: migration_20261025_041212_rankings.up,
+    down: migration_20261025_041212_rankings.down,
+    name: '20261025_041212_rankings',
+  },
+  {
+    up: migration_20261025_042611_circles.up,
+    down: migration_20261025_042611_circles.down,
+    name: '20261025_042611_circles'
   },
 ];
