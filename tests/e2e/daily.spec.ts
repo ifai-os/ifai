@@ -319,6 +319,8 @@ test.describe('with the sample stories', () => {
   })
 
   test("a story's page shows its skeleton while it comes in over a slow connection", async ({ page, context }) => {
+    // As when the reader clicks before the list has prefetched the story.
+    await page.route(/\/en\/daily\/sample-[^/?]+\?_rsc=/, (route) => (route.request().headers()['next-router-prefetch'] ? route.abort() : route.fallback()))
     await page.goto('/en/daily', { waitUntil: 'networkidle' })
     const cdp = await context.newCDPSession(page)
     await cdp.send('Network.enable')
@@ -329,6 +331,19 @@ test.describe('with the sample stories', () => {
     await expect(skeleton).toBeVisible()
     await expect(page.getByRole('heading', { level: 1, name: titles.preview })).toBeVisible({ timeout: 20_000 })
     await expect(skeleton).toHaveCount(0)
+  })
+
+  test('the stories the list shows are prefetched, so they open without waiting on the server', async ({ page }) => {
+    // Tall enough to show a story that was not rendered at build time (only the newest one is).
+    await page.setViewportSize({ width: 1280, height: 1600 })
+    await page.goto('/en/daily', { waitUntil: 'networkidle' })
+    const fetched: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('_rsc=') && !request.headers()['next-router-prefetch']) fetched.push(new URL(request.url()).pathname)
+    })
+    await page.getByRole('main').getByRole('article').getByRole('link', { name: titles.weights }).click()
+    await expect(page.getByRole('heading', { level: 1, name: titles.weights })).toBeVisible()
+    expect(fetched).toEqual([])
   })
 
   test("a product's topic page lists the stories about it, with its maker and app", async ({ page }) => {
