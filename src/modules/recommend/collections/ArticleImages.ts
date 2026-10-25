@@ -9,27 +9,31 @@ type FileHandler = NonNullable<UploadConfig['handlers']>[number]
 
 /**
  * Pictures of published articles can wait on a CDN for ten minutes: one the site owner hides
- * stops showing within that. A draft's pictures are for their author alone and are never kept.
- * Only files served from R2 go through here.
+ * stops showing within that. A draft's pictures are for their author alone and are never kept;
+ * nor is what an admin opens (Payload looks no picture up for them, so there is no `doc`).
  */
 const cacheHeaders: FileHandler = (_req, { doc, headers }) => {
-  const shown = (doc as { public?: boolean | null }).public === true
+  const shown = (doc as { public?: boolean | null } | undefined)?.public === true
   headers?.set('Cache-Control', shown ? 'public, max-age=86400, s-maxage=600' : 'private, no-store')
 }
 
 /**
- * Files: an admin opens any; a reader the published ones, and the member who uploaded a picture
- * also their own (to see a draft's preview). The list is the back office's alone.
+ * An admin reads any; a reader the published ones (their files, and as they are filled into a
+ * published article), and the member who uploaded a picture also its file (to see a draft's
+ * preview).
  */
 const read: Access = async ({ req, isReadingStaticFile }) => {
   if (req.user) return true
-  if (!isReadingStaticFile) return false
+  const shown: Where = { public: { equals: true } }
+  if (!isReadingStaticFile) return shown
   // Imported here: the sign-in setup is not needed to load the Payload config.
   const { auth } = await import('@/lib/auth/auth')
   const session = await auth.api.getSession({ headers: req.headers }).catch(() => null)
-  const shown: Where = { public: { equals: true } }
   return session ? { or: [shown, { uploader: { equals: session.user.id } }] } : shown
 }
+
+/** Which member uploaded a picture is the back office's to know. */
+const adminOnly = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
 
 const webp = (quality: number) => ({ format: 'webp' as const, options: { quality } })
 
@@ -75,8 +79,8 @@ export const ArticleImages: CollectionConfig = {
   },
   fields: [
     // The member who uploaded it (a Better Auth user id).
-    { name: 'uploader', type: 'text', required: true, index: true },
-    { name: 'article', type: 'number', index: true },
+    { name: 'uploader', type: 'text', required: true, index: true, access: { read: adminOnly } },
+    { name: 'article', type: 'number', index: true, access: { read: adminOnly } },
     { name: 'public', type: 'checkbox', defaultValue: false, index: true },
   ],
 }

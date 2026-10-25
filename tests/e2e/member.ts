@@ -6,7 +6,7 @@ import pg from 'pg'
  * A throwaway member who is signed in: a user and a session written straight to the database,
  * and the session cookie Better Auth would have set (the token, signed with BETTER_AUTH_SECRET).
  * Needs DATABASE_URI and BETTER_AUTH_SECRET, the same ones the server uses; CI sets both.
- * `remove()` deletes the member, and with it their sessions, saves, follows, reviews (and their translations), and Skill and app submissions.
+ * `remove()` deletes the member, and with it their sessions, saves, follows, reviews (and their translations), and Skill and app submissions, articles (with their pictures and reports) and article reports.
  */
 export async function createMember(baseURL: string, name = 'Smoke test member', { signedInHoursAgo = 0 } = {}) {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URI })
@@ -72,6 +72,10 @@ export async function createMember(baseURL: string, name = 'Smoke test member', 
       // Submissions keep the account id as text, not a foreign key, so they go first.
       await client.query('delete from skill_submissions where submitter_id = $1', [id])
       await client.query('delete from app_submissions where submitter_id = $1', [id])
+      // Articles keep their author's id as text too; their pictures and reports go with them.
+      await client.query(`delete from article_reports where reporter = $2 or article_id in (select id from articles where author = $1)`, [id, `u:${id}`])
+      await client.query('delete from articles where author = $1', [id])
+      await client.query('delete from article_images where uploader = $1', [id])
       await client.query('delete from auth_users where id = $1', [id])
       await client.end()
     },

@@ -3,8 +3,9 @@
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
 
-import { Button, buttonClass } from '@/components/button'
+import { Button } from '@/components/button'
 import { Icon } from '@/components/icon'
+import { localizePath, type Locale } from '@/i18n/config'
 import { Link, useRouter } from '@/i18n/navigation'
 
 import type { UploadedImage } from '../images'
@@ -171,7 +172,8 @@ export function ArticleEditor({ draft }: { draft: ArticleDraft | null }) {
       setSaved(true)
       if (id === null) {
         setId(json.id)
-        router.replace(`/recommend/write/${json.id}`)
+        // The draft's own address, without reloading the page (and losing what is on it).
+        window.history.replaceState(null, '', localizePath(locale as Locale, `/recommend/write/${json.id}`))
       }
     } catch {
       setBusy(null)
@@ -187,9 +189,16 @@ export function ArticleEditor({ draft }: { draft: ArticleDraft | null }) {
     <main id="main" className="mx-auto flex w-full max-w-read flex-col gap-6 px-4 pt-6 pb-16 md:pt-10 md:pb-24">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="text-h2 md:text-h1">{id === null ? t('newTitle') : t('editTitle')}</h1>
-        <Link href="/me/articles" className="text-meta text-ink-3 hover:text-ink">
-          {t('mine')}
-        </Link>
+        <div className="flex gap-4 text-meta">
+          {id !== null && published && (
+            <Link href={articleHref(id)} className="text-ink-3 hover:text-ink">
+              {t('view')}
+            </Link>
+          )}
+          <Link href="/me/articles" className="text-ink-3 hover:text-ink">
+            {t('mine')}
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -377,11 +386,6 @@ export function ArticleEditor({ draft }: { draft: ArticleDraft | null }) {
           </>
         )}
       </div>
-      {id !== null && published && (
-        <Link href={articleHref(id)} className={buttonClass('secondary', 'self-start')}>
-          {t('view')}
-        </Link>
-      )}
     </main>
   )
 }
