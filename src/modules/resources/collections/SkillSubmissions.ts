@@ -1,9 +1,10 @@
-import type { CollectionAfterChangeHook, CollectionBeforeChangeHook, CollectionConfig } from 'payload'
+import type { CollectionAfterChangeHook, CollectionBeforeChangeHook, CollectionConfig, Endpoint } from 'payload'
 
 import { localeNames, locales } from '@/i18n/config'
 import { inngest } from '@/lib/inngest/client'
 
 import { nextSubmissionSequence, submissionCode } from '../normalize'
+import { handlingState, skillFromSubmission, type ConvertResult, type HandlingState } from '../submit/admin'
 import { submissionNotifyEvent } from '../submit/rules'
 import { peek, reject, relationId } from './guards'
 import { isAdmin, resourcesAdminGroup, urlValidation } from './shared'
@@ -57,6 +58,57 @@ const guardListing: CollectionBeforeChangeHook = async ({ data, originalDoc, req
   return data
 }
 
+export type HandlingResponse = HandlingState
+export type ConvertResponse = ConvertResult
+
+const convertStatus: Record<Exclude<ConvertResult, { ok: true }>['error'], number> = {
+  'not-found': 404,
+  decided: 409,
+  'not-github': 422,
+  category: 400,
+}
+
+function submissionId(value: unknown): number | null {
+  const id = Number(value)
+  return Number.isInteger(id) && id > 0 ? id : null
+}
+
+/** Back-office endpoints for the「处理」panel, admins only. */
+const handlingEndpoints: Endpoint[] = [
+  {
+    // GET /api/skill-submissions/:id/handling — the linked Skill and the Skills from the same repository.
+    path: '/:id/handling',
+    method: 'get',
+    handler: async (req) => {
+      if (!req.user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+      const id = submissionId(req.routeParams?.id)
+      if (!id) return Response.json({ error: 'Bad id' }, { status: 400 })
+      const state = await handlingState(req.payload, id)
+      if (!state) return Response.json({ error: 'Not found' }, { status: 404 })
+      const response: HandlingResponse = state
+      return Response.json(response)
+    },
+  },
+  {
+    // POST /api/skill-submissions/:id/convert { category } —「转为 Skill」.
+    path: '/:id/convert',
+    method: 'post',
+    handler: async (req) => {
+      if (!req.user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+      const id = submissionId(req.routeParams?.id)
+      if (!id) return Response.json({ error: 'Bad id' }, { status: 400 })
+      let body: { category?: unknown } = {}
+      try {
+        body = ((await req.json?.()) ?? {}) as typeof body
+      } catch {
+        // No JSON body: fine when the Skill already exists; otherwise the category is missing.
+      }
+      const result: ConvertResponse = await skillFromSubmission(req, id, body.category)
+      return Response.json(result, { status: result.ok ? 200 : convertStatus[result.error] })
+    },
+  },
+]
+
 const statusOptions = [
   { value: 'pending', label: { en: 'Pending', zh: '待处理' } },
   { value: 'accepted', label: { en: 'Listed', zh: '已收录' } },
@@ -90,7 +142,13 @@ export const SkillSubmissions: CollectionConfig = {
     beforeChange: [assignCode, guardListing],
     afterChange: [queueEmail],
   },
+  endpoints: handlingEndpoints,
   fields: [
+    {
+      name: 'handling',
+      type: 'ui',
+      admin: { position: 'sidebar', components: { Field: '/modules/resources/admin/submission-panel#SubmissionPanel' } },
+    },
     {
       name: 'code',
       type: 'text',
@@ -123,8 +181,8 @@ export const SkillSubmissions: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description: {
-          en: 'The Skill imported from this submission. Listed: its page is in the email. Not listed after a blocked scan: the email lists what the scan found.',
-          zh: '由这条投稿导入的 Skill。收录时，邮件里附上它的页面；检测拦截后拒绝时，邮件里列出检测发现的问题。',
+          en: 'The Skill imported from this submission; “Make it a Skill” above fills it in. Listed: its page is in the email. Not listed after a blocked scan: the email lists what the scan found.',
+          zh: '由这条投稿导入的 Skill，上面「处理」里的「转为 Skill」会自动填上。收录时，邮件里附上它的页面；检测拦截后拒绝时，邮件里列出检测发现的问题。',
         },
       },
     },

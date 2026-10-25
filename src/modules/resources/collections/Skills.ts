@@ -1,12 +1,13 @@
 import type { CollectionBeforeChangeHook, CollectionConfig, SelectFieldSingleValidation } from 'payload'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
-import { inngest } from '@/lib/inngest/client'
 
 import { skillCategories, skillCategoryLabels } from '../categories'
 import { isValidRef, parseRepositoryUrl } from '../import/github'
+import { queueImport } from '../import/queue'
 import { isValidVersion, normalizeVersion } from '../normalize'
 import { refreshSkillsAfterChange, refreshSkillsAfterDelete } from '../public/cache'
+import { acceptOnPublish } from '../submit/admin'
 import { isSystemWrite, peek, reject, relationId } from './guards'
 import { adminMessage, isAdmin, resourcesAdminGroup, slugField, urlValidation } from './shared'
 
@@ -79,7 +80,7 @@ export const Skills: CollectionConfig = {
   },
   hooks: {
     beforeChange: [guardSkill],
-    afterChange: [syncHantFromHans(hantFields), refreshSkillsAfterChange],
+    afterChange: [syncHantFromHans(hantFields), refreshSkillsAfterChange, acceptOnPublish],
     afterDelete: [refreshSkillsAfterDelete],
   },
   // Every save is kept, so changes to the display fields have a record (docs/specs/resources.md, «数据»).
@@ -111,18 +112,10 @@ export const Skills: CollectionConfig = {
           )
         }
         try {
-          await inngest.send({ name: 'skill/import', data: { skillId: id, ref, version } })
+          await queueImport(req, id, { ref, version })
         } catch (error) {
           return Response.json({ error: `Could not queue the job (is Inngest running?): ${(error as Error).message}` }, { status: 502 })
         }
-        await req.payload.update({
-          collection: 'skills',
-          id,
-          data: { lastImport: { status: 'queued', ref: ref ?? null, commit: null, message: null, at: new Date().toISOString() } },
-          depth: 0,
-          req,
-          context: { system: true },
-        })
         return Response.json({ ok: true })
       },
     },

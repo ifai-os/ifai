@@ -17,6 +17,7 @@ import { ReviewQueueView as ReviewQueueView_c111dd891c468b16971f847e61641fc2 } f
 import { SubscriberOverview as SubscriberOverview_923ce44b0718105cb9207626c55c70a3 } from '../../../modules/daily/email/admin/subscriber-overview'
 import { ImportButton as ImportButton_732f6da2a57c9425424227b664ca593e } from '../../../modules/resources/admin/import-button'
 import { DescribePanel as DescribePanel_62e1fd9685e86a291070552a381d803d } from '../../../modules/resources/admin/describe-panel'
+import { SubmissionPanel as SubmissionPanel_1981ee4e416ef4a2c3a7d4a167067211 } from '../../../modules/resources/admin/submission-panel'
 import { PostsPanel as PostsPanel_04528d501dc004a7fa06c74166ce6fe5 } from '../../../modules/circles/admin/posts-panel'
 import { PostReports as PostReports_b655b1d9e8a238e1dd8654ca6f144b07 } from '../../../modules/circles/admin/post-reports'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -73,6 +74,7 @@ export const importMap = {
   "/modules/daily/email/admin/subscriber-overview#SubscriberOverview": SubscriberOverview_923ce44b0718105cb9207626c55c70a3,
   "/modules/resources/admin/import-button#ImportButton": ImportButton_732f6da2a57c9425424227b664ca593e,
   "/modules/resources/admin/describe-panel#DescribePanel": DescribePanel_62e1fd9685e86a291070552a381d803d,
+  "/modules/resources/admin/submission-panel#SubmissionPanel": SubmissionPanel_1981ee4e416ef4a2c3a7d4a167067211,
   "/modules/circles/admin/posts-panel#PostsPanel": PostsPanel_04528d501dc004a7fa06c74166ce6fe5,
   "/modules/circles/admin/post-reports#PostReports": PostReports_b655b1d9e8a238e1dd8654ca6f144b07,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
