@@ -55,7 +55,7 @@ describe('describeDevice', () => {
 describe('the settings sections', () => {
   it('reads ?section=, and anything else is the profile', () => {
     for (const section of settingsSections) expect(parseSection(section)).toBe(section)
-    for (const value of [undefined, '', 'privacy', 'Profile', ['data']]) expect(parseSection(value)).toBe('profile')
+    for (const value of [undefined, '', 'Profile', 'Privacy', ['data']]) expect(parseSection(value)).toBe('profile')
   })
 
   it('has「隐私」after the notifications once the circles are there', () => {
