@@ -456,7 +456,7 @@ export interface Story {
    * English, shared by all languages.
    */
   slug: string;
-  category: 'product' | 'industry' | 'open' | 'design' | 'research';
+  category: 'llm' | 'tools' | 'aigc' | 'open' | 'industry' | 'research' | 'robotics';
   status: 'pending' | 'published' | 'rejected' | 'merged' | 'withdrawn';
   /**
    * The original first.
@@ -470,6 +470,56 @@ export interface Story {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Up to 3. The story page links each to its list.
+   */
+  tags?:
+    | (
+        | 'assistants'
+        | 'agents'
+        | 'vibe-coding'
+        | 'image'
+        | 'video'
+        | 'music'
+        | 'voice'
+        | 'chips'
+        | 'on-device'
+        | 'hardware'
+        | 'health'
+        | 'education'
+        | 'security'
+        | 'deals'
+      )[]
+    | null;
+  /**
+   * What the story is about. The first product (else the first company) is its topic: stories sharing it are tracked together.
+   */
+  entities?:
+    | {
+        name: string;
+        kind: 'company' | 'product';
+        key?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Taken from the original article when the story is written. A video shows its cover with a play button and plays in a dialog.
+   */
+  media?: {
+    kind?: ('none' | 'image' | 'video') | null;
+    /**
+     * YouTube, Vimeo, or an .mp4 / .webm file.
+     */
+    videoUrl?: string | null;
+    /**
+     * For a video, its cover. Optional for videos.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Shown under the picture on the story page: "Image: …".
+     */
+    credit?: string | null;
+  };
   eventId: number;
   representativeItemId: number;
   score?: number | null;
@@ -527,7 +577,14 @@ export interface Story {
     | boolean
     | null;
   promptVersion?: string | null;
+  /**
+   * The news source's time: the site shows it and sorts by it. Left empty, approving fills in the original source's time (else the approval's).
+   */
   publishedAt?: string | null;
+  /**
+   * When it first went on the site. The morning email picks by it.
+   */
+  approvedAt?: string | null;
   correctedAt?: string | null;
   /**
    * Moves the story to the end of the queue.
@@ -1263,6 +1320,23 @@ export interface StoriesSelect<T extends boolean = true> {
         publishedAt?: T;
         id?: T;
       };
+  tags?: T;
+  entities?:
+    | T
+    | {
+        name?: T;
+        kind?: T;
+        key?: T;
+        id?: T;
+      };
+  media?:
+    | T
+    | {
+        kind?: T;
+        videoUrl?: T;
+        image?: T;
+        credit?: T;
+      };
   eventId?: T;
   representativeItemId?: T;
   score?: T;
@@ -1274,6 +1348,7 @@ export interface StoriesSelect<T extends boolean = true> {
   localeStatus?: T;
   promptVersion?: T;
   publishedAt?: T;
+  approvedAt?: T;
   correctedAt?: T;
   laterAt?: T;
   mergedInto?: T;

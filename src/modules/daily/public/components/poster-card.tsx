@@ -5,17 +5,22 @@ import type { Locale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 
 import type { PosterSummary } from '../data'
-import { posterDay, posterHref } from '../list-params'
+import { posterDay, posterHref, posterImagePath } from '../list-params'
 
-/** 「每日 AI 大事」(「IFAI 日报（新版）」board): the newest generated poster, a sketch of it, the whole card a link to its page. */
+/**
+ * 「每日 AI 大事」(「IFAI 日报（新版）」board): the newest generated poster and a sketch of it. The
+ * card links to the poster's page; 「下载海报」 saves the image in the reader's language.
+ */
 export function PosterCard({ poster, locale }: { poster: PosterSummary; locale: Locale }) {
   const t = useTranslations('poster')
 
   return (
-    <Link href={posterHref(poster.date)} className="flex flex-col gap-3 rounded-hero border border-surface-2 bg-surface p-5 transition-colors hover:border-line">
+    <div className="relative flex flex-col gap-3 rounded-hero border border-surface-2 bg-surface p-5 transition-colors hover:border-line">
       <span className="flex flex-col gap-0.5">
-        <span className="text-body font-medium">{t('title')}</span>
-        <span className="text-small text-ink-4">{t('dateLine', { date: posterDay(poster.date, locale, false) })}</span>
+        <Link href={posterHref(poster.date)} className="text-body font-medium text-ink after:absolute after:inset-0">
+          {t('title')}
+        </Link>
+        <span className="text-small text-ink-4">{posterDay(poster.date, locale, false)}</span>
       </span>
       <span aria-hidden="true" className="flex h-23 flex-col justify-between rounded-tile bg-night px-3.5 py-3">
         <span className="flex items-center gap-1.5">
@@ -30,10 +35,14 @@ export function PosterCard({ poster, locale }: { poster: PosterSummary; locale: 
       </span>
       <span className="flex items-center justify-between gap-2 text-meta">
         <span className="text-ink-2">{t('count', { count: poster.count })}</span>
-        <span className="font-medium text-link">
-          {t('view')} <span aria-hidden="true">›</span>
-        </span>
+        <a
+          href={posterImagePath(locale, poster.date, poster.version)}
+          download={`ifai-${poster.date}-${locale}.png`}
+          className="relative flex min-h-8 items-center font-medium text-link hover:underline"
+        >
+          {t('save')} <span aria-hidden="true">›</span>
+        </a>
       </span>
-    </Link>
+    </div>
   )
 }

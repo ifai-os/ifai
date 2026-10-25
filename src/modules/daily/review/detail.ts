@@ -22,6 +22,8 @@ export async function loadReviewDetail(id: number, now = new Date()): Promise<Re
     const text = textOf(story, locale)
     if (text) texts[locale] = text
   }
+  const imageId = typeof story.media?.image === 'object' ? story.media?.image?.id : story.media?.image
+  const image = imageId ? await payload.findByID({ collection: 'media', id: imageId, depth: 0 }).catch(() => null) : null
   return {
     id: story.id,
     slug: story.slug,
@@ -41,6 +43,8 @@ export async function loadReviewDetail(id: number, now = new Date()): Promise<Re
     original: original ? { name: original.name, url: original.url, publishedAt: original.publishedAt ?? null } : null,
     hans,
     sources,
+    media: { kind: story.media?.kind ?? 'none', videoUrl: story.media?.videoUrl ?? '', credit: story.media?.credit ?? '' },
+    mediaImage: image?.url ? { id: image.id, url: image.url } : null,
     texts,
     localeStatus: localeStatusOf(story),
     hansHash: hansHash(hans),

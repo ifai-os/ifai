@@ -78,11 +78,12 @@ async function summarize(
   items: QueueItem[],
 ): Promise<ReviewSummary> {
   const [publishedCount, latest, sources, usage, intake] = await Promise.all([
+    // The editor's day: what went up today, by approval rather than by the news's own time.
     payload.count({
       collection: 'stories',
-      where: { and: [{ status: { equals: 'published' } }, { publishedAt: { greater_than_equal: dayStart.toISOString() } }] },
+      where: { and: [{ status: { equals: 'published' } }, { approvedAt: { greater_than_equal: dayStart.toISOString() } }] },
     }),
-    payload.find({ collection: 'stories', where: { status: { equals: 'published' } }, sort: '-publishedAt', limit: 1, depth: 0 }),
+    payload.find({ collection: 'stories', where: { status: { equals: 'published' } }, sort: '-approvedAt', limit: 1, depth: 0 }),
     payload.find({ collection: 'sources', where: { enabled: { equals: true } }, pagination: false, limit: 200, depth: 0 }),
     ai.usageToday().catch(() => ({ costUsd: 0, calls: 0, budgetUsd: 0, enabled: false })),
     intakeToday(db, dayStart),
@@ -105,7 +106,7 @@ async function summarize(
       ),
     ).length,
     publishedToday: publishedCount.totalDocs,
-    lastPublishedAt: latest.docs[0]?.publishedAt ?? null,
+    lastPublishedAt: latest.docs[0]?.approvedAt ?? null,
     sources: {
       total: sources.totalDocs,
       failing: sources.docs.filter((source) => source.lastError).map((source) => ({ id: source.id, name: source.name, error: source.lastError ?? '' })),

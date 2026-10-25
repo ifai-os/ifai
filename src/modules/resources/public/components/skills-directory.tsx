@@ -9,7 +9,7 @@ import { Link } from '@/i18n/navigation'
 
 import { getSkillsOverview, getTag, listSkills } from '../data'
 import { guideHref, isFiltered, skillHref, skillSorts, skillsHref, submitHref, type SkillListParams } from '../list-params'
-import { ListLink, ListNavigationProvider, ListResults, ListSearch } from './list-navigation'
+import { ListLink, ListNavigationProvider, ListResults, ListSearch } from '@/components/states/list-navigation'
 import { SkillItem } from './skill-item'
 import { SkillListSkeleton } from './skill-list-skeleton'
 import { SkillTile } from './skill-tile'

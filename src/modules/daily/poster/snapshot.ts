@@ -6,7 +6,7 @@
 import { locales, type Locale } from '@/i18n/config'
 import { inAnyLanguage, inReaderLanguage, type InLanguage } from '@/lib/i18n/localized'
 
-import { storyCategories, type StoryCategory } from '../categories'
+import { storyCategoryOf, type StoryCategory } from '../categories'
 import type { RawStory } from '../public/story-item'
 
 export type PosterEntry = {
@@ -43,7 +43,7 @@ export function entryOf(doc: RawStory): PosterEntry {
   return {
     id: doc.id,
     slug: doc.slug,
-    category: (storyCategories as readonly string[]).includes(doc.category) ? doc.category : 'industry',
+    category: storyCategoryOf(doc.category),
     source: originalSource(doc),
     publishedAt: doc.publishedAt ?? doc.createdAt,
     title: perLocale((locale) => inAnyLanguage(doc.title, locale) ?? { value: doc.slug, lang: 'en' }),
@@ -61,7 +61,7 @@ function isEntry(value: unknown): value is PosterEntry {
     Boolean(entry) &&
     Number.isInteger(entry.id) &&
     typeof entry.slug === 'string' &&
-    (storyCategories as readonly string[]).includes(entry.category) &&
+    typeof entry.category === 'string' &&
     typeof entry.publishedAt === 'string' &&
     Boolean(entry.title) &&
     Boolean(entry.summary) &&
@@ -69,14 +69,17 @@ function isEntry(value: unknown): value is PosterEntry {
   )
 }
 
-/** The snapshot stored on a poster, or null when it is missing or not in this shape. */
+/**
+ * The snapshot stored on a poster, or null when it is missing or not in this shape. Posters
+ * generated before the categories changed keep their frozen entries; those read as the new ones.
+ */
 export function readSnapshot(value: unknown): PosterSnapshot | null {
   const snapshot = value as PosterSnapshot
   if (!snapshot || typeof snapshot !== 'object') return null
   if (typeof snapshot.date !== 'string' || typeof snapshot.generatedAt !== 'string' || typeof snapshot.updatedAt !== 'string') return null
   if (!Array.isArray(snapshot.entries)) return null
   if (!snapshot.entries.every(isEntry)) return null
-  return snapshot
+  return { ...snapshot, entries: snapshot.entries.map((entry) => ({ ...entry, category: storyCategoryOf(entry.category) })) }
 }
 
 /** Changes whenever the images change; added to image links so browsers and apps fetch the new ones. */
