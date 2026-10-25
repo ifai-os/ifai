@@ -106,12 +106,16 @@ export function TagList({ tags }: { tags: StoryTag[] }) {
   const names = useTranslations('tags')
   return (
     <section aria-labelledby="tags" className="flex flex-col gap-2.5">
-      <h2 id="tags" className="text-body font-semibold">
-        {t('tags')}
-      </h2>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+        <h2 id="tags" className="text-body font-semibold">
+          {t('tags')}
+        </h2>
+        {/* The board's note is about following, which is not built: this one says where a tag leads. */}
+        <p className="text-small text-ink-4">{t('tagsNote')}</p>
+      </div>
       <ul className="flex flex-col rounded-tile border border-line px-4 py-1">
         {tags.map((tag, index) => (
-          <li key={tag} className={index ? 'border-t border-line' : undefined}>
+          <li key={tag} className={index ? 'border-t border-surface-2' : undefined}>
             <Link href={listHref({ tag })} className="flex min-h-11 items-center justify-between gap-2 text-ui hover:text-accent">
               {names(tag)}
               <span aria-hidden="true" className="text-ink-4">

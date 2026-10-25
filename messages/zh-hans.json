@@ -1028,6 +1028,7 @@
     "similar": "同类事件",
     "similarNote": "过去类似的事，帮助理解这一条。",
     "tags": "行业标签",
+    "tagsNote": "点开看同领域的新闻",
     "entities": "涉及的公司与产品",
     "entityKinds": {
       "company": "公司",
