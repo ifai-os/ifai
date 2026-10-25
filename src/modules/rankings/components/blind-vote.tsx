@@ -183,7 +183,7 @@ export function BlindVote({ arena, boardHref, signIn }: BlindVoteProps) {
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <h3 id={`${id}-${side}`} className="text-title">
                   {t(side === 'a' ? 'modelA' : 'modelB')}
-                  {picked(side) && <span className="ml-2 text-small font-normal text-accent">{t('yourPick')}</span>}
+                  {picked(side) && <span className="ml-2 text-small font-normal text-accent-ink">{t('yourPick')}</span>}
                 </h3>
                 {model && (
                   <p className="text-meta text-ink-4">

@@ -51,7 +51,7 @@ export function TopicPageView({ topic, serverToday }: { topic: TopicPage; server
             )}
             <div className="flex min-w-0 flex-col gap-1.5">
               <h1 id="topic-title" className="text-h2 font-medium wrap-anywhere md:text-h1 md:font-medium">
-                <span aria-hidden="true" className="text-accent">
+                <span aria-hidden="true" className="text-accent-ink">
                   #
                 </span>
                 {topic.name}

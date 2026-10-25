@@ -28,7 +28,7 @@ export function ArenaTabs({ arenas, current, hrefOf }: ArenaTabsProps) {
                 aria-current={active ? 'page' : undefined}
                 scroll={false}
                 className={`flex h-10 items-center rounded-pill border px-4 text-ui font-medium transition-colors ${
-                  active ? 'border-ink bg-ink text-white' : 'border-line bg-bg text-ink hover:border-ink-4'
+                  active ? 'border-ink bg-ink text-bg' : 'border-line bg-bg text-ink hover:border-ink-4'
                 }`}
               >
                 {arena.name}

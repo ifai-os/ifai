@@ -23,7 +23,7 @@ export function SaveButton({ className, withCount = false, iconOnly = false }: S
 
   if (iconOnly) {
     return (
-      <button type="button" aria-pressed={saved} onClick={toggle} className={`${className} ${saved ? 'text-accent' : 'text-ink'}`}>
+      <button type="button" aria-pressed={saved} onClick={toggle} className={`${className} ${saved ? 'text-accent-ink' : 'text-ink'}`}>
         <Icon name="bookmark" size={20} fill={saved ? 'currentColor' : 'none'} />
         <span className="sr-only">{saved ? t('saved') : t('save')}</span>
       </button>
@@ -31,7 +31,7 @@ export function SaveButton({ className, withCount = false, iconOnly = false }: S
   }
 
   return (
-    <button type="button" aria-pressed={saved} onClick={toggle} className={`${className} ${saved ? 'text-accent' : 'text-ink'}`}>
+    <button type="button" aria-pressed={saved} onClick={toggle} className={`${className} ${saved ? 'text-accent-ink' : 'text-ink'}`}>
       {withCount && <Icon name="bookmark" size={18} fill={saved ? 'currentColor' : 'none'} />}
       {saved ? t('saved') : t('save')}
       {withCount && count !== null && count > 0 && (

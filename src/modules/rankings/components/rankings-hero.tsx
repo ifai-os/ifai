@@ -55,7 +55,7 @@ export function RankingsHero({ votes, voteHref, newcomers }: RankingsHeroProps) 
                   <span className="text-small text-ink-4">
                     {t.rich('newcomerRank', {
                       rank: model.rank ?? 0,
-                      place: (chunks) => <b className="font-semibold text-accent">{chunks}</b>,
+                      place: (chunks) => <b className="font-semibold text-accent-ink">{chunks}</b>,
                     })}
                     {model.org && ` · ${model.org}`}
                   </span>

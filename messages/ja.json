@@ -25,7 +25,8 @@
     "submissions": "提出したアプリ",
     "accountPage": "アカウント設定",
     "signOut": "ログアウト",
-    "search": "検索"
+    "search": "検索",
+    "appearance": "外観"
   },
   "home": {
     "todayAI": "今日のAI",
@@ -722,7 +723,7 @@
       "profile": "プロフィール",
       "sign-in": "アカウントとログイン",
       "notifications": "通知",
-      "language": "言語",
+      "language": "外観と言語",
       "data": "データとアカウント"
     },
     "avatarNote": "アイコンはニックネームの最初の1文字です。",
@@ -793,7 +794,9 @@
     "signInAgain": "ログインから1日以上たっています。ご本人か確認するため、いったんログアウトしてもう一度ログインしてから削除してください。",
     "signInAgainButton": "ログアウトしてログインし直す",
     "deleted": "アカウントを削除しました。IFAIをご利用いただきありがとうございました。",
-    "home": "ホームに戻る"
+    "home": "ホームに戻る",
+    "appearanceLabel": "外観",
+    "appearanceNote": "「システム設定」にすると、パソコンやスマートフォンがダークモードのとき IFAI もダークになります。"
   },
   "reviews": {
     "title": "レビュー",
@@ -1174,6 +1177,12 @@
     "data": "データ分析",
     "productivity": "仕事効率化",
     "life": "暮らし"
+  },
+  "theme": {
+    "label": "外観",
+    "system": "システム設定",
+    "light": "ライト",
+    "dark": "ダーク"
   },
   "rankings": {
     "metaTitle": "AIモデルランキング：ブラインド投票の結果",

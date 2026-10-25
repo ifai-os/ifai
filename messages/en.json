@@ -25,7 +25,8 @@
     "submissions": "My submissions",
     "accountPage": "Account settings",
     "signOut": "Sign out",
-    "search": "Search"
+    "search": "Search",
+    "appearance": "Appearance"
   },
   "home": {
     "todayAI": "AI today",
@@ -722,7 +723,7 @@
       "profile": "Profile",
       "sign-in": "Account and sign-in",
       "notifications": "Notifications",
-      "language": "Language",
+      "language": "Language & appearance",
       "data": "Data and account"
     },
     "avatarNote": "Your avatar is the first character of your nickname.",
@@ -793,7 +794,9 @@
     "signInAgain": "You signed in more than a day ago. To make sure it's you, sign out, sign in again, then delete your account.",
     "signInAgainButton": "Sign out and sign in again",
     "deleted": "Your account has been deleted. Thanks for using IFAI.",
-    "home": "Back to the home page"
+    "home": "Back to the home page",
+    "appearanceLabel": "Appearance",
+    "appearanceNote": "With System, IFAI turns dark when your computer or phone does."
   },
   "reviews": {
     "title": "Reviews",
@@ -1174,6 +1177,12 @@
     "data": "Data analysis",
     "productivity": "Productivity",
     "life": "Everyday life"
+  },
+  "theme": {
+    "label": "Appearance",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
   },
   "rankings": {
     "metaTitle": "AI model rankings from blind votes",

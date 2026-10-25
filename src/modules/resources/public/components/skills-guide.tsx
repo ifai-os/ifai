@@ -53,7 +53,7 @@ export async function SkillsGuide({ hosts }: { hosts: GuideHost[] }) {
               <li key={key} className="grid grid-cols-[32px_minmax(0,1fr)] gap-3">
                 <span
                   aria-hidden="true"
-                  className={`flex size-8 items-center justify-center rounded-pill text-meta font-semibold ${index === 0 ? 'bg-ink text-white' : 'bg-surface text-ink'}`}
+                  className={`flex size-8 items-center justify-center rounded-pill text-meta font-semibold ${index === 0 ? 'bg-ink text-bg' : 'bg-surface text-ink'}`}
                 >
                   {index + 1}
                 </span>

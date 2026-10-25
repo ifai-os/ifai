@@ -56,7 +56,7 @@ export function ValueForMoney({ points }: { points: ValuePoint[] }) {
               cy={top(dot.y)}
               r={dot.frontier ? 6 : 4.5}
               strokeWidth={1.5}
-              className={`stroke-white ${dot.frontier ? 'fill-accent' : 'fill-mute'}`}
+              className={`stroke-bg ${dot.frontier ? 'fill-accent' : 'fill-mute'}`}
             >
               <title>{`${dot.name} · ${cost(dot.costUsd)} · ${Math.round(dot.score)}`}</title>
             </circle>

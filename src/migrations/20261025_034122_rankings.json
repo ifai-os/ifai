@@ -3415,6 +3415,19 @@
           "primaryKey": true,
           "notNull": true
         },
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'media'"
+        },
+        "_objectkey": {
+          "name": "_objectkey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp(3) with time zone",
@@ -8941,6 +8954,19 @@
           "primaryKey": false,
           "notNull": false
         },
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'skills'"
+        },
+        "_objectkey": {
+          "name": "_objectkey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp(3) with time zone",
@@ -12567,6 +12593,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "0a23c872-eae2-4b55-99bc-a7b83f0e989d",
+  "id": "39752e77-9b6e-4998-9cbb-aa8f2542a9ad",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

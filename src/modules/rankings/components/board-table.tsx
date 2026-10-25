@@ -22,7 +22,7 @@ function Chip({ href, active, children }: { href: `/${string}`; active: boolean;
       scroll={false}
       aria-current={active ? 'true' : undefined}
       className={`flex h-8 items-center rounded-pill border px-3.5 text-meta whitespace-nowrap transition-colors ${
-        active ? 'border-ink bg-ink text-white' : 'border-line bg-bg text-ink-2 hover:border-ink-4'
+        active ? 'border-ink bg-ink text-bg' : 'border-line bg-bg text-ink-2 hover:border-ink-4'
       }`}
     >
       {children}
@@ -107,7 +107,7 @@ export function BoardTable({ arena, rows, filters }: BoardTableProps) {
           <tbody>
             {shown.map((row) => (
               <tr key={row.modelId} className="border-t border-surface-2">
-                <td className={`px-4 py-3 font-semibold tabular-nums ${row.rank !== null && row.rank <= 3 ? 'text-accent' : 'text-ink-4'}`}>
+                <td className={`px-4 py-3 font-semibold tabular-nums ${row.rank !== null && row.rank <= 3 ? 'text-accent-ink' : 'text-ink-4'}`}>
                   {row.rank ?? <span className="text-small font-normal">{t('provisional')}</span>}
                 </td>
                 <td className="px-2 py-3">

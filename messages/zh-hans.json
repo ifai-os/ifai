@@ -25,7 +25,8 @@
     "submissions": "我的提交",
     "accountPage": "账号设置",
     "signOut": "退出登录",
-    "search": "搜索"
+    "search": "搜索",
+    "appearance": "外观"
   },
   "home": {
     "todayAI": "今天的 AI",
@@ -722,7 +723,7 @@
       "profile": "个人资料",
       "sign-in": "账号与登录",
       "notifications": "通知",
-      "language": "语言",
+      "language": "外观与语言",
       "data": "数据与账号"
     },
     "avatarNote": "头像是昵称的第一个字。",
@@ -793,7 +794,9 @@
     "signInAgain": "你登录已经超过一天。为了确认是你本人，请退出后重新登录，再来删除账号。",
     "signInAgainButton": "退出并重新登录",
     "deleted": "账号已删除。谢谢你用过 IFAI。",
-    "home": "回到首页"
+    "home": "回到首页",
+    "appearanceLabel": "外观",
+    "appearanceNote": "跟随系统时，电脑或手机切到深色，IFAI 也跟着变。"
   },
   "reviews": {
     "title": "评价",
@@ -1174,6 +1177,12 @@
     "data": "数据分析",
     "productivity": "办公效率",
     "life": "生活服务"
+  },
+  "theme": {
+    "label": "外观",
+    "system": "跟随系统",
+    "light": "浅色",
+    "dark": "深色"
   },
   "rankings": {
     "metaTitle": "AI 模型排行：来自盲测投票",

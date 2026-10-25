@@ -4,7 +4,7 @@ import { Link } from '@/i18n/navigation'
 
 /** Buttons from the「设计令牌」board: primary is black (one per screen), secondary is outlined. */
 const variants = {
-  primary: 'bg-ink text-white hover:bg-ink-2',
+  primary: 'bg-ink text-bg hover:bg-ink-2',
   secondary: 'border border-line bg-bg text-ink hover:border-ink-4',
 } as const
 

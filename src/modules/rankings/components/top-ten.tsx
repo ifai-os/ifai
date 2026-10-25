@@ -31,7 +31,7 @@ export function TopTen({ arenaName, rows }: { arenaName: string; rows: BoardRow[
           const first = row.rank === 1
           return (
             <li key={row.modelId} className="grid grid-cols-[22px_minmax(0,1fr)_48px] items-center gap-2.5">
-              <span className={`text-right text-meta font-semibold tabular-nums ${(row.rank ?? 99) <= 3 ? 'text-accent' : 'text-ink-4'}`}>
+              <span className={`text-right text-meta font-semibold tabular-nums ${(row.rank ?? 99) <= 3 ? 'text-accent-ink' : 'text-ink-4'}`}>
                 {row.rank}
               </span>
               <span className="relative h-8 overflow-hidden rounded-thumb bg-surface">
@@ -40,7 +40,7 @@ export function TopTen({ arenaName, rows }: { arenaName: string; rows: BoardRow[
                   className={`absolute inset-y-0 left-0 rounded-thumb ${first ? 'bg-ink' : 'bg-line'}`}
                   style={{ width: barWidth(row.score, low, high) }}
                 />
-                <span className={`relative flex h-8 items-center gap-2 px-2.5 text-meta font-medium ${first ? 'text-white' : 'text-ink'}`}>
+                <span className={`relative flex h-8 items-center gap-2 px-2.5 text-meta font-medium ${first ? 'text-bg' : 'text-ink'}`}>
                   <MakerDot org={row.org} />
                   <span className="truncate">{row.name}</span>
                 </span>
