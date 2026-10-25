@@ -1,8 +1,8 @@
 import config from '@payload-config'
 import { and, desc, eq, gte, inArray, isNull, lte, max } from '@payloadcms/db-postgres/drizzle'
-import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 
+import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
 import type { Localized } from '@/lib/i18n/localized'
 import { DAILY_CACHE_TAG } from '@/modules/daily/review/cache'
@@ -37,7 +37,7 @@ export type LatestHeat = {
 }
 
 /** Every published app's heat on the latest scored day. */
-export const loadLatestHeat = unstable_cache(
+export const loadLatestHeat = cached(
   async (): Promise<LatestHeat> => {
     const { db } = await getDb()
     const [latest] = await db.select({ day: max(appMetricsDaily.day) }).from(appMetricsDaily)
@@ -67,7 +67,7 @@ export const loadLatestHeat = unstable_cache(
 )
 
 /** The apps' daily heat from `since` to `until` (inclusive), oldest first. */
-export const loadHeatHistory = unstable_cache(
+export const loadHeatHistory = cached(
   async (appIds: number[], since: string, until: string): Promise<Record<number, HeatPoint[]>> => {
     if (appIds.length === 0) return {}
     const { db } = await getDb()
@@ -106,7 +106,7 @@ export type AppHeatFigures = {
 export type AppHeat = { latest: AppHeatFigures | null; history: HeatPoint[] }
 
 /** One app on the latest scored day `day`, and its heat over the `historyDays` before it. */
-export const loadAppHeat = unstable_cache(
+export const loadAppHeat = cached(
   async (appId: number, day: string): Promise<AppHeat> => {
     const { db } = await getDb()
     const rows = await db
@@ -158,7 +158,7 @@ export type RawMention = {
  * owner removed). Read with the visitor's access rules, so a story taken down since the last
  * run drops out at once; cached under the daily tag too for that reason.
  */
-export const loadAppMentions = unstable_cache(
+export const loadAppMentions = cached(
   async (appId: number, limit: number): Promise<RawMention[]> => {
     const { db } = await getDb()
     const rows = await db

@@ -15,6 +15,13 @@ const localeLinks = [
   },
 ]
 
+// Vercel shares the data cache across Preview deployments: keys and tags go through @/lib/data-cache.
+const dataCache = {
+  name: 'next/cache',
+  importNames: ['unstable_cache', 'cacheTag'],
+  message: 'Use cached() from @/lib/data-cache, so the key and tags are scoped to this database.',
+}
+
 const modelSdks = {
   regex: '^(ai|ai/.*|@ai-sdk/.*|@openrouter/.*)$',
   message: 'Call models through @/lib/ai: name a purpose, not a model.',
@@ -40,20 +47,24 @@ export default defineConfig([
   ]),
   {
     rules: {
-      'no-restricted-imports': ['error', { paths: localeLinks, patterns: [modelSdks] }],
+      'no-restricted-imports': ['error', { paths: [...localeLinks, dataCache], patterns: [modelSdks] }],
     },
   },
   {
     // Model calls go through src/lib/ai only (AGENTS.md rule 8); tests use the SDK's mocks.
     files: ['src/lib/ai/**', 'tests/**'],
-    rules: { 'no-restricted-imports': ['error', { paths: localeLinks }] },
+    rules: { 'no-restricted-imports': ['error', { paths: [...localeLinks, dataCache] }] },
   },
   {
     // Pages and components never call models.
     files: ['src/app/(frontend)/**', 'src/components/**'],
     rules: {
-      'no-restricted-imports': ['error', { paths: localeLinks, patterns: [modelSdks, modelClient] }],
+      'no-restricted-imports': ['error', { paths: [...localeLinks, dataCache], patterns: [modelSdks, modelClient] }],
     },
+  },
+  {
+    files: ['src/lib/data-cache.ts'],
+    rules: { 'no-restricted-imports': ['error', { paths: localeLinks, patterns: [modelSdks] }] },
   },
   {
     files: ['src/i18n/navigation.ts'],
