@@ -64,6 +64,11 @@ test.describe('a signed-in member', () => {
         `insert into follows (user_id, target_type, target_key, created_at) values ($1, 'tag', 'vibe-coding', now() - interval '1 minute'), ($1, 'topic', 'kitecode', now())`,
         [member.id],
       )
+      // Kitecode is a sample story's product. Ask the database, not the flag: a seeded one can run without it.
+      const kitecodeStory = await member.query(
+        `select 1 from stories_entities e join stories s on s.id = e._parent_id where s.status = 'published' and e.key = 'kitecode'`,
+      )
+      const kitecode = kitecodeStory.rows.length > 0
       const review = await member.addReview(nowhere, 'Exported with the rest')
       const otherReview = await other.addReview(nowhere, 'Words of another member')
       await member.query(`insert into app_review_reports (review_id, reporter, reason) values ($1, $2, 'spam')`, [otherReview, `u:${member.id}`])
@@ -125,8 +130,8 @@ test.describe('a signed-in member', () => {
           type: 'topic',
           key: 'kitecode',
           // Without the sample stories, no published story is about Kitecode.
-          name: story === null ? null : 'Kitecode',
-          url: story === null ? null : expect.stringMatching(/\/en\/daily\/topic\/kitecode$/),
+          name: kitecode ? 'Kitecode' : null,
+          url: kitecode ? expect.stringMatching(/\/en\/daily\/topic\/kitecode$/) : null,
           followedAt: expect.any(String),
         },
         {
