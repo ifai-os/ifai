@@ -1,4 +1,4 @@
-import { defaultLocale, localizePath, locales } from '@/i18n/config'
+import { defaultLocale, localizePath, locales, type Locale } from '@/i18n/config'
 
 /**
  * Sitemaps (docs/specs/foundation.md「站点地图与 robots.txt」). A page is a locale-less pathname
@@ -10,6 +10,11 @@ export type SitemapPage = {
   path: `/${string}`
   /** When the content last changed; left out when unknown rather than guessed. */
   lastModified?: Date | string | null
+  /**
+   * Only this language's address, with no hreflang set: a page whose content is in one language
+   * and whose other addresses name this one as canonical (an article, docs/specs/recommend.md 规则 6).
+   */
+  only?: Locale
 }
 
 /** One sitemap file per this many pages: five addresses each, under the 50,000-URL limit. */
@@ -60,11 +65,15 @@ export function renderUrlset(origin: string, pages: SitemapPage[]): string {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
   ]
   for (const page of pages) {
+    const lastModified = isoDate(page.lastModified)
+    if (page.only) {
+      lines.push('<url>', `<loc>${escapeXml(origin + localizePath(page.only, page.path))}</loc>`, ...(lastModified ? [`<lastmod>${lastModified}</lastmod>`] : []), '</url>')
+      continue
+    }
     const alternates = [
       ...locales.map((locale) => [locale, localizePath(locale, page.path)] as const),
       ['x-default', localizePath(defaultLocale, page.path)] as const,
     ].map(([lang, path]) => `<xhtml:link rel="alternate" hreflang="${lang}" href="${escapeXml(origin + path)}"/>`)
-    const lastModified = isoDate(page.lastModified)
     for (const locale of locales) {
       lines.push(
         '<url>',
