@@ -65,6 +65,9 @@ const zh = {
     'apps:reviews/translate': '应用评价：重新翻译',
     'apps:reports/delist': '应用报错：下架这个应用',
     'apps:reports/resolve': '应用报错：标记完成',
+    'arenas:snapshot-run': '赛道：现在重算排行',
+    'arena-models:generate': '参赛模型：现在生成回答',
+    'arena-models:retry-failed': '参赛模型：重新生成失败和不能用的回答',
   } as Record<string, string>,
 }
 
@@ -134,6 +137,9 @@ const en: LogText = {
     'apps:reviews/translate': 'App review: translate again',
     'apps:reports/delist': 'App reports: delist the app',
     'apps:reports/resolve': 'App reports: mark done',
+    'arenas:snapshot-run': 'Arenas: recompute the rankings now',
+    'arena-models:generate': 'Contestant: generate answers now',
+    'arena-models:retry-failed': 'Contestant: redo failed and unusable answers',
   },
 }
 

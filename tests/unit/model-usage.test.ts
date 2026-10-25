@@ -12,7 +12,7 @@ import {
 } from '@/admin/model-usage/rules'
 import { usageText } from '@/admin/model-usage/text'
 import { dailyBudgetUsd, DEFAULT_DAILY_BUDGET_USD } from '@/lib/ai/limits'
-import { purposes } from '@/lib/ai/purposes'
+import { contestPurposes, purposes } from '@/lib/ai/purposes'
 
 describe('model usage page', () => {
   it('reads ?days= as one of the three periods, 7 days otherwise', () => {
@@ -62,11 +62,16 @@ describe('model usage page', () => {
     expect(rows.at(-1)).toMatchObject({ purpose: 'old-purpose', module: null, model: null, changed: false })
   })
 
+  it('shows the arena purpose under rankings, without a model of its own', () => {
+    const rows = purposeRows([{ purpose: 'arena', succeeded: 2, failed: 0, inputTokens: 300, outputTokens: 900, costUsd: 0.01 }], {})
+    expect(rows.find((row) => row.purpose === 'arena')).toMatchObject({ module: 'rankings', model: null, changed: false, averageUsd: 0.005 })
+  })
+
   it('knows the module of every purpose in purposes.ts', () => {
-    expect(Object.keys(purposeModules).sort()).toEqual([...purposes].sort())
+    expect(Object.keys(purposeModules).sort()).toEqual([...purposes, ...contestPurposes].sort())
     const zh = usageText('zh')
     const en = usageText('en')
-    for (const purpose of purposes) {
+    for (const purpose of [...purposes, ...contestPurposes]) {
       expect(zh.purposes.names[purpose]).toBeTruthy()
       expect(en.purposes.names[purpose]).toBeTruthy()
     }
@@ -90,6 +95,7 @@ describe('model usage page', () => {
     expect(parseSubject('apps:3')).toEqual({ kind: 'apps', id: 3 })
     expect(parseSubject('app_reviews:9')).toEqual({ kind: 'app_reviews', id: 9 })
     expect(parseSubject('skill-versions:4')).toEqual({ kind: 'skill-versions', id: 4 })
+    expect(parseSubject('arena-answers:7')).toEqual({ kind: 'arena-answers', id: 7 })
     expect(parseSubject('posters:1')).toBeNull()
     expect(parseSubject('apps:0')).toBeNull()
     expect(parseSubject('apps:x')).toBeNull()

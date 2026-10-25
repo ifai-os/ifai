@@ -8,8 +8,8 @@ import type { ReceiptStore } from './receipts'
 import { postgresReceiptStore } from './store'
 
 export * from './errors'
-export { DEFAULT_DAILY_BUDGET_USD, type AiResult, type UsageToday } from './client'
-export { EMBEDDING_DIMENSIONS, modelFor, purposes, type Purpose } from './purposes'
+export { DEFAULT_DAILY_BUDGET_USD, type AiResult, type ContestOutput, type UsageToday } from './client'
+export { contestPurposes, EMBEDDING_DIMENSIONS, modelFor, purposes, type ContestPurpose, type Purpose } from './purposes'
 export { untrusted } from './untrusted'
 
 let provider: ReturnType<typeof createOpenRouter> | undefined
@@ -27,12 +27,14 @@ function openRouter() {
 
 /**
  * Model calls for background jobs: `ai.object({ purpose, instructions, prompt, schema })`,
- * `ai.text(...)`, `ai.embed(...)`, `ai.usageToday()`. Pages never call models.
+ * `ai.text(...)`, `ai.embed(...)`, `ai.contest(...)` (the model arena), `ai.usageToday()`.
+ * Pages never call models.
  */
 export const ai: Ai = {
   text: (call) => client().text(call),
   object: (call) => client().object(call),
   embed: (call) => client().embed(call),
+  contest: (call) => client().contest(call),
   usageToday: () => client().usageToday(),
 }
 
