@@ -340,6 +340,15 @@
       }
     }
   },
+  "rankings": {
+    "newcomerRank": "首週排在 <place>#{rank}</place>",
+    "columns": {
+      "interval": "信賴區間"
+    },
+    "boardNote": "分數按兩兩對比結果擬合得出：平均水準是 1000 分，差 100 分大約是 64% 對 36% 的勝率；信賴區間重疊的模型可以視為同一水準。計分的票不足 {votes, number} 的模型標為「暫定」，不排名次、不進前 10。",
+    "trend": "分數走勢 · 近 {weeks} 週",
+    "trendChart": "近 {weeks} 週閉源第一和開放權重第一的分數走勢。"
+  },
   "tags": {
     "agents": "AI代理",
     "on-device": "裝置端AI"

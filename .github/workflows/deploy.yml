@@ -5,7 +5,8 @@ name: Deploy
 #   push to main  → main's preview: a long-lived Neon branch (preview/main, migrated on every merge)
 #                   and a fixed address that moves to each new deployment; production too once
 #                   PRODUCTION_DEPLOY is true
-#   pull request  → preview deployment with its own Neon branch, then the smoke tests against it
+#   pull request  → preview deployment with its own Neon branch, then the smoke tests against it; the
+#                   branch is reset from its parent first if it has applied a migration the PR no longer has
 #   PR closed     → the PR's Neon branch is deleted
 # Secrets (repository → Settings → Secrets and variables → Actions), see docs/setup.md step 3:
 # VERCEL_TOKEN, NEON_API_KEY, NEON_PROJECT_ID and, if previews are protected, VERCEL_AUTOMATION_BYPASS_SECRET.
@@ -140,6 +141,43 @@ jobs:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           api_key: ${{ secrets.NEON_API_KEY }}
           branch_name: ${{ matrix.neon_branch }}
+
+      # A PR that regenerates its migration after main moves (docs/status.md, 已知问题) leaves the old
+      # one applied on its reused branch under a name the code no longer has, and migrating again then
+      # fails on CREATE statements that already ran ("type ... already exists"). So when the branch has
+      # applied a migration that src/migrations no longer has, it is reset from its parent (Neon's
+      # default branch, which it was copied from) and the build migrates a clean copy. Whatever was
+      # written on that PR's preview is lost. Only ever a PR's own branch: never preview/main or production.
+      - name: Compare ${{ matrix.neon_branch }}'s migrations with this commit's
+        id: migrations
+        if: github.event_name == 'pull_request' && startsWith(matrix.neon_branch, 'preview/pr-') && steps.neon.outputs.created != 'true'
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+        run: |
+          table=$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "select to_regclass('public.payload_migrations') is not null")
+          applied=""
+          if [ "$table" = t ]; then
+            applied=$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "select name from payload_migrations where name <> 'dev'")
+          fi
+          stale=$(comm -23 <(sed '/^$/d' <<<"$applied" | sort -u) \
+            <(find src/migrations -maxdepth 1 -name '*.ts' ! -name index.ts -exec basename {} .ts \; | sort -u) | paste -sd ' ')
+          if [ -z "$stale" ]; then
+            echo "Every migration applied on $NEON_BRANCH is still in src/migrations; keeping the branch."
+            exit 0
+          fi
+          echo "::notice::Resetting $NEON_BRANCH from its parent: it has applied migrations this commit no longer has: $stale"
+          echo "Reset $NEON_BRANCH from its parent (applied migrations no longer in the code: $stale)." >> "$GITHUB_STEP_SUMMARY"
+          echo "reset=true" >> "$GITHUB_OUTPUT"
+
+      # The branch keeps its id, host and password, so the connection strings above still hold.
+      - name: Reset ${{ matrix.neon_branch }} from its parent
+        if: steps.migrations.outputs.reset == 'true'
+        uses: neondatabase/reset-branch-action@v1
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch: ${{ steps.neon.outputs.branch_id }}
+          parent: true
 
       - name: Pull Vercel settings and ${{ env.TARGET }} environment variables
         run: vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"

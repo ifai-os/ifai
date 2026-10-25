@@ -282,6 +282,9 @@ async function describeSubjects(
         const skill = typeof version.skill === 'object' ? version.skill : null
         return about([skill?.name, version.version].filter(Boolean).join(' '), collection('skill-versions', subject.id))
       }
+      case 'arena-answers':
+        // The answer's page names its question and model; a deleted one has nowhere to go.
+        return about(null, collection('arena-answers', subject.id))
     }
   })
 }

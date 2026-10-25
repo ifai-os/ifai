@@ -35,7 +35,7 @@ pnpm dev                 # http://localhost:3000
 部署不走 Vercel 的 Git 集成：Vercel Hobby 不能导入私有组织下的仓库，所以由 GitHub Actions（`.github/workflows/deploy.yml`）用 Vercel CLI 构建并部署。
 
 - 推送到 `main`（合并 PR）→ 部署 `main` 的预览：连长期的 Neon 分支 `preview/main`（构建前先跑迁移），部署完把固定地址 `https://ifai-preview-ifai1.vercel.app` 指向这次部署，所以这个地址总是 `main` 最新的样子。打开 `PRODUCTION_DEPLOY` 之后（见第 3 条）同时部署生产环境。
-- 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
+- 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。复用的分支上如果跑过这次提交里已经没有的迁移（PR 合并 `main` 后重新生成了迁移，旧名字的那个已经在库里跑过），就先把分支从它的父分支（Neon 的默认分支）重置，再迁移；这个 PR 预览里点出来的数据会清掉，`preview/main` 和生产不受影响。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
 - PR 关闭或合并 → 删掉它的 Neon 分支。
 - 想给预览加示例数据：Actions → **Seed preview** → Run workflow（手动运行）。PR 编号留空时往 `main` 的预览（`preview/main`）写 `main` 的示例；填了编号就往那个 PR 的预览（`preview/pr-<编号>`）写这个 PR 最新提交里的示例，只接受本仓库开着的 PR，分支还没建（预览还没部署过）就报错，不会新建。写入的是和 CI 冒烟测试一样的示例新闻、应用和 Skill，写完清掉 Vercel 的数据缓存，页面马上就能看到。可以重复运行，只覆盖示例本身，不动别的数据。示例的图片和 Skill 的 Zip 上传到预览专用的存储桶 `ifai-media-preview`（Vercel 的 Preview 环境也用它），密钥是仓库的 Secrets `R2_PREVIEW_ACCESS_KEY_ID`、`R2_PREVIEW_SECRET_ACCESS_KEY`，令牌只能读写这一个桶；Account ID 和桶名写在 workflow 里，可以用仓库变量 `R2_PREVIEW_ACCOUNT_ID`、`R2_PREVIEW_BUCKET` 覆盖。没有这两个 Secrets 时示例新闻没有配图（视频照常能播），示例 Skill 的 Zip 也下载不了。注意：填 PR 编号时跑的是那个 PR 自己的脚本，它能拿到这把预览桶的密钥，所以只接受本仓库的 PR。这个 workflow 合并进 `main` 之前，要在「Use workflow from」里选带它的分支才会出现 PR 编号这一栏。
 
@@ -72,6 +72,7 @@ pnpm dev                 # http://localhost:3000
 | `R2_*` | 见第 4 步 | 建议用单独的存储桶 | |
 | `OPENROUTER_API_KEY` | 见第 8 步 | 另一个 key | 预览用单独的 key，额度设小一点 |
 | `AI_DAILY_BUDGET_USD` | `10` | `1` | 每天（上海时间）的模型费用上限，美元 |
+| `ARENA_DAILY_BUDGET_USD` | 第三期前不用填（默认 `2`） | 不填 | 排行生成参赛回答每天（上海时间）的花费上限，美元，也算在 `AI_DAILY_BUDGET_USD` 里 |
 | `MODEL_CALLS_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不调用模型 |
 | `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源 |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |

@@ -59,6 +59,16 @@ test.describe('a signed-in member', () => {
           story,
         ])
       }
+      // A followed tag is named in the page language; a company or product as its newest story names it.
+      await member.query(
+        `insert into follows (user_id, target_type, target_key, created_at) values ($1, 'tag', 'vibe-coding', now() - interval '1 minute'), ($1, 'topic', 'kitecode', now())`,
+        [member.id],
+      )
+      // Kitecode is a sample story's product. Ask the database, not the flag: a seeded one can run without it.
+      const kitecodeStory = await member.query(
+        `select 1 from stories_entities e join stories s on s.id = e._parent_id where s.status = 'published' and e.key = 'kitecode'`,
+      )
+      const kitecode = kitecodeStory.rows.length > 0
       const review = await member.addReview(nowhere, 'Exported with the rest')
       const otherReview = await other.addReview(nowhere, 'Words of another member')
       await member.query(`insert into app_review_reports (review_id, reporter, reason) values ($1, $2, 'spam')`, [otherReview, `u:${member.id}`])
@@ -115,6 +125,23 @@ test.describe('a signed-in member', () => {
               },
             ]),
       ])
+      expect(data.follows).toEqual([
+        {
+          type: 'topic',
+          key: 'kitecode',
+          // Without the sample stories, no published story is about Kitecode.
+          name: kitecode ? 'Kitecode' : null,
+          url: kitecode ? expect.stringMatching(/\/en\/daily\/topic\/kitecode$/) : null,
+          followedAt: expect.any(String),
+        },
+        {
+          type: 'tag',
+          key: 'vibe-coding',
+          name: 'Vibe coding',
+          url: expect.stringMatching(/\/en\/daily\/tag\/vibe-coding$/),
+          followedAt: expect.any(String),
+        },
+      ])
       expect(data.reviews).toEqual([expect.objectContaining({ id: review, text: 'Exported with the rest', rating: 4, status: 'shown' })])
       expect(data.reviewReports).toEqual([expect.objectContaining({ review: otherReview, reason: 'spam' })])
       expect(data.appSubmissions).toEqual([
@@ -140,12 +167,13 @@ test.describe('a signed-in member', () => {
     }
   })
 
-  test('deletes their account, and their saves, reviews, reports and submissions go with it', async ({ page, context, baseURL }) => {
+  test('deletes their account, and their saves, follows, reviews, reports and submissions go with it', async ({ page, context, baseURL }) => {
     const member = await createMember(baseURL ?? 'http://localhost:3000')
     const other = await createMember(baseURL ?? 'http://localhost:3000', 'Smoke test reviewer')
     try {
       // On an app id no sample app has, so tests running alongside never see this save or review.
       await member.query(`insert into saves (user_id, target_type, target_id) values ($1, 'app', $2)`, [member.id, nowhere])
+      await member.query(`insert into follows (user_id, target_type, target_key) values ($1, 'tag', 'vibe-coding')`, [member.id])
       await member.query(`insert into app_reviews (app_id, user_id, rating, body, lang) values ($2, $1, 5, 'Gone soon', 'en')`, [member.id, nowhere])
       await member.query(`insert into app_submissions (name, website, email, submitter_id) values ('Gone', 'https://gone.example', $1, $2)`, [
         member.email,
@@ -185,6 +213,7 @@ test.describe('a signed-in member', () => {
            (select count(*) from auth_users where id = $1) as users,
            (select count(*) from auth_sessions where user_id = $1) as sessions,
            (select count(*) from saves where user_id = $1) as saves,
+           (select count(*) from follows where user_id = $1) as follows,
            (select count(*) from app_reviews where user_id = $1) as reviews,
            (select count(*) from app_review_reports where reporter = 'u:' || $1) as reports,
            (select count(*) from app_submissions where submitter_id = $1) as apps,
@@ -192,7 +221,17 @@ test.describe('a signed-in member', () => {
            (select count(*) from app_reviews where id = $2) as others`,
         [member.id, otherReview],
       )
-      expect(left.rows[0]).toEqual({ users: '0', sessions: '0', saves: '0', reviews: '0', reports: '0', apps: '0', skills: '0', others: '1' })
+      expect(left.rows[0]).toEqual({
+        users: '0',
+        sessions: '0',
+        saves: '0',
+        follows: '0',
+        reviews: '0',
+        reports: '0',
+        apps: '0',
+        skills: '0',
+        others: '1',
+      })
     } finally {
       await member.remove()
       await other.remove()
