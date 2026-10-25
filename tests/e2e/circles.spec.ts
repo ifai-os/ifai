@@ -9,6 +9,7 @@ import { createMember } from './member'
 
 const en = JSON.parse(readFileSync(new URL('../../messages/en.json', import.meta.url), 'utf8')) as typeof enMessages
 const c = en.circles
+const ja = (JSON.parse(readFileSync(new URL('../../messages/ja.json', import.meta.url), 'utf8')) as typeof enMessages).circles
 const nowhere = 2_000_000_000
 
 /** Circles launch in phase two (NEXT_PUBLIC_SITE_PHASE ≥ 2, as CI builds); the server says which phase it was built for. */
@@ -92,6 +93,20 @@ test.describe('the circles', () => {
     await expect(page.getByRole('tab', { name: c.tabs.hot })).toHaveAttribute('aria-selected', 'true')
     await page.goto('/en/circles?circle=ai-art')
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+  })
+
+  test('on a phone the page is no wider than the screen, in every language', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 })
+    for (const lang of ['en', 'zh-hans', 'zh-hant', 'ja', 'ko']) {
+      await page.goto(`/${lang}/circles`)
+      await expect(page.getByRole('tablist')).toBeVisible()
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+      expect(overflow, lang).toBeLessThanOrEqual(0)
+    }
+    // The Japanese tabs are wider than the screen: the last one is a swipe away.
+    await page.goto('/ja/circles')
+    await page.getByRole('tab', { name: ja.tabs.mine }).click()
+    await expect(page).toHaveURL(/\/ja\/circles\?tab=mine$/)
   })
 
   test('a member joins, posts, reacts, reports and deletes', async ({ page, context, baseURL }) => {

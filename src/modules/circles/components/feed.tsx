@@ -46,10 +46,13 @@ export function Feed() {
           </Link>
         </div>
       )}
-      <div role="tablist" aria-label={t('feedLabel')} className="flex gap-7 border-b border-line">
-        {tabs.map((item, index) => (
-          <TabButton key={item} tab={item} selected={item === tab} onSelect={setTab} onKeyDown={(event) => onKeyDown(event, index)} />
-        ))}
+      {/* On phones the four tabs can be wider than the screen (Japanese, English): they scroll, like the circle cards. */}
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div role="tablist" aria-label={t('feedLabel')} className="flex min-w-max gap-7 border-b border-line">
+          {tabs.map((item, index) => (
+            <TabButton key={item} tab={item} selected={item === tab} onSelect={setTab} onKeyDown={(event) => onKeyDown(event, index)} />
+          ))}
+        </div>
       </div>
 
       <div role="tabpanel" id={panelId} aria-labelledby={tabId(tab)} className="flex flex-col">
