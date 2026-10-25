@@ -24,7 +24,7 @@ export const dailySitemap = cached(
         sort: '-publishedAt',
         pagination: false,
         depth: 0,
-        select: { slug: true, publishedAt: true, correctedAt: true },
+        select: { slug: true, publishedAt: true, approvedAt: true, correctedAt: true },
         overrideAccess: false,
       }),
       payload.find({
@@ -37,7 +37,9 @@ export const dailySitemap = cached(
         overrideAccess: false,
       }),
     ])
-    const newestStory = stories.docs[0]?.publishedAt ?? null
+    // A page changes when its story goes up, which for a story added late is long after the news's own time.
+    const upAt = (story: (typeof stories.docs)[number]) => story.approvedAt ?? story.publishedAt
+    const newestStory = stories.docs.map(upAt).filter(Boolean).sort().at(-1) ?? null
 
     return {
       pages: [
@@ -49,7 +51,7 @@ export const dailySitemap = cached(
           return snapshot?.entries.length ? [{ path: posterHref(poster.date), lastModified: snapshot.updatedAt }] : []
         }),
       ],
-      stories: stories.docs.map((story) => ({ path: storyHref(story.slug), lastModified: story.correctedAt ?? story.publishedAt })),
+      stories: stories.docs.map((story) => ({ path: storyHref(story.slug), lastModified: story.correctedAt ?? upAt(story) })),
     }
   },
   ['daily-sitemap'],

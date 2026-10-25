@@ -1,7 +1,7 @@
 /**
  * Sample apps for local development and the CI smoke tests (tests/e2e/apps.spec.ts), with a
  * few weeks of heat scored the way the daily job scores it. The apps are fictional (websites
- * on .example). Runs only against a database on this machine, or main's preview when asked
+ * on .example). Runs only against a database on this machine, or a preview when asked
  * (./seed-target.ts), so it can never put sample apps on a real site. Safe to run again: apps
  * are matched by slug and overwritten, and their heat is written anew. Run it after
  * scripts/seed-stories.ts to match the sample stories that mention the apps.

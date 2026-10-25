@@ -97,7 +97,7 @@ const raw = (id: number, overrides: Record<string, unknown> = {}) =>
   ({
     id,
     slug: `story-${id}`,
-    category: 'product',
+    category: 'tools',
     title: { en: `Story ${id}`, 'zh-Hans': `新闻 ${id}`, 'zh-Hant': `新聞 ${id}` },
     summary: { en: `Summary ${id}.`, 'zh-Hans': `摘要 ${id}。` },
     sources: [{ name: `Source ${id}`, role: 'original', url: `https://source.example/${id}` }],

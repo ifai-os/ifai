@@ -20,6 +20,7 @@ import { EMBEDDING_DIMENSIONS } from '@/lib/ai/purposes'
 import { getDb } from '@/lib/db/drizzle'
 import type { Source } from '@/payload-types'
 
+import { storyCategoryOf } from '../categories'
 import { refreshHeat } from '../heat/heat'
 import { syncEventSources } from '../heat/sources'
 import { groupPrompt, prefilterPrompt, scorePrompt, structurePrompt, type GroupReport, type Material } from '../prompts'
@@ -373,7 +374,7 @@ export async function groupStep(itemId: number, deps: JudgeDeps = {}): Promise<S
       .values({
         representativeItemId: itemId,
         title: item.title,
-        category: analysis.structure.category,
+        category: storyCategoryOf(analysis.structure.category),
         firstSeenAt: seenAt,
         lastSeenAt: seenAt,
       })

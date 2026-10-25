@@ -26,5 +26,5 @@ export default async function DailyPage({ params, searchParams }: Props) {
   const page = readPage(await searchParams)
   if (!page) notFound()
 
-  return <DailyList locale={locale} category={null} page={page} />
+  return <DailyList locale={locale} page={page} />
 }

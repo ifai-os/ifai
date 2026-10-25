@@ -28,15 +28,19 @@ export default async function SignInPage({ params }: Props) {
   setRequestLocale(locale)
   const t = await getTranslations('auth')
 
+  // The form takes the heading over, to put「登录链接已发送」in its place; the page shows it while the form loads.
+  const header = (
+    <div className="flex flex-col items-center gap-3 text-center">
+      <Logo size={56} eager />
+      <h1 className="text-h2">{t('title')}</h1>
+      <p className="text-body text-ink-3">{t('subtitle')}</p>
+    </div>
+  )
+
   return (
-    <main id="main" className="mx-auto flex w-full max-w-[420px] flex-col gap-8 px-4 pt-16 pb-24">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <Logo size={56} eager />
-        <h1 className="text-h2">{t('title')}</h1>
-        <p className="text-body text-ink-3">{t('subtitle')}</p>
-      </div>
-      <Suspense>
-        <SignInForm providers={authProviders()} />
+    <main id="main" className="mx-auto flex w-full max-w-[420px] flex-col px-4 pt-16 pb-24">
+      <Suspense fallback={header}>
+        <SignInForm providers={authProviders()} header={header} />
       </Suspense>
     </main>
   )

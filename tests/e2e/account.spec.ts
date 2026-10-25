@@ -6,15 +6,30 @@ import type enMessages from '../../messages/en.json'
 
 import { createMember } from './member'
 
-const en = JSON.parse(readFileSync(new URL('../../messages/en.json', import.meta.url), 'utf8')) as typeof enMessages
+const load = (name: string) => JSON.parse(readFileSync(new URL(`../../messages/${name}.json`, import.meta.url), 'utf8')) as typeof enMessages
+const en = load('en')
+const ja = load('ja')
 const nowhere = 2_000_000_000
 
-test('the account page asks a visitor to sign in and stays out of search', async ({ page }) => {
-  const response = await page.goto('/en/me/account')
+const iPhone =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1'
+const windowsEdge =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0'
+
+test('the settings page asks a visitor to sign in and stays out of search', async ({ page }) => {
+  const response = await page.goto('/en/me/account?section=sign-in')
   expect(response?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1, name: en.account.title })).toBeVisible()
   await expect(page.getByText(en.account.signInBody)).toBeVisible()
+  await expect(page.getByRole('navigation', { name: en.account.sectionsLabel })).toHaveCount(0)
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+})
+
+test('signing out other devices is only for signed-in members, from IFAI’s own pages', async ({ request }) => {
+  const signedOut = await request.delete('/api/account/sessions/some-session')
+  expect(signedOut.status()).toBe(401)
+  expect(signedOut.headers()['cache-control']).toBe('private, no-store')
+  expect((await request.delete('/api/account/sessions/some-session', { headers: { 'sec-fetch-site': 'cross-site' } })).status()).toBe(403)
 })
 
 test('the data export is only for signed-in members, from IFAI’s own pages', async ({ request }) => {
@@ -71,7 +86,7 @@ test.describe('a signed-in member', () => {
       )
       await context.addCookies([member.cookie])
 
-      await page.goto('/en/me/account')
+      await page.goto('/en/me/account?section=data')
       await expect(page.getByRole('heading', { name: en.account.exportTitle })).toBeVisible()
       const downloading = page.waitForEvent('download')
       await page.getByRole('button', { name: en.account.exportButton }).click()
@@ -145,12 +160,13 @@ test.describe('a signed-in member', () => {
       await member.query(`insert into app_review_reports (review_id, reporter, reason) values ($1, $2, 'spam')`, [otherReview, `u:${member.id}`])
       await context.addCookies([member.cookie])
 
-      // From the account menu.
+      // From the account menu, then the section.
       await page.goto('/en')
       await page.getByRole('button', { name: en.header.account }).click()
       await page.getByRole('link', { name: en.header.accountPage }).click()
       await expect(page).toHaveURL(/\/en\/me\/account$/)
-      await expect(page.getByText(member.email)).toBeVisible()
+      await page.getByRole('navigation', { name: en.account.sectionsLabel }).getByRole('link', { name: en.account.sections.data }).click()
+      await expect(page).toHaveURL(/\/en\/me\/account\?section=data$/)
 
       await page.getByRole('button', { name: en.account.deleteButton }).click()
       const dialog = page.getByRole('dialog', { name: en.account.confirmTitle })
@@ -187,7 +203,7 @@ test.describe('a signed-in member', () => {
     const member = await createMember(baseURL ?? 'http://localhost:3000', 'Smoke test member', { signedInHoursAgo: 25 })
     try {
       await context.addCookies([member.cookie])
-      await page.goto('/en/me/account')
+      await page.goto('/en/me/account?section=data')
       await page.getByRole('button', { name: en.account.deleteButton }).click()
       const dialog = page.getByRole('dialog', { name: en.account.confirmTitle })
       await dialog.getByRole('button', { name: en.account.confirm }).click()
@@ -196,6 +212,136 @@ test.describe('a signed-in member', () => {
 
       await dialog.getByRole('button', { name: en.account.signInAgainButton }).click()
       await expect(page.getByText(en.account.signInBody)).toBeVisible()
+    } finally {
+      await member.remove()
+    }
+  })
+
+  test('sees who they are in the account menu and changes their nickname', async ({ page, context, baseURL }) => {
+    const member = await createMember(baseURL ?? 'http://localhost:3000')
+    try {
+      await context.addCookies([member.cookie])
+      await page.goto('/en')
+      await page.getByRole('button', { name: en.header.account }).click()
+      await expect(page.getByRole('link', { name: /Smoke test member/ })).toContainText(member.email)
+      await expect(page.getByRole('link', { name: en.header.submissions })).toHaveAttribute('href', '/en/apps/submit#mine')
+      await page.getByRole('link', { name: en.header.accountPage }).click()
+      await expect(page).toHaveURL(/\/en\/me\/account$/)
+      await expect(page.getByRole('link', { name: en.account.sections.profile })).toHaveAttribute('aria-current', 'page')
+
+      const main = page.getByRole('main')
+      const nickname = main.getByLabel(en.account.nameLabel)
+      await expect(nickname).toHaveValue('Smoke test member')
+      await nickname.fill('')
+      await main.getByRole('button', { name: en.account.save }).click()
+      await expect(main.getByRole('alert')).toHaveText(en.account.nameEmpty)
+
+      await nickname.fill('  Renamed   member ')
+      await main.getByRole('button', { name: en.account.save }).click()
+      await expect(main.getByRole('status')).toHaveText(en.account.saved)
+      await expect(nickname).toHaveValue('Renamed member')
+      expect((await member.query<{ name: string }>('select name from auth_users where id = $1', [member.id])).rows[0].name).toBe('Renamed member')
+
+      // The server checks too, whoever asks.
+      const status = await page.evaluate(async () => {
+        const response = await fetch('/api/auth/update-user', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ name: ' \u200b ' }),
+        })
+        return response.status
+      })
+      expect(status).toBe(400)
+      expect((await member.query<{ name: string }>('select name from auth_users where id = $1', [member.id])).rows[0].name).toBe('Renamed member')
+    } finally {
+      await member.remove()
+    }
+  })
+
+  test('sees the devices they are signed in on and signs the others out', async ({ page, context, baseURL }) => {
+    const member = await createMember(baseURL ?? 'http://localhost:3000')
+    try {
+      for (const [userAgent, ip, hoursAgo] of [
+        [iPhone, '203.0.113.7', 2],
+        [windowsEdge, '198.51.100.4', 30],
+      ] as const) {
+        await member.query(
+          `insert into auth_sessions (id, token, user_id, user_agent, ip_address, expires_at, created_at)
+           values (gen_random_uuid()::text, gen_random_uuid()::text, $1, $2, $3, now() + interval '1 day', now() - make_interval(hours => $4))`,
+          [member.id, userAgent, ip, hoursAgo],
+        )
+      }
+      // A sign-in that has run out is not a device any more.
+      await member.query(
+        `insert into auth_sessions (id, token, user_id, user_agent, expires_at) values (gen_random_uuid()::text, gen_random_uuid()::text, $1, $2, now() - interval '1 minute')`,
+        [member.id, windowsEdge],
+      )
+      await context.addCookies([member.cookie])
+      await page.goto('/en/me/account?section=sign-in')
+      await expect(page.getByRole('heading', { level: 2, name: en.account.sections['sign-in'] })).toBeVisible()
+      await expect(page.getByText(member.email)).toBeVisible()
+      await expect(page.getByText(en.account.thisDevice)).toBeVisible()
+      await expect(page.getByText('iPhone · Safari')).toBeVisible()
+      await expect(page.getByText('203.0.113.7', { exact: false })).toBeVisible()
+      await expect(page.getByText('Windows · Edge')).toHaveCount(1)
+
+      await page.getByRole('button', { name: en.account.signOutDeviceLabel.replace('{device}', 'iPhone · Safari') }).click()
+      await expect(page.getByText('iPhone · Safari')).toHaveCount(0)
+      const left = async () => (await member.query('select 1 from auth_sessions where user_id = $1 and expires_at > now()', [member.id])).rowCount
+      expect(await left()).toBe(2)
+
+      await page.getByRole('button', { name: en.account.signOutOthers }).click()
+      await expect(page.getByText('Windows · Edge')).toHaveCount(0)
+      await expect(page.getByRole('button', { name: en.account.signOutOthers })).toHaveCount(0)
+      expect(await left()).toBe(1)
+
+      // Still signed in here.
+      await page.reload()
+      await expect(page.getByText(en.account.thisDevice)).toBeVisible()
+    } finally {
+      await member.remove()
+    }
+  })
+
+  test('finds the daily email of their sign-in address in the notifications', async ({ page, context, baseURL }) => {
+    const member = await createMember(baseURL ?? 'http://localhost:3000')
+    let subscriber: number | undefined
+    try {
+      await context.addCookies([member.cookie])
+      await page.goto('/en/me/account?section=notifications')
+      await expect(page.getByText(en.account.dailyNone)).toBeVisible()
+      await expect(page.getByRole('link', { name: en.account.manageDaily })).toHaveCount(0)
+      await expect(page.getByLabel(en.subscribe.email)).toHaveValue(member.email)
+
+      subscriber = (
+        await member.query<{ id: number }>(
+          `insert into subscribers (email, locale, time_zone, subscribed_at) values ($1, 'en', 'Asia/Tokyo', now()) returning id`,
+          [member.email],
+        )
+      ).rows[0].id
+      await page.reload()
+      await expect(page.getByText(en.account.dailySubscribed)).toBeVisible()
+      await page.getByRole('link', { name: en.account.manageDaily }).click()
+      await expect(page).toHaveURL(/\/en\/daily\/subscription\?token=/)
+      await expect(page.getByRole('heading', { level: 1, name: en.subscription.title })).toBeVisible()
+    } finally {
+      if (subscriber !== undefined) await member.query('delete from subscribers where id = $1', [subscriber])
+      await member.remove()
+    }
+  })
+
+  test('changes the interface language and stays in the section', async ({ page, context, baseURL }) => {
+    const member = await createMember(baseURL ?? 'http://localhost:3000')
+    try {
+      await context.addCookies([member.cookie])
+      await page.goto('/en/me/account?section=language')
+      await expect(page.getByRole('group', { name: en.account.languageLabel }).getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true')
+      await page.getByRole('group', { name: en.account.languageLabel }).getByRole('button', { name: '日本語' }).click()
+      await expect(page).toHaveURL(/\/ja\/me\/account\?section=language$/)
+      await expect(page.getByRole('heading', { level: 1, name: ja.account.title })).toBeVisible()
+      await expect(page.getByRole('group', { name: ja.account.languageLabel }).getByRole('button', { name: '日本語' })).toHaveAttribute('aria-pressed', 'true')
+      // Remembered like the header's switcher.
+      expect((await context.cookies()).find((cookie) => cookie.name === 'IFAI_LOCALE')?.value).toBe('ja')
     } finally {
       await member.remove()
     }

@@ -5,33 +5,43 @@ import { localizePath, locales, ogLocales, type Locale } from '@/i18n/config'
 import { alternatesFor, shareCard } from '@/lib/seo'
 
 import type { StoryCategory } from '../categories'
+import type { StoryTag } from '../tags'
 import { posterVersion } from '../poster/snapshot'
 import { POSTER_SIZE } from '../poster/layout'
-import { getPoster, getStory } from './data'
-import { feedPath, listHref, posterDay, posterHref, posterImagePath, storyHref } from './list-params'
+import { getPoster, getStory, getTopicPage } from './data'
+import { feedPath, listHref, posterDay, posterHref, posterImagePath, storyHref, topicHref } from './list-params'
 
 const descriptionLength = 160
 
-/** Title, description, canonical address and the RSS link of a list page. */
+/** Title, description, canonical address and the RSS link of a list page: the daily list, a category's or a tag's. */
 export async function listMetadata({
   locale,
   category,
+  tag = null,
   page,
 }: {
   locale: Locale
   category: StoryCategory | null
+  tag?: StoryTag | null
   page: number
 }): Promise<Metadata> {
-  const [t, names] = await Promise.all([
+  const [t, names, about, tagNames] = await Promise.all([
     getTranslations({ locale, namespace: 'daily' }),
     getTranslations({ locale, namespace: 'categories' }),
+    getTranslations({ locale, namespace: 'categoryAbout' }),
+    getTranslations({ locale, namespace: 'tags' }),
   ])
-  const base = category ? t('categoryTitle', { category: names(category) }) : t('title')
+  const base = category
+    ? t('categoryTitle', { category: names(category) })
+    : tag
+      ? t('tagTitle', { tag: tagNames(tag) })
+      : t('title')
   return {
     title: page > 1 ? t('pageTitle', { title: base, page }) : base,
-    description: t('description'),
+    // A category page describes the category, as its banner does.
+    description: category ? about(category) : t('description'),
     alternates: {
-      ...alternatesFor(listHref({ category, page }), locale),
+      ...alternatesFor(listHref({ category, tag, page }), locale),
       types: { 'application/rss+xml': localizePath(locale, feedPath) },
     },
   }
@@ -48,6 +58,20 @@ export async function storyMetadata(slug: string, locale: Locale): Promise<Metad
     description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
     alternates: alternatesFor(storyHref(story.slug), locale),
     ...shareCard(locale, { article: { publishedTime: story.publishedAt, modifiedTime: story.correctedAt } }),
+  }
+}
+
+/** A topic page: its name; kept out of search engines while only one story is about it (thin page). */
+export async function topicMetadata(key: string, page: number, locale: Locale): Promise<Metadata> {
+  const topic = await getTopicPage(key, page, locale)
+  if (!topic) return {}
+  const t = await getTranslations({ locale, namespace: 'daily' })
+  const title = t('topicTitle', { name: topic.name })
+  return {
+    title: page > 1 ? t('pageTitle', { title, page }) : title,
+    description: t('topicDescription', { name: topic.name }),
+    alternates: alternatesFor(topicHref(key, page), locale),
+    ...(topic.total < 2 ? { robots: { index: false, follow: true } } : {}),
   }
 }
 
