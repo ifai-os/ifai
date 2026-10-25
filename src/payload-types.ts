@@ -87,12 +87,17 @@ export interface Config {
     'arena-models': ArenaModel;
     'arena-prompts': ArenaPrompt;
     'arena-answers': ArenaAnswer;
+    'arena-images': ArenaImage;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    'arena-images': {
+      answers: 'arena-answers';
+    };
+  };
   collectionsSelect: {
     admins: AdminsSelect<false> | AdminsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -114,6 +119,7 @@ export interface Config {
     'arena-models': ArenaModelsSelect<false> | ArenaModelsSelect<true>;
     'arena-prompts': ArenaPromptsSelect<false> | ArenaPromptsSelect<true>;
     'arena-answers': ArenaAnswersSelect<false> | ArenaAnswersSelect<true>;
+    'arena-images': ArenaImagesSelect<false> | ArenaImagesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1064,6 +1070,10 @@ export interface Arena {
    */
   status: 'draft' | 'published';
   /**
+   * Text answers, or one picture per answer. Fixed once the arena has questions.
+   */
+  kind: 'text' | 'image';
+  /**
    * Smaller comes first; the first one is the rankings page itself.
    */
   order?: number | null;
@@ -1120,7 +1130,7 @@ export interface ArenaModel {
 export interface ArenaPrompt {
   id: number;
   /**
-   * Exactly what the models get. A real task readers would ask about; nothing about AI models themselves, nothing that needs the web or files.
+   * Exactly what the models get. A real task readers would ask about; nothing about AI models themselves, nothing that needs the web or files. In an image arena, describe the picture to draw.
    */
   text: string;
   arena: number | Arena;
@@ -1151,6 +1161,10 @@ export interface ArenaAnswer {
   lang: 'en' | 'zh-Hans' | 'ja' | 'ko';
   status: 'pending' | 'done' | 'failed';
   text?: string | null;
+  /**
+   * Hide the answer if the picture has a signature, a watermark or a model or company name on it, or should not be shown.
+   */
+  image?: (number | null) | ArenaImage;
   cutOff?: boolean | null;
   namesItself?: boolean | null;
   error?: string | null;
@@ -1164,6 +1178,51 @@ export interface ArenaAnswer {
   generatedAt?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * The contestants’ pictures, stored by the answer job. To keep a picture out of the votes, hide its answer under Answers.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-images".
+ */
+export interface ArenaImage {
+  id: number;
+  answers?: {
+    docs?: (number | ArenaAnswer)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumb?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    vote?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1268,6 +1327,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'arena-answers';
         value: number | ArenaAnswer;
+      } | null)
+    | ({
+        relationTo: 'arena-images';
+        value: number | ArenaImage;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1797,6 +1860,7 @@ export interface ArenasSelect<T extends boolean = true> {
   intro?: T;
   slug?: T;
   status?: T;
+  kind?: T;
   order?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1843,6 +1907,7 @@ export interface ArenaAnswersSelect<T extends boolean = true> {
   lang?: T;
   status?: T;
   text?: T;
+  image?: T;
   cutOff?: T;
   namesItself?: T;
   error?: T;
@@ -1853,6 +1918,50 @@ export interface ArenaAnswersSelect<T extends boolean = true> {
   generatedAt?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "arena-images_select".
+ */
+export interface ArenaImagesSelect<T extends boolean = true> {
+  answers?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumb?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        vote?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

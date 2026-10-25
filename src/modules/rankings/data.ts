@@ -5,7 +5,7 @@ import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
 
 import { rankingsCacheTag } from './cache'
-import { TREND_WEEKS, type Region, type TrendPoint, type Weights } from './rules'
+import { TREND_WEEKS, type ArenaKind, type Region, type TrendPoint, type Weights } from './rules'
 import { arenaBattles, arenaSnapshotRows, arenaSnapshots } from './schema'
 
 /**
@@ -17,7 +17,7 @@ import { arenaBattles, arenaSnapshotRows, arenaSnapshots } from './schema'
 
 const cacheOptions = { tags: [rankingsCacheTag], revalidate: 3600 }
 
-export type PublicArena = { id: number; slug: string; name: string; intro: string | null }
+export type PublicArena = { id: number; slug: string; name: string; intro: string | null; kind: ArenaKind }
 
 /** The published arenas in their order, in the page's language (English where one is missing). */
 export const getArenas = cached(
@@ -30,9 +30,15 @@ export const getArenas = cached(
       locale,
       pagination: false,
       depth: 0,
-      select: { slug: true, name: true, intro: true },
+      select: { slug: true, name: true, intro: true, kind: true },
     })
-    return docs.map((arena) => ({ id: Number(arena.id), slug: arena.slug ?? String(arena.id), name: arena.name ?? '', intro: arena.intro || null }))
+    return docs.map((arena) => ({
+      id: Number(arena.id),
+      slug: arena.slug ?? String(arena.id),
+      name: arena.name ?? '',
+      intro: arena.intro || null,
+      kind: arena.kind ?? 'text',
+    }))
   },
   ['rankings-arenas'],
   cacheOptions,

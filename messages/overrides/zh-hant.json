@@ -362,5 +362,8 @@
   "tags": {
     "agents": "AI代理",
     "on-device": "裝置端AI"
+  },
+  "rankingsVote": {
+    "newTab": "（在新分頁開啟原圖）"
   }
 }

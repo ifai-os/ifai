@@ -103,8 +103,8 @@ export const ArenaPrompts: CollectionConfig = {
       admin: {
         rows: 6,
         description: {
-          en: 'Exactly what the models get. A real task readers would ask about; nothing about AI models themselves, nothing that needs the web or files.',
-          zh: '模型拿到的就是这段话。写读者真会问的任务；不要问模型自己的事，不要需要上网或附件的题。',
+          en: 'Exactly what the models get. A real task readers would ask about; nothing about AI models themselves, nothing that needs the web or files. In an image arena, describe the picture to draw.',
+          zh: '模型拿到的就是这段话。写读者真会问的任务；不要问模型自己的事，不要需要上网或附件的题。图像赛道的题写要画的画面。',
         },
       },
     },

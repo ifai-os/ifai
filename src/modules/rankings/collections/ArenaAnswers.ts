@@ -7,8 +7,9 @@ const readOnly = { readOnly: true } as const
 
 /**
  * The contestants' answers (docs/specs/rankings.md rule 6), written only by the answer job
- * (../answers/generate.ts) through the Local API. The site owner can read them and hide one; a
- * hidden, cut-off or self-naming answer is never shown in a vote. Votes already cast on it stay.
+ * (../answers/generate.ts) through the Local API: text, or in an image arena a picture
+ * (./ArenaImages.ts). The site owner can read them and hide one; a hidden, cut-off or self-naming
+ * answer is never shown in a vote. Votes already cast on it stay.
  */
 export const ArenaAnswers: CollectionConfig = {
   slug: 'arena-answers',
@@ -74,10 +75,26 @@ export const ArenaAnswers: CollectionConfig = {
       name: 'text',
       type: 'textarea',
       label: { en: 'Answer', zh: '回答' },
-      admin: { ...readOnly, rows: 16 },
+      admin: { ...readOnly, rows: 16, condition: (data) => !data?.image },
+    },
+    {
+      name: 'image',
+      type: 'upload',
+      relationTo: 'arena-images',
+      label: { en: 'Picture', zh: '图' },
+      admin: {
+        ...readOnly,
+        condition: (data) => Boolean(data?.image),
+        description: {
+          en: 'Hide the answer if the picture has a signature, a watermark or a model or company name on it, or should not be shown.',
+          zh: '图上有签名、水印、模型名或公司名，或者不该给读者看，就把这份回答隐藏。',
+        },
+      },
     },
     {
       type: 'row',
+      // Pictures are neither cut off nor read for names (「图像生成赛道」).
+      admin: { condition: (data) => !data?.image },
       fields: [
         {
           name: 'cutOff',

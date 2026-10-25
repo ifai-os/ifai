@@ -10749,6 +10749,14 @@
           "notNull": true,
           "default": "'draft'"
         },
+        "kind": {
+          "name": "kind",
+          "type": "enum_arenas_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'text'"
+        },
         "order": {
           "name": "order",
           "type": "numeric",
@@ -11447,6 +11455,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "image_id": {
+          "name": "image_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "cut_off": {
           "name": "cut_off",
           "type": "boolean",
@@ -11574,6 +11588,21 @@
           "method": "btree",
           "with": {}
         },
+        "arena_answers_image_idx": {
+          "name": "arena_answers_image_idx",
+          "columns": [
+            {
+              "expression": "image_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "arena_answers_updated_at_idx": {
           "name": "arena_answers_updated_at_idx",
           "columns": [
@@ -11665,8 +11694,269 @@
           ],
           "onDelete": "set null",
           "onUpdate": "no action"
+        },
+        "arena_answers_image_id_arena_images_id_fk": {
+          "name": "arena_answers_image_id_arena_images_id_fk",
+          "tableFrom": "arena_answers",
+          "tableTo": "arena_images",
+          "columnsFrom": [
+            "image_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.arena_images": {
+      "name": "arena_images",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'arena'"
+        },
+        "_objectkey": {
+          "name": "_objectkey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "url": {
+          "name": "url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "thumbnail_u_r_l": {
+          "name": "thumbnail_u_r_l",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filename": {
+          "name": "filename",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filesize": {
+          "name": "filesize",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "width": {
+          "name": "width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height": {
+          "name": "height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "focal_x": {
+          "name": "focal_x",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "focal_y": {
+          "name": "focal_y",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_url": {
+          "name": "sizes_thumb_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_width": {
+          "name": "sizes_thumb_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_height": {
+          "name": "sizes_thumb_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_mime_type": {
+          "name": "sizes_thumb_mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_filesize": {
+          "name": "sizes_thumb_filesize",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_thumb_filename": {
+          "name": "sizes_thumb_filename",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_url": {
+          "name": "sizes_vote_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_width": {
+          "name": "sizes_vote_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_height": {
+          "name": "sizes_vote_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_mime_type": {
+          "name": "sizes_vote_mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_filesize": {
+          "name": "sizes_vote_filesize",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizes_vote_filename": {
+          "name": "sizes_vote_filename",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "arena_images_updated_at_idx": {
+          "name": "arena_images_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_images_created_at_idx": {
+          "name": "arena_images_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_images_filename_idx": {
+          "name": "arena_images_filename_idx",
+          "columns": [
+            {
+              "expression": "filename",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_images_sizes_thumb_sizes_thumb_filename_idx": {
+          "name": "arena_images_sizes_thumb_sizes_thumb_filename_idx",
+          "columns": [
+            {
+              "expression": "sizes_thumb_filename",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "arena_images_sizes_vote_sizes_vote_filename_idx": {
+          "name": "arena_images_sizes_vote_sizes_vote_filename_idx",
+          "columns": [
+            {
+              "expression": "sizes_vote_filename",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -11949,6 +12239,12 @@
         },
         "arena_answers_id": {
           "name": "arena_answers_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "arena_images_id": {
+          "name": "arena_images_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -12299,6 +12595,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "payload_locked_documents_rels_arena_images_id_idx": {
+          "name": "payload_locked_documents_rels_arena_images_id_idx",
+          "columns": [
+            {
+              "expression": "arena_images_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -12568,6 +12879,19 @@
           "tableTo": "arena_answers",
           "columnsFrom": [
             "arena_answers_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_arena_images_fk": {
+          "name": "payload_locked_documents_rels_arena_images_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "arena_images",
+          "columnsFrom": [
+            "arena_images_id"
           ],
           "columnsTo": [
             "id"
@@ -13307,6 +13631,14 @@
         "published"
       ]
     },
+    "public.enum_arenas_kind": {
+      "name": "enum_arenas_kind",
+      "schema": "public",
+      "values": [
+        "text",
+        "image"
+      ]
+    },
     "public.enum_arena_models_weights": {
       "name": "enum_arena_models_weights",
       "schema": "public",
@@ -13382,6 +13714,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "db37b209-ba88-4a50-a3e3-b00c011c428c",
+  "id": "59d53acf-d2fe-4ed0-a415-a2212dae53ce",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

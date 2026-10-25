@@ -75,7 +75,7 @@ export type AnswerProgress = {
   /** Questions in use in the arena: the answers this model should have. */
   questions: number
   done: number
-  /** Done but never shown in votes: hidden, cut off, or naming itself. */
+  /** Done but never shown in votes: hidden, cut off, naming itself, or its picture deleted. */
   unusable: number
   pending: number
   failed: number
@@ -83,6 +83,9 @@ export type AnswerProgress = {
 }
 
 type ProgressRow = { arena_id: number; status: string; answers: number; unusable: number; cost: number }
+
+/** A done answer with nothing left to show: its picture was deleted in the back office. */
+const lost = sql`(image_id is null and coalesce(text, '') = '')`
 
 /** A contestant's answers per arena it is in (the「回答」box on its page). */
 export async function answerProgress(payload: Payload, modelId: number, locale: AdminLocale): Promise<AnswerProgress[]> {
@@ -94,7 +97,7 @@ export async function answerProgress(payload: Payload, modelId: number, locale: 
     payload.find({ collection: 'arenas', where: { id: { in: arenaIds } }, pagination: false, depth: 0, locale, sort: 'order', select: { name: true } }),
     db.execute<ProgressRow>(sql`
       select arena_id, status::text as status, count(*)::int as answers,
-        (count(*) filter (where hidden or cut_off or names_itself))::int as unusable,
+        (count(*) filter (where hidden or cut_off or names_itself or ${lost}))::int as unusable,
         coalesce(sum(cost_usd), 0)::float as cost
       from arena_answers where model_id = ${modelId}
       group by arena_id, status`),
@@ -122,7 +125,8 @@ export async function answerProgress(payload: Payload, modelId: number, locale: 
 
 /**
  * 「重新生成失败和不能用的」: the model's failed answers, and its done ones that a vote cannot show
- * because they were cut off or name the model (not the ones the owner hid), go back to waiting.
+ * because they were cut off, name the model or lost their picture (not the ones the owner hid), go
+ * back to waiting.
  * Each comes back as a new call (`attempts` + 1 is the call's variant), so a call that already
  * failed three times can be paid for again. Returns how many.
  */
@@ -130,7 +134,7 @@ export async function retryAnswers(payload: Payload, modelId: number): Promise<n
   const result = await drizzleOf(payload).execute<{ id: number }>(sql`
     update arena_answers
     set status = 'pending', error = null, attempts = coalesce(attempts, 0) + 1, updated_at = now()
-    where model_id = ${modelId} and not hidden and (status = 'failed' or (status = 'done' and (cut_off or names_itself)))
+    where model_id = ${modelId} and not hidden and (status = 'failed' or (status = 'done' and (cut_off or names_itself or ${lost})))
     returning id`)
   return result.rows.length
 }

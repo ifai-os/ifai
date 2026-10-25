@@ -26,9 +26,13 @@ import { arenaBattles } from './schema'
  * calls a model.
  */
 
-/** An answer a vote can show: done, not hidden, not cut off, not naming itself, from a competing model of the arena. */
+/**
+ * An answer a vote can show: done, with its text or its picture (one the site owner deleted is
+ * gone), not hidden, not cut off, not naming itself, from a competing model of the arena.
+ */
 const usableAnswer = sql`a.status = 'done' and not coalesce(a.hidden, false) and not coalesce(a.cut_off, false)
-  and not coalesce(a.names_itself, false) and m.status = 'active'
+  and not coalesce(a.names_itself, false) and (a.image_id is not null or coalesce(a.text, '') <> '')
+  and m.status = 'active'
   and exists (select 1 from arena_models_rels r where r.parent_id = m.id and r.path = 'arenas' and r.arenas_id = p.arena_id)`
 
 const answersOf = sql`arena_answers a
@@ -90,13 +94,19 @@ function forPage(text: string, lang: PromptLang, locale: Locale): { text: string
   return locale === 'zh-Hant' && lang === 'zh-Hans' ? { text: toHant(text), lang: 'zh-Hant' } : { text, lang }
 }
 
+/** A picture as a vote shows it: the copy sized for the page, its size, and the file the model returned. */
+export type BattleImage = { src: string; width: number; height: number; original: string }
+
+/** One side of a vote: a text answer in the page's script, or a picture (「图像生成赛道」). */
+export type BattleAnswer = { kind: 'text'; text: string; lang: string } | { kind: 'image'; image: BattleImage }
+
 export type Battle = {
   /** What the vote names; null for visitors, whose questions are not stored. */
   id: string | null
   arena: string
   prompt: { text: string; lang: string }
   /** A, then B. */
-  answers: [{ text: string; lang: string }, { text: string; lang: string }]
+  answers: [BattleAnswer, BattleAnswer]
 }
 
 export type OpenResult = { status: 'ready'; battle: Battle } | { status: 'not-found' } | { status: 'empty' } | { status: 'daily-limit' }
@@ -133,16 +143,40 @@ export async function openBattle({
     const promptId = await choosePrompt(arena.id, locale, recent)
     if (!promptId) return { status: 'empty' }
     const picked = await db.execute<PickedAnswer>(sql`
-      select a.id, a.model_id, a.text, p.lang::text as lang, p.text as prompt from ${answersOf}
+      select a.id, a.model_id, a.text, a.image_id, p.lang::text as lang, p.text as prompt from ${answersOf}
       where a.prompt_id = ${promptId} and ${usableAnswer}
       order by random() limit 2`)
     const [a, b] = picked.rows
-    if (a && b) return { status: 'ready', battle: await storeBattle({ arena, promptId, a, b, userId, locale, now }) }
+    if (!a || !b) continue
+    const answers = await shownAnswers([a, b], locale)
+    if (answers) return { status: 'ready', battle: await storeBattle({ arena, promptId, a, b, answers, userId, locale, now }) }
   }
   return { status: 'empty' }
 }
 
-type PickedAnswer = { id: number; model_id: number; text: string; lang: PromptLang; prompt: string }
+type PickedAnswer = { id: number; model_id: number; text: string | null; image_id: number | null; lang: PromptLang; prompt: string }
+
+/** The two answers as the page shows them; null when a picture is gone by now. */
+async function shownAnswers(picked: [PickedAnswer, PickedAnswer], locale: Locale): Promise<[BattleAnswer, BattleAnswer] | null> {
+  const imageIds = picked.map((answer) => answer.image_id).filter((id): id is number => id !== null)
+  const images = new Map<number, BattleImage>()
+  if (imageIds.length) {
+    const { payload } = await getDb()
+    // Whole documents: the addresses are worked out from the file names (and, on R2, the folder).
+    const { docs } = await payload.find({ collection: 'arena-images', where: { id: { in: imageIds } }, depth: 0, joins: false, pagination: false })
+    for (const doc of docs) {
+      if (!doc.url) continue
+      const shown = doc.sizes?.vote?.url ? doc.sizes.vote : doc
+      images.set(Number(doc.id), { src: shown.url ?? doc.url, width: shown.width ?? 1024, height: shown.height ?? 1024, original: doc.url })
+    }
+  }
+  const [a, b] = picked.map((answer): BattleAnswer | null => {
+    if (answer.image_id === null) return { kind: 'text', ...forPage(answer.text ?? '', answer.lang, locale) }
+    const image = images.get(Number(answer.image_id))
+    return image ? { kind: 'image', image } : null
+  })
+  return a && b ? [a, b] : null
+}
 
 /** Stores a member's question (visitors' are not stored) and returns it in the page's script. */
 async function storeBattle({
@@ -150,6 +184,7 @@ async function storeBattle({
   promptId,
   a,
   b,
+  answers,
   userId,
   locale,
   now,
@@ -158,6 +193,7 @@ async function storeBattle({
   promptId: number
   a: PickedAnswer
   b: PickedAnswer
+  answers: [BattleAnswer, BattleAnswer]
   userId: string | null
   locale: Locale
   now: Date
@@ -179,12 +215,7 @@ async function storeBattle({
       createdAt: now,
     })
   }
-  return {
-    id,
-    arena: arena.slug,
-    prompt: forPage(a.prompt, a.lang, locale),
-    answers: [forPage(a.text, a.lang, locale), forPage(b.text, b.lang, locale)],
-  }
+  return { id, arena: arena.slug, prompt: forPage(a.prompt, a.lang, locale), answers }
 }
 
 export type RevealedModel = { name: string; org: string }

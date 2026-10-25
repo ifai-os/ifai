@@ -13,6 +13,10 @@ export function rankingsLaunched(phase: Phase = sitePhase): boolean {
 export const arenaStatuses = ['draft', 'published'] as const
 export type ArenaStatus = (typeof arenaStatuses)[number]
 
+/** What an arena's answers are: text, or one picture each (「图像生成赛道」). */
+export const arenaKinds = ['text', 'image'] as const
+export type ArenaKind = (typeof arenaKinds)[number]
+
 /** 备赛 (answers only), 参赛 (in battles and rankings), 退役 (neither; its votes stay). */
 export const modelStatuses = ['draft', 'active', 'retired'] as const
 export type ModelStatus = (typeof modelStatuses)[number]
