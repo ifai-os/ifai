@@ -27,7 +27,7 @@ pnpm dev                 # http://localhost:3000
 3. 在 Connect 面板选分支，复制**带连接池**的连接串（主机名里有 `-pooler`）：
    - `dev` 分支 → 本地 `.env` 的 `DATABASE_URI`
    - `main` 分支 → Vercel Production 环境的 `DATABASE_URI`
-4. 预览库不用手动建：每个 PR 由 GitHub Actions 从 `main` 分支复制出 `preview/pr-<编号>`，PR 关闭后删除（见第 3 步）。`main` 的预览用一个长期分支 `preview/main`：第一次部署时复制出来，之后每次合并只跑迁移，里面的数据一直留着。免费版每个项目最多 10 个分支，同时开着的 PR 别太多；关掉的 PR 如果分支没删掉（例如那次运行失败了），下一次合并进 `main` 或关闭别的 PR 时，Deploy 会把所有 PR 已关闭的 `preview/pr-<编号>` 一并删掉；急着腾名额也可以在 Neon 控制台 → Branches 里手动删。
+4. 预览库不用手动建：每个 PR 由 GitHub Actions 从 `main` 分支复制出 `preview/pr-<编号>`，PR 关闭后删除（见第 3 步）。`main` 的预览用一个长期分支 `preview/main`：第一次部署时复制出来，之后每次合并只跑迁移，里面的数据一直留着。免费版每个项目最多 10 个分支，同时开着的 PR 别太多；关掉的 PR 如果分支没删掉（例如那次运行失败了），Deploy 每次运行（开 PR、推提交、合并、关闭）都会先把所有 PR 已关闭的 `preview/pr-<编号>` 删掉，再建新分支；急着腾名额也可以在 Neon 控制台 → Branches 里手动删。
 5. pgvector 不用手动开：迁移 `model_receipts_pgvector` 会执行 `CREATE EXTENSION IF NOT EXISTS vector`（Neon 支持）。
 
 ## 3. Vercel（部署与预览环境）

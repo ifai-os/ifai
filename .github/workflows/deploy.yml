@@ -7,8 +7,8 @@ name: Deploy
 #                   PRODUCTION_DEPLOY is true
 #   pull request  → preview deployment with its own Neon branch, then the smoke tests against it; the
 #                   branch is copied again first if it has applied a migration the PR no longer has
-#   PR closed     → the PR's Neon branch is deleted; this and every push to main also delete the
-#                   branches of any other closed PRs left behind
+#   PR closed     → the PR's Neon branch is deleted
+#   every run     → first deletes the Neon branches of any other closed PRs left behind
 # Secrets (repository → Settings → Secrets and variables → Actions), see docs/setup.md step 3:
 # VERCEL_TOKEN, NEON_API_KEY, NEON_PROJECT_ID and, if previews are protected, VERCEL_AUTOMATION_BYPASS_SECRET.
 on:
@@ -88,7 +88,7 @@ jobs:
 
   deploy:
     name: Deploy to ${{ matrix.label }}
-    needs: config
+    needs: [config, prune]
     if: needs.config.outputs.targets != '[]'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -291,13 +291,14 @@ jobs:
 
   # The branch limit is small (10 on Neon's free plan), and a branch left behind by a failed cleanup
   # run, or by a PR closed before the secrets existed, keeps its slot until someone deletes it by hand.
-  # So every merge to main and every closed PR also deletes the preview/pr-<n> branches whose pull
-  # request is no longer open. Only names of exactly that form: preview/main and production never match.
+  # So every run first deletes the preview/pr-<n> branches whose pull request is no longer open, and
+  # the deploy job waits for it: a new PR's branch then finds a free slot. Only names of exactly that
+  # form: preview/main and production never match. A failure here never holds up a deployment.
   prune:
     name: Delete Neon branches of closed PRs
-    if: github.event_name == 'push' || github.event.action == 'closed'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    continue-on-error: true
     permissions:
       pull-requests: read
     env:
