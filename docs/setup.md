@@ -37,7 +37,7 @@ pnpm dev                 # http://localhost:3000
 - 推送到 `main`（合并 PR）→ 部署 `main` 的预览：连长期的 Neon 分支 `preview/main`（构建前先跑迁移），部署完把固定地址 `https://ifai-preview-ifai1.vercel.app` 指向这次部署，所以这个地址总是 `main` 最新的样子。打开 `PRODUCTION_DEPLOY` 之后（见第 3 条）同时部署生产环境。
 - 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
 - PR 关闭或合并 → 删掉它的 Neon 分支。
-- 想给预览加示例数据：Actions → **Seed preview** → Run workflow（手动运行）。PR 编号留空时往 `main` 的预览（`preview/main`）写 `main` 的示例；填了编号就往那个 PR 的预览（`preview/pr-<编号>`）写这个 PR 最新提交里的示例，只接受本仓库开着的 PR，分支还没建（预览还没部署过）就报错，不会新建。写入的是和 CI 冒烟测试一样的示例新闻、应用和 Skill，写完清掉 Vercel 的数据缓存，页面马上就能看到。可以重复运行，只覆盖示例本身，不动别的数据。预览没配 R2，示例新闻没有配图（视频照常能播），示例 Skill 的 Zip 也下载不了。这个 workflow 合并进 `main` 之前，要在「Use workflow from」里选带它的分支才会出现 PR 编号这一栏。
+- 想给预览加示例数据：Actions → **Seed preview** → Run workflow（手动运行）。PR 编号留空时往 `main` 的预览（`preview/main`）写 `main` 的示例；填了编号就往那个 PR 的预览（`preview/pr-<编号>`）写这个 PR 最新提交里的示例，只接受本仓库开着的 PR，分支还没建（预览还没部署过）就报错，不会新建。写入的是和 CI 冒烟测试一样的示例新闻、应用和 Skill，写完清掉 Vercel 的数据缓存，页面马上就能看到。可以重复运行，只覆盖示例本身，不动别的数据。示例的图片和 Skill 的 Zip 上传到预览专用的存储桶 `ifai-media-preview`（Vercel 的 Preview 环境也用它），密钥是仓库的 Secrets `R2_PREVIEW_ACCESS_KEY_ID`、`R2_PREVIEW_SECRET_ACCESS_KEY`，令牌只能读写这一个桶；Account ID 和桶名写在 workflow 里，可以用仓库变量 `R2_PREVIEW_ACCOUNT_ID`、`R2_PREVIEW_BUCKET` 覆盖。没有这两个 Secrets 时示例新闻没有配图（视频照常能播），示例 Skill 的 Zip 也下载不了。注意：填 PR 编号时跑的是那个 PR 自己的脚本，它能拿到这把预览桶的密钥，所以只接受本仓库的 PR。这个 workflow 合并进 `main` 之前，要在「Use workflow from」里选带它的分支才会出现 PR 编号这一栏。
 
 1. Vercel 项目已经建好：团队 `ifai1` 下的 `ifai`，没有连接 Git。不要再导入仓库，也不要在 Vercel 里装 Neon 集成（预览库由 GitHub Actions 建，见下面第 3 条）。
 2. 构建命令写在 `vercel.json`：`pnpm run ci`，即先执行数据库迁移、再构建。构建在 GitHub Actions 的机器上跑，所以迁移也是从那里连 Neon 执行的：生产连 `main` 分支，PR 的预览连自己的 `preview/pr-<编号>` 分支，`main` 的预览连 `preview/main`，都不会碰生产库。

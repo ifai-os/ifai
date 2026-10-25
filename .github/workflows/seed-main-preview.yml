@@ -120,10 +120,17 @@ jobs:
       # Stories first, so the apps seed matches the stories that mention the sample apps, and the stories
       # again after the apps, for scripts that look the apps up. SEED_PREVIEW_MAIN lets the scripts write
       # to this one remote database (scripts/seed-target.ts); every branch's scripts know that name.
+      # The R2 keys are the previews' own bucket (ifai-media-preview, the same one Vercel's Preview
+      # environment uses), scoped to that bucket only: with them the stories' pictures and the Skills'
+      # Zips go where the preview can serve them. Without the secrets the stories go without pictures.
       - name: Sample stories, apps and Skills
         env:
           DATABASE_URI: ${{ steps.neon.outputs.database_url }}
           SEED_PREVIEW_MAIN: '1'
+          R2_ACCOUNT_ID: ${{ vars.R2_PREVIEW_ACCOUNT_ID || '05f6e90691fbf6502bca3aac98222374' }}
+          R2_BUCKET: ${{ vars.R2_PREVIEW_BUCKET || 'ifai-media-preview' }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_PREVIEW_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_PREVIEW_SECRET_ACCESS_KEY }}
         run: |
           pnpm payload run scripts/seed-stories.ts
           pnpm payload run scripts/seed-apps.ts
