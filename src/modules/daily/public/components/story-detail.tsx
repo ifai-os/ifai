@@ -10,6 +10,8 @@ import { SaveProvider } from '@/modules/saves/components/save-provider'
 
 import type { StoryDetail } from '../story-item'
 import { listHref, storyHref } from '../list-params'
+import { StoryFigure } from './story-media'
+import { EntityList, SimilarStories, TagList, TopicTrack } from './story-related'
 
 function hostOf(url: string): string {
   try {
@@ -21,7 +23,9 @@ function hostOf(url: string): string {
 
 /**
  * A story's page (「IFAI 资讯详情页 · v1」board): title and times, summary, try-it, sources, save
- * and share, other developments. The page stays static; the save state is read in the browser.
+ * and share, the topic's timeline and similar events; beside them the industry tags, other
+ * developments and the companies and products. The page stays static; the save state is read in
+ * the browser.
  */
 export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn: AuthProviders }) {
   const t = useTranslations('daily')
@@ -76,6 +80,8 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
             </p>
           )}
 
+          <StoryFigure story={story} />
+
           {story.tryIt && (
             <section aria-labelledby="try-it" className="flex flex-col gap-1.5 rounded-card bg-surface px-5 py-4">
               <h2 id="try-it" className="text-ui font-semibold text-accent-ink">
@@ -96,8 +102,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
           {story.sources.length > 0 && (
             <section aria-labelledby="sources" className="flex flex-col gap-2">
               <h2 id="sources" className="text-h3 font-semibold">
-                {t('sources')}{' '}
-                <span className="font-normal text-ink-4">({story.sources.length})</span>
+                {t('sources')} <span className="font-normal text-ink-4">({story.sources.length})</span>
               </h2>
               <ol className="flex flex-col">
                 {story.sources.map((source, index) => (
@@ -130,27 +135,42 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
               labels={{ share: t('share'), copied: t('copied') }}
             />
           </div>
+
+          {story.topic && (
+            <div className="mt-6">
+              <TopicTrack topic={story.topic} currentId={story.id} />
+            </div>
+          )}
+          {story.similar.length > 0 && (
+            <div className="mt-6">
+              <SimilarStories stories={story.similar} />
+            </div>
+          )}
         </article>
 
-        {story.developments.length > 0 && (
-          <aside className="w-full md:w-80 md:flex-none">
-            <section aria-labelledby="developments" className="flex flex-col gap-2 rounded-card border border-surface-2 bg-surface p-5">
-              <h2 id="developments" className="text-ui font-semibold text-ink-4">
-                {t('developments')}
-              </h2>
-              <ol className="flex flex-col">
-                {story.developments.map((other) => (
-                  <li key={other.id} className="border-t border-line py-3">
-                    <Link href={storyHref(other.slug)} className="flex flex-col gap-1">
-                      <LocalTime iso={other.publishedAt} style="date" className="text-small text-ink-4" />
-                      <span lang={other.title.lang} className="text-ui font-medium hover:text-accent-ink">
-                        {other.title.value}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ol>
-            </section>
+        {(story.tags.length > 0 || story.developments.length > 0 || story.entities.length > 0) && (
+          <aside className="flex w-full flex-col gap-6 md:w-80 md:flex-none">
+            {story.tags.length > 0 && <TagList tags={story.tags} />}
+            {story.developments.length > 0 && (
+              <section aria-labelledby="developments" className="flex flex-col gap-2 rounded-card border border-surface-2 bg-surface p-5">
+                <h2 id="developments" className="text-ui font-semibold text-ink-4">
+                  {t('developments')}
+                </h2>
+                <ol className="flex flex-col">
+                  {story.developments.map((other) => (
+                    <li key={other.id} className="border-t border-line py-3">
+                      <Link href={storyHref(other.slug)} className="flex flex-col gap-1">
+                        <LocalTime iso={other.publishedAt} style="date" className="text-small text-ink-4" />
+                        <span lang={other.title.lang} className="text-ui font-medium hover:text-accent-ink">
+                          {other.title.value}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+            {story.entities.length > 0 && <EntityList entities={story.entities} />}
           </aside>
         )}
       </div>

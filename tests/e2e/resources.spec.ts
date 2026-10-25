@@ -199,6 +199,8 @@ test.describe('with the sample Skills', () => {
   })
 
   test('a Skill’s page shows its skeleton while it comes in over a slow connection', async ({ page, context }) => {
+    // As when the reader clicks before the list has prefetched the Skill.
+    await page.route(/\/en\/resources\/skills\/[^/?]+\?_rsc=/, (route) => (route.request().headers()['next-router-prefetch'] ? route.abort() : route.fallback()))
     await page.goto('/en/resources', { waitUntil: 'networkidle' })
     const cdp = await context.newCDPSession(page)
     await cdp.send('Network.enable')
@@ -209,6 +211,17 @@ test.describe('with the sample Skills', () => {
     await expect(skeleton).toBeVisible()
     await expect(page.getByRole('heading', { level: 1, name: 'Release Notes Writer' })).toBeVisible({ timeout: 20_000 })
     await expect(skeleton).toHaveCount(0)
+  })
+
+  test('the Skills the list shows are prefetched, so they open without waiting on the server', async ({ page }) => {
+    await page.goto('/en/resources', { waitUntil: 'networkidle' })
+    const fetched: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('_rsc=') && !request.headers()['next-router-prefetch']) fetched.push(new URL(request.url()).pathname)
+    })
+    await page.getByRole('main').getByRole('article').getByRole('link', { name: 'Release Notes Writer' }).first().click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Release Notes Writer' })).toBeVisible()
+    expect(fetched).toEqual([])
   })
 
   test('the detail page installs the current version', async ({ page }) => {

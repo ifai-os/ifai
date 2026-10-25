@@ -6,7 +6,7 @@ import { Link } from '@/i18n/navigation'
 import type { SkillListItem } from '../data'
 import { skillHref, skillsHref } from '../list-params'
 import { ApiKeyBadge, ScanBadgeView } from './badges'
-import { ListLink } from './list-navigation'
+import { ListLink } from '@/components/states/list-navigation'
 import { SkillTile } from './skill-tile'
 
 /**

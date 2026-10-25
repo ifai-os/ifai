@@ -48,7 +48,13 @@ describe('classes that break in dark mode', () => {
 
   it('floats menus and dialogs on overlay, not bg', () => {
     expect(
-      offending((line) => /(?<![\w-])shadow-float(?![\w-])/.test(line) && /(?<![\w:-])bg-bg(?![\w-])/.test(line) && !line.includes('rounded-card')),
+      // Menus and popovers are absolute, toasts fixed, dialogs have a backdrop; cards in the flow keep bg.
+      offending(
+        (line) =>
+          /(?<![\w-])shadow-float(?![\w-])/.test(line) &&
+          /(?<![\w:-])bg-bg(?![\w-])/.test(line) &&
+          /(?<![\w:-])(absolute|fixed)(?![\w-])|backdrop:/.test(line),
+      ),
     ).toEqual([])
   })
 })

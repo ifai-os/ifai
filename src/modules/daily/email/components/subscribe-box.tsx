@@ -17,13 +17,14 @@ import { isEmailAddress, normalizeEmail, suggestEmail, type EmailSuggestion } fr
 export type SubscribeBoxVariant = 'column' | 'card' | 'band'
 
 const looks: Record<SubscribeBoxVariant, { box: string; text: string; title: string; note: string; form: string; row: string; input: string; idle: string; button: string }> = {
+  // The board stacks title, note, address and button 12 apart.
   column: {
     box: 'flex flex-col gap-3 rounded-hero border border-surface-2 bg-surface p-5',
-    text: 'flex flex-col gap-1',
+    text: 'flex flex-col gap-3',
     title: 'text-body font-medium',
-    note: 'text-small text-ink-4',
+    note: 'text-small leading-4.75 text-ink-4',
     form: 'flex flex-col gap-2',
-    row: 'flex flex-col gap-2',
+    row: 'flex flex-col gap-3',
     input: 'h-10 w-full rounded-pill border bg-bg px-3.5 text-meta',
     idle: 'border-line',
     button: 'h-9 rounded-pill bg-ink px-4 text-meta font-medium text-bg',

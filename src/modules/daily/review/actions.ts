@@ -13,10 +13,12 @@ import { getDb } from '@/lib/db/drizzle'
 
 import { storyCategories } from '../categories'
 import { refreshHeat } from '../heat/heat'
+import { parseVideo, storyMediaKinds, videoUrl } from '../media'
 import { syncEventSources } from '../heat/sources'
 import { sourceRoles } from '../story-fields'
 import { assistPrompt, cleanSuggestion, type AssistKind } from '../prompts/assist'
 import { rewritePrompt } from '../prompts/rewrite'
+import { publishTime } from '../publish-time'
 import { verifyWriting } from '../write/verify'
 import { loadReports, materialOf } from '../write/write'
 import { refreshDailyCache } from './cache'
@@ -88,6 +90,13 @@ const editsSchema = z.object({
       }),
     )
     .max(30),
+  media: z
+    .object({
+      kind: z.enum(storyMediaKinds),
+      videoUrl: z.string().trim().max(2000).default(''),
+      credit: z.string().trim().max(120).default(''),
+    })
+    .optional(),
 })
 
 /** Validates the editor's changes; nothing (undefined) means "no changes sent". */
@@ -95,7 +104,11 @@ export function parseEdits(value: unknown): Edits | undefined {
   if (value === undefined || value === null) return undefined
   const parsed = editsSchema.safeParse(value)
   if (!parsed.success) throw new ReviewError('bad_request', 400, { issues: parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`) })
-  return parsed.data
+  const media = parsed.data.media ?? { kind: 'none', videoUrl: '', credit: '' }
+  if (media.kind === 'video' && !parseVideo(media.videoUrl)) {
+    throw new ReviewError('bad_request', 400, { issues: ['media.videoUrl: not a YouTube, Vimeo, .mp4 or .webm address'] })
+  }
+  return { ...parsed.data, media }
 }
 
 async function mustLoad(payload: Payload, id: number): Promise<StoryAll> {
@@ -120,11 +133,16 @@ export async function saveEdits(id: number, edits: Edits | undefined): Promise<v
   const reports = await loadReports(story.representativeItemId, story.eventId)
   const hans = { title: edits.title, summary: edits.summary, tryIt: edits.tryIt }
   const verification = reports ? verifyWriting(allTexts(story, hans), materialOf(reports.prompt)) : asVerification(story.verification)
+  const video = edits.media.kind === 'video' ? parseVideo(edits.media.videoUrl) : null
+  // A picture story without its picture has nothing to show: keep it as no media.
+  const kind = edits.media.kind === 'image' && !story.media?.image ? 'none' : edits.media.kind
+  const image = typeof story.media?.image === 'object' ? (story.media?.image?.id ?? null) : (story.media?.image ?? null)
+  const media = { kind, image, videoUrl: video ? videoUrl(video) : null, credit: edits.media.credit || null }
   await payload.update({
     collection: 'stories',
     id,
     locale: 'zh-Hans',
-    data: { ...hans, category: edits.category, sources: edits.sources, verification },
+    data: { ...hans, category: edits.category, sources: edits.sources, media, verification },
   })
 }
 
@@ -191,7 +209,9 @@ async function rewriteOrFail(id: number, deps: ReviewDeps): Promise<void> {
 
 /**
  * 通过并发布: save the edits, make sure the other languages match the simplified Chinese
- * (rewriting the stale ones), then publish. The publish time is the approval time.
+ * (rewriting the stale ones), then publish. The publish time is the news source's (the one the
+ * story has, else its sources'; ../publish-time.ts); the approval time is kept beside it, the
+ * first one when a withdrawn story goes back up.
  */
 export async function publishStory(id: number, edits: Edits | undefined, deps: ReviewDeps = {}): Promise<ReviewDetail> {
   const { payload, db } = await getDb()
@@ -203,7 +223,12 @@ export async function publishStory(id: number, edits: Edits | undefined, deps: R
   if (duplicate) throw new ReviewError('duplicate_open', 409, { duplicate })
   checkLengths(story)
   await rewriteOrFail(id, deps)
-  await patch(payload, id, { status: 'published', publishedAt: now.toISOString(), laterAt: null })
+  await patch(payload, id, {
+    status: 'published',
+    publishedAt: publishTime(story, now),
+    approvedAt: story.approvedAt ?? now.toISOString(),
+    laterAt: null,
+  })
   await (deps.refresh ?? refreshDailyCache)()
   return (await loadReviewDetail(id, now))!
 }

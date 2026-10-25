@@ -85,6 +85,9 @@
   --text-display: 40px;
   --text-display--line-height: 1.25;
   --text-display--font-weight: 600;
+  --text-display-phone: 28px; /* the category pages' banner title on phones; 「头条」's title (line height 1.4 there) */
+  --text-display-phone--line-height: 1.25;
+  --text-display-phone--font-weight: 600;
   --text-h1-article: 38px;
   --text-h1-article--line-height: 1.4;
   --text-h1-article--font-weight: 600;

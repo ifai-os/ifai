@@ -1,31 +1,41 @@
-name: Seed main preview
+name: Seed preview
 
-# Fills main's preview (https://ifai-preview-ifai1.vercel.app, see deploy.yml) with the sample
-# stories, apps and Skills that CI's smoke tests use, so its pages have something to show.
-# Run it by hand: Actions → Seed main preview → Run workflow. Safe to run again: the scripts
-# overwrite their own samples and leave everything else alone.
-# It writes only to the Neon branch preview/main. It never creates that branch (deploy.yml does,
-# when it deploys main) and never connects to production.
+# Fills a preview with the sample stories, apps and Skills that CI's smoke tests use, so its pages
+# have something to show. Run it by hand: Actions → Seed preview → Run workflow.
+#   no PR number → main's preview (https://ifai-preview-ifai1.vercel.app, see deploy.yml): main's
+#                  samples into the Neon branch preview/main
+#   PR number    → that pull request's preview: the samples of its latest commit into its Neon
+#                  branch preview/pr-<number>; only for open pull requests from this repository
+# Safe to run again: the scripts overwrite their own samples and leave everything else alone.
+# It writes only to that one Neon branch. It never creates a branch (deploy.yml does, when it
+# deploys main or the pull request) and never connects to production.
 on:
   workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number (empty for main's preview)
+        required: false
+        type: string
+
+run-name: "Seed ${{ inputs.pr && format('PR #{0}', inputs.pr) || 'main' }} preview"
 
 concurrency:
-  group: seed-main-preview
+  group: seed-preview-${{ inputs.pr || 'main' }}
   cancel-in-progress: false
 
 permissions:
   contents: read
+  pull-requests: read
 
 env:
   # Same project as deploy.yml; repository variables override them there too.
   VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID || 'team_5ej7Y4L2sAmq0AqIlyXG4sHI' }}
   VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID || 'prj_75LhQzJ83dQTRSSvmxhosJkobFGh' }}
   VERCEL_CLI: vercel@63.1.2
-  NEON_BRANCH: preview/main
 
 jobs:
   seed:
-    name: Seed main preview
+    name: "Seed ${{ inputs.pr && format('PR #{0}', inputs.pr) || 'main' }} preview"
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -33,33 +43,70 @@ jobs:
       PAYLOAD_SECRET: seed-only-payload-secret-not-used-anywhere-else
       BETTER_AUTH_SECRET: seed-only-better-auth-secret-not-used-anywhere-else
       NEXT_TELEMETRY_DISABLED: '1'
+      PR: ${{ inputs.pr }}
 
     steps:
-      # The samples go with main's code and schema, whichever branch the run was started from.
-      - uses: actions/checkout@v5
-        with:
-          ref: main
+      # The samples go with the preview's own code and schema: main's, or the pull request's latest
+      # commit (what deploy.yml deployed). Not a fork's: its code would run here with database access.
+      - name: Pick the preview
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$PR" ]; then
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+            echo "neon_branch=preview/main" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! [[ "$PR" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::\"$PR\" is not a pull request number."
+            exit 1
+          fi
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR")
+          if [ "$(jq -r .state <<<"$pr")" != open ]; then
+            echo "::error::PR #$PR is closed: deploy.yml has deleted its Neon branch."
+            exit 1
+          fi
+          if [ "$(jq -r .head.repo.full_name <<<"$pr")" != "$GITHUB_REPOSITORY" ]; then
+            echo "::error::PR #$PR comes from another repository, so its scripts don't run here."
+            exit 1
+          fi
+          sha=$(jq -r .head.sha <<<"$pr")
+          echo "ref=$sha" >> "$GITHUB_OUTPUT"
+          echo "neon_branch=preview/pr-$PR" >> "$GITHUB_OUTPUT"
+          echo "PR #$PR at $sha" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Check that ${{ env.NEON_BRANCH }} exists
+      # Looked up, never created: if the branch is missing, the preview has not been deployed yet.
+      - name: Connect to ${{ steps.target.outputs.neon_branch }}
+        id: neon
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          NEON_BRANCH: ${{ steps.target.outputs.neon_branch }}
         run: |
-          branches=$(curl -fsS -H "Authorization: Bearer $NEON_API_KEY" -H 'Accept: application/json' \
-            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
-          if ! jq -e --arg name "$NEON_BRANCH" 'any(.branches[]; .name == $name)' <<<"$branches" >/dev/null; then
-            echo "::error::Neon branch $NEON_BRANCH does not exist yet. deploy.yml creates it the next time main is deployed."
+          neon() {
+            curl -fsS -H "Authorization: Bearer $NEON_API_KEY" -H 'Accept: application/json' \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/$1"
+          }
+          branch=$(neon branches | jq -r --arg name "$NEON_BRANCH" 'first(.branches[] | select(.name == $name) | .id) // empty')
+          if [ -z "$branch" ]; then
+            echo "::error::Neon branch $NEON_BRANCH does not exist yet. deploy.yml creates it when it deploys that preview."
             exit 1
           fi
+          # The database, role and pooled host the preview itself uses (create-branch-action's defaults in deploy.yml).
+          url=$(neon "connection_uri?branch_id=$branch&database_name=neondb&role_name=neondb_owner&pooled=true" | jq -r '.uri // empty')
+          if [ -z "$url" ]; then
+            echo "::error::Neon gave no connection string for $NEON_BRANCH."
+            exit 1
+          fi
+          echo "::add-mask::$url"
+          echo "::add-mask::$(sed -E 's|^[^:]+://[^:]+:([^@]+)@.*$|\1|' <<<"$url")"
+          echo "database_url=$url" >> "$GITHUB_OUTPUT"
 
-      # The branch exists, so this only looks up its connection string.
-      - name: Connect to ${{ env.NEON_BRANCH }}
-        id: neon
-        uses: neondatabase/create-branch-action@v6
+      - uses: actions/checkout@v5
         with:
-          project_id: ${{ secrets.NEON_PROJECT_ID }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-          branch_name: ${{ env.NEON_BRANCH }}
+          ref: ${{ steps.target.outputs.ref }}
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
@@ -70,20 +117,29 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Same order as CI: stories first, so the apps seed matches the stories that mention the sample
-      # apps. SEED_PREVIEW_MAIN lets the scripts write to this one remote database (scripts/seed-target.ts).
+      # Stories first, so the apps seed matches the stories that mention the sample apps, and the stories
+      # again after the apps, for scripts that look the apps up. SEED_PREVIEW_MAIN lets the scripts write
+      # to this one remote database (scripts/seed-target.ts); every branch's scripts know that name.
       - name: Sample stories, apps and Skills
         env:
-          DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
+          DATABASE_URI: ${{ steps.neon.outputs.database_url }}
           SEED_PREVIEW_MAIN: '1'
         run: |
           pnpm payload run scripts/seed-stories.ts
           pnpm payload run scripts/seed-apps.ts
+          pnpm payload run scripts/seed-stories.ts
           pnpm payload run scripts/seed-skills.ts
 
-      # Pages keep what they read for up to an hour, and the samples were written from here, so the
-      # site never heard about them. Clearing Vercel's data cache makes them show up right away.
-      # (It is the whole project's cache: harmless, it refills on the next visits.)
+  # Pages keep what they read for up to an hour, and the samples were written from here, so the site
+  # never heard about them. Clearing Vercel's data cache makes them show up right away. (It is the whole
+  # project's cache: harmless, it refills on the next visits.) A machine of its own, so nothing a pull
+  # request's scripts did above can get at the Vercel token.
+  purge:
+    name: Clear Vercel's data cache
+    needs: seed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
       - name: Clear Vercel's data cache
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
