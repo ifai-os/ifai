@@ -21,6 +21,7 @@
     "signIn": "Sign in",
     "account": "Account menu",
     "saves": "Saved",
+    "following": "Following",
     "mine": "Your content",
     "submissions": "My submissions",
     "accountPage": "Account settings",
@@ -145,7 +146,7 @@
       "sections": {
         "collect": {
           "title": "What we collect",
-          "body": "When you sign in:\n- Your email address, name and profile picture. If you sign in with Google or GitHub, they give us these; with an email link, we only have your email.\n- Your interface language.\n- Sign-in sessions, with the IP address and browser they came from, so you stay signed in and we can spot misuse.\n\nWhat you add yourself:\n- Reviews of apps. They are public and show your account name.\n- Saves. Only you can see them.\n- Problem reports about an app, with an optional way to contact you.\n- App and Skill submissions, with the contact email you give.\n\nIf you subscribe to the Daily by email: your email address, language and time zone, and whether each email was delivered, bounced or marked as spam.\n\nWhen anyone visits: to count clicks and installs and to limit abuse, we combine your IP address and browser into a one-way code that changes every day. We do not store the IP address itself, and codes from different days cannot be linked to each other. Our hosting provider also keeps short-lived technical logs."
+          "body": "When you sign in:\n- Your email address, name and profile picture. If you sign in with Google or GitHub, they give us these; with an email link, we only have your email.\n- Your interface language.\n- Sign-in sessions, with the IP address and browser they came from, so you stay signed in and we can spot misuse.\n\nWhat you add yourself:\n- Reviews of apps. They are public and show your account name.\n- Saves. Only you can see them.\n- The industry tags, companies and products you follow. Only you can see them; topic pages show only how many people follow.\n- Problem reports about an app, with an optional way to contact you.\n- App and Skill submissions, with the contact email you give.\n\nIf you subscribe to the Daily by email: your email address, language and time zone, and whether each email was delivered, bounced or marked as spam.\n\nWhen anyone visits: to count clicks and installs and to limit abuse, we combine your IP address and browser into a one-way code that changes every day. We do not store the IP address itself, and codes from different days cannot be linked to each other. Our hosting provider also keeps short-lived technical logs."
         },
         "cookies": {
           "title": "Cookies",
@@ -153,7 +154,7 @@
         },
         "use": {
           "title": "How we use it",
-          "body": "- To run the site: sign you in, show your saves and reviews, and remember your settings.\n- To send email you asked for: sign-in links, the Daily, and the outcome of your submissions.\n- To rank apps and Skills by clicks, saves and installs.\n- To keep the site safe: rate limits, spam and abuse checks, and handling reports.\n- To translate reviews into other languages with a machine translation model, marked as machine translated.\n\nWe do not sell your information and do not use it for advertising."
+          "body": "- To run the site: sign you in, show your saves, follows and reviews, and remember your settings.\n- To send email you asked for: sign-in links, the Daily, and the outcome of your submissions.\n- To rank apps and Skills by clicks, saves and installs.\n- To keep the site safe: rate limits, spam and abuse checks, and handling reports.\n- To translate reviews into other languages with a machine translation model, marked as machine translated.\n\nWe do not sell your information and do not use it for advertising."
         },
         "share": {
           "title": "Who processes it",
@@ -165,7 +166,7 @@
         },
         "choices": {
           "title": "Your choices",
-          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews and remove saves at any time.\n- You can download a copy of your data as a JSON file: sign in and open Account from the account menu. It includes your account details, sign-ins, saves, reviews, reports and submissions, and the Daily email subscription of your sign-in email if it has one.\n- On the same page you can delete your account yourself. Your saves, reviews, reports and submissions are deleted with it.\n- You can ask us to show you, correct or delete the information we hold about you by writing to {email}, and to delete your account if you can't sign in. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
+          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews, remove saves and unfollow at any time.\n- You can download a copy of your data as a JSON file: sign in and open Account from the account menu. It includes your account details, sign-ins, saves, follows, reviews, reports and submissions, and the Daily email subscription of your sign-in email if it has one.\n- On the same page you can delete your account yourself. Your saves, follows, reviews, reports and submissions are deleted with it.\n- You can ask us to show you, correct or delete the information we hold about you by writing to {email}, and to delete your account if you can't sign in. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
         },
         "children": {
           "title": "Children",
@@ -714,6 +715,34 @@
     "removeName": "Remove {name}",
     "failed": "Couldn't remove it. Try again."
   },
+  "follows": {
+    "follow": "Follow",
+    "following": "Following",
+    "followTopic": "Follow topic",
+    "followingTopic": "Following topic",
+    "followName": "Follow {name}",
+    "followingName": "Following {name}",
+    "count": "{count, plural, one {# follower} other {# followers}}",
+    "tagsNote": "Follow to see news in the same field",
+    "followedNote": "Following. When there's news about {name}, you'll find it under <link>Following</link>.",
+    "signInTitle": "Sign in to follow",
+    "afterSignIn": "Once you're signed in, you'll be following it.",
+    "tooMany": "You can follow up to {max}. Unfollow some first, then follow new ones.",
+    "followFailed": "Couldn't follow it. Try again.",
+    "unfollowFailed": "Couldn't unfollow it. Try again.",
+    "title": "Following",
+    "description": "News about the industry tags, companies and products you follow.",
+    "signInBody": "Sign in to see news about the industry tags, companies and products you follow.",
+    "emptyTitle": "Not following anything yet",
+    "emptyBody": "Follow industry tags, companies or products on a story's page, and their news will show up here",
+    "browseDaily": "Read the Daily",
+    "followed": "You follow",
+    "tags": "Industry tags",
+    "topics": "Companies and products",
+    "removeName": "Unfollow {name}",
+    "noStoriesTitle": "No news yet",
+    "noStoriesBody": "When the tags, companies and products you follow are in the news, it will show up here"
+  },
   "account": {
     "title": "Settings",
     "description": "Your IFAI settings: nickname, sign-in methods and devices, emails, language, and your data.",
@@ -774,7 +803,7 @@
     "languageLabel": "Interface language",
     "languageNote": "The daily email has its own language, set in the daily email subscription.",
     "exportTitle": "Download your data",
-    "exportBody": "A JSON file with what IFAI keeps about this account: account details, sign-ins, saves, reviews, reports, and the apps and Skills you submitted. If your sign-in email has subscribed to the daily email, it also includes the subscription settings and a record of each email sent.",
+    "exportBody": "A JSON file with what IFAI keeps about this account: account details, sign-ins, saves, follows, reviews, reports, and the apps and Skills you submitted. If your sign-in email has subscribed to the daily email, it also includes the subscription settings and a record of each email sent.",
     "exportButton": "Download my data",
     "exporting": "Preparing…",
     "exported": "Downloaded {file}",
@@ -782,7 +811,7 @@
     "exportSignedOut": "You've been signed out. Reload the page and sign in again, then download your data.",
     "exportAbout": "The data IFAI keeps about the account {email}, exported at {time}. The privacy policy explains what each part is: {url}",
     "deleteTitle": "Delete account",
-    "deleteBody": "Deleting your account also deletes your saves, the app reviews you wrote, the reports you sent, and the apps and Skills you submitted. This can't be undone. Apps and Skills already listed on IFAI stay.",
+    "deleteBody": "Deleting your account also deletes your saves, what you follow, the app reviews you wrote, the reports you sent, and the apps and Skills you submitted. This can't be undone. Apps and Skills already listed on IFAI stay.",
     "deleteKeeps": "The daily email is separate from your account, so deleting it doesn't unsubscribe you. To stop the emails, use the unsubscribe link at the bottom of any email.",
     "deleteButton": "Delete account",
     "confirmTitle": "Delete your account for good?",
@@ -1031,7 +1060,6 @@
     "similar": "Similar events",
     "similarNote": "Past happenings like this one, for context.",
     "tags": "Industry tags",
-    "tagsNote": "See news in the same field",
     "entities": "Companies and products",
     "entityKinds": {
       "company": "Company",

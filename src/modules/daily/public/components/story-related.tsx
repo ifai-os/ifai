@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 import { Icon } from '@/components/icon'
 import { LocalTime } from '@/components/local-time'
 import { Link } from '@/i18n/navigation'
+import { FollowButton } from '@/modules/follows/components/follow-button'
 
 import type { StoryTag } from '../../tags'
 import type { StoryEntityItem, StoryItem, StoryTopic } from '../story-item'
@@ -14,8 +15,8 @@ const topicFirst = 5
 
 /**
  * The story page's related blocks (「IFAI 资讯详情页 · v1」board; docs/specs/daily.md
- * 「详情页：行业标签、公司与产品、话题追踪、同类事件」). Following tags, companies and topics is
- * not built yet, so the board's「关注」buttons are left out.
+ * 「详情页：行业标签、公司与产品、话题追踪、同类事件」). Their follow buttons (「关注」) need the
+ * page's FollowProvider around them.
  */
 
 /**「话题追踪」: stories about the same product or company as a timeline, newest first, this one marked. */
@@ -53,13 +54,16 @@ export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId:
 
   return (
     <section aria-labelledby="topic" className="flex flex-col gap-4 border-t border-line pt-8">
-      <h2 id="topic" className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-h2">
-        <Icon name="clock" size={20} className="text-accent-ink" />
-        {t('topic')}
-        <Link href={topicHref(topic.key)} className="text-body font-normal text-ink-4 hover:text-accent-ink">
-          {topic.name}
-        </Link>
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="topic" className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-h2">
+          <Icon name="clock" size={20} className="text-accent-ink" />
+          {t('topic')}
+          <Link href={topicHref(topic.key)} className="text-body font-normal text-ink-4 hover:text-accent-ink">
+            {topic.name}
+          </Link>
+        </h2>
+        <FollowButton target={{ type: 'topic', key: topic.key }} name={topic.name} look="topic" />
+      </div>
       <p className="text-meta text-ink-4">{t('topicNote')}</p>
       <ShowMoreList
         rows={rows}
@@ -100,28 +104,26 @@ export function SimilarStories({ stories }: { stories: StoryItem[] }) {
   )
 }
 
-/**「行业标签」: each links to the stories with that tag. */
+/**「行业标签」: each links to the stories with that tag, and can be followed. */
 export function TagList({ tags }: { tags: StoryTag[] }) {
   const t = useTranslations('daily')
+  const follows = useTranslations('follows')
   const names = useTranslations('tags')
   return (
     <section aria-labelledby="tags" className="flex flex-col gap-2.5">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
         <h2 id="tags" className="text-body font-semibold">
           {t('tags')}
         </h2>
-        {/* The board's note is about following, which is not built: this one says where a tag leads. */}
-        <p className="text-small text-ink-4">{t('tagsNote')}</p>
+        <p className="text-small text-ink-4">{follows('tagsNote')}</p>
       </div>
       <ul className="flex flex-col rounded-tile border border-line px-4 py-1">
         {tags.map((tag, index) => (
-          <li key={tag} className={index ? 'border-t border-surface-2' : undefined}>
-            <Link href={listHref({ tag })} className="flex min-h-11 items-center justify-between gap-2 text-ui hover:text-accent-ink">
+          <li key={tag} className={`flex min-h-11 items-center justify-between gap-2 ${index ? 'border-t border-surface-2' : ''}`}>
+            <Link href={listHref({ tag })} className="min-w-0 py-2 text-ui wrap-anywhere hover:text-accent-ink">
               {names(tag)}
-              <span aria-hidden="true" className="text-ink-4">
-                ›
-              </span>
             </Link>
+            <FollowButton target={{ type: 'tag', key: tag }} name={names(tag)} look="row" />
           </li>
         ))}
       </ul>
@@ -134,8 +136,12 @@ export function initialOf(name: string): string {
   return Array.from(name.trim())[0]?.toUpperCase() ?? ''
 }
 
-/**「涉及的公司与产品」: an initial tile, the name and its kind, leading to its topic page; an app page when the app is on the site. */
-export function EntityList({ entities }: { entities: StoryEntityItem[] }) {
+/**
+ *「涉及的公司与产品」: an initial tile, the name and its kind, leading to its topic page; an app
+ * page when the app is on the site, and a follow button, except for the topic (`topicKey`) when
+ * the topic tracker above already has one.
+ */
+export function EntityList({ entities, topicKey = null }: { entities: StoryEntityItem[]; topicKey?: string | null }) {
   const t = useTranslations('daily')
   return (
     <section aria-labelledby="entities" className="flex flex-col gap-2.5">
@@ -157,15 +163,18 @@ export function EntityList({ entities }: { entities: StoryEntityItem[] }) {
                 <span className="text-small text-ink-4">{t(`entityKinds.${entity.kind}`)}</span>
               </span>
             </Link>
-            {entity.app && (
-              <Link
-                href={`/apps/${entity.app.slug}`}
-                className="inline-flex h-8 flex-none items-center rounded-pill border border-line px-3 text-small text-ink-2 hover:border-ink-4"
-              >
-                {t('appPage')}
-                <span className="sr-only">: {entity.app.name}</span>
-              </Link>
-            )}
+            <span className="flex flex-none items-center gap-2">
+              {entity.app && (
+                <Link
+                  href={`/apps/${entity.app.slug}`}
+                  className="inline-flex h-8 flex-none items-center rounded-pill border border-line px-3 text-small text-ink-2 hover:border-ink-4"
+                >
+                  {t('appPage')}
+                  <span className="sr-only">: {entity.app.name}</span>
+                </Link>
+              )}
+              {entity.key !== topicKey && <FollowButton target={{ type: 'topic', key: entity.key }} name={entity.name} look="entity" />}
+            </span>
           </li>
         ))}
       </ul>

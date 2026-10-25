@@ -312,7 +312,7 @@ describe('a story’s page', () => {
     )
     expect(html).toContain(`href="/en/daily/tag/hardware"`)
     expect(html).toContain(`>${en.tags.hardware}`)
-    expect(html).toContain(`>${en.daily.tagsNote}<`)
+    expect(html).toContain(`>${en.follows.tagsNote}<`)
     expect(html).toContain(`>${en.daily.entityKinds.product}<`)
     expect(html).toContain('href="/en/apps/apple-intelligence"')
     expect(html).toContain('href="/en/daily/topic/apple"')
@@ -325,6 +325,25 @@ describe('a story’s page', () => {
     expect(html).toContain('Show more (2)')
     expect(html).toContain('href="/en/daily/last-year"')
     expect(html.indexOf(en.daily.topic)).toBeLessThan(html.indexOf(en.daily.similar))
+  })
+
+  it('offers to follow each tag, the topic, and the companies and products the topic tracker does not cover', () => {
+    const entities: StoryDetail['entities'] = [
+      { name: 'MacBook Pro', kind: 'product', key: 'macbookpro', app: null },
+      { name: 'Apple', kind: 'company', key: 'apple', app: null },
+    ]
+    const signIn = { google: false, github: false, email: true }
+    const topic = { name: 'MacBook Pro', key: 'macbookpro', stories: [story({ id: 20, publishedAt: '2026-10-23T09:00:00Z' })] }
+    const html = render(<StoryDetailView story={{ ...detail, tags: ['hardware'], entities, topic }} signIn={signIn} />)
+    expect(html).toMatch(/aria-pressed="false" aria-label="Follow AI hardware"[^>]*><span aria-hidden="true">\+<\/span>Follow<\/button>/)
+    expect(html).toContain(`>${en.follows.followTopic}</button>`)
+    expect(html).toContain('aria-label="Follow Apple"')
+    // The topic tracker's button follows MacBook Pro, so its row has none.
+    expect(html).not.toContain('aria-label="Follow MacBook Pro"')
+
+    const alone = render(<StoryDetailView story={{ ...detail, tags: [], entities, topic: null }} signIn={signIn} />)
+    expect(alone).toContain('aria-label="Follow MacBook Pro"')
+    expect(alone).not.toContain(en.follows.followTopic)
   })
 
   it('has a save button next to share', () => {
@@ -365,7 +384,7 @@ describe('a company’s or product’s topic page', () => {
   })
 
   it('names it, links its maker and app, and lists the stories under their times', () => {
-    const html = render(<TopicPageView topic={topic} serverToday="2026-10-22" />)
+    const html = render(<TopicPageView topic={topic} serverToday="2026-10-22" signIn={{ google: false, github: false, email: true }} />)
     expect(html).toContain('>#</span>Kimi</h1>')
     expect(html).toContain(`>${en.daily.entityKinds.product}<`)
     expect(html).toMatch(/Made by <a [^>]*href="\/en\/daily\/topic\/moonshotai">Moonshot AI<\/a>/)
@@ -378,10 +397,19 @@ describe('a company’s or product’s topic page', () => {
     expect(html).toContain('6 more outlets reported this')
     expect(html).toContain('href="/en/daily/topic/kimi?page=2"')
     expect(html).toContain('Load earlier stories (3)')
+    // 「+ 关注」at the top; the follower count is read in the browser, so none yet.
+    expect(html).toContain('aria-label="Follow Kimi"')
+    expect(html).not.toContain('follower')
   })
 
   it('says when there is nothing earlier, and leaves out a maker it does not know', () => {
-    const html = render(<TopicPageView topic={{ ...topic, page: 2, earlier: 0, developer: null, app: null }} serverToday="2026-10-22" />)
+    const html = render(
+      <TopicPageView
+        topic={{ ...topic, page: 2, earlier: 0, developer: null, app: null }}
+        serverToday="2026-10-22"
+        signIn={{ google: false, github: false, email: true }}
+      />,
+    )
     expect(html).toContain(en.daily.noEarlier)
     expect(html).toContain('href="/en/daily/topic/kimi"')
     expect(html).not.toContain('Made by')

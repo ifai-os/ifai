@@ -72,6 +72,8 @@ const icons = {
   ),
   // Filled with currentColor once saved.
   bookmark: <path d="M6 4h12v16l-6-4-6 4z" />,
+  // 「我的关注」in the account menu: what you follow shows as #name, like the topic pages.
+  hash: <path d="M9.5 4 8 20M16 4l-1.5 16M4.5 9h15M4 15h15" />,
   // The account menu (「IFAI 账号菜单与通知」) and「登录的设备」(「IFAI 账号设置」).
   chevronRight: <path d="M9 6l6 6-6 6" />,
   upload: (
