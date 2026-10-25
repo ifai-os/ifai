@@ -1,7 +1,7 @@
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 
+import { cached } from '@/lib/data-cache'
 import type { SitemapPage } from '@/lib/sitemap'
 
 import { storyCategories } from '../categories'
@@ -14,7 +14,7 @@ import { listHref, posterHref, storyHref } from './list-params'
  * published story, newest first. Same visitor access rules and cache tag as ./data.ts, so a
  * withdrawn story leaves the sitemap when it leaves the pages.
  */
-export const dailySitemap = unstable_cache(
+export const dailySitemap = cached(
   async (): Promise<{ pages: SitemapPage[]; stories: SitemapPage[] }> => {
     const payload = await getPayload({ config })
     const [stories, posters] = await Promise.all([

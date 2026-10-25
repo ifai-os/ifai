@@ -212,6 +212,7 @@ Wiki（2026-10-24 按推荐默认值起草，站长还没确认；细节见 wiki
 - 应用资料草稿的每一步（`src/modules/apps/profile/draft.ts`）都可以传入 `fetch`、`resolve`、`ai`，本机用假网页和假模型在本地库上跑通整条流程。抓取只访问公网地址，所以假网页要配一个返回公网 IP 的 `resolve`。仓库外的临时脚本用 `pnpm payload run` 跑时，扩展名用 `.mts`，并把仓库的 `node_modules` 链接到脚本旁边。
 - 沙盒里有 PostgreSQL 16：`service postgresql start`，建库 `ifai`，在 `.env` 里填本地的 `DATABASE_URI`，就能跑迁移和 `pnpm build`。
 - 本机重新跑示例数据脚本之后，先删掉 `.next/cache/fetch-cache` 再 `pnpm build`：数据缓存会跨构建保留，首页这类构建时预渲染的页面会用上旧数据，冒烟测试跟着失败。CI 每次都是新环境，不受影响。
+- Vercel 的数据缓存是所有 Preview 部署共用的：键只写查询名时，PR 预览（自己的 Neon 分支）会读到主预览缓存的结果，一边 `revalidateTag` 也会清掉另一边。所以页面的缓存读取一律用 `src/lib/data-cache.ts` 的 `cached()`（代替 `unstable_cache`），刷新用 `revalidateTag(dataTag(…))`：键和标签都带上数据库连接串的短哈希，同一个库的部署共用缓存，不同库互不影响。不要直接用 `unstable_cache`、`cacheTag` 或裸的标签名。
 - 沙盒里的 DNS 查询全部失败（ENOTFOUND），订阅接口的收信服务器检查在这里一律当作「查询出错」不拦；冒烟测试里「域名收不了信」那条在查不到 `gmail.com` 的地方自动跳过，CI 上照常跑。
 - 生产构建（Turbopack）里页面和接口各有一份 `payload` 模块，Payload 实例却是共用的（谁先启动用谁的）。先打开过后台页面时，接口里 `instanceof ValidationError` 认不出钩子抛的错误：后台保存被拒时只显示错误的 `message`，字段下面的提示没有了。所以钩子拒绝保存一律用 `src/lib/field-error.ts` 的 `rejectField`（把说明也写进 `message`），判断是不是某个字段的错误用 `isFieldError`（看形状、不用 `instanceof`）。应用提交、资源（`collections/guards.ts`、`submit/submit.ts`）和日报订阅者都已改用它们；新写的钩子不要直接 `throw new ValidationError`。
 - Payload 的自定义根页面（`payload.config.ts` 里 `admin.components.views` 的页面）不经过后台的登录检查，没登录也会渲染，而且不带后台的导航外框。页面自己要检查 `initPageResult.req.user` 并跳到登录页，再用 `DefaultTemplate` 包起来，照 `src/admin/model-usage/view.tsx`。集合下面的自定义页面（如审核队列）不受影响。

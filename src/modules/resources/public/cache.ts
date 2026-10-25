@@ -1,6 +1,8 @@
 import { revalidateTag } from 'next/cache'
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, PayloadRequest } from 'payload'
 
+import { dataTag } from '@/lib/data-cache'
+
 /** Every cached Skills query carries this tag: one change refreshes the list, the pages and the home page. */
 export const skillsCacheTag = 'skills'
 
@@ -10,7 +12,7 @@ export const skillsCacheTag = 'skills'
  */
 export function refreshSkillsCache(onError: (error: unknown) => void = (error) => console.warn('Could not refresh the Skills pages', error)) {
   try {
-    revalidateTag(skillsCacheTag, { expire: 0 })
+    revalidateTag(dataTag(skillsCacheTag), { expire: 0 })
   } catch (error) {
     // Scripts, migrations and background jobs outside a request have no page cache to refresh.
     if (error instanceof Error && error.message.includes('static generation store missing')) return

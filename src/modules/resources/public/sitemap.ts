@@ -1,14 +1,14 @@
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 
+import { cached } from '@/lib/data-cache'
 import type { SitemapPage } from '@/lib/sitemap'
 
 import { skillCategories } from '../categories'
 import { skillsCacheTag } from './cache'
 import { guideHref, skillHref, skillsHref, submitHref } from './list-params'
 
-const findSkills = unstable_cache(
+const findSkills = cached(
   async () => {
     const { docs } = await (await getPayload({ config })).find({
       collection: 'skills',

@@ -1,9 +1,9 @@
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import { cache } from 'react'
 
 import type { Locale } from '@/i18n/config'
+import { cached } from '@/lib/data-cache'
 import { inAnyLanguage, inReaderLanguage, type InLanguage, type Localized } from '@/lib/i18n/localized'
 import { shanghaiDate } from '@/lib/shanghai-day'
 import { appsCacheTag } from '@/modules/apps/cache'
@@ -146,7 +146,7 @@ const catalogSelect = {
 } as const
 
 /** Every published entry (the fields lists and relations need) and every topic. */
-const loadCatalog = unstable_cache(
+const loadCatalog = cached(
   async () => {
     const client = await payload()
     const [entries, topics] = await Promise.all([
@@ -382,7 +382,7 @@ const detailSelect = {
   updatedAt: true,
 } as const
 
-const findEntry = unstable_cache(
+const findEntry = cached(
   async (slug: string) => {
     const { docs } = await (await payload()).find({
       collection: 'wiki-entries',
@@ -404,7 +404,7 @@ const findEntry = unstable_cache(
  * ones still public, in the editor's order. Cached with their modules' tags too, so one taken
  * down leaves the entry's page when its own module refreshes.
  */
-const loadFurther = unstable_cache(
+const loadFurther = cached(
   async (apps: number[], skills: number[], stories: number[], locale: Locale) => {
     const [appItems, skillItems, storyItems] = await Promise.all([
       apps.length ? getSavedApps(apps, locale) : [],
@@ -473,7 +473,7 @@ export const getEntry = cache(async (slug: string, locale: Locale): Promise<Entr
 })
 
 /** Published entries' addresses and dates, for the sitemap. */
-export const findEntriesForSitemap = unstable_cache(
+export const findEntriesForSitemap = cached(
   async () => {
     const { docs } = await (await payload()).find({
       collection: 'wiki-entries',
