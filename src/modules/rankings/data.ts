@@ -194,3 +194,14 @@ export const getCountedVotes = cached(
   ['rankings-votes'],
   cacheOptions,
 )
+
+/**
+ * The home page's「模型排行」(the「IFAI 首页」board): the first arena's top placed models, the
+ * board `/rankings` opens on. Empty before that arena's first snapshot places anyone.
+ */
+export async function getHomeRankings(locale: Locale, limit: number): Promise<BoardRow[]> {
+  const [arena] = await getArenas(locale)
+  if (!arena) return []
+  const { rows } = await getBoard(arena.id, locale)
+  return rows.filter((row) => row.rank !== null).slice(0, limit)
+}

@@ -156,6 +156,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
             </h3>
             <p className="text-ui text-ink-3">{t('exportBody')}</p>
             {isLaunched('circles') && <p className="text-ui text-ink-3">{t('exportCircles')}</p>}
+            {isLaunched('rankings') && <p className="text-ui text-ink-3">{t('exportRankings')}</p>}
             <ExportData />
           </section>
           <section aria-labelledby="delete-account" className="flex flex-col items-start gap-3 rounded-card border border-surface-2 p-4 md:p-7">
@@ -164,6 +165,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
             </h3>
             <p className="text-ui text-ink-3">{t('deleteBody')}</p>
             {isLaunched('circles') && <p className="text-ui text-ink-3">{t('deleteCircles')}</p>}
+            {isLaunched('rankings') && <p className="text-ui text-ink-3">{t('deleteRankings')}</p>}
             <p className="text-ui text-ink-3">{t('deleteKeeps')}</p>
             <DeleteAccount />
           </section>

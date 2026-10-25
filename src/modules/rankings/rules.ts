@@ -2,13 +2,7 @@
  * The model arena's rules (docs/specs/rankings.md「已定的规则」): the pure parts, so they can be
  * tested without a database. Collections, jobs, the vote API and the pages all read them here.
  */
-import { visibleNavItems, type Phase, sitePhase } from '@/config/site'
 import { isLocale, type Locale } from '@/i18n/config'
-
-/** The leaderboard, the vote page and their API exist only once the third phase has launched. */
-export function rankingsLaunched(phase: Phase = sitePhase): boolean {
-  return visibleNavItems(phase).some((item) => item.key === 'rankings')
-}
 
 export const arenaStatuses = ['draft', 'published'] as const
 export type ArenaStatus = (typeof arenaStatuses)[number]

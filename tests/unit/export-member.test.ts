@@ -139,6 +139,30 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
     ],
     circleReactions: [{ postId: 40, circleId: 20, reaction: 'rocket', createdAt: day('2026-10-23') }],
     circlePostReports: [{ postId: 41, circleId: 22, reason: 'abuse', createdAt: day('2026-10-22'), resolvedAt: day('2026-10-23') }],
+    arenaVotes: [
+      {
+        arenaId: 60,
+        promptId: 61,
+        modelAId: 70,
+        modelBId: 71,
+        outcome: 'a',
+        counted: true,
+        pageLocale: 'en',
+        createdAt: day('2026-10-23'),
+        votedAt: new Date('2026-10-23T08:01:30.000Z'),
+      },
+      {
+        arenaId: 60,
+        promptId: 62,
+        modelAId: 72,
+        modelBId: 70,
+        outcome: 'tie',
+        counted: false,
+        pageLocale: 'zh-Hant',
+        createdAt: day('2026-10-22'),
+        votedAt: new Date('2026-10-22T08:00:02.000Z'),
+      },
+    ],
     subscriber: {
       id: 5,
       email: 'reader@example.com',
@@ -170,6 +194,15 @@ const refs: ExportRefs = {
   circle: new Map([
     [20, { id: 20, name: 'AI art', url: `${site}/en/circles?circle=ai-art` }],
     [21, { id: 21, name: 'Prompts', url: null }],
+  ]),
+  arena: new Map([[60, { id: 60, name: 'Text', url: `${site}/en/rankings/text` }]]),
+  arenaPrompt: new Map([
+    [61, { id: 61, name: 'Write a two-line apology for a late reply.', url: null }],
+    [62, { id: 62, name: '给一家咖啡店起三个名字', url: null }],
+  ]),
+  arenaModel: new Map([
+    [70, { id: 70, name: 'Fjord Large', url: null }],
+    [71, { id: 71, name: 'Kestrel 2', url: null }],
   ]),
 }
 
@@ -262,6 +295,34 @@ describe('shapeMemberExport', () => {
     ])
   })
 
+  it('gives the member’s votes in the rankings with the models behind A and B, newest first', () => {
+    expect(shape(records()).arenaVotes).toEqual([
+      {
+        arena: refs.arena.get(60),
+        question: refs.arenaPrompt.get(61),
+        modelA: refs.arenaModel.get(70),
+        modelB: refs.arenaModel.get(71),
+        vote: 'a',
+        counted: true,
+        pageLanguage: 'en',
+        shownAt: '2026-10-23T08:00:00.000Z',
+        votedAt: '2026-10-23T08:01:30.000Z',
+      },
+      {
+        arena: refs.arena.get(60),
+        question: refs.arenaPrompt.get(62),
+        // A model deleted since keeps only its id.
+        modelA: { id: 72, name: null, url: null },
+        modelB: refs.arenaModel.get(70),
+        vote: 'tie',
+        counted: false,
+        pageLanguage: 'zh-Hant',
+        shownAt: '2026-10-22T08:00:00.000Z',
+        votedAt: '2026-10-22T08:00:02.000Z',
+      },
+    ])
+  })
+
   it('includes the daily email subscription and its sends, or null when there is none', () => {
     expect(shape(records()).dailyEmail).toMatchObject({
       email: 'reader@example.com',
@@ -289,6 +350,15 @@ describe('readExportRefs', () => {
       { id: 20, name: 'AI 绘画', slug: 'ai-art', shown: true },
       { id: 21, name: '提示词', slug: 'prompts', shown: false },
     ],
+    arenas: [{ id: 60, name: 'テキスト', slug: 'text', status: 'published' }],
+    'arena-prompts': [
+      { id: 61, text: 'Write a two-line apology for a late reply.', lang: 'en' },
+      { id: 62, text: '给一家咖啡店起三个名字', lang: 'zh-Hans' },
+    ],
+    'arena-models': [
+      { id: 70, name: 'Fjord Large' },
+      { id: 71, name: 'Kestrel 2' },
+    ],
   }
 
   it('looks each kind up once, in the page language, with addresses only for pages readers can open', async () => {
@@ -297,12 +367,20 @@ describe('readExportRefs', () => {
     const input = records({ saves: [{ targetType: 'app', targetId: 8, createdAt: day('2026-10-20') }] })
     const found = await readExportRefs(payload, input, 'ja', site)
 
-    expect(find).toHaveBeenCalledTimes(4)
+    expect(find).toHaveBeenCalledTimes(7)
     for (const [options] of find.mock.calls) expect(options).toMatchObject({ locale: 'ja', overrideAccess: true, depth: 0 })
     const ids = Object.fromEntries(
       find.mock.calls.map(([options]) => [options.collection, (options as unknown as { where: { id: { in: number[] } } }).where.id.in]),
     )
-    expect(ids).toEqual({ apps: [8, 1, 99], skills: [2], 'app-categories': [3], circles: [20, 21, 22] })
+    expect(ids).toEqual({
+      apps: [8, 1, 99],
+      skills: [2],
+      'app-categories': [3],
+      circles: [20, 21, 22],
+      arenas: [60],
+      'arena-prompts': [61, 62],
+      'arena-models': [70, 71, 72],
+    })
 
     const ref = (map: Map<number, ExportRef>, id: number) => map.get(id)
     expect(ref(found.app, 1)).toEqual({ id: 1, name: 'Notion', url: `${site}/ja/apps/notion` })
@@ -313,6 +391,21 @@ describe('readExportRefs', () => {
     // A hidden circle has no page.
     expect(ref(found.circle, 20)).toEqual({ id: 20, name: 'AI 绘画', url: `${site}/ja/circles?circle=ai-art` })
     expect(ref(found.circle, 21)).toEqual({ id: 21, name: '提示词', url: null })
+    // Questions keep their own language; models have no page.
+    expect(ref(found.arena, 60)).toEqual({ id: 60, name: 'テキスト', url: `${site}/ja/rankings/text` })
+    expect(ref(found.arenaPrompt, 62)).toEqual({ id: 62, name: '给一家咖啡店起三个名字', url: null })
+    expect(ref(found.arenaModel, 71)).toEqual({ id: 71, name: 'Kestrel 2', url: null })
+  })
+
+  it('shows Simplified questions in Traditional Chinese, as the vote page does, and links no draft arena', async () => {
+    const find = vi.fn(async ({ collection }: { collection: string }) => ({
+      docs: collection === 'arenas' ? [{ id: 60, name: '文字', slug: 'text', status: 'draft' }] : docs[collection],
+    }))
+    const input = records({ saves: [], reviews: [], reviewReports: [], appReports: [], appSubmissions: [], skillSubmissions: [] })
+    const found = await readExportRefs({ find } as unknown as Payload, input, 'zh-Hant', site)
+    expect(found.arenaPrompt.get(62)).toEqual({ id: 62, name: '給一家咖啡店起三個名字', url: null })
+    expect(found.arenaPrompt.get(61)?.name).toBe('Write a two-line apology for a late reply.')
+    expect(found.arena.get(60)).toEqual({ id: 60, name: '文字', url: null })
   })
 
   it('reads nothing for a member with nothing to name', async () => {
@@ -328,10 +421,11 @@ describe('readExportRefs', () => {
       circlePosts: [],
       circleReactions: [],
       circlePostReports: [],
+      arenaVotes: [],
     })
     const found = await readExportRefs({ find } as unknown as Payload, empty, 'en', site)
     expect(find).not.toHaveBeenCalled()
-    expect(found.app.size + found.skill.size + found.category.size + found.circle.size).toBe(0)
+    expect(Object.values(found).every((refs) => refs.size === 0)).toBe(true)
   })
 })
 

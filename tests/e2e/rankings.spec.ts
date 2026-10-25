@@ -44,6 +44,7 @@ test.describe('before the third phase', () => {
     const nav = page.getByRole('navigation', { name: en.nav.label })
     await expect(nav.getByRole('link', { name: en.nav.daily })).toBeVisible()
     await expect(nav.getByRole('link', { name: en.nav.rankings })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: en.home.modelTop })).toHaveCount(0)
   })
 })
 
@@ -101,6 +102,18 @@ test.describe('with the sample rankings', () => {
     await expect(page.getByText(/^The gap between the best closed and the best open-weights model (went from -?\d+ to -?\d+|stayed at -?\d+) points\.$/)).toBeVisible()
     await expect(page.getByRole('heading', { name: en.rankings.makers })).toBeVisible()
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/en\/rankings$/)
+  })
+
+  test('the home page shows the top five of the first arena', async ({ page }) => {
+    await page.goto('/en')
+    const card = page.getByRole('region', { name: en.home.modelTop })
+    const places = card.getByRole('listitem')
+    await expect(places).toHaveCount(5)
+    await expect(places.first()).toContainText(sampleModels)
+    await expect(places.first()).toContainText(/^1/)
+    await expect(card).not.toContainText('Fjord Nano')
+    await card.getByRole('link', { name: en.home.viewAll }).click()
+    await expect(page).toHaveURL(/\/en\/rankings$/)
   })
 
   test('filters keep only the matching models and are not indexed', async ({ page }) => {
@@ -234,6 +247,27 @@ test.describe('with the sample rankings', () => {
         { outcome: 'tie', counted: false },
         { outcome: 'a', counted: true },
       ])
+
+      // 「下载我的数据」 has both votes, newest first; a question not voted on yet stays out, so it can't give its models away.
+      const third = page.waitForResponse((response) => response.url().endsWith('/api/rankings/battles'))
+      await page.getByRole('button', { name: en.rankingsVote.next }).click()
+      await third
+      const exported = await (await page.request.get('/api/account/export?locale=en')).json()
+      expect(exported.arenaVotes).toMatchObject([
+        { vote: 'a', counted: true, pageLanguage: 'en', arena: { name: 'Text', url: expect.stringMatching(/\/en\/rankings\/text$/) } },
+        { vote: 'tie', counted: false, pageLanguage: 'en', arena: { name: 'Text' } },
+      ])
+      for (const vote of exported.arenaVotes) {
+        expect(vote.question.name).toBeTruthy()
+        expect(vote.modelA.name).toMatch(sampleModels)
+        expect(vote.modelB.name).toMatch(sampleModels)
+      }
+      // The settings page says the download has the votes, and that they stay when the account goes.
+      const settings = await context.newPage()
+      await settings.goto('/en/me/account?section=data')
+      await expect(settings.getByText(en.account.exportRankings)).toBeVisible()
+      await expect(settings.getByText(en.account.deleteRankings)).toBeVisible()
+      await settings.close()
     } finally {
       await member.query('delete from arena_battles where user_id = $1', [member.id])
       await member.remove()

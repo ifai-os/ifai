@@ -40,6 +40,7 @@
     "trendingApps": "熱門應用",
     "newSkills": "新上架 Skills",
     "viewAll": "檢視全部",
+    "modelTop": "模型排行",
     "comingSoon": "即將上線"
   },
   "modules": {
@@ -805,6 +806,7 @@
     "exportTitle": "下載我的資料",
     "exportBody": "一份 JSON 檔案，裡面是 IFAI 儲存的、和這個帳號有關的資料：帳號資訊、登入記錄、收藏、評價、報錯和舉報，以及提交的應用和 Skill 投稿。登入的電子郵件訂閱過日報的話，訂閱設定和每封日報的傳送記錄也在裡面。",
     "exportCircles": "圈子裡的資料也在：加入的圈子、發過的動態、表情回應和舉報。",
+    "exportRankings": "模型排行裡投過的票也在：哪道題、兩邊的模型、你的選擇和時間。",
     "exportButton": "下載我的資料",
     "exporting": "正在準備…",
     "exported": "已下載 {file}",
@@ -814,6 +816,7 @@
     "deleteTitle": "刪除帳號",
     "deleteBody": "刪除帳號會一起刪掉你的收藏、寫過的應用評價、報錯和舉報，以及提交過的應用和 Skill 投稿，不能恢復。已經收錄到 IFAI 的應用和 Skill 不受影響。",
     "deleteCircles": "你在圈子裡發過的動態、表情回應和舉報也會一起刪掉，加入的圈子也都退出。",
+    "deleteRankings": "你在模型排行投過的票會留下，但不再和任何人關聯，排名不會因為刪除帳號而變。",
     "deleteKeeps": "日報郵件和帳號是分開的，刪除帳號不會退訂。不想再收，請點任意一封日報郵件底部的退訂連結。",
     "deleteButton": "刪除帳號",
     "confirmTitle": "永久刪除你的帳號？",

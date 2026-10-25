@@ -84,6 +84,7 @@
     "exportAbout": "這是 IFAI 儲存的、和帳號 {email} 有關的資料，匯出於 {time}。每一項是什麼意思，見隱私政策：{url}",
     "deleteTitle": "刪除帳號",
     "deleteBody": "刪除帳號會一起刪掉你的收藏、寫過的應用評價、報錯和舉報，以及提交過的應用和 Skill 投稿，不能恢復。已經收錄到 IFAI 的應用和 Skill 不受影響。",
+    "deleteRankings": "你在模型排行投過的票會留下，但不再和任何人關聯，排名不會因為刪除帳號而變。",
     "deleteKeeps": "日報郵件和帳號是分開的，刪除帳號不會退訂。不想再收，請點任意一封日報郵件底部的退訂連結。",
     "deleteButton": "刪除帳號",
     "confirmTitle": "永久刪除你的帳號？",

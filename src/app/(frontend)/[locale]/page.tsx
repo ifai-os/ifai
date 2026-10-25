@@ -5,7 +5,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { AppCard } from '@/components/cards/app-card'
 import { ComingSoonCard } from '@/components/cards/coming-soon-card'
 import { SkillCard } from '@/components/cards/skill-card'
-import { upcomingNavItems } from '@/config/site'
+import { isLaunched, upcomingNavItems } from '@/config/site'
 import { isLocale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
@@ -17,6 +17,8 @@ import { SubscribeBox } from '@/modules/daily/email/components/subscribe-box'
 import { subscribingOpen } from '@/modules/daily/email/delivery'
 import { TodayHeadlines } from '@/modules/daily/public/components/today-headlines'
 import { latestStories } from '@/modules/daily/public/data'
+import { HomeRankings } from '@/modules/rankings/components/home-rankings'
+import { getHomeRankings } from '@/modules/rankings/data'
 import { ScanBadgeView } from '@/modules/resources/public/components/badges'
 import { SkillTile } from '@/modules/resources/public/components/skill-tile'
 import { getHomeSkills } from '@/modules/resources/public/data'
@@ -26,6 +28,8 @@ import { skillHref } from '@/modules/resources/public/list-params'
 const storiesRead = 20
 /** Cards in「热门应用」. */
 const trendingShown = 6
+/** Models in「模型排行」. */
+const rankingsShown = 5
 
 type Props = { params: Promise<{ locale: string }> }
 
@@ -41,10 +45,11 @@ export default async function HomePage({ params }: Props) {
   setRequestLocale(locale)
   const t = await getTranslations()
   const upcoming = upcomingNavItems()
-  const [stories, apps, skills] = await Promise.all([
+  const [stories, apps, skills, rankings] = await Promise.all([
     latestStories(locale, storiesRead),
     getHomeApps(locale, trendingShown),
     getHomeSkills(locale),
+    isLaunched('rankings') ? getHomeRankings(locale, rankingsShown) : [],
   ])
   const { pick } = apps
   const pickSkill = skills.featured
@@ -157,6 +162,13 @@ export default async function HomePage({ params }: Props) {
             ))}
           </div>
         </section>
+      )}
+
+      {rankings.length > 0 && (
+        // The「IFAI 首页」board puts「社区精选」(推荐) on the left of this card once that module is in.
+        <div className="flex flex-wrap gap-4">
+          <HomeRankings rows={rankings} />
+        </div>
       )}
 
       {upcoming.length > 0 && (

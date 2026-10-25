@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { isLaunched } from '@/config/site'
 import { auth } from '@/lib/auth/auth'
 import { isCrossSite } from '@/lib/same-origin'
 import { openBattle } from '@/modules/rankings/battles'
-import { parseOpenInput, rankingsLaunched } from '@/modules/rankings/rules'
+import { parseOpenInput } from '@/modules/rankings/rules'
 
 // Per reader and always new: never rendered ahead or kept by the browser or a CDN.
 export const dynamic = 'force-dynamic'
@@ -21,7 +22,7 @@ function reply(body: object, status = 200) {
  * question yet. Only from IFAI's own pages; members get at most 600 questions a day.
  */
 export async function POST(request: NextRequest) {
-  if (!rankingsLaunched()) return reply({ error: 'not-found' }, 404)
+  if (!isLaunched('rankings')) return reply({ error: 'not-found' }, 404)
   if (isCrossSite(request)) return reply({ error: 'cross-site' }, 403)
   const input = parseOpenInput(await request.json().catch(() => null))
   if (!input) return reply({ error: 'invalid-request' }, 400)

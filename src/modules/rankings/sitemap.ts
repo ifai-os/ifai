@@ -1,7 +1,8 @@
+import { isLaunched } from '@/config/site'
 import type { SitemapPage } from '@/lib/sitemap'
 
 import { getArenas, getBoard } from './data'
-import { boardHref, rankingsLaunched } from './rules'
+import { boardHref } from './rules'
 
 /**
  * The rankings in the sitemap once the third phase has launched: each published arena's board
@@ -9,7 +10,7 @@ import { boardHref, rankingsLaunched } from './rules'
  * and the blind vote stay out (noindex).
  */
 export async function rankingsSitemap(): Promise<SitemapPage[]> {
-  if (!rankingsLaunched()) return []
+  if (!isLaunched('rankings')) return []
   const arenas = await getArenas('en')
   const boards = await Promise.all(arenas.map((arena) => getBoard(arena.id, 'en')))
   return arenas.map((arena, index) => ({ path: boardHref(index === 0 ? null : arena.slug), lastModified: boards[index].computedAt }))

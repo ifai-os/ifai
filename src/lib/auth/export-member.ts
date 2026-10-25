@@ -1,9 +1,10 @@
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
-import { desc, eq, inArray } from '@payloadcms/db-postgres/drizzle'
+import { and, desc, eq, inArray, isNotNull } from '@payloadcms/db-postgres/drizzle'
 import { createTranslator } from 'next-intl'
 import type { Payload } from 'payload'
 
 import { localizePath, messagesFileName, type Locale } from '@/i18n/config'
+import { toHant } from '@/lib/i18n/hant'
 import type { ReportReason, ReviewStatus, TranslatedTexts, TranslationStatus } from '@/modules/apps/reviews/rules'
 import { appReviewReports, appReviews, appReviewTranslations } from '@/modules/apps/schema'
 import { normalizeEmail } from '@/modules/daily/email/address'
@@ -15,6 +16,8 @@ import { isStoryTag } from '@/modules/daily/tags'
 import { readTopicNames } from '@/modules/daily/topic-names'
 import { follows } from '@/modules/follows/schema'
 import { followId, type FollowType } from '@/modules/follows/target'
+import { boardHref, type Outcome } from '@/modules/rankings/rules'
+import { arenaBattles } from '@/modules/rankings/schema'
 import { skillHref } from '@/modules/resources/public/list-params'
 import { saves } from '@/modules/saves/schema'
 import type { SaveType } from '@/modules/saves/target'
@@ -25,7 +28,8 @@ import { authAccounts, authSessions, authUsers } from './schema'
 /**
  * 「下载我的数据」(docs/specs/foundation.md「导出我的数据」): everything IFAI keeps about a
  * member, as one JSON file. It reads the same tables ./delete-member.ts and the foreign keys
- * delete, plus the daily email subscription of a verified sign-in email. Fields are picked one
+ * delete, plus the daily email subscription of a verified sign-in email and the votes in the
+ * model rankings (which stay, without the member, when the account goes). Fields are picked one
  * by one, so sign-in tokens and the owner's internal notes never reach the file, and neither
  * does anyone else's data (the text of a review they reported). A table that starts to hold a
  * member's data belongs here as well as in the deletion.
@@ -115,6 +119,21 @@ export type MemberExport = {
   circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string }[]
   /** Posts by others the member reported: which one and why, not its text or author. */
   circlePostReports: { post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null }[]
+  /**
+   * Their votes in the model rankings, newest first: the question (its text), the models behind
+   * answers A and B, the vote (`a` or `b` is better, `tie`, both `bad`) and whether it counted.
+   */
+  arenaVotes: {
+    arena: ExportRef
+    question: ExportRef
+    modelA: ExportRef
+    modelB: ExportRef
+    vote: Outcome
+    counted: boolean
+    pageLanguage: string
+    shownAt: string
+    votedAt: string
+  }[]
   /** The daily email subscription of the sign-in email, when it is verified and subscribed at some point. */
   dailyEmail: {
     email: string
@@ -167,6 +186,17 @@ export type MemberRecords = {
   circlePosts: { id: number; circleId: number; body: string; lang: string; status: PostStatus; createdAt: Date }[]
   circleReactions: { postId: number; circleId: number; reaction: Reaction; createdAt: Date }[]
   circlePostReports: { postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
+  arenaVotes: {
+    arenaId: number
+    promptId: number
+    modelAId: number
+    modelBId: number
+    outcome: Outcome
+    counted: boolean
+    pageLocale: string
+    createdAt: Date
+    votedAt: Date
+  }[]
   subscriber: Subscriber | null
   sends: { localDate: string; locale: string; status: EmailSendStatus; storyCount: number | null; sentAt: Date | null }[]
 }
@@ -177,8 +207,8 @@ const link = (site: string, locale: Locale, path: `/${string}`) => `${site}${loc
 
 /**
  * How the file names each kind of thing: one per save type (a new save type does not compile
- * until it has one), plus app categories, daily stories and circles. Deleted things are left out
- * and keep only their id.
+ * until it has one), plus app categories, daily stories, circles, and the rankings' arenas,
+ * questions and models. Deleted things are left out and keep only their id.
  */
 const lookups = {
   app: async (payload, ids, locale, site) => {
@@ -246,6 +276,45 @@ const lookups = {
     // A circle the owner took down has no page of its own.
     return docs.map((circle) => ({ id: circle.id, name: circle.name, url: circle.shown ? link(site, locale, `/circles?circle=${circle.slug}`) : null }))
   },
+  arena: async (payload, ids, locale, site) => {
+    const { docs } = await payload.find({
+      collection: 'arenas',
+      where: { id: { in: ids } },
+      select: { name: true, slug: true, status: true },
+      depth: 0,
+      pagination: false,
+      overrideAccess: true,
+      locale,
+    })
+    // A draft arena has no board; the first arena's /rankings/<slug> takes readers to /rankings.
+    return docs.map((arena) => ({ id: arena.id, name: arena.name, url: arena.status === 'published' ? link(site, locale, boardHref(arena.slug)) : null }))
+  },
+  arenaPrompt: async (payload, ids, locale) => {
+    const { docs } = await payload.find({
+      collection: 'arena-prompts',
+      where: { id: { in: ids } },
+      select: { text: true, lang: true },
+      depth: 0,
+      pagination: false,
+      overrideAccess: true,
+      locale,
+    })
+    // A question keeps its own language; Traditional Chinese shows Simplified ones converted, as the vote page does.
+    return docs.map((prompt) => ({ id: prompt.id, name: locale === 'zh-Hant' && prompt.lang === 'zh-Hans' ? toHant(prompt.text) : prompt.text, url: null }))
+  },
+  arenaModel: async (payload, ids, locale) => {
+    const { docs } = await payload.find({
+      collection: 'arena-models',
+      where: { id: { in: ids } },
+      select: { name: true },
+      depth: 0,
+      pagination: false,
+      overrideAccess: true,
+      locale,
+    })
+    // Model names are not translated, and a model has no page of its own.
+    return docs.map((model) => ({ id: model.id, name: model.name, url: null }))
+  },
 } satisfies Record<SaveType, Lookup> & Record<string, Lookup>
 
 type RefKind = keyof typeof lookups
@@ -299,6 +368,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     posts,
     postReactions,
     postReports,
+    battles,
     subscribers,
   ] = await Promise.all([
     db
@@ -397,6 +467,22 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .innerJoin(circlePosts, eq(circlePosts.id, circlePostReports.postId))
       .where(eq(circlePostReports.reporter, reporter))
       .orderBy(desc(circlePostReports.createdAt)),
+    // Only votes: a question not voted on yet would name its models before the vote (it is deleted after two days).
+    db
+      .select({
+        arenaId: arenaBattles.arenaId,
+        promptId: arenaBattles.promptId,
+        modelAId: arenaBattles.modelAId,
+        modelBId: arenaBattles.modelBId,
+        outcome: arenaBattles.outcome,
+        counted: arenaBattles.counted,
+        pageLocale: arenaBattles.pageLocale,
+        createdAt: arenaBattles.createdAt,
+        votedAt: arenaBattles.votedAt,
+      })
+      .from(arenaBattles)
+      .where(and(eq(arenaBattles.userId, userId), isNotNull(arenaBattles.votedAt)))
+      .orderBy(desc(arenaBattles.votedAt)),
     // The subscription is by address, not by account: only an address the member has shown is theirs.
     user.emailVerified
       ? payload.find({ collection: 'subscribers', where: { email: { equals: normalizeEmail(user.email) } }, depth: 0, limit: 1, overrideAccess: true })
@@ -448,12 +534,14 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     circlePosts: posts,
     circleReactions: postReactions,
     circlePostReports: postReports,
+    // A vote sets both (src/modules/rankings/battles.ts).
+    arenaVotes: battles.flatMap(({ outcome, votedAt, ...battle }) => (outcome && votedAt ? [{ ...battle, outcome, votedAt }] : [])),
     subscriber,
     sends,
   }
 }
 
-/** Names and addresses for every app, Skill, category and circle the records point at, in the page language. */
+/** Names and addresses for every app, Skill, category, circle and arena (with its questions and models) the records point at, in the page language. */
 export async function readExportRefs(payload: Payload, records: MemberRecords, locale: Locale, site: string): Promise<ExportRefs> {
   const kinds = Object.keys(lookups) as RefKind[]
   const wanted = Object.fromEntries(kinds.map((kind) => [kind, new Set<number>()])) as Record<RefKind, Set<number>>
@@ -470,6 +558,12 @@ export async function readExportRefs(payload: Payload, records: MemberRecords, l
   }
   for (const submission of records.skillSubmissions) want('skill', idOf(submission.skill))
   for (const row of [...records.circleMembers, ...records.circlePosts, ...records.circleReactions, ...records.circlePostReports]) want('circle', row.circleId)
+  for (const vote of records.arenaVotes) {
+    want('arena', vote.arenaId)
+    want('arenaPrompt', vote.promptId)
+    want('arenaModel', vote.modelAId)
+    want('arenaModel', vote.modelBId)
+  }
 
   const found = await Promise.all(
     kinds.map(async (kind) => {
@@ -640,6 +734,17 @@ export function shapeMemberExport(
       reason: report.reason,
       reportedAt: iso(report.createdAt),
       resolvedAt: isoOrNull(report.resolvedAt),
+    })),
+    arenaVotes: records.arenaVotes.map((vote) => ({
+      arena: ref('arena', vote.arenaId),
+      question: ref('arenaPrompt', vote.promptId),
+      modelA: ref('arenaModel', vote.modelAId),
+      modelB: ref('arenaModel', vote.modelBId),
+      vote: vote.outcome,
+      counted: vote.counted,
+      pageLanguage: vote.pageLocale,
+      shownAt: iso(vote.createdAt),
+      votedAt: iso(vote.votedAt),
     })),
     dailyEmail: subscriber
       ? {

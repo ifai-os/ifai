@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { isLaunched } from '@/config/site'
 import {
   answerParts,
   arenaBudgetUsd,
@@ -12,7 +13,6 @@ import {
   parseOpenInput,
   parseVoteInput,
   promptLangFor,
-  rankingsLaunched,
   readBoardFilters,
   topMakers,
   trendGap,
@@ -23,9 +23,9 @@ import {
 
 describe('launch', () => {
   it('opens the rankings in the third phase only', () => {
-    expect(rankingsLaunched(1)).toBe(false)
-    expect(rankingsLaunched(2)).toBe(false)
-    expect(rankingsLaunched(3)).toBe(true)
+    expect(isLaunched('rankings', 1)).toBe(false)
+    expect(isLaunched('rankings', 2)).toBe(false)
+    expect(isLaunched('rankings', 3)).toBe(true)
   })
 })
 
