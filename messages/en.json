@@ -1028,6 +1028,7 @@
     "similar": "Similar events",
     "similarNote": "Past happenings like this one, for context.",
     "tags": "Industry tags",
+    "tagsNote": "See news in the same field",
     "entities": "Companies and products",
     "entityKinds": {
       "company": "Company",
