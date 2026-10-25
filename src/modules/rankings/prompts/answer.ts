@@ -10,3 +10,14 @@ export const answerInstructions = `Answer the request below as well as you can.
 - Do not mention your name, which model you are, or the company that made you, and do not sign the answer.
 - Write plain text. Put any code in fenced code blocks (\`\`\`). Do not use other Markdown: no headings, tables, bold or links markup.
 - Be as long as the request needs and no longer.`
+
+/**
+ * The instructions for an image arena (「图像生成赛道」): the same words for every contestant,
+ * with the description as the prompt. Like `answerInstructions`, changing them makes every picture
+ * due again.
+ */
+export const imageInstructions = `Draw one image for the description below.
+
+- Make exactly one image. Do not ask questions or explain; only the image is kept.
+- Do not put a signature, a watermark, a logo, your name, which model you are or the company that made you anywhere in the image.
+- Put text in the image only where the description asks for it.`

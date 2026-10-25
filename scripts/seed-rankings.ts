@@ -1,11 +1,12 @@
 /**
  * Sample model rankings for local development and the CI smoke tests (tests/e2e/rankings.spec.ts):
  * fictional contestants (OpenRouter IDs under sample/), a few questions per arena with their
- * answers, four weeks of blind votes drawn from made-up strengths, and the last three weekly
- * snapshots computed the way the Monday job computes them. Kestrel 3 Coder enters in the last
- * week (「新上榜」) and Fjord Nano has too few votes (「暂定」). Runs only against a database on
- * this machine, or main's preview when asked (./seed-target.ts). Safe to run again: the sample
- * models, questions, answers and votes and the two arenas' snapshots are replaced.
+ * answers (in 图像生成, pictures drawn here in a few proportions), four weeks of blind votes drawn
+ * from made-up strengths, and the last three weekly snapshots computed the way the Monday job
+ * computes them. All three arenas are put on the site. Kestrel 3 Coder enters in the last week
+ * (「新上榜」) and Fjord Nano has too few votes (「暂定」). Runs only against a database on this
+ * machine, or main's preview when asked (./seed-target.ts). Safe to run again: the sample models,
+ * questions, answers, pictures and votes and the arenas' snapshots are replaced.
  *
  *   pnpm payload run scripts/seed-rankings.ts
  */
@@ -14,7 +15,8 @@ import { randomBytes } from 'node:crypto'
 import config from '@payload-config'
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { inArray, or } from '@payloadcms/db-postgres/drizzle'
-import { getPayload } from 'payload'
+import { getPayload, type Where } from 'payload'
+import sharp from 'sharp'
 
 import { locales } from '../src/i18n/config'
 import { shanghaiDate } from '../src/lib/shanghai-day'
@@ -24,7 +26,7 @@ import { arenaBattles, arenaSnapshots } from '../src/modules/rankings/schema'
 import { storeSnapshot } from '../src/modules/rankings/snapshot'
 import { assertSeedTarget } from './seed-target'
 
-type ArenaSlug = 'text' | 'coding'
+type ArenaSlug = 'text' | 'coding' | 'image'
 
 type SampleModel = {
   name: string
@@ -43,6 +45,8 @@ type SampleModel = {
   since: 1 | 4
   /** How often it is drawn into a vote, 1 by default; a small share keeps it provisional. */
   share?: number
+  /** The size an image model draws at. */
+  canvas?: readonly [number, number]
 }
 
 const apache = { name: 'Apache-2.0', url: 'https://www.apache.org/licenses/LICENSE-2.0' }
@@ -101,6 +105,35 @@ const models: SampleModel[] = [
     since: 4,
   },
   { name: 'Fjord Nano', openrouterId: 'sample/fjord-nano', org: { en: 'Fjord' }, weights: 'closed', region: 'eu', arenas: ['text'], strength: 900, costUsd: 0.0003, since: 1, share: 0.15 },
+  // The image arena's painters, in four proportions.
+  { name: 'Lumen Canvas', openrouterId: 'sample/lumen-canvas', org: { en: 'Lumen Labs' }, weights: 'closed', region: 'us', arenas: ['image'], strength: 1110, costUsd: 0.04, since: 4, canvas: [1024, 1024] },
+  {
+    name: 'Kestrel Paint',
+    openrouterId: 'sample/kestrel-paint',
+    org: { en: 'Kestrel AI', 'zh-Hans': '红隼智能' },
+    weights: 'open',
+    region: 'cn',
+    license: apache,
+    arenas: ['image'],
+    strength: 1050,
+    costUsd: 0.003,
+    since: 4,
+    canvas: [1216, 832],
+  },
+  { name: 'Orchid Studio', openrouterId: 'sample/orchid-studio', org: { en: 'Orchid' }, weights: 'closed', region: 'eu', arenas: ['image'], strength: 1000, costUsd: 0.02, since: 4, canvas: [832, 1216] },
+  {
+    name: 'Basalt Diffuse',
+    openrouterId: 'sample/basalt-diffuse',
+    org: { en: 'Basalt Research' },
+    weights: 'open',
+    region: 'other',
+    license: { name: 'Basalt Community License' },
+    arenas: ['image'],
+    strength: 940,
+    costUsd: 0.002,
+    since: 4,
+    canvas: [1344, 768],
+  },
 ]
 
 /** The questions; `code` goes into the longer half of the answers. */
@@ -125,6 +158,10 @@ const questions: { arena: ArenaSlug; lang: PromptLang; text: string; code?: stri
     text: '用 SQL 查出每个部门工资最高的员工，表结构是 employees(id, name, department, salary)。',
     code: '```sql\nselect name, department, salary\nfrom employees e\nwhere salary = (select max(salary) from employees where department = e.department);\n```',
   },
+  { arena: 'image', lang: 'en', text: 'A red bicycle leaning against a brick wall in the rain, watercolor.' },
+  { arena: 'image', lang: 'en', text: 'A cozy reading nook with a cat asleep on the window seat, warm evening light.' },
+  { arena: 'image', lang: 'zh-Hans', text: '水墨风格的山间小屋，清晨有雾，远处有一条小溪。' },
+  { arena: 'image', lang: 'ja', text: '桜並木の下を走る路面電車、やわらかいイラスト風。' },
 ]
 
 /** Marks the sample questions, so a new run finds them. */
@@ -161,6 +198,24 @@ function random(seed: number): () => number {
   }
 }
 
+/** A sample picture: soft circles on a gradient, the same on every run for the same seed. */
+async function samplePicture(seed: number, [width, height]: readonly [number, number]): Promise<Buffer> {
+  const draw = random(seed)
+  const hue = Math.floor(draw() * 360)
+  const circles = Array.from({ length: 7 }, () => {
+    const radius = Math.round((0.08 + draw() * 0.22) * Math.min(width, height))
+    const fill = `hsl(${(hue + Math.floor(draw() * 140)) % 360}, 70%, ${45 + Math.floor(draw() * 25)}%)`
+    return `<circle cx="${Math.round(draw() * width)}" cy="${Math.round(draw() * height)}" r="${radius}" fill="${fill}" fill-opacity="0.7"/>`
+  }).join('')
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+    <defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="hsl(${hue}, 60%, 88%)"/><stop offset="1" stop-color="hsl(${(hue + 50) % 360}, 55%, 40%)"/>
+    </linearGradient></defs>
+    <rect width="100%" height="100%" fill="url(#sky)"/>${circles}
+  </svg>`
+  return sharp(Buffer.from(svg)).png().toBuffer()
+}
+
 /** Monday 06:00 in Shanghai, when the weekly job takes the week's snapshot. */
 const snapshotTime = (week: string) => new Date(`${week}T06:00:00+08:00`)
 
@@ -179,6 +234,9 @@ const oldModelIds = oldModels.docs.map((doc) => Number(doc.id))
 const oldPromptIds = oldPrompts.docs.map((doc) => Number(doc.id))
 if (oldModelIds.length || oldPromptIds.length) {
   const orNone = (ids: number[]) => (ids.length ? ids : [-1])
+  const oldAnswers: Where = { or: [{ model: { in: orNone(oldModelIds) } }, { prompt: { in: orNone(oldPromptIds) } }] }
+  const { docs: drawn } = await payload.find({ collection: 'arena-answers', where: oldAnswers, pagination: false, depth: 0, select: { image: true } })
+  const oldPictureIds = drawn.flatMap((answer) => (answer.image ? [Number(typeof answer.image === 'object' ? answer.image.id : answer.image)] : []))
   await db
     .delete(arenaBattles)
     .where(
@@ -188,18 +246,15 @@ if (oldModelIds.length || oldPromptIds.length) {
         inArray(arenaBattles.promptId, orNone(oldPromptIds)),
       ),
     )
-  await payload.delete({
-    collection: 'arena-answers',
-    where: { or: [{ model: { in: orNone(oldModelIds) } }, { prompt: { in: orNone(oldPromptIds) } }] },
-    depth: 0,
-  })
+  await payload.delete({ collection: 'arena-answers', where: oldAnswers, depth: 0 })
+  if (oldPictureIds.length) await payload.delete({ collection: 'arena-images', where: { id: { in: oldPictureIds } }, depth: 0 })
   if (oldModelIds.length) await payload.delete({ collection: 'arena-models', where: { id: { in: oldModelIds } }, depth: 0, context })
   if (oldPromptIds.length) await payload.delete({ collection: 'arena-prompts', where: { id: { in: oldPromptIds } }, depth: 0, context })
 }
 
-// The migration adds 文本 and 编程; make sure both are on the site.
+// The migrations add 文本, 编程 and 图像生成; make sure all three are on the site.
 const arenaIds = {} as Record<ArenaSlug, number>
-for (const slug of ['text', 'coding'] as const) {
+for (const slug of ['text', 'coding', 'image'] as const) {
   const { docs } = await payload.find({ collection: 'arenas', where: { slug: { equals: slug } }, limit: 1, depth: 0 })
   if (!docs[0]) throw new Error(`The arena "${slug}" is missing: run pnpm payload migrate first.`)
   if (docs[0].status !== 'published') await payload.update({ collection: 'arenas', id: docs[0].id, data: { status: 'published' } })
@@ -232,9 +287,10 @@ for (const model of models) {
 
 // Every model answers every question of its arenas, as the answer job would.
 const draw = random(42)
-const promptIds: Record<ArenaSlug, number[]> = { text: [], coding: [] }
+const promptIds: Record<ArenaSlug, number[]> = { text: [], coding: [], image: [] }
 const answerIds = new Map<string, number>()
-for (const question of questions) {
+let pictures = 0
+for (const [questionIndex, question] of questions.entries()) {
   const prompt = await payload.create({
     collection: 'arena-prompts',
     context,
@@ -245,6 +301,14 @@ for (const question of questions) {
   for (const [index, model] of answering.entries()) {
     const { intro, steps } = answerText[question.lang]
     const long = draw() < 0.5
+    let image: number | undefined
+    if (model.canvas) {
+      // Stored the way the answer job stores a picture: a random name, nothing about the model.
+      const png = await samplePicture(1000 * (questionIndex + 1) + index, model.canvas)
+      const name = `${randomBytes(12).toString('hex')}.png`
+      image = Number((await payload.create({ collection: 'arena-images', data: {}, file: { data: png, mimetype: 'image/png', name, size: png.byteLength }, depth: 0 })).id)
+      pictures++
+    }
     const answer = await payload.create({
       collection: 'arena-answers',
       data: {
@@ -253,10 +317,12 @@ for (const question of questions) {
         arena: arenaIds[question.arena],
         lang: question.lang,
         status: 'done',
-        text: [intro(index + 1), long && steps, long && question.code].filter(Boolean).join('\n\n'),
+        ...(image
+          ? { image }
+          : { text: [intro(index + 1), long && steps, long && question.code].filter(Boolean).join('\n\n') }),
         costUsd: Number((model.costUsd * (0.8 + draw() * 0.4)).toFixed(6)),
         inputTokens: 60 + question.text.length,
-        outputTokens: Math.round((long ? 500 : 200) + draw() * 300),
+        outputTokens: image ? 1290 : Math.round((long ? 500 : 200) + draw() * 300),
         generatedAt: now.toISOString(),
       },
     })
@@ -274,7 +340,7 @@ const periods = [
   { weeksAgo: 0, from: snapshotTime(thisWeek), until: now, votes: 300 },
 ]
 const rows: (typeof arenaBattles.$inferInsert)[] = []
-for (const [arenaIndex, [arena, scale]] of ([['text', 1], ['coding', 0.7]] as const).entries()) {
+for (const [arenaIndex, [arena, scale]] of ([['text', 1], ['coding', 0.7], ['image', 0.6]] as const).entries()) {
   for (const [periodIndex, period] of periods.entries()) {
     if (period.until.getTime() - period.from.getTime() < 60_000) continue
     // Each period has its own sequence, so one cut short (run on a Monday morning) leaves the others as they were.
@@ -324,5 +390,5 @@ for (const [arena, id] of Object.entries(arenaIds)) {
     console.log(`${arena} ${week}:`, result.status === 'stored' ? `${result.ranked} of ${result.models} models placed, ${result.votes} votes` : result.reason)
   }
 }
-console.log(`Sample rankings: ${models.length} models, ${questions.length} questions, ${answerIds.size} answers, ${rows.length} votes.`)
+console.log(`Sample rankings: ${models.length} models, ${questions.length} questions, ${answerIds.size} answers (${pictures} pictures), ${rows.length} votes.`)
 process.exit(0)

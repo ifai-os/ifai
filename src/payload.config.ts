@@ -31,6 +31,7 @@ import { dailyEmailTables } from './modules/daily/email/schema'
 import { dailyTables } from './modules/daily/schema'
 import { followsTables } from './modules/follows/schema'
 import { ArenaAnswers } from './modules/rankings/collections/ArenaAnswers'
+import { ArenaImages } from './modules/rankings/collections/ArenaImages'
 import { ArenaModels } from './modules/rankings/collections/ArenaModels'
 import { ArenaPrompts } from './modules/rankings/collections/ArenaPrompts'
 import { Arenas } from './modules/rankings/collections/Arenas'
@@ -118,6 +119,7 @@ export default buildConfig({
     ArenaModels,
     ArenaPrompts,
     ArenaAnswers,
+    ArenaImages,
   ]),
   editor: lexicalEditor(),
 
@@ -181,6 +183,7 @@ export default buildConfig({
       alwaysInsertFields: true,
       collections: {
         media: { prefix: 'media' },
+        'arena-images': { prefix: 'arena' },
         // Downloads go to a short-lived R2 address; the site's own reads (the file viewer) stream through.
         'skill-versions': {
           prefix: 'skills',

@@ -60,6 +60,19 @@ export type ContestCall = {
 /** The answer, and whether the model stopped on its own or ran into `maxOutputTokens`. */
 export type ContestOutput = { text: string; cutOff: boolean }
 
+/** A picture as the model returned it, before it is stored. */
+export type ContestImage = { data: Uint8Array; mediaType: string }
+
+/**
+ * A contestant's picture in an image arena: the same call as `ContestCall`, asking OpenRouter for
+ * image output. `keep` stores the first picture and returns its ID before the receipt is marked
+ * done, so the receipt only holds that ID and no later step pays for the picture again.
+ */
+export type ContestImageCall = Omit<ContestCall, 'maxOutputTokens'> & { keep: (image: ContestImage) => Promise<number> }
+
+/** The stored picture's ID; null when the model answered without one. */
+export type ContestImageOutput = { image: number | null }
+
 export type AiResult<T> = {
   output: T
   model: string
@@ -257,5 +270,34 @@ export function createAi({ store, languageModel, embeddingModel, env = process.e
     )
   }
 
-  return { text, object, embed, contest, usageToday }
+  /** One contestant's picture for an image-arena question (src/modules/rankings/answers). */
+  function contestImage(call: ContestImageCall): Promise<AiResult<ContestImageOutput>> {
+    return withReceipt(
+      call.purpose,
+      { kind: 'contest-image', instructions: call.instructions, prompt: call.prompt, variant: call.variant },
+      call.subject,
+      async (model) => {
+        const result = await generateText({
+          model: languageModel(model),
+          instructions: call.instructions,
+          prompt: call.prompt,
+          // OpenRouter's chat API returns pictures inline when asked for image output; the provider passes its options on.
+          providerOptions: { openrouter: { modalities: ['image', 'text'] } },
+        })
+        const picture = result.files.find((file) => file.mediaType.startsWith('image/'))
+        return {
+          output: { image: picture ? await call.keep({ data: picture.uint8Array, mediaType: picture.mediaType }) : null },
+          usage: {
+            inputTokens: result.usage.inputTokens ?? 0,
+            outputTokens: result.usage.outputTokens ?? 0,
+            costUsd: costOf(result.providerMetadata),
+          },
+        }
+      },
+      (stored) => z.object({ image: z.number().int().nullable() }).parse(stored),
+      call.model,
+    )
+  }
+
+  return { text, object, embed, contest, contestImage, usageToday }
 }
