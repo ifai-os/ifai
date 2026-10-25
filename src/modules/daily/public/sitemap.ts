@@ -1,7 +1,7 @@
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 
+import { cached } from '@/lib/data-cache'
 import type { SitemapPage } from '@/lib/sitemap'
 
 import { storyCategories } from '../categories'
@@ -14,7 +14,7 @@ import { listHref, posterHref, storyHref } from './list-params'
  * published story, newest first. Same visitor access rules and cache tag as ./data.ts, so a
  * withdrawn story leaves the sitemap when it leaves the pages.
  */
-export const dailySitemap = unstable_cache(
+export const dailySitemap = cached(
   async (): Promise<{ pages: SitemapPage[]; stories: SitemapPage[] }> => {
     const payload = await getPayload({ config })
     const [stories, posters] = await Promise.all([
@@ -24,7 +24,7 @@ export const dailySitemap = unstable_cache(
         sort: '-publishedAt',
         pagination: false,
         depth: 0,
-        select: { slug: true, publishedAt: true, correctedAt: true },
+        select: { slug: true, publishedAt: true, approvedAt: true, correctedAt: true },
         overrideAccess: false,
       }),
       payload.find({
@@ -37,7 +37,9 @@ export const dailySitemap = unstable_cache(
         overrideAccess: false,
       }),
     ])
-    const newestStory = stories.docs[0]?.publishedAt ?? null
+    // A page changes when its story goes up, which for a story added late is long after the news's own time.
+    const upAt = (story: (typeof stories.docs)[number]) => story.approvedAt ?? story.publishedAt
+    const newestStory = stories.docs.map(upAt).filter(Boolean).sort().at(-1) ?? null
 
     return {
       pages: [
@@ -49,7 +51,7 @@ export const dailySitemap = unstable_cache(
           return snapshot?.entries.length ? [{ path: posterHref(poster.date), lastModified: snapshot.updatedAt }] : []
         }),
       ],
-      stories: stories.docs.map((story) => ({ path: storyHref(story.slug), lastModified: story.correctedAt ?? story.publishedAt })),
+      stories: stories.docs.map((story) => ({ path: storyHref(story.slug), lastModified: story.correctedAt ?? upAt(story) })),
     }
   },
   ['daily-sitemap'],

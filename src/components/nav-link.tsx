@@ -19,9 +19,9 @@ export function NavLink({ href, icon, children }: NavLinkProps) {
     <Link
       href={href}
       aria-current={current ? 'page' : undefined}
-      className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap text-ink transition-colors hover:text-accent ${current ? 'font-medium' : ''}`}
+      className={`flex min-h-11 shrink-0 items-center gap-1.25 whitespace-nowrap text-ink transition-colors hover:text-accent ${current ? 'font-medium' : ''}`}
     >
-      <Icon name={icon} size={18} />
+      <Icon name={icon} size={22} strokeWidth={2} />
       {children}
     </Link>
   )

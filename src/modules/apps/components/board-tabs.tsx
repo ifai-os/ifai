@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { ListLink } from '@/components/states/list-navigation'
 
 import { boards, type Board } from '../boards'
 import { listHref } from '../list-params'
@@ -27,7 +27,7 @@ export function BoardTabs({ current, category, q, className = '' }: BoardTabsPro
           const active = board === current
           return (
             <li key={board}>
-              <Link
+              <ListLink
                 href={listHref({ category, q, board })}
                 aria-current={active ? 'page' : undefined}
                 className={`flex h-9 items-center justify-center rounded-thumb px-4 text-ui whitespace-nowrap transition-colors md:rounded-pill md:text-meta md:font-medium ${
@@ -35,7 +35,7 @@ export function BoardTabs({ current, category, q, className = '' }: BoardTabsPro
                 }`}
               >
                 {t(`boards.${board}`)}
-              </Link>
+              </ListLink>
             </li>
           )
         })}

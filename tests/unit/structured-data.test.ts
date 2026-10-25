@@ -37,7 +37,7 @@ describe('storyJsonLd', () => {
   const story = {
     id: 1,
     slug: 'openai-ships-a-thing',
-    category: 'product',
+    category: 'tools',
     publishedAt: '2026-10-22T08:00:00.000Z',
     correctedAt: null,
     title: { value: 'OpenAI 发布新模型', lang: 'zh-Hans' },
@@ -83,7 +83,7 @@ describe('storyJsonLd', () => {
     expect(trail.itemListElement.map((item: { position: number; item: string }) => [item.position, item.item])).toEqual([
       [1, 'https://ifai.io/en'],
       [2, 'https://ifai.io/en/daily'],
-      [3, 'https://ifai.io/en/daily/category/product'],
+      [3, 'https://ifai.io/en/daily/category/tools'],
       [4, 'https://ifai.io/en/daily/openai-ships-a-thing'],
     ])
   })

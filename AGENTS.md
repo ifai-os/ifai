@@ -48,7 +48,7 @@ src/
     api/auth/[...all]/     Better Auth 接口
   admin/                   跨模块的后台页面：model-usage/（模型用量：花费与预算、开关、按用途、要处理的调用）、admin-log/（操作记录：谁在后台保存、删除、按了什么按钮）、theme/（后台样式：按钮沿用前台的样子）、ui-language/（顶栏的界面语言切换）
   collections/             Payload 集合（Admins、Media；模块的集合放到各自模块里）
-  components/              共用组件：site-header、search-link、language-switcher、cards/、auth/（登录表单和登录对话框）、account/（账号页、下载我的数据和删除账号）…
+  components/              共用组件：site-header、search-link、language-switcher、cards/、states/（空状态、骨架、加载失败、列表在页面里切换 list-navigation）、auth/（登录表单和登录对话框）、account-button（头像和账号菜单）、account/（设置页：分区 sections.ts 和各分区的组件、头像 member-avatar、下载我的数据和删除账号）…
   config/site.ts           导航与分期
   i18n/                    语言配置、路由、导航、next-intl 请求配置
   lib/
@@ -56,6 +56,7 @@ src/
     inngest/               Inngest 客户端和任务列表
     admin-log/             后台操作记录：表（schema.ts）、记什么（rules.ts）、所有集合的钩子和接口包装（hooks.ts 的 withAdminLog）
     switches.ts            总开关 COLLECT_ENABLED、MODEL_CALLS_ENABLED、DAILY_EMAIL_ENABLED
+    data-cache.ts          cached()（代替 unstable_cache）和 dataTag()：数据缓存的键和标签按数据库区分，预览环境之间不串数据
     shanghai-day.ts        上海时间的自然日（预算和海报按它算）
     email/layout.ts        邮件版式（登录邮件、投稿邮件共用；纯文本版一起生成）
     visitor.ts             访客哈希（IP + 浏览器标识，盐每天换）：应用点击、Skill 安装计数、评价举报共用
@@ -63,14 +64,14 @@ src/
     seo.ts                 canonical 与 hreflang（alternatesFor）、分享卡片（shareCard）；sitemap.ts、robots.ts：站点地图和 robots.txt（见 foundation.md）
     same-origin.ts         isCrossSite()：写接口只接受本站页面发来的请求（收藏、评价、投稿）
     field-error.ts         rejectField()：集合钩子拒绝保存时用它（说明写进字段和 message）；isFieldError() 按形状判断字段错误
-    auth/                  Better Auth 服务端配置、客户端、表结构、邮件、删除账号时清理投稿（delete-member.ts）、导出会员数据（export-member.ts，接口在 src/app/api/account/export）
+    auth/                  Better Auth 服务端配置、客户端、表结构、邮件、删除账号时清理投稿（delete-member.ts）、导出会员数据（export-member.ts，接口在 src/app/api/account/export）、设置页读的数据（settings.ts：登录方式、登录的设备、日报邮件）、设备名（devices.ts）、昵称清理（nickname.ts）；退出一台设备的接口在 src/app/api/account/sessions
     db/url.ts              数据库连接串（DATABASE_URI，预览环境回退到 DATABASE_URL）
     db/drizzle.ts          getDb()：Payload 实例和它的 Drizzle 连接，模块自己的表用它读写
     i18n/hant.ts           简体 → 台湾繁体（toHant），读者自己写的繁体 → 简体（toHans）
     i18n/detect.ts         按文字判断读者写的内容是哪种语言（评价的 lang）
   migrations/              Payload 迁移文件（自动生成，和代码一起提交）
   modules/                 按模块组织的业务代码：daily/、apps/、resources/ …
-    daily/                 信源与新闻集合（collections/）、读取器（readers/）、采集任务（collect/）、提示词（prompts/）、判断流水线（judge/）、写作（write/）、审核与发布（review/）、热度（heat/）、海报（poster/：规则、冻结内容、排版、画图、后台接口）、邮件订阅（email/：地址检查、收信服务器查询、令牌、订阅规则、欢迎信、经 Resend 发送（单封和批量）、到点的时区（schedule.ts）、选稿（content.ts）、晨报邮件（digest.ts）、发送任务的步骤（send.ts）和任务（jobs.ts）、Resend 回调（webhook.ts）、清理、订阅框和管理订阅页组件、后台概览和预览（overview.ts、endpoints.ts、admin/）、Drizzle 表（schema.ts）；接口在 src/app/api/subscriptions）、前台数据与组件（public/）、后台组件（admin/）、Drizzle 表（schema.ts）
+    daily/                 信源与新闻集合（collections/）、分类（categories.ts，七个；分类页的底图在 public/components/category-art.tsx）、行业标签（tags.ts）、公司与产品（entities.ts）、读取器（readers/）、采集任务（collect/）、提示词（prompts/）、判断流水线（judge/）、写作（write/）、审核与发布（review/）、热度（heat/）、海报（poster/：规则、冻结内容、排版、画图、后台接口）、邮件订阅（email/：地址检查、收信服务器查询、令牌、订阅规则、欢迎信、经 Resend 发送（单封和批量）、到点的时区（schedule.ts）、选稿（content.ts）、晨报邮件（digest.ts）、发送任务的步骤（send.ts）和任务（jobs.ts）、Resend 回调（webhook.ts）、清理、订阅框和管理订阅页组件、后台概览和预览（overview.ts、endpoints.ts、admin/）、Drizzle 表（schema.ts）；接口在 src/app/api/subscriptions）、前台数据与组件（public/）、后台组件（admin/）、Drizzle 表（schema.ts）
     apps/                  集合（collections/）、页面数据与组件（data.ts，热度读取 heat-reads.ts，榜单与排序 boards.ts，页面开关 settings.ts，components/）、资料草稿（profile/：取材、核对、任务、批量添加）、热度（heat.ts 打分，metrics/：点击、日报提及、Tranco、热度任务、后台接口）、评价（reviews/：规则 rules.ts、读写 data.ts、后台读写 admin.ts 与接口 endpoints.ts、翻译 translations.ts（读译文、排队）与 translate.ts、jobs.ts（翻译任务）、页面组件 components/；接口在 src/app/api/reviews）、报错（reports/：规则 rules.ts、写入 data.ts、后台读写 admin.ts 与接口 endpoints.ts、对话框 components/；集合 collections/AppReports.ts，读者接口在 src/app/api/app-reports/new）、提交应用（submissions/：规则 rules.ts、提交与「我的提交」data.ts、后台「处理」admin.ts 与接口 endpoints.ts、结果邮件 email.ts、notify.ts 与 jobs.ts（发信任务）、提交页组件 components/；集合 collections/AppSubmissions.ts，读者接口在 src/app/api/app-submissions/new）、Drizzle 表（schema.ts）、提示词（prompts/）、后台组件（admin/）
     search/                全站搜索：类型与分期（kinds.ts）、地址参数（params.ts）、名称优先的排序（rank.ts）、汇总各模块结果（data.ts）、页面组件（components/）；各模块的搜索在 searchApps、searchSkills、searchStories
     legal/                 隐私政策与用户协议：各节顺序、生效日期、联系邮箱（documents.ts），页面组件；条文在 messages 的 legal

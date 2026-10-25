@@ -22,6 +22,13 @@ test('unknown stories, categories, pages and posters answer 404', async ({ page,
   for (const path of [
     '/en/daily/not-a-story',
     '/en/daily/category/not-a-category',
+    // The categories before 2026-10-24 (docs/specs/daily.md「分类与分类页」).
+    '/en/daily/category/product',
+    '/en/daily/category/design',
+    '/en/daily/category/tools?page=999',
+    '/en/daily/tag/not-a-tag',
+    '/en/daily/topic/nobodyhere',
+    '/en/daily/topic/Not%20Compared',
     '/en/daily?page=0',
     '/en/daily?page=x',
     '/en/daily/poster/2020-01-01',
@@ -54,13 +61,26 @@ test.describe('with the sample stories', () => {
     weights: 'Sample: Kitecode publishes the weights of its code model',
     benchmark: 'Sample: Orbit Notes reports a new summarization benchmark',
     preview: 'Sample: Lumen Chat previews team workspaces',
+    nimbus: 'Sample: Nimbus AI releases Nimbus 3, which reasons step by step',
+    quill: 'Sample: Quill Labs raises a Series A to bring its writing assistant to teams',
+    prism: 'Sample: Prism turns rough sketches into short videos',
+    robot: 'Sample: Strider Robotics shows a warehouse robot that learns by watching',
   }
 
   test('lists published stories newest first and leaves pending and withdrawn ones out', async ({ page }) => {
     await page.goto('/en/daily')
     const main = page.getByRole('main')
     const rows = page.getByRole('article')
-    await expect(rows.getByRole('link', { name: /^Sample: / })).toHaveText([titles.workspaces, titles.weights, titles.benchmark, titles.preview])
+    await expect(rows.getByRole('link', { name: /^Sample: / })).toHaveText([
+      titles.workspaces,
+      titles.weights,
+      titles.nimbus,
+      titles.quill,
+      titles.prism,
+      titles.robot,
+      titles.benchmark,
+      titles.preview,
+    ])
     await expect(main.getByText('Sample pending story')).toHaveCount(0)
     await expect(main.getByText('Sample withdrawn story')).toHaveCount(0)
     await expect(rows.filter({ hasText: titles.workspaces }).getByText('2 more outlets reported this')).toBeVisible()
@@ -70,28 +90,33 @@ test.describe('with the sample stories', () => {
   test("today's hottest story leads, and the hottest events of 48 hours are listed once each", async ({ page }) => {
     await page.goto('/en/daily')
     const hottest = page.getByRole('region', { name: titles.workspaces })
-    await expect(hottest).toContainText(`${en.daily.hottest} · ${en.categories.product} · 2 more outlets reported this`)
+    await expect(hottest).toContainText(`${en.daily.hottest} · ${en.categories.tools} · 2 more outlets reported this`)
     await expect(hottest.getByRole('link')).toHaveAttribute('href', '/en/daily/sample-lumen-chat-adds-shared-workspaces')
 
     const hot = page.getByRole('region', { name: en.daily.hotTitle })
     // One story per event (the earlier Lumen Chat story shares its event); withdrawn and pending ones never show.
-    await expect(hot.getByRole('link')).toHaveText([titles.workspaces, titles.weights, titles.benchmark])
+    await expect(hot.getByRole('link')).toHaveText([titles.workspaces, titles.weights, titles.benchmark, titles.nimbus, titles.quill])
     const items = hot.getByRole('listitem')
     await expect(items.nth(0)).toContainText(`3 outlets${en.daily.trend.new}`)
     await expect(items.nth(1)).toContainText(`1 outlet${en.daily.trend.rising}`)
     await expect(items.nth(2)).toHaveText(/2 outlets$/)
 
-    // Categories and later pages keep the hot list but not the hottest story.
-    await page.goto('/en/daily/category/open')
+    // A tag's list keeps the hot list but not the hottest story; a category's page has neither (its board has no column).
+    await page.goto('/en/daily/tag/assistants')
     await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
     await expect(page.getByRole('region', { name: en.daily.hotTitle })).toBeVisible()
+    await page.goto('/en/daily/category/open')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.open}`)
+    await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
+    await expect(page.getByRole('region', { name: en.daily.hotTitle })).toHaveCount(0)
   })
 
   test("the list leads to the day's poster: the stories on it and its image in every language", async ({ page, request }) => {
     await page.goto('/en/daily')
-    const card = page.getByRole('link', { name: new RegExp(`^${en.poster.title}`) })
-    await expect(card).toContainText(en.poster.view)
-    await card.click()
+    const save = page.getByRole('link', { name: en.poster.save })
+    await expect(save).toHaveAttribute('download', /^ifai-\d{4}-\d{2}-\d{2}-en\.png$/)
+    await expect(save).toHaveAttribute('href', /^\/en\/daily\/poster\/\d{4}-\d{2}-\d{2}\/image\.png\?v=\w+$/)
+    await page.getByRole('link', { name: en.poster.title, exact: true }).click()
     await expect(page).toHaveURL(/\/en\/daily\/poster\/\d{4}-\d{2}-\d{2}$/)
     const date = new URL(page.url()).pathname.split('/').at(-1)
     await expect(page.getByRole('heading', { level: 1, name: en.poster.title })).toBeVisible()
@@ -136,7 +161,7 @@ test.describe('with the sample stories', () => {
       // 2026-10-20T08:15Z is 17:15 in Tokyo, still October 20.
       await expect(row.locator('time[datetime="2026-10-20T08:15:00.000Z"]')).toHaveText(/5:15\sPM/)
       await expect(page.getByRole('heading', { level: 2, name: 'Tuesday, October 20' })).toBeVisible()
-      // The newest sample story was published a minute ago, so the first group is today.
+      // The newest sample story came out five minutes ago, so the first group is today.
       await expect(page.locator('[id^="day-"]').first()).toHaveText(en.daily.today)
     })
   })
@@ -152,26 +177,80 @@ test.describe('with the sample stories', () => {
     })
   })
 
-  test('filters by category', async ({ page }) => {
-    await page.goto('/en/daily/category/open')
-    await expect(page.getByRole('heading', { level: 1, name: en.categories.open })).toBeVisible()
-    const filter = page.getByRole('navigation', { name: en.daily.filterLabel })
-    await expect(filter.getByRole('link', { name: en.categories.open })).toHaveAttribute('aria-current', 'page')
-    const rows = page.getByRole('article')
-    await expect(rows.getByRole('link', { name: titles.weights })).toBeVisible()
-    await expect(rows.getByRole('link', { name: titles.workspaces })).toHaveCount(0)
-
-    await filter.getByRole('link', { name: en.categories.product }).click()
-    await expect(page).toHaveURL(/\/en\/daily\/category\/product$/)
-    await expect(rows.getByRole('link', { name: titles.workspaces })).toBeVisible()
+  test('day headings put the count on the same line, with a space before the weekday in Chinese', async ({ page }) => {
+    await page.goto('/zh-hans/daily')
+    const day = page.locator('header').filter({ has: page.getByRole('heading', { level: 2, name: /^10月20日 星期二$/ }) })
+    await expect(day).toContainText('1 条')
+    // A sample story went up exactly a day before the samples were added.
+    await expect(page.getByRole('heading', { level: 2, name: '昨天' })).toBeVisible()
   })
 
-  test('an empty category says so and links to every story', async ({ page }) => {
-    await page.goto('/en/daily/category/design')
-    await expect(page.getByText(en.daily.emptyCategoryTitle)).toBeVisible()
-    await page.getByRole('link', { name: en.daily.allStories }).click()
+  test('a picture shows beside its story and on its page; a video plays in a dialog', async ({ page }) => {
+    await page.goto('/en/daily')
+    const pictured = page.getByRole('article').filter({ hasText: titles.workspaces })
+    await expect(pictured.locator('img').first()).toHaveAttribute('src', /\/_next\/image\?url=%2Fapi%2Fmedia%2Ffile%2F/)
+
+    const play = page.getByRole('button', { name: `Play video: ${titles.weights}` })
+    await expect(page.locator('iframe')).toHaveCount(0)
+    await play.click()
+    const dialog = page.getByRole('dialog', { name: titles.weights })
+    await expect(dialog.locator('iframe')).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/M7lc1UVf-VE\?autoplay=1/)
+    await page.keyboard.press('Escape')
+    await expect(page.locator('iframe')).toHaveCount(0)
+    // Vimeo too, asked not to track (dnt=1).
+    await page.getByRole('button', { name: `Play video: ${titles.robot}` }).click()
+    await expect(page.getByRole('dialog', { name: titles.robot }).locator('iframe')).toHaveAttribute(
+      'src',
+      'https://player.vimeo.com/video/76979871?autoplay=1&dnt=1',
+    )
+    await page.keyboard.press('Escape')
+    await expect(page.locator('iframe')).toHaveCount(0)
+
+    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    await expect(page.getByRole('img', { name: titles.workspaces })).toBeVisible()
+    await expect(page.getByText('Image: Lumen Labs')).toBeVisible()
+  })
+
+  test("a category's page has its banner, every category as pills, and its stories as cards", async ({ page }) => {
+    await page.goto('/en/daily/category/tools')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.tools}`)
+    const banner = page.getByRole('region', { name: en.categories.tools })
+    await expect(banner).toContainText(en.categoryAbout.tools)
+    // The newest sample story came out minutes before the tests, so the update is today's: a time alone.
+    await expect(banner).toContainText(/stor(y|ies) in the last 7 days · updated \d{1,2}:\d{2}\s[AP]M$/)
+    await expect(page).toHaveTitle(new RegExp(`^${en.categories.tools} · Daily`))
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', en.categoryAbout.tools)
+
+    const filter = page.getByRole('navigation', { name: en.daily.filterLabel })
+    await expect(filter.getByRole('link')).toHaveCount(8)
+    await expect(filter.getByRole('link', { name: en.categories.tools, exact: true })).toHaveAttribute('aria-current', 'page')
+    const cards = page.getByRole('main').getByRole('article')
+    // Newest first, under their times; the「试一试」in its grey box.
+    await expect(cards.getByRole('link')).toHaveText([titles.workspaces, titles.preview])
+    await expect(cards.first()).toContainText(`${en.daily.tryIt} Open a workspace and invite a teammate.`)
+    await expect(cards.nth(1)).toContainText(en.card.moreSources.match(/=0 \{([^}]*)\}/)![1])
+    await expect(page.getByText(en.daily.noEarlier)).toBeVisible()
+
+    await filter.getByRole('link', { name: en.categories.open, exact: true }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/category\/open$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.open}`)
+    await expect(cards.getByRole('link')).toHaveText([titles.weights])
+    await filter.getByRole('link', { name: en.daily.allCategories, exact: true }).click()
     await expect(page).toHaveURL(/\/en\/daily$/)
   })
+
+  test("a category's banner keeps its text to the left of the art on phones", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/zh-hans/daily/category/llm')
+    const title = page.getByRole('heading', { level: 1 })
+    await expect(title).toHaveText('#大模型')
+    const banner = page.getByRole('region', { name: '大模型' })
+    // 200 high at least, the text 210 wide at most, so the art's last 150 px stay in view.
+    expect((await banner.boundingBox())!.height).toBeGreaterThanOrEqual(200)
+    expect((await title.boundingBox())!.width).toBeLessThanOrEqual(210)
+  })
+
+  // Every category has sample stories, so an empty one is left to tests/unit/daily/public.test.tsx.
 
   test("a story's page has its sources, original first, and the other developments of its event", async ({ page }) => {
     const response = await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
@@ -187,6 +266,120 @@ test.describe('with the sample stories', () => {
       '/en/daily/sample-lumen-chat-announces-workspaces',
     )
     await expect(page.getByRole('button', { name: en.daily.share })).toBeVisible()
+  })
+
+  test("a story's page has its industry tags, companies and products, and its topic", async ({ page }) => {
+    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    const topic = page.getByRole('region', { name: new RegExp(en.daily.topic) })
+    await expect(topic.getByText(en.daily.thisStory)).toBeVisible()
+    await expect(topic.getByRole('link', { name: titles.preview })).toHaveAttribute('href', '/en/daily/sample-lumen-chat-announces-workspaces')
+    const entities = page.getByRole('region', { name: en.daily.entities })
+    await expect(entities.getByText('Lumen Labs')).toBeVisible()
+    await page.getByRole('region', { name: en.daily.tags }).getByRole('link', { name: en.tags.assistants }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/tag\/assistants$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`${en.tags.assistants} · Daily`)
+    // Listed by day and again in the hot list beside it.
+    await expect(page.getByRole('link', { name: titles.workspaces }).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: titles.preview })).toBeVisible()
+    // Prism's story has other tags and isn't hot enough for the hot list.
+    await expect(page.getByRole('link', { name: titles.prism })).toHaveCount(0)
+  })
+
+  test('another category keeps the page and puts a skeleton, then a retry, where the stories were', async ({ page }) => {
+    await page.clock.install()
+    await page.goto('/en/daily', { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    // Hold the next view of the list back, as a slow connection would.
+    let release = (): void => undefined
+    const held = new Promise<void>((resolve) => (release = resolve))
+    await page.route(
+      (url) => url.pathname === '/en/daily/category/research' && url.searchParams.has('_rsc'),
+      async (route) => {
+        await held
+        await route.continue()
+      },
+    )
+
+    const categories = main.getByRole('navigation', { name: en.daily.filterLabel })
+    await categories.getByRole('link', { name: en.categories.research }).click()
+    const skeleton = main.getByRole('status', { name: en.states.loadingList })
+    await expect(skeleton).toBeVisible()
+    await expect(categories).toBeVisible()
+
+    await page.clock.fastForward(10_000)
+    await expect(main.getByRole('alert')).toContainText(en.states.failedTitle)
+    await main.getByRole('button', { name: en.states.retry }).click()
+    await expect(skeleton).toBeVisible()
+
+    release()
+    await expect(page).toHaveURL(/\/en\/daily\/category\/research$/)
+    await expect(main.getByRole('link', { name: titles.benchmark }).first()).toBeVisible()
+    await expect(skeleton).toHaveCount(0)
+  })
+
+  test("a story's page shows its skeleton while it comes in over a slow connection", async ({ page, context }) => {
+    // As when the reader clicks before the list has prefetched the story.
+    await page.route(/\/en\/daily\/sample-[^/?]+\?_rsc=/, (route) => (route.request().headers()['next-router-prefetch'] ? route.abort() : route.fallback()))
+    await page.goto('/en/daily', { waitUntil: 'networkidle' })
+    const cdp = await context.newCDPSession(page)
+    await cdp.send('Network.enable')
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 400, downloadThroughput: 12 * 1024, uploadThroughput: 12 * 1024 })
+
+    await page.getByRole('main').getByRole('link', { name: titles.preview }).first().click()
+    const skeleton = page.getByRole('status', { name: en.states.loadingPage })
+    await expect(skeleton).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: titles.preview })).toBeVisible({ timeout: 20_000 })
+    await expect(skeleton).toHaveCount(0)
+  })
+
+  test('the stories the list shows are prefetched, so they open without waiting on the server', async ({ page }) => {
+    // Tall enough to show a story that was not rendered at build time (only the newest one is).
+    await page.setViewportSize({ width: 1280, height: 1600 })
+    await page.goto('/en/daily', { waitUntil: 'networkidle' })
+    const fetched: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('_rsc=') && !request.headers()['next-router-prefetch']) fetched.push(new URL(request.url()).pathname)
+    })
+    await page.getByRole('main').getByRole('article').getByRole('link', { name: titles.weights }).click()
+    await expect(page.getByRole('heading', { level: 1, name: titles.weights })).toBeVisible()
+    expect(fetched).toEqual([])
+  })
+
+  test("a product's topic page lists the stories about it, with its maker and app", async ({ page }) => {
+    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    await page.getByRole('region', { name: en.daily.entities }).getByRole('link', { name: /^Lumen Chat/ }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/topic\/lumenchat$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('#Lumen Chat')
+    const main = page.getByRole('main')
+    await expect(main.getByText('2 stories')).toBeVisible()
+    await expect(main.getByRole('article').getByRole('link')).toHaveText([titles.workspaces, titles.preview])
+    await expect(main.getByText(en.daily.noEarlier)).toBeVisible()
+    await expect(main.getByRole('link', { name: /^App page/ })).toHaveAttribute('href', '/en/apps/lumen-chat')
+    // The app's developer has a topic page of its own: a company.
+    await main.getByRole('link', { name: 'Lumen Labs' }).click()
+    await expect(page).toHaveURL(/\/en\/daily\/topic\/lumenlabs$/)
+    await expect(page.getByRole('main').getByText(en.daily.entityKinds.company, { exact: true })).toBeVisible()
+  })
+
+  test("a story's page lists the stories of other events that read like it, each event once", async ({ page }) => {
+    // Its report reads like Kitecode's and Orbit Notes', the closer first.
+    await page.goto('/en/daily/sample-nimbus-3-reasons-step-by-step')
+    const similar = page.getByRole('region', { name: en.daily.similar })
+    await expect(similar.getByRole('link')).toHaveText([new RegExp(titles.weights), new RegExp(titles.benchmark)])
+
+    // Both Lumen Chat stories read like Quill's, but they are one event: listed once, by the closer story.
+    await page.goto('/en/daily/sample-quill-raises-funding-for-team-writing')
+    await expect(similar.getByRole('link')).toHaveText([new RegExp(titles.workspaces)])
+
+    // The other Lumen Chat story is of the same event, so only Quill's is listed.
+    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    await expect(similar.getByRole('link')).toHaveText([new RegExp(titles.quill)])
+
+    // Nothing reads like it: no such block.
+    await page.goto('/en/daily/sample-prism-turns-sketches-into-video')
+    await expect(page.getByRole('heading', { level: 1, name: titles.prism })).toBeVisible()
+    await expect(similar).toHaveCount(0)
   })
 
   test('a corrected story shows when it was corrected', async ({ page }) => {

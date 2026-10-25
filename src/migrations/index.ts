@@ -21,7 +21,12 @@ import * as migration_20261023_073510_app_reports from './20261023_073510_app_re
 import * as migration_20261023_082050_daily_email_sends from './20261023_082050_daily_email_sends';
 import * as migration_20261023_084701_app_submissions from './20261023_084701_app_submissions';
 import * as migration_20261024_041525_admin_log from './20261024_041525_admin_log';
-import * as migration_20261024_175335_r2_upload_columns from './20261024_175335_r2_upload_columns';
+import * as migration_20261024_125558_daily_story_media from './20261024_125558_daily_story_media';
+import * as migration_20261024_135122_daily_story_tags from './20261024_135122_daily_story_tags';
+import * as migration_20261024_155932_daily_categories from './20261024_155932_daily_categories';
+import * as migration_20261024_181845_daily_tags from './20261024_181845_daily_tags';
+import * as migration_20261024_185906_daily_approved_at from './20261024_185906_daily_approved_at';
+import * as migration_20261025_030735_r2_upload_columns from './20261025_030735_r2_upload_columns';
 
 export const migrations = [
   {
@@ -140,8 +145,33 @@ export const migrations = [
     name: '20261024_041525_admin_log',
   },
   {
-    up: migration_20261024_175335_r2_upload_columns.up,
-    down: migration_20261024_175335_r2_upload_columns.down,
-    name: '20261024_175335_r2_upload_columns'
+    up: migration_20261024_125558_daily_story_media.up,
+    down: migration_20261024_125558_daily_story_media.down,
+    name: '20261024_125558_daily_story_media',
+  },
+  {
+    up: migration_20261024_135122_daily_story_tags.up,
+    down: migration_20261024_135122_daily_story_tags.down,
+    name: '20261024_135122_daily_story_tags',
+  },
+  {
+    up: migration_20261024_155932_daily_categories.up,
+    down: migration_20261024_155932_daily_categories.down,
+    name: '20261024_155932_daily_categories',
+  },
+  {
+    up: migration_20261024_181845_daily_tags.up,
+    down: migration_20261024_181845_daily_tags.down,
+    name: '20261024_181845_daily_tags',
+  },
+  {
+    up: migration_20261024_185906_daily_approved_at.up,
+    down: migration_20261024_185906_daily_approved_at.down,
+    name: '20261024_185906_daily_approved_at',
+  },
+  {
+    up: migration_20261025_030735_r2_upload_columns.up,
+    down: migration_20261025_030735_r2_upload_columns.down,
+    name: '20261025_030735_r2_upload_columns'
   },
 ];

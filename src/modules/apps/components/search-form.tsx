@@ -1,15 +1,12 @@
-import Form from 'next/form'
 import { useTranslations } from 'next-intl'
 
 import { Icon } from '@/components/icon'
-import type { Locale } from '@/i18n/config'
-import { getPathname, Link } from '@/i18n/navigation'
+import { ListLink, ListSearch } from '@/components/states/list-navigation'
 
 import { defaultSorts, type Board, type Sort } from '../boards'
 import { listHref } from '../list-params'
 
 type SearchFormProps = {
-  locale: Locale
   /** Searching inside a category keeps to that category, and to the board and sort shown. */
   category: string | null
   q: string
@@ -17,14 +14,12 @@ type SearchFormProps = {
   sort: Sort
 }
 
-/** Search box above the categories; a plain GET form, so it also works before JavaScript loads. */
-export function SearchForm({ locale, category, q, board, sort }: SearchFormProps) {
+/** Search box above the categories; a GET form, so it also works before JavaScript loads, and loads in place after. */
+export function SearchForm({ category, q, board, sort }: SearchFormProps) {
   const t = useTranslations('apps')
-  const action = getPathname({ href: listHref({ category }), locale })
-
   return (
-    <Form
-      action={action}
+    <ListSearch
+      href={listHref({ category })}
       role="search"
       className="flex h-11 items-center gap-1 rounded-pill border border-surface-2 bg-surface pr-1.5 pl-1 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-link md:max-w-120"
     >
@@ -48,14 +43,14 @@ export function SearchForm({ locale, category, q, board, sort }: SearchFormProps
       {board !== 'top' && <input type="hidden" name="board" value={board} />}
       {sort !== defaultSorts[board] && <input type="hidden" name="sort" value={sort} />}
       {q && (
-        <Link
+        <ListLink
           href={listHref({ category, board, sort })}
           aria-label={t('clearSearch')}
           className="flex size-8 flex-none items-center justify-center rounded-pill bg-line text-ink-2 hover:text-ink"
         >
           <Icon name="close" size={14} strokeWidth={2} />
-        </Link>
+        </ListLink>
       )}
-    </Form>
+    </ListSearch>
   )
 }

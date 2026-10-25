@@ -12,6 +12,7 @@ export const tileTones = [
 /** Box, corner and letter size per tile size; app logos use the same boxes. */
 export const tileSizes = {
   sm: 'size-7 rounded-thumb text-small',
+  compact: 'size-8 rounded-thumb text-meta', // 「今天提到的应用」beside the daily list
   md: 'size-10 rounded-tile text-body',
   lg: 'size-11 rounded-tile text-body',
   xl: 'size-13 rounded-tile text-h3',
