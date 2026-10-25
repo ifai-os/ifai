@@ -38,7 +38,8 @@ export default async function MemberPage({ params, searchParams }: Props) {
   // An address they had before, or in capitals: on to the one they have now, with the tab.
   if (found.status === 'moved') {
     const tab = one(query.tab)
-    return permanentRedirect({ href: { pathname: profilePath(found.handle), query: tab ? { tab } : {} }, locale })
+    const pathname = profilePath(found.handle)
+    return permanentRedirect({ href: tab ? { pathname, query: { tab } } : pathname, locale })
   }
   const page = await getProfilePage(found.userId, locale, parseProfileTab(one(query.tab)), parseBefore(one(query.before)))
   if (!page) notFound()

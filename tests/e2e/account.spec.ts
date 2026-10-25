@@ -256,13 +256,19 @@ test.describe('a signed-in member', () => {
     }
   })
 
-  test('sees who they are in the account menu and changes their nickname', async ({ page, context, baseURL }) => {
+  test('sees who they are in the account menu and changes their nickname', async ({ page, context, request, baseURL }) => {
     const member = await createMember(baseURL ?? 'http://localhost:3000')
     try {
       await context.addCookies([member.cookie])
       await page.goto('/en')
       await page.getByRole('button', { name: en.header.account }).click()
-      await expect(page.getByRole('link', { name: /Smoke test member/ })).toContainText(member.email)
+      // With the circles, the top of the menu is the member's page; before them, the sign-in address.
+      const top = page.getByRole('link', { name: /Smoke test member/ })
+      if ((await request.get('/api/circles/feed')).status() === 404) await expect(top).toContainText(member.email)
+      else {
+        await expect(top).toContainText(en.header.profileLine.replace('{handle}', member.handle))
+        await expect(top).toHaveAttribute('href', `/en/u/${member.handle}`)
+      }
       await expect(page.getByRole('link', { name: en.header.submissions })).toHaveAttribute('href', '/en/apps/submit#mine')
       await page.getByRole('link', { name: en.header.accountPage }).click()
       await expect(page).toHaveURL(/\/en\/me\/account$/)

@@ -114,7 +114,7 @@ function ProfileHeader({ page }: { page: ProfilePageData }) {
         <Link href={peoplePath(profile.handle, 'following')} className="hover:text-ink">
           {t.rich('followingCount', { count: follows.following, b: bold })}
         </Link>
-        <span aria-hidden="true" className="text-mute">
+        <span aria-hidden="true" className="text-ink-4">
           ·
         </span>
         <Link href={peoplePath(profile.handle, 'followers')} className="hover:text-ink">

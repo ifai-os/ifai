@@ -33,7 +33,9 @@ test.describe('the circles', () => {
     expect(feed.status()).toBe(200)
     expect(feed.headers()['cache-control']).toBe('private, no-store')
     expect(await feed.json()).toMatchObject({ signedIn: false, joined: [], overview: { circles: expect.any(Array) } })
-    expect((await request.get('/api/circles/feed?tab=following')).status()).toBe(400)
+    expect((await request.get('/api/circles/feed?tab=friends')).status()).toBe(400)
+    // 关注 for a visitor: nothing to show, not an error.
+    expect(await (await request.get('/api/circles/feed?tab=following')).json()).toMatchObject({ posts: [], next: null })
     expect((await request.get('/api/circles/feed?cursor=abc')).status()).toBe(400)
     expect((await request.get(`/api/circles/feed?circle=${nowhere}`)).status()).toBe(404)
     // 我的圈子 for a visitor: nothing to show, not an error.
