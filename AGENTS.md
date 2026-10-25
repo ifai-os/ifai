@@ -56,6 +56,7 @@ src/
     inngest/               Inngest 客户端和任务列表
     admin-log/             后台操作记录：表（schema.ts）、记什么（rules.ts）、所有集合的钩子和接口包装（hooks.ts 的 withAdminLog）
     switches.ts            总开关 COLLECT_ENABLED、MODEL_CALLS_ENABLED、DAILY_EMAIL_ENABLED
+    data-cache.ts          cached()（代替 unstable_cache）和 dataTag()：数据缓存的键和标签按数据库区分，预览环境之间不串数据
     shanghai-day.ts        上海时间的自然日（预算和海报按它算）
     email/layout.ts        邮件版式（登录邮件、投稿邮件共用；纯文本版一起生成）
     visitor.ts             访客哈希（IP + 浏览器标识，盐每天换）：应用点击、Skill 安装计数、评价举报共用

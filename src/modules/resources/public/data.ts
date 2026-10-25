@@ -1,9 +1,9 @@
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import { cache } from 'react'
 
 import type { Locale } from '@/i18n/config'
+import { cached } from '@/lib/data-cache'
 import { inAnyLanguage, inReaderLanguage, type InLanguage, type Localized } from '@/lib/i18n/localized'
 import { namesFirst } from '@/modules/search/rank'
 import type { AgentHost, Skill, SkillVersion } from '@/payload-types'
@@ -187,7 +187,7 @@ const listSelect = {
 const versionListSelect = { skill: true, version: true, status: true, publishedAt: true, scanStatus: true } as const
 
 /** Every published Skill, its public versions' dates and the tags, as read for the list. */
-const loadCatalog = unstable_cache(
+const loadCatalog = cached(
   async () => {
     const client = await payload()
     const [skills, versions, tags] = await Promise.all([
@@ -405,7 +405,7 @@ const detailSelect = { ...listSelect, status: true, delistReason: true, reposito
  * A published or delisted Skill by slug. Delisted Skills keep their page (it says why), so this
  * reads past the visitor's access rules and selects only what the page shows.
  */
-const findSkill = unstable_cache(
+const findSkill = cached(
   async (slug: string) => {
     const { docs } = await (await payload()).find({
       collection: 'skills',
@@ -423,7 +423,7 @@ const findSkill = unstable_cache(
 )
 
 /** A Skill's public versions with everything a version page shows (not the back-office findings). */
-const findVersions = unstable_cache(
+const findVersions = cached(
   async (skillId: number) => {
     const { docs } = await (await payload()).find({
       collection: 'skill-versions',
@@ -457,7 +457,7 @@ const findVersions = unstable_cache(
 )
 
 /** The newest version of any status, only its number and state: is a newer one being checked? */
-const findNewest = unstable_cache(
+const findNewest = cached(
   async (skillId: number) => {
     const { docs } = await (await payload()).find({
       collection: 'skill-versions',
@@ -473,7 +473,7 @@ const findNewest = unstable_cache(
   cacheOptions,
 )
 
-const findHosts = unstable_cache(
+const findHosts = cached(
   async () => {
     const { docs } = await (await payload()).find({
       collection: 'agent-hosts',
@@ -507,7 +507,7 @@ export type GuideHost = {
   instructions: InLanguage<string> | null
 }
 
-const findGuideHosts = unstable_cache(
+const findGuideHosts = cached(
   async () => {
     const { docs } = await (await payload()).find({
       collection: 'agent-hosts',
@@ -690,7 +690,7 @@ export async function getInstallTarget(slug: string, version?: string): Promise<
 }
 
 /** The stored Zip's file name, which Payload's file route serves it under. */
-export const getVersionFilename = unstable_cache(
+export const getVersionFilename = cached(
   async (versionId: number) => {
     const doc = await (await payload()).findByID({
       collection: 'skill-versions',

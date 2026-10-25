@@ -1,10 +1,10 @@
 import config from '@payload-config'
 import { and, desc, eq, gte, isNull, sql } from '@payloadcms/db-postgres/drizzle'
-import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { cache } from 'react'
 
 import type { Locale } from '@/i18n/config'
+import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
 import { shanghaiDate } from '@/lib/shanghai-day'
 import { appsCacheTag } from '@/modules/apps/cache'
@@ -98,7 +98,7 @@ async function payload() {
 
 type ListArgs = { tag?: StoryTag | null; page: number }
 
-const findStories = unstable_cache(
+const findStories = cached(
   async ({ tag, page }: ListArgs) => {
     const result = await (await payload()).find({
       collection: 'stories',
@@ -119,7 +119,7 @@ const findStories = unstable_cache(
 )
 
 // One page of a category's published stories, newest first (its category page).
-const findCategoryPage = unstable_cache(
+const findCategoryPage = cached(
   async (category: StoryCategory, page: number) => {
     const result = await (await payload()).find({
       collection: 'stories',
@@ -141,7 +141,7 @@ const findCategoryPage = unstable_cache(
 
 // A category page's banner: its stories of the last 7 days, counted when the cache fills (so up to
 // an hour behind as stories age out), and when the newest went up.
-const findCategorySummary = unstable_cache(
+const findCategorySummary = cached(
   async (category: StoryCategory) => {
     const client = await payload()
     const inCategory: Where[] = [published, { category: { equals: category } }]
@@ -169,7 +169,7 @@ const findCategorySummary = unstable_cache(
   cacheOptions,
 )
 
-const findLatest = unstable_cache(
+const findLatest = cached(
   async (limit: number) => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -188,7 +188,7 @@ const findLatest = unstable_cache(
   cacheOptions,
 )
 
-const findStory = unstable_cache(
+const findStory = cached(
   async (slug: string) => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -206,7 +206,7 @@ const findStory = unstable_cache(
   cacheOptions,
 )
 
-const findDevelopments = unstable_cache(
+const findDevelopments = cached(
   async (eventId: number, storyId: number) => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -226,7 +226,7 @@ const findDevelopments = unstable_cache(
 )
 
 // Published stories about the same product or company (`stories.entities.key`), newest first.
-const findTopic = unstable_cache(
+const findTopic = cached(
   async (key: string) => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -246,7 +246,7 @@ const findTopic = unstable_cache(
 )
 
 // One page of the published stories about a company or product, newest first (its topic page).
-const findTopicPage = unstable_cache(
+const findTopicPage = cached(
   async (key: string, page: number) => {
     const result = await (await payload()).find({
       collection: 'stories',
@@ -267,7 +267,7 @@ const findTopicPage = unstable_cache(
 )
 
 // Published apps by their compared names (name and aliases), so a topic page can say which app it is.
-const findTopicApps = unstable_cache(
+const findTopicApps = cached(
   async () => {
     const { docs } = await (await payload()).find({
       collection: 'apps',
@@ -292,7 +292,7 @@ const findTopicApps = unstable_cache(
 
 // Published stories whose report reads most like this one's (pgvector, step 6's embeddings): one per
 // event, the closest, leaving out the given events.
-const findSimilar = unstable_cache(
+const findSimilar = cached(
   async (itemId: number, leaveOut: number[]) => {
     const { payload: client, db } = await getDb()
     const distance = sql`mine.embedding <=> theirs.embedding`
@@ -332,7 +332,7 @@ const findSimilar = unstable_cache(
 )
 
 // The published apps the apps module matched to this story, with the name the match was made on.
-const findStoryApps = unstable_cache(
+const findStoryApps = cached(
   async (storyId: number) => {
     const { payload: client, db } = await getDb()
     const rows = await db
@@ -360,7 +360,7 @@ const findStoryApps = unstable_cache(
 )
 
 // Stories of every event with heat (the heat job keeps it to the last 48 hours), hottest first.
-const findHot = unstable_cache(
+const findHot = cached(
   async () => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
@@ -389,7 +389,7 @@ export type MentionedApp = {
 }
 
 // The apps pages' matches of published stories to published apps (src/modules/apps/metrics/mentions.ts).
-const findMentionedApps = unstable_cache(
+const findMentionedApps = cached(
   async (): Promise<MentionedApp[]> => {
     const { payload: client, db } = await getDb()
     const rows = await db
@@ -441,7 +441,7 @@ function logoOf(media: number | Media | null | undefined): MentionedApp['logo'] 
 }
 
 // Generated posters only (the visitor's access rules); the editor's generating refreshes the tag.
-const findPoster = unstable_cache(
+const findPoster = cached(
   async (date: string): Promise<PosterSnapshot | null> => {
     const { docs } = await (await payload()).find({
       collection: 'posters',
@@ -458,7 +458,7 @@ const findPoster = unstable_cache(
   cacheOptions,
 )
 
-const findPosterDates = unstable_cache(
+const findPosterDates = cached(
   async (): Promise<string[]> => {
     const { docs } = await (await payload()).find({
       collection: 'posters',
