@@ -12,6 +12,7 @@
 | [resources.md](./resources.md) — 资源（Agent Skills） | 已确认，实现中（第 3 步完成） |
 | [search.md](./search.md) — 全站搜索 | 已实现，待预览环境验收 |
 | [circles.md](./circles.md) — 圈子（第二期） | 草稿，第 1 步（圈子与文字动态）实现中；标「按推荐」的规则待站长确认 |
+| [account.md](./account.md) — 账号菜单、登录与设置 | 第一期已实现，待走查；依赖圈子的部分随圈子做 |
 
 ## 模板
 
