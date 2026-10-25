@@ -49,7 +49,7 @@
     "apps": "AI apps ranked by heat, with pricing and alternatives",
     "rankings": "Model rankings from blind votes",
     "resources": "Agent Skills you can install, with versions and safety checks",
-    "wiki": "An AI encyclopedia anyone can edit"
+    "wiki": "AI terms in plain words, with examples and sources"
   },
   "card": {
     "heat": "Heat {value}",
@@ -118,12 +118,14 @@
       "all": "All",
       "daily": "Daily",
       "apps": "Apps",
-      "skills": "Skills"
+      "skills": "Skills",
+      "wiki": "Wiki"
     },
     "kind": {
       "daily": "Daily",
       "apps": "App",
-      "skills": "Skill"
+      "skills": "Skill",
+      "wiki": "Wiki"
     },
     "found": "{count, plural, one {# result} other {# results}} for “{q}”",
     "seeAll": "See all {count}",
@@ -1404,5 +1406,85 @@
     "signInPost": "Sign in to post",
     "signInReact": "Sign in to react",
     "afterSignIn": "You will come back to the circles page."
+  },
+  "wiki": {
+    "title": "Wiki",
+    "description": "AI terms explained in plain words, with examples, limits and the sources to check them. Written and fact-checked by IFAI's editors.",
+    "welcome": "Welcome to the IFAI Wiki",
+    "intro": "AI words in plain language: what each one means, an example, where it stops working, and the sources behind it. Every entry is written and fact-checked by IFAI's editors before it goes up.",
+    "searchLabel": "Search the Wiki",
+    "searchPlaceholder": "Search entries, e.g. Agent, context window, RAG",
+    "entryCount": "{count, plural, one {<b>#</b> entry} other {<b>#</b> entries}}",
+    "topicCount": "{count, plural, one {<b>#</b> topic} other {<b>#</b> topics}}",
+    "today": "Today’s entry",
+    "topicsTitle": "Browse by topic",
+    "entries": "{count, plural, one {# entry} other {# entries}}",
+    "startWith": "Start with",
+    "newest": "Newest entries",
+    "seeAll": "All entries",
+    "didYouKnow": "Did you know",
+    "anotherFact": "Another one",
+    "toEntry": "Read the entry “{title}” ›",
+    "emptyTitle": "No entries yet",
+    "emptyBody": "The first entries are being written and checked. Meanwhile, see what changed in AI today.",
+    "toDaily": "Read the Daily",
+    "sideLabel": "Wiki",
+    "home": "Wiki home",
+    "allEntries": "All entries",
+    "topics": "Topics",
+    "byType": "Types",
+    "types": {
+      "concept": "Concept",
+      "method": "Method"
+    },
+    "typesPlural": {
+      "concept": "Concepts",
+      "method": "Methods"
+    },
+    "breadcrumb": "You are here",
+    "topicTitle": "{topic} · Wiki",
+    "mustRead": "Read these first",
+    "mustReadNote": "In the order an editor suggests.",
+    "inTopic": "Everything in this topic",
+    "topicEmpty": "No entries in this topic yet.",
+    "entriesTitle": "All Wiki entries",
+    "entriesTypeTitle": "Wiki · {type}",
+    "entriesIntro": "Every entry, sorted by name.",
+    "typeFilter": "Entry type",
+    "allTypes": "All",
+    "pageTitle": "{title} · Page {page}",
+    "pages": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "entryTitle": "{title} · Wiki",
+    "alsoCalled": "Also called: <names></names>",
+    "separator": ", ",
+    "definition": "In one sentence",
+    "sections": {
+      "explanation": "In plain words",
+      "examples": "Examples",
+      "steps": "Steps",
+      "uses": "What it’s used for",
+      "limitations": "Limitations",
+      "contexts": "In different contexts",
+      "comparisons": "Easily confused with",
+      "relations": "Related entries",
+      "further": "Try it",
+      "sources": "Sources"
+    },
+    "prerequisites": "Read first",
+    "readNext": "Read next",
+    "related": "See also",
+    "apps": "Apps",
+    "skills": "Skills",
+    "stories": "In the Daily",
+    "reviewedOn": "Facts checked {date}",
+    "updatedOn": "Updated <time></time>",
+    "reviewNote": "“Facts checked” is the day an editor last compared this entry with its sources; fixing the wording doesn’t change it.",
+    "reportMistake": "Spotted a mistake or something out of date?",
+    "tellUs": "Email us",
+    "reportSubject": "Wiki: {title}",
+    "toc": "On this page"
   }
 }

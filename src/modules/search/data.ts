@@ -7,6 +7,9 @@ import { storyHref } from '@/modules/daily/public/list-params'
 import type { SkillCategory } from '@/modules/resources/categories'
 import { getHomeSkills, getSkillsOverview, searchSkills } from '@/modules/resources/public/data'
 import { skillHref } from '@/modules/resources/public/list-params'
+import { searchWiki } from '@/modules/wiki/data'
+import { entryHref } from '@/modules/wiki/links'
+import type { EntryType } from '@/modules/wiki/rules'
 
 import { visibleKinds, type SearchKind } from './kinds'
 
@@ -56,6 +59,15 @@ export type SearchHit =
       category: SkillCategory
       author: string
     }
+  | {
+      kind: 'wiki'
+      key: string
+      href: `/${string}`
+      title: HitText
+      summary: InLanguage<string> | null
+      slug: string
+      type: EntryType
+    }
 
 export type KindResult = { kind: SearchKind; total: number; hits: SearchHit[] }
 
@@ -96,6 +108,22 @@ async function searchKind(kind: SearchKind, q: string, locale: Locale, { offset,
       })),
     }
   }
+  if (kind === 'wiki') {
+    const result = await searchWiki({ locale, q, offset, limit })
+    return {
+      kind,
+      total: result.total,
+      hits: result.entries.map((entry) => ({
+        kind,
+        key: `wiki-${entry.id}`,
+        href: entryHref(entry.slug),
+        title: entry.title,
+        summary: entry.definition,
+        slug: entry.slug,
+        type: entry.type,
+      })),
+    }
+  }
   const result = await searchSkills({ locale, q, offset, limit })
   return {
     kind,
@@ -133,7 +161,7 @@ export async function searchOneKind(
     searchKind(kind, q, locale, { offset: (page - 1) * hitsPerPage, limit: hitsPerPage }),
     ...kinds.filter((other) => other !== kind).map((other) => searchKind(other, q, locale, { offset: 0, limit: 1 })),
   ])
-  const totals = { daily: 0, apps: 0, skills: 0 }
+  const totals = { daily: 0, apps: 0, skills: 0, wiki: 0 }
   for (const item of [result, ...others]) totals[item.kind] = item.total
   return { result, totals }
 }

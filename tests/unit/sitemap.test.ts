@@ -9,6 +9,7 @@ describe('sitemap files', () => {
   it('reads file names and nothing else', () => {
     expect(parseSitemapFile('daily-2.xml')).toEqual({ section: 'daily', number: 2 })
     expect(parseSitemapFile('pages-1.xml')).toEqual({ section: 'pages', number: 1 })
+    expect(parseSitemapFile('wiki-1.xml')).toEqual({ section: 'wiki', number: 1 })
     for (const name of ['daily-0.xml', 'daily-01.xml', 'daily.xml', 'other-1.xml', 'daily-1.xml.gz', 'daily-1']) {
       expect(parseSitemapFile(name)).toBeNull()
     }

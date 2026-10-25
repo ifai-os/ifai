@@ -41,9 +41,10 @@ jobs:
       BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-used-anywhere-else
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_TELEMETRY_DISABLED: '1'
-      # Builds with the phase-two modules (圈子), so the smoke tests cover them before launch. Phase one's
-      # navigation is covered by the unit tests (tests/unit/site-config.test.ts).
-      NEXT_PUBLIC_SITE_PHASE: '2'
+      # Builds with the phase-two and phase-three modules (圈子, 排行, Wiki), so the smoke tests cover them before
+      # launch. Phase one's navigation is covered by the unit tests (tests/unit/site-config.test.ts), and the
+      # preview smoke tests (deploy.yml) run against the preview's own phase, where the later modules stay hidden.
+      NEXT_PUBLIC_SITE_PHASE: '3'
       # The subscribe boxes and endpoints, for the smoke tests. Without Resend the emails only go to the server log.
       DAILY_EMAIL_ENABLED: 'true'
       # Signs the smoke tests' fake Resend webhooks (base64 of a made-up string).
@@ -77,9 +78,15 @@ jobs:
       - name: Migrations apply to an empty database
         run: pnpm payload migrate
 
-      # Stories first, so the apps seed can match the stories that mention the sample apps.
-      - name: Sample stories, apps and Skills for the smoke tests
-        run: pnpm payload run scripts/seed-stories.ts && pnpm payload run scripts/seed-apps.ts && pnpm payload run scripts/seed-skills.ts
+      # Stories first, so the apps seed can match the stories that mention the sample apps; the Wiki last,
+      # so its entries can link the sample apps, Skills and stories.
+      - name: Sample stories, apps, Skills, rankings and Wiki entries for the smoke tests
+        run: |
+          pnpm payload run scripts/seed-stories.ts
+          pnpm payload run scripts/seed-apps.ts
+          pnpm payload run scripts/seed-skills.ts
+          pnpm payload run scripts/seed-rankings.ts
+          pnpm payload run scripts/seed-wiki.ts
 
       - name: Build
         run: pnpm build
@@ -92,83 +99,15 @@ jobs:
         env:
           E2E_ADMIN: '1'
           E2E_SAMPLE_APPS: '1'
+          E2E_SAMPLE_RANKINGS: '1'
           E2E_SAMPLE_SKILLS: '1'
           E2E_SAMPLE_STORIES: '1'
+          E2E_SAMPLE_WIKI: '1'
 
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report
-          retention-days: 7
-
-  # The model rankings open in the third phase (NEXT_PUBLIC_SITE_PHASE=3), so the job above only
-  # checks that they stay hidden. This one builds the third phase with the sample rankings and runs
-  # their smoke tests. When the site moves to the third phase, fold it into the job above.
-  rankings:
-    name: Rankings smoke tests (third phase)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-
-    services:
-      postgres:
-        image: pgvector/pgvector:pg17
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: ifai
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-    # CI-only placeholder values, as above.
-    env:
-      DATABASE_URI: postgres://postgres:postgres@localhost:5432/ifai
-      PAYLOAD_SECRET: ci-only-payload-secret-not-used-anywhere-else
-      BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-used-anywhere-else
-      NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      NEXT_PUBLIC_SITE_PHASE: '3'
-      NEXT_TELEMETRY_DISABLED: '1'
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Migrations
-        run: pnpm payload migrate
-
-      - name: Sample rankings
-        run: pnpm payload run scripts/seed-rankings.ts
-
-      - name: Build (third phase)
-        run: pnpm build
-
-      - name: Install Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Rankings smoke tests
-        run: pnpm test:e2e tests/e2e/rankings.spec.ts
-        env:
-          E2E_SAMPLE_RANKINGS: '1'
-
-      - name: Upload Playwright report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-rankings
           path: playwright-report
           retention-days: 7

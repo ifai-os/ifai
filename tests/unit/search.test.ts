@@ -11,8 +11,13 @@ describe('readSearchParams', () => {
 
   it('takes a known kind and treats anything else as all', () => {
     expect(readSearchParams({ q: 'x', type: 'apps' }).type).toBe('apps')
-    expect(readSearchParams({ q: 'x', type: 'wiki' }).type).toBe('all')
+    expect(readSearchParams({ q: 'x', type: 'people' }).type).toBe('all')
     expect(readSearchParams({ q: 'x', type: ['skills', 'apps'] }).type).toBe('skills')
+  })
+
+  it('treats a kind as all until its module launches', () => {
+    expect(readSearchParams({ q: 'x', type: 'wiki' }, 2).type).toBe('all')
+    expect(readSearchParams({ q: 'x', type: 'wiki' }, 3).type).toBe('wiki')
   })
 
   it('gives no page for anything but a whole number from 1', () => {
@@ -58,8 +63,9 @@ describe('namesFirst', () => {
 })
 
 describe('visibleKinds', () => {
-  it('searches the Daily, apps and Skills from the first phase', () => {
+  it('searches the Daily, apps and Skills from the first phase, and the Wiki from the third', () => {
     expect(visibleKinds(1)).toEqual(['daily', 'apps', 'skills'])
-    expect(visibleKinds(3)).toEqual(['daily', 'apps', 'skills'])
+    expect(visibleKinds(2)).toEqual(['daily', 'apps', 'skills'])
+    expect(visibleKinds(3)).toEqual(['daily', 'apps', 'skills', 'wiki'])
   })
 })

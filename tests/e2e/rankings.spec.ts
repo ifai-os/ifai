@@ -16,7 +16,7 @@ const en = load('en')
 const ja = load('ja')
 const zhHant = load('zh-hant')
 
-/** The rankings open in the third phase. CI's main job builds the first and checks they stay hidden; its rankings job builds the third. */
+/** The rankings open in the third phase. CI builds the third; the preview smoke tests run against the preview's own phase and check they stay hidden. */
 const launched = process.env.NEXT_PUBLIC_SITE_PHASE === '3'
 
 /** A vote sooner than this after the question appeared is kept but not counted (MIN_READ_MS in src/modules/rankings/rules.ts). */
@@ -73,7 +73,7 @@ test.describe('in the third phase', () => {
   })
 })
 
-// Needs the sample rankings from scripts/seed-rankings.ts in a third-phase build: CI's rankings job has both.
+// Needs the sample rankings from scripts/seed-rankings.ts in a third-phase build: CI has both.
 test.describe('with the sample rankings', () => {
   test.skip(
     !launched || !process.env.E2E_SAMPLE_RANKINGS,

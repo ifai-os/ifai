@@ -2,12 +2,13 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
+import { isLaunched } from '@/config/site'
 import { isLocale } from '@/i18n/config'
 import { redirect } from '@/i18n/navigation'
 import { RankingsBoard } from '@/modules/rankings/components/rankings-board'
 import { getArenas } from '@/modules/rankings/data'
 import { boardMetadata } from '@/modules/rankings/metadata'
-import { boardHref, rankingsLaunched, readBoardFilters } from '@/modules/rankings/rules'
+import { boardHref, readBoardFilters } from '@/modules/rankings/rules'
 
 type Props = {
   params: Promise<{ locale: string; arena: string }>
@@ -16,7 +17,7 @@ type Props = {
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { locale, arena: slug } = await params
-  if (!isLocale(locale) || !rankingsLaunched()) return {}
+  if (!isLocale(locale) || !isLaunched('rankings')) return {}
   const arenas = await getArenas(locale)
   const arena = arenas.find((item) => item.slug === slug)
   if (!arena) return {}
@@ -26,7 +27,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 /** Another arena's rankings; the first arena's own address is /rankings. */
 export default async function ArenaRankingsPage({ params, searchParams }: Props) {
   const { locale, arena: slug } = await params
-  if (!isLocale(locale) || !rankingsLaunched()) notFound()
+  if (!isLocale(locale) || !isLaunched('rankings')) notFound()
   setRequestLocale(locale)
   const arenas = await getArenas(locale)
   const arena = arenas.find((item) => item.slug === slug)

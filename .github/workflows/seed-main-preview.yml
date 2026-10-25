@@ -1,7 +1,8 @@
 name: Seed preview
 
-# Fills a preview with the sample stories, apps and Skills that CI's smoke tests use, so its pages
-# have something to show. Run it by hand: Actions → Seed preview → Run workflow.
+# Fills a preview with the sample stories, apps, Skills and Wiki entries that CI's smoke tests use,
+# so its pages have something to show (the Wiki's only once the preview's NEXT_PUBLIC_SITE_PHASE
+# is 3). Run it by hand: Actions → Seed preview → Run workflow.
 #   no PR number → main's preview (https://ifai-preview-ifai1.vercel.app, see deploy.yml): main's
 #                  samples into the Neon branch preview/main
 #   PR number    → that pull request's preview: the samples of its latest commit into its Neon
@@ -118,12 +119,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Stories first, so the apps seed matches the stories that mention the sample apps, and the stories
-      # again after the apps, for scripts that look the apps up. SEED_PREVIEW_MAIN lets the scripts write
-      # to this one remote database (scripts/seed-target.ts); every branch's scripts know that name.
+      # again after the apps, for scripts that look the apps up. The Wiki last, so its entries can link
+      # them; a pull request from before the Wiki has no such script. SEED_PREVIEW_MAIN lets the scripts
+      # write to this one remote database (scripts/seed-target.ts); every branch's scripts know that name.
       # The R2 keys are the previews' own bucket (ifai-media-preview, the same one Vercel's Preview
       # environment uses), scoped to that bucket only: with them the stories' pictures and the Skills'
       # Zips go where the preview can serve them. Without the secrets the stories go without pictures.
-      - name: Sample stories, apps and Skills
+      - name: Sample stories, apps, Skills and Wiki entries
         env:
           DATABASE_URI: ${{ steps.neon.outputs.database_url }}
           SEED_PREVIEW_MAIN: '1'
@@ -136,6 +138,7 @@ jobs:
           pnpm payload run scripts/seed-apps.ts
           pnpm payload run scripts/seed-stories.ts
           pnpm payload run scripts/seed-skills.ts
+          if [ -f scripts/seed-wiki.ts ]; then pnpm payload run scripts/seed-wiki.ts; fi
 
   # Pages keep what they read for up to an hour, and the samples were written from here, so the site
   # never heard about them. Clearing Vercel's data cache makes them show up right away. (It is the whole

@@ -88,6 +88,8 @@ export interface Config {
     'arena-prompts': ArenaPrompt;
     'arena-answers': ArenaAnswer;
     'arena-images': ArenaImage;
+    'wiki-topics': WikiTopic;
+    'wiki-entries': WikiEntry;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -120,6 +122,8 @@ export interface Config {
     'arena-prompts': ArenaPromptsSelect<false> | ArenaPromptsSelect<true>;
     'arena-answers': ArenaAnswersSelect<false> | ArenaAnswersSelect<true>;
     'arena-images': ArenaImagesSelect<false> | ArenaImagesSelect<true>;
+    'wiki-topics': WikiTopicsSelect<false> | WikiTopicsSelect<true>;
+    'wiki-entries': WikiEntriesSelect<false> | WikiEntriesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1225,6 +1229,151 @@ export interface ArenaImage {
   };
 }
 /**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wiki-topics".
+ */
+export interface WikiTopic {
+  id: number;
+  name: string;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  /**
+   * Two or three sentences: what this topic covers and where a beginner should start.
+   */
+  intro?: string | null;
+  /**
+   * In reading order; drag to reorder. Drafts are left out until published.
+   */
+  mustRead?: (number | WikiEntry)[] | null;
+  /**
+   * Smaller comes first.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately; missing languages show the English. Publishing checks the English version is complete.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wiki-entries".
+ */
+export interface WikiEntry {
+  id: number;
+  /**
+   * As readers in this language call it.
+   */
+  title: string;
+  /**
+   * Lowercase English, shared by all five languages. Left empty, it is made from the name.
+   */
+  slug: string;
+  /**
+   * A method also has steps.
+   */
+  type: 'concept' | 'method';
+  status: 'draft' | 'published';
+  /**
+   * The day you last checked the facts against the sources. Leave it when you only fix wording or typos.
+   */
+  reviewedAt?: string | null;
+  /**
+   * The Wiki home shows one of these a day. With none ticked, every entry takes a turn.
+   */
+  featured?: boolean | null;
+  /**
+   * Set on the first publish. Orders「Newest entries」.
+   */
+  publishedAt?: string | null;
+  /**
+   * Other names readers of this language search for. All languages’ names and aliases find this entry.
+   */
+  aliases?: string[] | null;
+  /**
+   * One sentence a beginner understands. Also the page description in search engines.
+   */
+  definition?: string | null;
+  /**
+   * A blank line starts a new paragraph.
+   */
+  explanation?: string | null;
+  examples?:
+    | {
+        title?: string | null;
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  steps?:
+    | {
+        title: string;
+        detail?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  uses?: string | null;
+  /**
+   * Where it stops working, what it does not mean.
+   */
+  limitations?: string | null;
+  /**
+   * For words that mean different things in different places, one row each.
+   */
+  contexts?:
+    | {
+        label: string;
+        meaning: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional: one surprising, sourced fact for the「Did you know」box on the Wiki home.
+   */
+  fact?: string | null;
+  /**
+   * The first one is used in the breadcrumb.
+   */
+  topics?: (number | WikiTopic)[] | null;
+  /**
+   * One way: those pages list this entry under「Read next」. Loops are refused.
+   */
+  prerequisites?: (number | WikiEntry)[] | null;
+  /**
+   * Two-way.
+   */
+  related?: (number | WikiEntry)[] | null;
+  /**
+   * Two-way: the other entry’s page shows the same difference.
+   */
+  comparisons?:
+    | {
+        entry?: (number | null) | WikiEntry;
+        difference: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Where the facts come from: papers, official docs, reputable articles. Shared by every language.
+   */
+  sources?:
+    | {
+        title: string;
+        url: string;
+        publisher?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  apps?: (number | App)[] | null;
+  skills?: (number | Skill)[] | null;
+  stories?: (number | Story)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1331,6 +1480,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'arena-images';
         value: number | ArenaImage;
+      } | null)
+    | ({
+        relationTo: 'wiki-topics';
+        value: number | WikiTopic;
+      } | null)
+    | ({
+        relationTo: 'wiki-entries';
+        value: number | WikiEntry;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1962,6 +2119,82 @@ export interface ArenaImagesSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wiki-topics_select".
+ */
+export interface WikiTopicsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  intro?: T;
+  mustRead?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wiki-entries_select".
+ */
+export interface WikiEntriesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  type?: T;
+  status?: T;
+  reviewedAt?: T;
+  featured?: T;
+  publishedAt?: T;
+  aliases?: T;
+  definition?: T;
+  explanation?: T;
+  examples?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  steps?:
+    | T
+    | {
+        title?: T;
+        detail?: T;
+        id?: T;
+      };
+  uses?: T;
+  limitations?: T;
+  contexts?:
+    | T
+    | {
+        label?: T;
+        meaning?: T;
+        id?: T;
+      };
+  fact?: T;
+  topics?: T;
+  prerequisites?: T;
+  related?: T;
+  comparisons?:
+    | T
+    | {
+        entry?: T;
+        difference?: T;
+        id?: T;
+      };
+  sources?:
+    | T
+    | {
+        title?: T;
+        url?: T;
+        publisher?: T;
+        id?: T;
+      };
+  apps?: T;
+  skills?: T;
+  stories?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

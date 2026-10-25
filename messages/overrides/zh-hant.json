@@ -359,6 +359,11 @@
     "trend": "分數走勢 · 近 {weeks} 週",
     "trendChart": "近 {weeks} 週閉源第一和開放權重第一的分數走勢。"
   },
+  "wiki": {
+    "intro": "用白話講清楚 AI 裡的詞：是什麼意思、舉個例子、哪裡不管用，並附上可以核對的來源。每個條目都由 IFAI 編輯撰寫、核對後發布。",
+    "byType": "類型",
+    "typeFilter": "條目類型"
+  },
   "tags": {
     "agents": "AI代理",
     "on-device": "裝置端AI"

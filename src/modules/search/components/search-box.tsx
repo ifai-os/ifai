@@ -14,6 +14,9 @@ type SearchBoxProps = {
   type?: SearchType
   /** Only on the search page with nothing searched yet: the reader came here to type. */
   autoFocus?: boolean
+  /** For a box that searches one kind (the Wiki home's): its name and the hint inside it. */
+  label?: string
+  placeholder?: string
   className?: string
 }
 
@@ -21,7 +24,7 @@ type SearchBoxProps = {
  * The pill-shaped box from the「空状态与加载状态」board (搜索无结果, 页面不存在). A plain GET
  * form to the search page, so it also works before JavaScript loads.
  */
-export function SearchBox({ locale, q = '', type = 'all', autoFocus = false, className = '' }: SearchBoxProps) {
+export function SearchBox({ locale, q = '', type = 'all', autoFocus = false, label, placeholder, className = '' }: SearchBoxProps) {
   const t = useTranslations('search')
 
   return (
@@ -44,8 +47,8 @@ export function SearchBox({ locale, q = '', type = 'all', autoFocus = false, cla
         maxLength={maxQueryLength}
         enterKeyHint="search"
         autoFocus={autoFocus}
-        aria-label={t('label')}
-        placeholder={t('placeholder')}
+        aria-label={label ?? t('label')}
+        placeholder={placeholder ?? t('placeholder')}
         className="min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-ink-4 [&::-webkit-search-cancel-button]:appearance-none"
       />
       {type !== 'all' && <input type="hidden" name="type" value={type} />}

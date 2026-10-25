@@ -49,7 +49,7 @@
     "apps": "인기도 순 AI 앱 목록, 요금과 대안 앱까지",
     "rankings": "익명 블라인드 투표로 매기는 모델 랭킹",
     "resources": "버전 관리와 보안 검사를 거친 Agent Skills",
-    "wiki": "누구나 편집할 수 있는 AI 백과사전"
+    "wiki": "AI 용어를 쉬운 말로, 예시와 출처까지"
   },
   "card": {
     "heat": "인기도 {value}",
@@ -118,12 +118,14 @@
       "all": "전체",
       "daily": "데일리",
       "apps": "앱",
-      "skills": "Skills"
+      "skills": "Skills",
+      "wiki": "Wiki"
     },
     "kind": {
       "daily": "데일리",
       "apps": "앱",
-      "skills": "Skill"
+      "skills": "Skill",
+      "wiki": "Wiki"
     },
     "found": "‘{q}’ 검색 결과 {count}개",
     "seeAll": "{count}개 모두 보기",
@@ -1404,5 +1406,85 @@
     "signInPost": "로그인하고 글쓰기",
     "signInReact": "로그인하고 반응하기",
     "afterSignIn": "로그인하면 서클 페이지로 돌아와요."
+  },
+  "wiki": {
+    "title": "Wiki",
+    "description": "AI 용어를 쉬운 말로 설명합니다. 뜻, 예시, 한계, 확인할 수 있는 출처까지. IFAI 에디터가 쓰고 확인합니다.",
+    "welcome": "IFAI Wiki에 오신 것을 환영해요",
+    "intro": "AI 용어를 쉬운 말로 풀어 드려요. 무슨 뜻인지, 예시, 잘 안 되는 경우, 확인할 수 있는 출처까지. 모든 항목은 IFAI 에디터가 쓰고 사실을 확인한 뒤 공개해요.",
+    "searchLabel": "Wiki 검색",
+    "searchPlaceholder": "항목 검색 (예: Agent, 컨텍스트 윈도우, RAG)",
+    "entryCount": "{count, plural, other {항목 <b>#</b>개}}",
+    "topicCount": "{count, plural, other {주제 <b>#</b>개}}",
+    "today": "오늘의 항목",
+    "topicsTitle": "주제별로 보기",
+    "entries": "{count, plural, other {항목 #개}}",
+    "startWith": "먼저 읽기",
+    "newest": "새 항목",
+    "seeAll": "전체 항목",
+    "didYouKnow": "알고 계셨나요",
+    "anotherFact": "다른 것 보기",
+    "toEntry": "‘{title}’ 항목 보기 ›",
+    "emptyTitle": "아직 항목이 없어요",
+    "emptyBody": "첫 항목들을 쓰고 확인하는 중이에요. 그동안 데일리에서 오늘의 AI 소식을 확인해 보세요.",
+    "toDaily": "데일리 보기",
+    "sideLabel": "Wiki",
+    "home": "Wiki 홈",
+    "allEntries": "전체 항목",
+    "topics": "주제",
+    "byType": "유형",
+    "types": {
+      "concept": "개념",
+      "method": "방법"
+    },
+    "typesPlural": {
+      "concept": "개념",
+      "method": "방법"
+    },
+    "breadcrumb": "현재 위치",
+    "topicTitle": "{topic} · Wiki",
+    "mustRead": "먼저 읽을 항목",
+    "mustReadNote": "에디터가 추천하는 순서예요.",
+    "inTopic": "이 주제의 전체 항목",
+    "topicEmpty": "이 주제에는 아직 항목이 없어요.",
+    "entriesTitle": "Wiki 전체 항목",
+    "entriesTypeTitle": "Wiki · {type}",
+    "entriesIntro": "모든 항목을 이름순으로 정렬했어요.",
+    "typeFilter": "항목 유형",
+    "allTypes": "전체",
+    "pageTitle": "{title} · {page}페이지",
+    "pages": "페이지",
+    "previous": "이전",
+    "next": "다음",
+    "pageOf": "{page} / {pages} 페이지",
+    "entryTitle": "{title} · Wiki",
+    "alsoCalled": "다른 이름: <names></names>",
+    "separator": ", ",
+    "definition": "한 문장으로",
+    "sections": {
+      "explanation": "쉽게 말하면",
+      "examples": "예시",
+      "steps": "단계",
+      "uses": "어디에 쓰나",
+      "limitations": "한계",
+      "contexts": "상황에 따라 다른 뜻",
+      "comparisons": "헷갈리기 쉬운 말",
+      "relations": "관련 항목",
+      "further": "직접 써 보기",
+      "sources": "출처"
+    },
+    "prerequisites": "먼저 읽기",
+    "readNext": "다음에 읽기",
+    "related": "함께 보기",
+    "apps": "앱",
+    "skills": "Skills",
+    "stories": "데일리 관련 소식",
+    "reviewedOn": "{date} 사실 확인",
+    "updatedOn": "<time></time> 업데이트",
+    "reviewNote": "‘사실 확인’은 에디터가 이 항목을 출처와 마지막으로 대조한 날이에요. 문장만 다듬을 때는 바뀌지 않아요.",
+    "reportMistake": "틀리거나 오래된 내용을 발견하셨나요?",
+    "tellUs": "메일로 알려 주기",
+    "reportSubject": "Wiki: {title}",
+    "toc": "이 페이지 목차"
   }
 }

@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { isLaunched } from '@/config/site'
 import { auth } from '@/lib/auth/auth'
 import { isCrossSite } from '@/lib/same-origin'
 import { castVote } from '@/modules/rankings/battles'
-import { isBattleId, parseVoteInput, rankingsLaunched } from '@/modules/rankings/rules'
+import { isBattleId, parseVoteInput } from '@/modules/rankings/rules'
 
 // Per member: never rendered ahead or kept by the browser or a CDN.
 export const dynamic = 'force-dynamic'
@@ -22,7 +23,7 @@ const statusOf = { 'not-found': 404, 'voted-already': 409, expired: 410, 'daily-
  * from IFAI's own pages (403); once per question (409), within two hours (410), at most 200 a day (429).
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!rankingsLaunched()) return reply({ error: 'not-found' }, 404)
+  if (!isLaunched('rankings')) return reply({ error: 'not-found' }, 404)
   if (isCrossSite(request)) return reply({ error: 'cross-site' }, 403)
   const { id } = await params
   const input = parseVoteInput(await request.json().catch(() => null))

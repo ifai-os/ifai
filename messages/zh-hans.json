@@ -49,7 +49,7 @@
     "apps": "按热度排序的 AI 应用目录，附定价和替代品",
     "rankings": "匿名盲测投票的模型排行",
     "resources": "可以直接安装的 Agent Skills，带版本和安全检测",
-    "wiki": "人人可编辑的 AI 百科"
+    "wiki": "用白话讲清 AI 术语，附例子和来源"
   },
   "card": {
     "heat": "热度 {value}",
@@ -118,12 +118,14 @@
       "all": "全部",
       "daily": "日报",
       "apps": "应用",
-      "skills": "Skills"
+      "skills": "Skills",
+      "wiki": "Wiki"
     },
     "kind": {
       "daily": "日报",
       "apps": "应用",
-      "skills": "Skill"
+      "skills": "Skill",
+      "wiki": "Wiki"
     },
     "found": "找到 {count} 个与「{q}」相关的结果",
     "seeAll": "查看全部 {count} 条",
@@ -1404,5 +1406,85 @@
     "signInPost": "登录后发动态",
     "signInReact": "登录后回应",
     "afterSignIn": "登录后会回到圈子页。"
+  },
+  "wiki": {
+    "title": "Wiki",
+    "description": "用白话讲清 AI 术语：是什么、举个例子、哪里不管用，附上能核对的来源。由 IFAI 编辑撰写和核对。",
+    "welcome": "欢迎来到 IFAI Wiki",
+    "intro": "用白话讲清楚 AI 里的词：是什么意思、举个例子、哪里不管用，并附上可以核对的来源。每个条目都由 IFAI 编辑撰写、核对后发布。",
+    "searchLabel": "搜索 Wiki",
+    "searchPlaceholder": "搜索条目，例如：Agent、上下文窗口、RAG",
+    "entryCount": "{count, plural, other {现有 <b>#</b> 个条目}}",
+    "topicCount": "{count, plural, other {<b>#</b> 个主题}}",
+    "today": "今日条目",
+    "topicsTitle": "按主题浏览",
+    "entries": "{count, plural, other {# 个条目}}",
+    "startWith": "先读",
+    "newest": "最新条目",
+    "seeAll": "全部",
+    "didYouKnow": "你知道吗",
+    "anotherFact": "换一条",
+    "toEntry": "去看条目「{title}」›",
+    "emptyTitle": "还没有条目",
+    "emptyBody": "第一批条目正在撰写和核对。先去日报看看今天 AI 有什么变化。",
+    "toDaily": "看日报",
+    "sideLabel": "Wiki",
+    "home": "Wiki 首页",
+    "allEntries": "全部条目",
+    "topics": "主题",
+    "byType": "类型",
+    "types": {
+      "concept": "概念",
+      "method": "方法"
+    },
+    "typesPlural": {
+      "concept": "概念",
+      "method": "方法"
+    },
+    "breadcrumb": "当前位置",
+    "topicTitle": "{topic} · Wiki",
+    "mustRead": "先读这几个",
+    "mustReadNote": "按编辑建议的顺序。",
+    "inTopic": "这个主题的全部条目",
+    "topicEmpty": "这个主题还没有条目。",
+    "entriesTitle": "Wiki 全部条目",
+    "entriesTypeTitle": "Wiki · {type}",
+    "entriesIntro": "所有条目，按名称排序。",
+    "typeFilter": "条目类型",
+    "allTypes": "全部",
+    "pageTitle": "{title} · 第 {page} 页",
+    "pages": "翻页",
+    "previous": "上一页",
+    "next": "下一页",
+    "pageOf": "第 {page} / {pages} 页",
+    "entryTitle": "{title} · Wiki",
+    "alsoCalled": "又称：<names></names>",
+    "separator": "、",
+    "definition": "一句话定义",
+    "sections": {
+      "explanation": "白话说明",
+      "examples": "例子",
+      "steps": "步骤",
+      "uses": "用途",
+      "limitations": "局限",
+      "contexts": "不同语境下",
+      "comparisons": "容易混淆",
+      "relations": "相关条目",
+      "further": "动手试试",
+      "sources": "参考来源"
+    },
+    "prerequisites": "先读这些",
+    "readNext": "接着读",
+    "related": "另见",
+    "apps": "应用",
+    "skills": "Skills",
+    "stories": "相关日报",
+    "reviewedOn": "{date} 复核",
+    "updatedOn": "<time></time> 更新",
+    "reviewNote": "「复核」是编辑最后一次对照来源核对这个条目的日期；只改措辞不算。",
+    "reportMistake": "发现错误或过时的内容？",
+    "tellUs": "写信告诉我们",
+    "reportSubject": "Wiki：{title}",
+    "toc": "本页目录"
   }
 }
