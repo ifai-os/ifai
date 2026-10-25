@@ -200,7 +200,7 @@ Wiki（2026-10-24 按推荐默认值起草，站长还没确认；细节见 wiki
 - 沙盒里可以用 apt 装 `postgresql-16-pgvector`，再 `service postgresql start`，在本地库上跑迁移和 `pnpm build`。
 - 沙盒的代理也不放行 codeload.github.com 和 api.github.com，Skill 导入只能把 `fetch` 换成假响应、用 `tests/unit/resources/fixtures/skill-repo.tar.gz` 在本地库上验证；真实导入要在预览环境里点「导入版本」试（需要 Inngest 集成）。
 - 沙盒的代理不放行新闻站点（techcrunch.com、openai.com、hn.algolia.com 都返回 403），信源抓取只能把 `fetch` 换成假数据在本地库上验证；真实抓取要在预览环境看。模型流水线同理，本地只能用 `ai/test` 的假模型跑；真实跑一遍要在站长的电脑上（`OPENROUTER_BASE_URL` 指向局域网接口）或预览环境。
-- 两个并行 PR 各自带 Payload 迁移时，后合并的要先合并 main、删掉自己的迁移再重新 `pnpm payload migrate:create`，因为迁移快照会缺对方的表（应用 PR #6 和日报的迁移就是这种情况）。
+- 两个并行 PR 各自带 Payload 迁移时，后合并的要先合并 main、删掉自己的迁移再重新 `pnpm payload migrate:create`，因为迁移快照会缺对方的表（应用 PR #6 和日报的迁移就是这种情况）。重新生成之前 PR 的预览已经部署过的话，它的预览库（Neon 分支 `preview/pr-<编号>`）按旧名字跑过这个迁移，新迁移再建表会报「已存在」，预览部署失败：SQL 没变时，在新迁移的 `up()` 开头删掉旧名字的那条 `payload_migrations` 记录，删到了就直接返回，照 `20261025_024201_wiki`。
 - 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
 - 新闻、应用、Skill 详情页和 Wiki 的条目页、主题页的 `generateStaticParams` 不要改回空数组：Next.js 16 只给构建时生成过的路由写预取信息（`.next/server/prefetch-hints.json`），没有的路由，列表里的链接只预取到路由结构，点了要等服务器。本机验证预取时要先填示例数据再构建，否则构建时没有页面可生成。
