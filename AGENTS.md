@@ -48,7 +48,7 @@ src/
     api/auth/[...all]/     Better Auth 接口
   admin/                   跨模块的后台页面：model-usage/（模型用量：花费与预算、开关、按用途、要处理的调用）、admin-log/（操作记录：谁在后台保存、删除、按了什么按钮）、theme/（后台样式：按钮沿用前台的样子）、ui-language/（顶栏的界面语言切换）
   collections/             Payload 集合（Admins、Media；模块的集合放到各自模块里）
-  components/              共用组件：site-header、search-link、language-switcher、cards/、states/（空状态、骨架、加载失败、列表在页面里切换 list-navigation）、auth/（登录表单和登录对话框）、account/（账号页、下载我的数据和删除账号）…
+  components/              共用组件：site-header、search-link、language-switcher、cards/、states/（空状态、骨架、加载失败、列表在页面里切换 list-navigation）、auth/（登录表单和登录对话框）、account-button（头像和账号菜单）、account/（设置页：分区 sections.ts 和各分区的组件、头像 member-avatar、下载我的数据和删除账号）…
   config/site.ts           导航与分期
   i18n/                    语言配置、路由、导航、next-intl 请求配置
   lib/
@@ -63,7 +63,7 @@ src/
     seo.ts                 canonical 与 hreflang（alternatesFor）、分享卡片（shareCard）；sitemap.ts、robots.ts：站点地图和 robots.txt（见 foundation.md）
     same-origin.ts         isCrossSite()：写接口只接受本站页面发来的请求（收藏、评价、投稿）
     field-error.ts         rejectField()：集合钩子拒绝保存时用它（说明写进字段和 message）；isFieldError() 按形状判断字段错误
-    auth/                  Better Auth 服务端配置、客户端、表结构、邮件、删除账号时清理投稿（delete-member.ts）、导出会员数据（export-member.ts，接口在 src/app/api/account/export）
+    auth/                  Better Auth 服务端配置、客户端、表结构、邮件、删除账号时清理投稿（delete-member.ts）、导出会员数据（export-member.ts，接口在 src/app/api/account/export）、设置页读的数据（settings.ts：登录方式、登录的设备、日报邮件）、设备名（devices.ts）、昵称清理（nickname.ts）；退出一台设备的接口在 src/app/api/account/sessions
     db/url.ts              数据库连接串（DATABASE_URI，预览环境回退到 DATABASE_URL）
     db/drizzle.ts          getDb()：Payload 实例和它的 Drizzle 连接，模块自己的表用它读写
     i18n/hant.ts           简体 → 台湾繁体（toHant），读者自己写的繁体 → 简体（toHans）
