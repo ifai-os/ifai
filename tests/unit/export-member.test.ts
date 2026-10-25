@@ -52,12 +52,20 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
       updatedAt: day('2026-10-02'),
     },
     profile: { bio: '记录在用的 AI 工具', bioLang: 'zh-Hans', website: 'https://reader.example/', handleChangedAt: day('2026-10-15') },
-    oldHandles: [{ handle: 'u-0123456789', createdAt: day('2026-10-15') }],
+    oldHandles: [
+      { handle: 'reader-old', createdAt: day('2026-10-18'), retiredAt: day('2026-10-18') },
+      { handle: 'u-0123456789', createdAt: day('2026-10-15'), retiredAt: null },
+    ],
     following: [
       { handle: 'linqi', createdAt: day('2026-10-22') },
       { handle: null, createdAt: day('2026-10-21') },
     ],
     followers: [{ handle: 'beiwei', createdAt: day('2026-10-20') }],
+    blocking: [{ handle: 'spammer', createdAt: day('2026-10-23') }],
+    memberReports: [
+      { handle: 'spammer', reason: 'spam', createdAt: day('2026-10-23'), resolvedAt: day('2026-10-24') },
+      { handle: null, reason: 'impersonation', createdAt: day('2026-10-22'), resolvedAt: null },
+    ],
     accounts: [{ providerId: 'github', accountId: 'gh-42', scope: 'read:user,user:email', createdAt: day('2026-10-01'), ...secrets }],
     sessions: sessionRows,
     saves: [
@@ -312,7 +320,10 @@ describe('shapeMemberExport', () => {
       bioLanguage: 'zh-Hans',
       website: 'https://reader.example/',
       handleChangedAt: '2026-10-15T08:00:00.000Z',
-      oldHandles: [{ handle: 'u-0123456789', changedAt: '2026-10-15T08:00:00.000Z' }],
+      oldHandles: [
+        { handle: 'reader-old', changedAt: '2026-10-18T08:00:00.000Z', retiredAt: '2026-10-18T08:00:00.000Z' },
+        { handle: 'u-0123456789', changedAt: '2026-10-15T08:00:00.000Z', retiredAt: null },
+      ],
     })
     expect(file.following).toEqual([
       { handle: 'linqi', url: `${site}/en/u/linqi`, since: '2026-10-22T08:00:00.000Z' },
@@ -321,6 +332,15 @@ describe('shapeMemberExport', () => {
     expect(file.followers).toEqual([{ handle: 'beiwei', url: `${site}/en/u/beiwei`, since: '2026-10-20T08:00:00.000Z' }])
     // Never another member's id.
     expect(JSON.stringify(file.following)).not.toContain('member-')
+  })
+
+  it('gives whom the member blocked and reported, by address only', () => {
+    const file = shape(records())
+    expect(file.blocking).toEqual([{ handle: 'spammer', url: `${site}/en/u/spammer`, since: '2026-10-23T08:00:00.000Z' }])
+    expect(file.memberReports).toEqual([
+      { handle: 'spammer', url: `${site}/en/u/spammer`, reason: 'spam', reportedAt: '2026-10-23T08:00:00.000Z', resolvedAt: '2026-10-24T08:00:00.000Z' },
+      { handle: null, url: null, reason: 'impersonation', reportedAt: '2026-10-22T08:00:00.000Z', resolvedAt: null },
+    ])
   })
 
   it('has no page links while the circles are closed, and an empty profile before the first save', () => {

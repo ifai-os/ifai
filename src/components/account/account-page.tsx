@@ -10,8 +10,9 @@ import { Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
 import type { DailyEmailState, LinkedAccount, SignedInDevice } from '@/lib/auth/settings'
 import { SubscribeBox } from '@/modules/daily/email/components/subscribe-box'
-import type { ProfileSettings } from '@/modules/profiles/rules'
+import type { BlockedPerson, ProfileSettings } from '@/modules/profiles/rules'
 
+import { BlockedPeople } from './blocked-people'
 import { DeleteAccount } from './delete-account'
 import { ExportData } from './export-data'
 import { LanguageChoice } from './language-choice'
@@ -27,6 +28,7 @@ export type SettingsView =
   | { section: 'profile'; profile: ProfileSettings | null; siteHost: string }
   | { section: 'sign-in'; accounts: LinkedAccount[]; devices: SignedInDevice[]; result: LinkResult | null }
   | { section: 'notifications'; dailyEmail: DailyEmailState; subscribing: boolean }
+  | { section: 'privacy'; blocked: BlockedPerson[] }
   | { section: 'language' }
   | { section: 'data' }
 
@@ -135,6 +137,16 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
         </>
       )
     }
+
+    case 'privacy':
+      return (
+        <>
+          {title}
+          <GroupTitle>{t('blockedTitle')}</GroupTitle>
+          <p className="-mt-2 text-meta text-ink-4">{t('blockedNote')}</p>
+          <BlockedPeople people={view.blocked} />
+        </>
+      )
 
     case 'language':
       return (

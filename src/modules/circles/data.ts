@@ -7,6 +7,7 @@ import { toneFor } from '@/components/cards/initial-tile'
 import { authUsers } from '@/lib/auth/schema'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
 import { cleanName } from '@/modules/apps/reviews/rules'
+import { notBlocked } from '@/modules/profiles/blocks'
 import { followedAmong } from '@/modules/profiles/data'
 import { memberFollows } from '@/modules/profiles/schema'
 
@@ -32,7 +33,8 @@ import { circleComments, circleMembers, circlePostReactions, circlePostReports, 
  * Reading and writing circles for the page (src/app/api/circles). Works on the Payload instance it
  * is given and stays free of the Payload config, like the back office's ./admin. Which circles
  * readers can see comes from the caller (./public.ts reads the `circles` collection): posts in a
- * hidden circle are left out everywhere.
+ * hidden circle are left out everywhere. So is what a member wrote, for a member they blocked or
+ * who blocked them (docs/specs/circles.md rule 23).
  */
 
 const drizzleOf = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
@@ -41,18 +43,26 @@ const person = (userId: string, name: string): PersonView => ({ name: cleanName(
 
 const author = (userId: string, name: string, handle: string | null): AuthorView => ({ ...person(userId, name), handle })
 
-/** Everyone's shown posts, and the reader's own hidden ones, in the circles readers can see. */
+/**
+ * Everyone's shown posts, and the reader's own hidden ones, in the circles readers can see; none
+ * by a member the reader blocked or was blocked by.
+ */
 function readable(circleIds: number[], userId: string | null): SQL | undefined {
   const visible = eq(circlePosts.status, 'shown')
-  return and(inArray(circlePosts.circleId, circleIds), userId ? or(visible, eq(circlePosts.userId, userId)) : visible)
+  return and(
+    inArray(circlePosts.circleId, circleIds),
+    userId ? or(visible, eq(circlePosts.userId, userId)) : visible,
+    notBlocked(circlePosts.userId, userId),
+  )
 }
 
 /**
  * The numbers on the circles' cards and in the header: members, posts today (Shanghai day), the
  * last few people who posted, the busiest two circles, and how many people posted today.
- * Hidden posts do not count.
+ * Hidden posts do not count. With a reader, the last people who posted leave out anyone the
+ * reader blocked or was blocked by (rule 23); the numbers stay the same for everyone.
  */
-export async function circlesOverview(payload: Payload, circleIds: number[], now = new Date()): Promise<CirclesOverview> {
+export async function circlesOverview(payload: Payload, circleIds: number[], readerId: string | null = null, now = new Date()): Promise<CirclesOverview> {
   if (circleIds.length === 0) return { postersToday: 0, circles: [] }
   const db = drizzleOf(payload)
   const dayStart = shanghaiDayStart(now)
@@ -64,7 +74,7 @@ export async function circlesOverview(payload: Payload, circleIds: number[], now
       select ${circlePosts.circleId} as circle_id, ${circlePosts.userId} as user_id, ${authUsers.name} as name,
         row_number() over (partition by ${circlePosts.circleId} order by max(${circlePosts.id}) desc) as place
       from ${circlePosts} inner join ${authUsers} on ${authUsers.id} = ${circlePosts.userId}
-      where ${and(inArray(circlePosts.circleId, circleIds), eq(circlePosts.status, 'shown'), gte(circlePosts.createdAt, since))}
+      where ${and(inArray(circlePosts.circleId, circleIds), eq(circlePosts.status, 'shown'), gte(circlePosts.createdAt, since), notBlocked(circlePosts.userId, readerId))}
       group by ${circlePosts.circleId}, ${circlePosts.userId}, ${authUsers.name}
     ) as recent
     where place <= ${circleRules.recentPosters}
@@ -114,19 +124,23 @@ export async function setMembership(payload: Payload, circleId: number, userId: 
   else await db.delete(circleMembers).where(and(eq(circleMembers.circleId, circleId), eq(circleMembers.userId, userId)))
 }
 
-/** The reactions on these posts for the reader (null for a visitor): counts, theirs, and two of the others' names. */
+/**
+ * The reactions on these posts for the reader (null for a visitor): counts, theirs, and two of the
+ * others' names, never one of a member the reader blocked or was blocked by (their reactions count).
+ */
 export async function reactionsFor(payload: Payload, postIds: number[], userId: string | null): Promise<Map<number, ReactionView[]>> {
   const result = new Map<number, ReactionView[]>()
   if (postIds.length === 0) return result
   // No member has an empty id, so a visitor's reactions are nobody's.
   const me = userId ?? ''
+  const named = and(ne(circlePostReactions.userId, me), notBlocked(circlePostReactions.userId, userId))
   const rows = await drizzleOf(payload)
     .select({
       postId: circlePostReactions.postId,
       reaction: circlePostReactions.reaction,
       count: count(),
       mine: sql<boolean>`coalesce(bool_or(${circlePostReactions.userId} = ${me}), false)`,
-      names: sql<string[] | null>`(array_agg(${authUsers.name} order by ${circlePostReactions.createdAt} desc) filter (where ${circlePostReactions.userId} <> ${me}))[1:2]`,
+      names: sql<string[] | null>`(array_agg(${authUsers.name} order by ${circlePostReactions.createdAt} desc) filter (where ${named}))[1:2]`,
     })
     .from(circlePostReactions)
     .innerJoin(authUsers, eq(authUsers.id, circlePostReactions.userId))
@@ -145,9 +159,10 @@ const parentComment = alias(circleComments, 'parent_comment')
 
 /**
  * The comments and replies everyone can see on each of these posts (docs/specs/circles.md rule
- * 15): shown ones, not under a hidden comment.
+ * 15): shown ones, not under a hidden comment. For a member, none by someone they blocked or were
+ * blocked by, nor under one of theirs (rule 23).
  */
-export async function commentCounts(payload: Payload, postIds: number[]): Promise<Map<number, number>> {
+export async function commentCounts(payload: Payload, postIds: number[], readerId: string | null = null): Promise<Map<number, number>> {
   if (postIds.length === 0) return new Map()
   const rows = await drizzleOf(payload)
     .select({ postId: circleComments.postId, count: count() })
@@ -158,6 +173,9 @@ export async function commentCounts(payload: Payload, postIds: number[]): Promis
         inArray(circleComments.postId, postIds),
         eq(circleComments.status, 'shown'),
         or(isNull(circleComments.parentId), eq(parentComment.status, 'shown')),
+        notBlocked(circleComments.userId, readerId),
+        // Nor a reply under their comment; a comment itself has no parent, which matches no block.
+        notBlocked(parentComment.userId, readerId),
       ),
     )
     .groupBy(circleComments.postId)
@@ -204,6 +222,7 @@ async function toViews(payload: Payload, rows: PostRow[], userId: string | null)
     commentCounts(
       payload,
       shown.map((row) => row.id),
+      userId,
     ),
     followedAmong(
       payload,
@@ -424,13 +443,19 @@ export async function deletePost(payload: Payload, postId: number, userId: strin
   return true
 }
 
-/** Whether readers can see the post (shown, in a circle they can see): only those take reactions, reports and comments. */
-export async function shownPost(payload: Payload, postId: number, circleIds: number[]): Promise<{ userId: string } | null> {
+/**
+ * Whether readers can see the post (shown, in a circle they can see): only those take reactions,
+ * reports and comments. With `readerId`, also whether that member can: not when its author and
+ * they blocked one or the other (rule 23).
+ */
+export async function shownPost(payload: Payload, postId: number, circleIds: number[], readerId: string | null = null): Promise<{ userId: string } | null> {
   if (circleIds.length === 0) return null
   const [post] = await drizzleOf(payload)
     .select({ userId: circlePosts.userId })
     .from(circlePosts)
-    .where(and(eq(circlePosts.id, postId), eq(circlePosts.status, 'shown'), inArray(circlePosts.circleId, circleIds)))
+    .where(
+      and(eq(circlePosts.id, postId), eq(circlePosts.status, 'shown'), inArray(circlePosts.circleId, circleIds), notBlocked(circlePosts.userId, readerId)),
+    )
     .limit(1)
   return post ?? null
 }
@@ -442,7 +467,7 @@ export async function setReaction(
   circleIds: number[],
 ): Promise<ReactionView[] | null> {
   const { postId, userId, reaction, on } = change
-  if (!(await shownPost(payload, postId, circleIds))) return null
+  if (!(await shownPost(payload, postId, circleIds, userId))) return null
   const db = drizzleOf(payload)
   if (on) await db.insert(circlePostReactions).values({ postId, userId, reaction }).onConflictDoNothing()
   else

@@ -19,8 +19,8 @@ import { isStoryTag } from '@/modules/daily/tags'
 import { readTopicNames } from '@/modules/daily/topic-names'
 import { follows } from '@/modules/follows/schema'
 import { followId, type FollowType } from '@/modules/follows/target'
-import { profilePath } from '@/modules/profiles/rules'
-import { memberFollows, memberOldHandles, memberProfiles } from '@/modules/profiles/schema'
+import { profilePath, type MemberReportReason } from '@/modules/profiles/rules'
+import { memberBlocks, memberFollows, memberOldHandles, memberProfiles, memberReports } from '@/modules/profiles/schema'
 import { skillHref } from '@/modules/resources/public/list-params'
 import { saves } from '@/modules/saves/schema'
 import type { SaveType } from '@/modules/saves/target'
@@ -119,7 +119,8 @@ export type MemberExport = {
   /**
    * Their page (docs/specs/circles.md「/u/[handle]」): its address and link (while the circles are
    * open), the line about themselves and its language, their site, when they last chose an
-   * address, and the addresses they had before, which still lead to their page.
+   * address, and the addresses they had before, which still lead to their page, unless the site
+   * owner took one away (`retiredAt`: it leads nowhere and nobody can have it again).
    */
   profile: {
     handle: string | null
@@ -128,12 +129,16 @@ export type MemberExport = {
     bioLanguage: string | null
     website: string | null
     handleChangedAt: string | null
-    oldHandles: { handle: string; changedAt: string }[]
+    oldHandles: { handle: string; changedAt: string; retiredAt: string | null }[]
   }
   /** The people the member follows, newest first: their address and page. */
   following: ExportPerson[]
   /** The people who follow the member, newest first; anyone can see these on their page. */
   followers: ExportPerson[]
+  /** The people the member blocked, newest first. Who blocked them is the others' to know, so it is left out. */
+  blocking: ExportPerson[]
+  /** Members the member reported: whom and why. */
+  memberReports: { handle: string | null; url: string | null; reason: MemberReportReason; reportedAt: string; resolvedAt: string | null }[]
   /** The circles the member joined, newest first. */
   circles: { circle: ExportRef; joinedAt: string }[]
   /** Their posts in circles, newest first, hidden ones too (a hidden post's pictures no longer open). */
@@ -197,9 +202,11 @@ export type MemberRecords = {
   }
   /** Saved from the settings form; null until the member first saves it. */
   profile: { bio: string; bioLang: string | null; website: string | null; handleChangedAt: Date | null } | null
-  oldHandles: { handle: string; createdAt: Date }[]
+  oldHandles: { handle: string; createdAt: Date; retiredAt: Date | null }[]
   following: { handle: string | null; createdAt: Date }[]
   followers: { handle: string | null; createdAt: Date }[]
+  blocking: { handle: string | null; createdAt: Date }[]
+  memberReports: { handle: string | null; reason: MemberReportReason; createdAt: Date; resolvedAt: Date | null }[]
   accounts: { providerId: string; accountId: string; scope: string | null; createdAt: Date }[]
   sessions: { id: string; createdAt: Date; expiresAt: Date; ipAddress: string | null; userAgent: string | null }[]
   saves: { targetType: SaveType; targetId: number; createdAt: Date }[]
@@ -359,9 +366,11 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     .where(eq(authUsers.id, userId))
     .limit(1)
   if (!user) return null
-  // The other member in each follow: who they follow, who follows them.
+  // The other member in each follow: who they follow, who follows them; whom they blocked or reported.
   const followee = alias(authUsers, 'followee')
   const follower = alias(authUsers, 'follower')
+  const blocked = alias(authUsers, 'blocked')
+  const reported = alias(authUsers, 'reported')
 
   // Reports keep the reporter as `u:<member id>` (src/app/api/app-reports/new, src/app/api/reviews/report).
   const reporter = `u:${userId}`
@@ -386,6 +395,8 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     oldHandles,
     following,
     followers,
+    blocking,
+    memberReportRows,
     subscribers,
   ] = await Promise.all([
     db
@@ -526,7 +537,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .where(eq(memberProfiles.userId, userId))
       .limit(1),
     db
-      .select({ handle: memberOldHandles.handle, createdAt: memberOldHandles.createdAt })
+      .select({ handle: memberOldHandles.handle, createdAt: memberOldHandles.createdAt, retiredAt: memberOldHandles.retiredAt })
       .from(memberOldHandles)
       .where(eq(memberOldHandles.userId, userId))
       .orderBy(desc(memberOldHandles.createdAt)),
@@ -542,6 +553,18 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .innerJoin(follower, eq(follower.id, memberFollows.followerId))
       .where(eq(memberFollows.followeeId, userId))
       .orderBy(desc(memberFollows.id)),
+    db
+      .select({ handle: blocked.handle, createdAt: memberBlocks.createdAt })
+      .from(memberBlocks)
+      .innerJoin(blocked, eq(blocked.id, memberBlocks.blockedId))
+      .where(eq(memberBlocks.blockerId, userId))
+      .orderBy(desc(memberBlocks.id)),
+    db
+      .select({ handle: reported.handle, reason: memberReports.reason, createdAt: memberReports.createdAt, resolvedAt: memberReports.resolvedAt })
+      .from(memberReports)
+      .innerJoin(reported, eq(reported.id, memberReports.userId))
+      .where(eq(memberReports.reporter, reporter))
+      .orderBy(desc(memberReports.createdAt)),
     // The subscription is by address, not by account: only an address the member has shown is theirs.
     user.emailVerified
       ? payload.find({ collection: 'subscribers', where: { email: { equals: normalizeEmail(user.email) } }, depth: 0, limit: 1, overrideAccess: true })
@@ -585,6 +608,8 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     oldHandles,
     following,
     followers,
+    blocking,
+    memberReports: memberReportRows,
     accounts,
     sessions,
     saves: saveRows,
@@ -808,10 +833,18 @@ export function shapeMemberExport(
       bioLanguage: records.profile?.bio ? records.profile.bioLang : null,
       website: records.profile?.website ?? null,
       handleChangedAt: isoOrNull(records.profile?.handleChangedAt),
-      oldHandles: records.oldHandles.map((old) => ({ handle: old.handle, changedAt: iso(old.createdAt) })),
+      oldHandles: records.oldHandles.map((old) => ({ handle: old.handle, changedAt: iso(old.createdAt), retiredAt: isoOrNull(old.retiredAt) })),
     },
     following: records.following.map(person),
     followers: records.followers.map(person),
+    blocking: records.blocking.map(person),
+    memberReports: records.memberReports.map((report) => ({
+      handle: report.handle,
+      url: report.handle ? profileUrl(report.handle) : null,
+      reason: report.reason,
+      reportedAt: iso(report.createdAt),
+      resolvedAt: isoOrNull(report.resolvedAt),
+    })),
     circles: records.circleMembers.map((membership) => ({ circle: ref('circle', membership.circleId), joinedAt: iso(membership.createdAt) })),
     circlePosts: records.circlePosts.map((post) => ({
       id: post.id,

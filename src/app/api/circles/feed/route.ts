@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
   const first = cursor === null
   const [page, overview, joined, follows] = await Promise.all([
     feedPage(payload, { tab, circleIds, circle, cursor, userId }),
-    first ? circlesOverview(payload, circleIds) : undefined,
+    first ? circlesOverview(payload, circleIds, userId) : undefined,
     first ? (userId ? joinedCircles(payload, userId, circleIds) : Promise.resolve([])) : undefined,
     first && tab === 'following' && userId ? followCounts(payload, userId).then((counts) => counts.following) : undefined,
   ])

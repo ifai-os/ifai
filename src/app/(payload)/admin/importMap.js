@@ -20,6 +20,7 @@ import { DescribePanel as DescribePanel_62e1fd9685e86a291070552a381d803d } from 
 import { PostsPanel as PostsPanel_04528d501dc004a7fa06c74166ce6fe5 } from '../../../modules/circles/admin/posts-panel'
 import { CommentsPanel as CommentsPanel_f1efdfcf23ac057dfdee4f3f02659eaf } from '../../../modules/circles/admin/comments-panel'
 import { PostReports as PostReports_b655b1d9e8a238e1dd8654ca6f144b07 } from '../../../modules/circles/admin/post-reports'
+import { MemberReports as MemberReports_1244d3398020c09a707031d0e8601d77 } from '../../../modules/profiles/admin/member-reports'
 import { SnapshotStatus as SnapshotStatus_5ae6b63efaca662215fabf9b06a0db06 } from '../../../modules/rankings/admin/snapshot-status'
 import { AnswersPanel as AnswersPanel_30251a44f6ba0b489a653addc8e3ce37 } from '../../../modules/rankings/admin/answers-panel'
 import { UiLanguageSwitch as UiLanguageSwitch_1ab148fae9b2f4a257e97088aafad126 } from '../../../admin/ui-language/switch'
@@ -56,6 +57,7 @@ export const importMap = {
   "/modules/circles/admin/posts-panel#PostsPanel": PostsPanel_04528d501dc004a7fa06c74166ce6fe5,
   "/modules/circles/admin/comments-panel#CommentsPanel": CommentsPanel_f1efdfcf23ac057dfdee4f3f02659eaf,
   "/modules/circles/admin/post-reports#PostReports": PostReports_b655b1d9e8a238e1dd8654ca6f144b07,
+  "/modules/profiles/admin/member-reports#MemberReports": MemberReports_1244d3398020c09a707031d0e8601d77,
   "/modules/rankings/admin/snapshot-status#SnapshotStatus": SnapshotStatus_5ae6b63efaca662215fabf9b06a0db06,
   "/modules/rankings/admin/answers-panel#AnswersPanel": AnswersPanel_30251a44f6ba0b489a653addc8e3ce37,
   "/admin/ui-language/switch#UiLanguageSwitch": UiLanguageSwitch_1ab148fae9b2f4a257e97088aafad126,

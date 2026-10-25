@@ -20,6 +20,7 @@ test('members’ pages and following come with the circles', async ({ page, requ
   expect((await page.goto('/en/u/nobody-at-all'))?.status()).toBe(404)
   expect((await request.post('/api/follows/members', { data: { handle: 'nobody-at-all', on: true } })).status()).toBe(launched ? 401 : 404)
   expect((await request.patch('/api/account/profile', { data: { bio: 'Hi', locale: 'en' } })).status()).toBe(launched ? 401 : 404)
+  expect((await request.post('/api/account/blocks', { data: { handle: 'nobody-at-all', on: true } })).status()).toBe(launched ? 401 : 404)
   expect((await request.get('/api/circles/people')).status()).toBe(launched ? 200 : 404)
 })
 
@@ -257,6 +258,184 @@ test.describe('members’ pages', () => {
       await expect(circle).toContainText('1 post by them')
     } finally {
       await member.remove()
+    }
+  })
+
+  test('blocking a member: from their page, what it hides both ways, and the settings', async ({ page, context, browser, request, baseURL }) => {
+    test.slow()
+    const site = baseURL ?? 'http://localhost:3000'
+    const member = await createMember(site, 'Ada Blocks')
+    const other = await createMember(site, 'Grace Blocks')
+    const others = await browser.newContext({ baseURL: site })
+    try {
+      await others.addCookies([other.cookie])
+      const aiArt = (await member.query<{ id: number }>(`select id from circles where slug = 'ai-art'`)).rows[0].id
+      const post = async (userId: string, body: string) =>
+        (await member.query<{ id: number }>(`insert into circle_posts (circle_id, user_id, body, lang) values ($1, $2, $3, 'en') returning id`, [aiArt, userId, body]))
+          .rows[0].id
+      const hers = await post(other.id, 'A heron in ink, blocked or not.')
+      const mine = await post(member.id, 'A lighthouse at dusk.')
+      // She commented on his post, and they follow each other.
+      const comment = (
+        await member.query<{ id: number }>(`insert into circle_comments (post_id, user_id, body, lang) values ($1, $2, 'Lovely light.', 'en') returning id`, [
+          mine,
+          other.id,
+        ])
+      ).rows[0].id
+      await member.query('insert into member_follows (follower_id, followee_id) values ($1, $2), ($2, $1)', [member.id, other.id])
+      const more = p.moreName.replace('{name}', 'Grace Blocks')
+      const blockName = p.blockName.replace('{name}', 'Grace Blocks')
+      const postsBy = async (api: APIRequestContext, handle: string) =>
+        ((await (await api.get(`/api/circles/feed?tab=latest&author=${handle}`)).json()) as { posts: { id: number }[] }).posts.map((shown) => shown.id)
+
+      // A visitor is asked to sign in first.
+      await page.goto(`/en/u/${other.handle}`)
+      await page.getByRole('button', { name: more }).click()
+      await page.getByRole('button', { name: blockName }).click()
+      await expectSignIn(page, c.signInBlock)
+
+      // Signed in: it asks first; then her page has only its header, and the follows are gone both ways.
+      await context.addCookies([member.cookie])
+      await page.reload()
+      await page.getByRole('button', { name: more }).click()
+      await page.getByRole('button', { name: blockName }).click()
+      const confirm = page.getByRole('dialog', { name: p.blockTitle.replace('{name}', 'Grace Blocks') })
+      await expect(confirm.getByText(p.blockBody)).toBeVisible()
+      await confirm.getByRole('button', { name: p.blockConfirm, exact: true }).click()
+      await expect(page.getByText(p.blockedByYou.replace('{name}', 'Grace Blocks'))).toBeVisible()
+      await expect(confirm).toBeHidden()
+      await expect(page.getByRole('heading', { level: 1, name: 'Grace Blocks' })).toBeVisible()
+      await expect(page.getByRole('button', { name: p.followName.replace('{name}', 'Grace Blocks') })).toHaveCount(0)
+      await expect(page.getByRole('navigation', { name: p.tabsLabel })).toHaveCount(0)
+      expect((await member.query('select 1 from member_follows where follower_id = any($1)', [[member.id, other.id]])).rows).toHaveLength(0)
+
+      // Neither sees the other's posts, nor her comment and its count; a visitor sees everything.
+      expect(await postsBy(page.request, other.handle)).toEqual([])
+      expect(await postsBy(others.request, member.handle)).toEqual([])
+      expect(await postsBy(request, other.handle)).toEqual([hers])
+      expect((await page.goto(`/en/circles/p/${hers}`))?.status()).toBe(404)
+      expect((await request.get(`/en/circles/p/${hers}`)).status()).toBe(200)
+      expect(await (await page.request.get(`/api/circles/comments?post=${mine}`)).json()).toMatchObject({ count: 0, comments: [] })
+      expect(await (await request.get(`/api/circles/comments?post=${mine}`)).json()).toMatchObject({ count: 1, comments: [{ id: comment }] })
+      expect((await others.request.get(`/api/circles/comments?post=${mine}`)).status()).toBe(404)
+
+      // Nor her face among the last people to post on a circle's card: she posted last in Desks & Gear.
+      const desks = (await member.query<{ id: number }>(`select id from circles where slug = 'desks-and-gear'`)).rows[0].id
+      const shelf = (
+        await member.query<{ id: number }>(`insert into circle_posts (circle_id, user_id, body, lang) values ($1, $2, 'A walnut monitor shelf.', 'en') returning id`, [
+          desks,
+          other.id,
+        ])
+      ).rows[0].id
+      const faces = async (api: APIRequestContext) => {
+        const { overview } = (await (await api.get('/api/circles/feed?tab=latest')).json()) as {
+          overview: { circles: { id: number; recent: { name: string }[] }[] }
+        }
+        return overview.circles.find((circle) => circle.id === desks)?.recent.map((person) => person.name) ?? []
+      }
+      expect(await faces(request)).toContain('Grace Blocks')
+      expect(await faces(page.request)).not.toContain('Grace Blocks')
+      await member.query('delete from circle_posts where id = $1', [shelf])
+
+      // Neither can follow, react to, comment on or answer the other.
+      const followHim = await others.request.post('/api/follows/members', { data: { handle: member.handle, on: true } })
+      expect(followHim.status()).toBe(403)
+      expect(await followHim.json()).toMatchObject({ error: 'blocked' })
+      expect((await page.request.post('/api/follows/members', { data: { handle: other.handle, on: true } })).status()).toBe(403)
+      expect((await page.request.post('/api/circles/reactions', { data: { post: hers, reaction: 'like', on: true } })).status()).toBe(404)
+      expect((await others.request.post('/api/circles/comments', { data: { post: mine, body: 'Me again.', locale: 'en' } })).status()).toBe(404)
+      expect((await page.request.post('/api/circles/comments', { data: { post: mine, body: 'Thanks!', locale: 'en', replyTo: comment } })).status()).toBe(422)
+
+      // What the blocks API turns down.
+      const crossSite = { 'sec-fetch-site': 'cross-site' }
+      expect((await page.request.post('/api/account/blocks', { data: { handle: member.handle, on: true } })).status()).toBe(422)
+      expect((await page.request.post('/api/account/blocks', { data: { handle: 'nobody-at-all', on: true } })).status()).toBe(404)
+      expect((await page.request.post('/api/account/blocks', { data: { handle: other.handle, on: 'yes' } })).status()).toBe(400)
+      expect((await page.request.post('/api/account/blocks', { data: { handle: other.handle, on: true }, headers: crossSite })).status()).toBe(403)
+
+      // Her side: his page says why it is empty, and 更多 can still block and report him.
+      const hersPage = await others.newPage()
+      await hersPage.goto(`/en/u/${member.handle}`)
+      await expect(hersPage.getByText(p.blockedYou.replace('{name}', 'Ada Blocks'))).toBeVisible()
+      await expect(hersPage.getByRole('button', { name: p.followName.replace('{name}', 'Ada Blocks') })).toHaveCount(0)
+      await hersPage.getByRole('button', { name: p.moreName.replace('{name}', 'Ada Blocks') }).click()
+      await expect(hersPage.getByRole('button', { name: p.blockName.replace('{name}', 'Ada Blocks') })).toBeVisible()
+      await expect(hersPage.getByRole('button', { name: c.report, exact: true })).toBeVisible()
+
+      // The download has whom they blocked; whom someone else blocked is not in theirs.
+      expect((await (await page.request.get('/api/account/export?locale=en')).json()).blocking).toMatchObject([{ handle: other.handle }])
+      expect((await (await others.request.get('/api/account/export?locale=en')).json()).blocking).toEqual([])
+
+      // 隐私 lists her. Unblocking from her page brings the page back, not the follows.
+      await page.goto('/en/me/account?section=privacy')
+      const main = page.getByRole('main')
+      await expect(main.getByRole('heading', { name: en.account.blockedTitle })).toBeVisible()
+      await expect(main.getByRole('link', { name: 'Grace Blocks' })).toHaveAttribute('href', `/en/u/${other.handle}`)
+      await page.goto(`/en/u/${other.handle}`)
+      await page.getByRole('main').getByRole('button', { name: p.unblock, exact: true }).click()
+      await expect(page.getByRole('button', { name: p.followName.replace('{name}', 'Grace Blocks') })).toHaveAttribute('aria-pressed', 'false')
+      await expect(page.getByRole('navigation', { name: p.tabsLabel })).toBeVisible()
+      expect(await postsBy(page.request, other.handle)).toEqual([hers])
+
+      // Blocked again, and unblocked from the settings: off the list at once.
+      expect(await (await page.request.post('/api/account/blocks', { data: { handle: other.handle, on: true } })).json()).toEqual({ blocked: true })
+      await page.goto('/en/me/account?section=privacy')
+      await main.getByRole('button', { name: en.account.unblockName.replace('{name}', 'Grace Blocks') }).click()
+      await expect(main.getByText(en.account.blockedNone)).toBeVisible()
+      await expect.poll(async () => (await member.query('select 1 from member_blocks where blocker_id = $1', [member.id])).rows.length).toBe(0)
+    } finally {
+      await others.close()
+      await member.remove()
+      await other.remove()
+    }
+  })
+
+  test('reporting a member from their page', async ({ page, context, baseURL }) => {
+    const site = baseURL ?? 'http://localhost:3000'
+    const member = await createMember(site, 'Ada Reports')
+    const other = await createMember(site, 'Grace Reports')
+    try {
+      const more = p.moreName.replace('{name}', 'Grace Reports')
+
+      // A visitor can report too: one of the five reasons for members, then thanks, and 已举报.
+      await page.goto(`/en/u/${other.handle}`)
+      await page.getByRole('button', { name: more }).click()
+      await page.getByRole('button', { name: c.report, exact: true }).click()
+      const dialog = page.getByRole('dialog', { name: c.reportMemberTitle })
+      await expect(dialog.getByText(c.reportMemberBody)).toBeVisible()
+      await expect(dialog.getByRole('radio')).toHaveCount(5)
+      await dialog.getByRole('radio', { name: c.memberReasons.impersonation }).check()
+      await dialog.getByRole('button', { name: c.reportSend, exact: true }).click()
+      await expect(dialog.getByRole('status')).toHaveText(c.reportDone)
+      await page.keyboard.press('Escape')
+      await page.getByRole('button', { name: more }).click()
+      await expect(page.getByRole('button', { name: c.reported, exact: true })).toBeDisabled()
+
+      // A member: once per reporter, not themselves, only a member who is there, only the members' reasons.
+      await context.addCookies([member.cookie])
+      expect(await (await page.request.post('/api/circles/report', { data: { member: other.handle, reason: 'profile' } })).json()).toEqual({ reported: true })
+      expect((await page.request.post('/api/circles/report', { data: { member: other.handle.toUpperCase(), reason: 'spam' } })).status()).toBe(200)
+      const own = await page.request.post('/api/circles/report', { data: { member: member.handle, reason: 'spam' } })
+      expect(own.status()).toBe(400)
+      expect(await own.json()).toMatchObject({ error: 'own-profile' })
+      expect((await page.request.post('/api/circles/report', { data: { member: 'nobody-at-all', reason: 'spam' } })).status()).toBe(404)
+      expect((await page.request.post('/api/circles/report', { data: { member: other.handle, reason: 'offTopic' } })).status()).toBe(400)
+      const reports = await member.query<{ reporter: string; reason: string }>('select reporter, reason from member_reports where user_id = $1 order by id', [other.id])
+      expect(reports.rows).toEqual([
+        { reporter: expect.stringMatching(/^v:/), reason: 'impersonation' },
+        { reporter: `u:${member.id}`, reason: 'profile' },
+      ])
+
+      // What the site owner sees and does is for admins only.
+      expect((await page.request.get('/api/circles/member-reports')).status()).toBe(401)
+      expect((await page.request.post(`/api/circles/member-reports/${other.id}`, { data: { keep: true } })).status()).toBe(401)
+
+      // The download lists whom they reported, by address.
+      const exported = await (await page.request.get('/api/account/export?locale=en')).json()
+      expect(exported.memberReports).toMatchObject([{ handle: other.handle, reason: 'profile', resolvedAt: null }])
+    } finally {
+      await member.remove()
+      await other.remove()
     }
   })
 })

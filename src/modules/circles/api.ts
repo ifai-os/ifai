@@ -22,6 +22,6 @@ export const fail = (error: CirclesError, status: number) => reply({ error }, st
 export const notLaunched = () => fail('not-found', 404)
 
 export async function changed(payload: Payload, circleIds: number[], userId: string): Promise<CirclesChange> {
-  const [overview, joined] = await Promise.all([circlesOverview(payload, circleIds), joinedCircles(payload, userId, circleIds)])
+  const [overview, joined] = await Promise.all([circlesOverview(payload, circleIds, userId), joinedCircles(payload, userId, circleIds)])
   return { overview, joined }
 }

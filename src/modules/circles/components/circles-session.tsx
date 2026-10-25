@@ -8,10 +8,12 @@ import { loadTimeoutMs } from '@/components/states/timing'
 import { authClient } from '@/lib/auth/client'
 import type { AuthProviders } from '@/lib/auth/providers'
 
-import type { CircleView, CirclesError, ReportReason, ReportTarget } from '../rules'
+import type { MemberReportReason } from '@/modules/profiles/rules'
+
+import type { CircleView, CirclesError, MemberReportTarget, ReportReason, ReportTarget } from '../rules'
 
 /** What a visitor pressed before being asked to sign in: it names the dialog. */
-export type SignInReason = 'join' | 'post' | 'react' | 'comment' | 'follow'
+export type SignInReason = 'join' | 'post' | 'react' | 'comment' | 'follow' | 'block'
 
 type CirclesSessionValue = {
   circles: CircleView[]
@@ -22,7 +24,8 @@ type CirclesSessionValue = {
   member: { id: string; name: string } | null
   /** The sign-in dialog; signing in comes back to `returnTo` (this page by default). */
   askToSignIn: (reason: SignInReason, returnTo?: string) => void
-  report: (target: ReportTarget, reason: ReportReason) => Promise<boolean>
+  /** A post or a comment with the reasons for them, or a member with theirs (the server checks the pair). */
+  report: (target: ReportTarget | MemberReportTarget, reason: ReportReason | MemberReportReason) => Promise<boolean>
 }
 
 const CirclesSessionContext = createContext<CirclesSessionValue | null>(null)
@@ -61,7 +64,7 @@ type CirclesSessionProviderProps = {
 /**
  * What the circles page, a post's page and members' pages share (docs/specs/circles.md): the
  * circles readers can see, who is reading, the sign-in dialog for a visitor who pressed something
- * only members can do, and reporting a post or a comment.
+ * only members can do, and reporting a post, a comment or a member.
  */
 export function CirclesSessionProvider({ circles, signIn, afterSignIn, children }: CirclesSessionProviderProps) {
   const t = useTranslations('circles')
@@ -78,8 +81,9 @@ export function CirclesSessionProvider({ circles, signIn, afterSignIn, children 
     setSignInReason(reason)
   }, [])
 
-  const report = useCallback(async (target: ReportTarget, reason: ReportReason) => {
-    const { data } = await request<{ reported: boolean }>('/api/circles/report', json({ [target.kind]: target.id, reason }))
+  const report = useCallback(async (target: ReportTarget | MemberReportTarget, reason: ReportReason | MemberReportReason) => {
+    const body = target.kind === 'member' ? { member: target.handle, reason } : { [target.kind]: target.id, reason }
+    const { data } = await request<{ reported: boolean }>('/api/circles/report', json(body))
     return Boolean(data)
   }, [])
 
@@ -89,6 +93,7 @@ export function CirclesSessionProvider({ circles, signIn, afterSignIn, children 
     react: t('signInReact'),
     comment: t('signInComment'),
     follow: t('signInFollow'),
+    block: t('signInBlock'),
   }
 
   return (

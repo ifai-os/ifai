@@ -28,7 +28,8 @@ type PeopleListProps = {
 
 /**
  * 「关注者」and「正在关注」(docs/specs/circles.md「/u/[handle]」): back to the member's page, the two
- * lists as tabs, then 30 people a page, the latest follow first, each with「关注」unless it is the reader.
+ * lists as tabs, then 30 people a page, the latest follow first, each with「关注」unless it is the reader
+ * or one of the two blocked the other (rule 23).
  */
 export function PeopleList({ page, side, title, circles, signIn }: PeopleListProps) {
   const t = useTranslations('profiles')
@@ -124,7 +125,7 @@ function PersonItem({ person }: { person: PersonRow }) {
           </span>
         )}
       </span>
-      {!person.self && <FollowButton handle={person.handle} name={name} initial={person.following} look="accent" />}
+      {!person.self && !person.blocked && <FollowButton handle={person.handle} name={name} initial={person.following} look="accent" />}
     </li>
   )
 }

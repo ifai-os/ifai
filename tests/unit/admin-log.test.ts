@@ -92,6 +92,12 @@ describe('admin log: endpoint bodies and actions', () => {
       params: { commentId: '31' },
     })
     expect(endpointAction('circles', '/:id/comments/:commentId', { id: '2', commentId: '31' }, { keep: true })?.action).toBe('circles:comments/keep')
+    // A reported member: dealt with (any of the three), or kept.
+    expect(endpointAction('circles', '/member-reports/:userId', { userId: 'member-7' }, { resetHandle: true, resetName: true })).toEqual({
+      action: 'circles:member-reports/handle',
+      params: { userId: 'member-7' },
+    })
+    expect(endpointAction('circles', '/member-reports/:userId', { userId: 'member-7' }, { keep: true })?.action).toBe('circles:member-reports/keep')
   })
 
   it('logs nothing for endpoints that write nothing', () => {
@@ -108,6 +114,7 @@ describe('admin log: endpoint bodies and actions', () => {
       'app-submissions:/:id/handling': [{ action: 'draft' }, { action: 'duplicate' }],
       'circles:/:id/posts/:postId': [{ status: 'hidden' }, { status: 'shown' }, { keep: true }],
       'circles:/:id/comments/:commentId': [{ status: 'hidden' }, { status: 'shown' }, { keep: true }],
+      'circles:/member-reports/:userId': [{ clearProfile: true }, { keep: true }],
     }
     const reviewActions = ['edit', 'publish', 'correct', 'reject', 'later', 'withdraw', 'merge', 'keep-separate', 'rewrite']
     const actions: string[] = []

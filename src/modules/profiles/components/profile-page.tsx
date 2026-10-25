@@ -1,25 +1,26 @@
 'use client'
 
 import { useFormatter, useLocale, useTranslations } from 'next-intl'
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, useTransition, type ReactNode } from 'react'
 
-import { buttonClass } from '@/components/button'
+import { Button, buttonClass } from '@/components/button'
 import { tileTones } from '@/components/cards/initial-tile'
 import { Icon } from '@/components/icon'
 import { LocalTime } from '@/components/local-time'
 import { ShareButton } from '@/components/share-button'
 import { StateShell } from '@/components/states/state-shell'
 import { localizePath, type Locale } from '@/i18n/config'
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
 import { AppTile } from '@/modules/apps/components/app-tile'
 import { Stars } from '@/modules/apps/reviews/components/stars'
-import { CirclesSessionProvider } from '@/modules/circles/components/circles-session'
+import { CirclesSessionProvider, json, request, useCirclesSession } from '@/modules/circles/components/circles-session'
 import { PersonAvatar } from '@/modules/circles/components/person-avatar'
-import type { CircleView } from '@/modules/circles/rules'
+import { ReportDialog } from '@/modules/circles/components/report-dialog'
+import type { CircleView, MemberReportTarget } from '@/modules/circles/rules'
 
 import type { ProfileCircle, ProfilePageData, ProfileReview } from '../public'
-import { peoplePath, profilePath, profileTabs, websiteLabel, type ProfileTab } from '../rules'
+import { peoplePath, profilePath, profileTabs, websiteLabel, type BlockChange, type BlockState, type ProfilesError, type ProfileTab } from '../rules'
 import { FollowButton, FollowsProvider, useFollowers } from './follows'
 import { ProfilePosts } from './profile-posts'
 
@@ -31,31 +32,117 @@ type ProfilePageProps = {
 
 /**
  * A member's page (docs/specs/circles.md「/u/[handle]」, the「IFAI 个人主页」board): who they are
- * and their numbers, then 动态 / 评价 / 圈子 (and a link to「我的收藏」on one's own page).
+ * and their numbers, then 动态 / 评价 / 圈子 (and a link to「我的收藏」on one's own page). Between
+ * a member and someone one of them blocked (rule 23), only the top half and a note.
  */
 export function ProfilePage({ page, circles, signIn }: ProfilePageProps) {
   const t = useTranslations('profiles')
   return (
     <CirclesSessionProvider circles={circles} signIn={signIn} afterSignIn={t('afterSignIn')}>
-      <FollowsProvider>
-        <main id="main" className="mx-auto flex w-full max-w-[720px] flex-col px-4 pt-8 pb-24 md:pt-12">
-          <ProfileHeader page={page} />
-          <ProfileTabs page={page} />
-          {page.posts && <ProfilePosts handle={page.profile.handle} initial={page.posts} loadedAt={page.loadedAt} />}
-          {page.reviews && <ProfileReviews handle={page.profile.handle} reviews={page.reviews} />}
-          {page.tab === 'circles' && <ProfileCircles circles={page.circles} own={page.own} />}
-        </main>
-      </FollowsProvider>
+      <ProfileBody page={page} />
     </CirclesSessionProvider>
   )
 }
 
-function ProfileHeader({ page }: { page: ProfilePageData }) {
+/** What「更多」does on someone else's page: block or unblock them (rule 23), report them (rule 24). */
+type MenuActions = {
+  block: () => void
+  unblock: () => void
+  report: () => void
+  reported: boolean
+  /** Blocking or unblocking is on its way, or the page is being read again after it. */
+  busy: boolean
+  /** The last unblock did not go through. */
+  unblockFailed: boolean
+}
+
+function ProfileBody({ page }: { page: ProfilePageData }) {
+  const circlesT = useTranslations('circles')
+  const { signedIn, sessionPending, askToSignIn } = useCirclesSession()
+  const router = useRouter()
+  const { handle } = page.profile
+  const name = page.profile.name || circlesT('anonymous')
+  const [confirming, setConfirming] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'busy' | 'block-failed' | 'unblock-failed'>('idle')
+  const [refreshing, startTransition] = useTransition()
+  const [reporting, setReporting] = useState<MemberReportTarget | null>(null)
+  const [reported, setReported] = useState(false)
+
+  // The page read again after blocking or unblocking shows the change: the dialog has done its part.
+  const [shownBlock, setShownBlock] = useState(page.block)
+  if (shownBlock !== page.block) {
+    setShownBlock(page.block)
+    setConfirming(false)
+  }
+
+  async function setBlocked(on: boolean) {
+    setStatus('busy')
+    const { data, status: code } = await request<BlockChange, ProfilesError>('/api/account/blocks', json({ handle, on }))
+    if (!data) {
+      setStatus(on ? 'block-failed' : 'unblock-failed')
+      if (code === 401) {
+        setConfirming(false)
+        askToSignIn('block')
+      }
+      return
+    }
+    // What the page shows changes with the fresh page; until then the transition keeps the buttons waiting.
+    setStatus('idle')
+    startTransition(() => router.refresh())
+  }
+
+  const actions: MenuActions = {
+    block: () => {
+      if (sessionPending) return
+      // Signing in comes back to this page; blocking waits for another press.
+      if (!signedIn) return askToSignIn('block')
+      setStatus('idle')
+      setConfirming(true)
+    },
+    unblock: () => void setBlocked(false),
+    report: () => setReporting({ kind: 'member', handle }),
+    reported,
+    busy: status === 'busy' || refreshing,
+    unblockFailed: status === 'unblock-failed',
+  }
+
+  return (
+    <>
+      {/* A new block state starts the follow buttons afresh: blocking ended the follows. */}
+      <FollowsProvider key={page.block ?? 'none'}>
+        <main id="main" className="mx-auto flex w-full max-w-[720px] flex-col px-4 pt-8 pb-24 md:pt-12">
+          <ProfileHeader page={page} actions={actions} />
+          {page.block ? (
+            <BlockedNote block={page.block} name={name} actions={actions} />
+          ) : (
+            <>
+              <ProfileTabs page={page} />
+              {page.posts && <ProfilePosts handle={handle} initial={page.posts} loadedAt={page.loadedAt} />}
+              {page.reviews && <ProfileReviews handle={handle} reviews={page.reviews} />}
+              {page.tab === 'circles' && <ProfileCircles circles={page.circles} own={page.own} />}
+            </>
+          )}
+        </main>
+      </FollowsProvider>
+      <BlockDialog
+        open={confirming}
+        name={name}
+        busy={status === 'busy' || refreshing}
+        failed={status === 'block-failed'}
+        onConfirm={() => void setBlocked(true)}
+        onClose={() => setConfirming(false)}
+      />
+      <ReportDialog target={reporting} onClose={() => setReporting(null)} onReported={() => setReported(true)} />
+    </>
+  )
+}
+
+function ProfileHeader({ page, actions }: { page: ProfilePageData; actions: MenuActions }) {
   const t = useTranslations('profiles')
   const circlesT = useTranslations('circles')
   const format = useFormatter()
   const locale = useLocale() as Locale
-  const { profile, own, follows, stats, circles } = page
+  const { profile, own, follows, stats, circles, block } = page
   const name = profile.name || circlesT('anonymous')
   const followers = useFollowers(profile.handle, follows.followers)
   const bold = (chunks: ReactNode) => <b className="font-semibold text-ink">{chunks}</b>
@@ -81,8 +168,8 @@ function ProfileHeader({ page }: { page: ProfilePageData }) {
             </>
           ) : (
             <>
-              <FollowButton handle={profile.handle} name={name} initial={page.following} look="large" />
-              <ProfileMenu handle={profile.handle} name={name} />
+              {!block && <FollowButton handle={profile.handle} name={name} initial={page.following} look="large" />}
+              <ProfileMenu handle={profile.handle} name={name} block={block} actions={actions} />
             </>
           )}
         </div>
@@ -123,17 +210,19 @@ function ProfileHeader({ page }: { page: ProfilePageData }) {
       </p>
 
       {/* The cards share their rows, so the numbers line up when a label takes two lines. */}
-      <div className="mt-2 grid grid-cols-3 gap-x-2 sm:gap-x-3">
-        <StatCard label={t('postsCard')} value={format.number(stats.posts)}>
-          {t('receivedNote', { reactions: stats.reactions, comments: stats.comments })}
-        </StatCard>
-        <StatCard label={t('circlesCard')} value={format.number(circles.length)}>
-          {circles.length > 0 && <CircleTiles circles={circles} />}
-        </StatCard>
-        <StatCard label={t('daysCard')} value={t('days', { count: stats.days })}>
-          {t('reviewsNote', { count: stats.reviews })}
-        </StatCard>
-      </div>
+      {!block && (
+        <div className="mt-2 grid grid-cols-3 gap-x-2 sm:gap-x-3">
+          <StatCard label={t('postsCard')} value={format.number(stats.posts)}>
+            {t('receivedNote', { reactions: stats.reactions, comments: stats.comments })}
+          </StatCard>
+          <StatCard label={t('circlesCard')} value={format.number(circles.length)}>
+            {circles.length > 0 && <CircleTiles circles={circles} />}
+          </StatCard>
+          <StatCard label={t('daysCard')} value={t('days', { count: stats.days })}>
+            {t('reviewsNote', { count: stats.reviews })}
+          </StatCard>
+        </div>
+      )}
     </section>
   )
 }
@@ -169,8 +258,11 @@ function CircleTiles({ circles }: { circles: ProfileCircle[] }) {
   )
 }
 
-/** 「更多」on someone else's page:「复制主页链接」(4b adds blocking and reporting). */
-function ProfileMenu({ handle, name }: { handle: string; name: string }) {
+const menuItem = 'flex min-h-10 w-full items-center rounded-thumb px-2.5 text-left text-ui hover:bg-surface'
+
+/** 「更多」on someone else's page:「复制主页链接」,「屏蔽 林栖」or「解除屏蔽」, and「举报」in red (「已举报」once done). */
+function ProfileMenu({ handle, name, block, actions }: { handle: string; name: string; block: BlockState; actions: MenuActions }) {
+  const circlesT = useTranslations('circles')
   const t = useTranslations('profiles')
   const locale = useLocale() as Locale
   const [open, setOpen] = useState(false)
@@ -226,8 +318,31 @@ function ProfileMenu({ handle, name }: { handle: string; name: string }) {
       </button>
       {open && (
         <div id={menuId} className="absolute top-11 right-0 z-10 flex w-max min-w-42 flex-col rounded-tile border border-hairline bg-overlay p-1.5 shadow-float">
-          <button type="button" onClick={copyLink} className="flex min-h-10 w-full items-center rounded-thumb px-2.5 text-left text-ui hover:bg-surface">
+          <button type="button" onClick={copyLink} className={menuItem}>
             {t('copyLink')}
+          </button>
+          <button
+            type="button"
+            disabled={actions.busy}
+            onClick={() => {
+              setOpen(false)
+              if (block === 'mine') actions.unblock()
+              else actions.block()
+            }}
+            className={`${menuItem} disabled:opacity-60`}
+          >
+            {block === 'mine' ? t('unblock') : t('blockName', { name })}
+          </button>
+          <button
+            type="button"
+            disabled={actions.reported}
+            onClick={() => {
+              setOpen(false)
+              actions.report()
+            }}
+            className={`${menuItem} ${actions.reported ? 'text-ink-4' : 'text-down'}`}
+          >
+            {actions.reported ? circlesT('reported') : circlesT('report')}
           </button>
         </div>
       )}
@@ -235,6 +350,88 @@ function ProfileMenu({ handle, name }: { handle: string; name: string }) {
         {copied ? t('linkCopied') : ''}
       </span>
     </div>
+  )
+}
+
+/**
+ * Instead of the tabs, between the reader and someone one of them blocked: the reader blocked
+ * them, with「解除屏蔽」; or they blocked the reader.
+ */
+function BlockedNote({ block, name, actions }: { block: 'mine' | 'theirs'; name: string; actions: MenuActions }) {
+  const t = useTranslations('profiles')
+  return (
+    <div className="mt-9 flex flex-col items-start gap-3 rounded-tile bg-surface p-5">
+      <p className="text-ui text-ink-2">{block === 'mine' ? t('blockedByYou', { name }) : t('blockedYou', { name })}</p>
+      {block === 'mine' && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <Button variant="secondary" onClick={actions.unblock} disabled={actions.busy} className="h-9 disabled:opacity-60">
+            {t('unblock')}
+          </Button>
+          {actions.unblockFailed && (
+            <p role="alert" className="text-small text-down">
+              {t('unblockFailed')}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type BlockDialogProps = { open: boolean; name: string; busy: boolean; failed: boolean; onConfirm: () => void; onClose: () => void }
+
+/** 「屏蔽林栖？」: what blocking does (rule 23), then「屏蔽」or「取消」. Shaped like the circles' report dialog. */
+function BlockDialog({ open, name, busy, failed, onConfirm, onClose }: BlockDialogProps) {
+  const t = useTranslations('profiles')
+  const circlesT = useTranslations('circles')
+  const states = useTranslations('states')
+  const ref = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
+
+  useEffect(() => {
+    const dialog = ref.current
+    if (!dialog) return
+    if (open && !dialog.open) dialog.showModal()
+    if (!open && dialog.open) dialog.close()
+  }, [open])
+
+  return (
+    <dialog
+      ref={ref}
+      aria-labelledby={titleId}
+      onClose={onClose}
+      className="m-auto w-[calc(100%-32px)] max-w-90 overflow-visible rounded-dialog bg-overlay p-0 text-ink shadow-float backdrop:bg-scrim"
+    >
+      {open && (
+        <div className="relative flex flex-col gap-3 p-5">
+          <h2 id={titleId} className="pr-8 text-title font-semibold wrap-anywhere">
+            {t('blockTitle', { name })}
+          </h2>
+          <p className="text-meta text-ink-3">{t('blockBody')}</p>
+          {failed && (
+            <p role="alert" className="text-small text-down">
+              {t('blockFailed')}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={onClose}>
+              {circlesT('cancel')}
+            </Button>
+            <Button onClick={onConfirm} disabled={busy} className="disabled:opacity-60">
+              {t('blockConfirm')}
+            </Button>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={states('dismiss')}
+            className="absolute top-3.5 right-3.5 flex size-8 items-center justify-center rounded-pill text-ink-4 hover:text-ink"
+          >
+            <Icon name="close" size={16} strokeWidth={2} />
+          </button>
+        </div>
+      )}
+    </dialog>
   )
 }
 

@@ -12,8 +12,19 @@ import { withLinkCards } from '@/modules/circles/link-cards'
 import { getCircles, getOverview } from '@/modules/circles/public'
 import type { CircleView, PostView } from '@/modules/circles/rules'
 
+import { blockState } from './blocks'
 import { findByHandle, followCounts, followedAmong, peoplePage, profileView } from './data'
-import { daysSince, isHandle, normalizeHandle, profileRules, type PeopleSide, type PersonRow, type ProfileTab, type ProfileView } from './rules'
+import {
+  daysSince,
+  isHandle,
+  normalizeHandle,
+  profileRules,
+  type BlockState,
+  type PeopleSide,
+  type PersonRow,
+  type ProfileTab,
+  type ProfileView,
+} from './rules'
 
 /**
  * What members' pages show (docs/specs/circles.md「/u/[handle]」): read once per request, for the
@@ -49,6 +60,8 @@ export type ProfilePageData = {
   own: boolean
   /** The reader follows them. */
   following: boolean
+  /** The reader blocked them, or they blocked the reader (rule 23): the page is only its top half. */
+  block: BlockState
   follows: { following: number; followers: number }
   /** The cards: only what everyone can see counts. */
   stats: { posts: number; reactions: number; comments: number; reviews: number; days: number }
@@ -57,7 +70,7 @@ export type ProfilePageData = {
   /** The tabs' numbers: on their own page, their hidden posts and reviews count too. */
   counts: Record<ProfileTab, number>
   tab: ProfileTab
-  /** The open tab's first page: 动态 reads on in the browser, 评价 pages with ?before=. */
+  /** The open tab's first page: 动态 reads on in the browser, 评价 pages with ?before=. None when blocked. */
   posts: { posts: PostView[]; next: number | null } | null
   reviews: { reviews: ProfileReview[]; next: number | null } | null
   /** When it was read, for「3 小时前」. */
@@ -79,10 +92,11 @@ export const getProfilePage = cache(
     const readerId = session?.user.id ?? null
     const own = readerId === userId
     const circleIds = circles.map((circle) => circle.id)
-    const [profile, follows, followed, stats, reviewCounts, overview] = await Promise.all([
+    const [profile, follows, followed, block, stats, reviewCounts, overview] = await Promise.all([
       profileView(payload, userId),
       followCounts(payload, userId),
       own ? new Set<string>() : followedAmong(payload, readerId, [userId]),
+      blockState(payload, readerId, userId),
       authorStats(payload, userId, circleIds),
       memberReviewCounts(payload, userId, appIds),
       getOverview(circleIds),
@@ -97,19 +111,20 @@ export const getProfilePage = cache(
     })
 
     const [posts, reviews] = await Promise.all([
-      tab === 'posts'
+      tab === 'posts' && !block
         ? feedPage(payload, { tab: 'latest', circleIds, circle: null, cursor: null, userId: readerId, authorId: userId }).then(async (page) => ({
             posts: await withLinkCards(page.posts, locale),
             next: page.next,
           }))
         : null,
-      tab === 'reviews' ? profileReviews(userId, { appIds, own, before, locale }) : null,
+      tab === 'reviews' && !block ? profileReviews(userId, { appIds, own, before, locale }) : null,
     ])
 
     return {
       profile,
       own,
       following: followed.has(userId),
+      block,
       follows,
       stats: {
         posts: stats.posts,

@@ -2,9 +2,9 @@ import { defaultLocale, isLocale, type Locale } from '@/i18n/config'
 import { cleanLine, textLength } from '@/modules/apps/reviews/rules'
 
 /**
- * Profiles and following (docs/specs/circles.md rules 18–21): the limits, input checks and shapes
- * shared by the API, the pages and the settings form. No server imports, so the page's own code
- * can use it.
+ * Profiles, following, blocking and reporting members (docs/specs/circles.md rules 18–24): the
+ * limits, input checks and shapes shared by the API, the pages and the settings form. No server
+ * imports, so the page's own code can use it.
  */
 export const profileRules = {
   /** Characters in an address (rule 18). */
@@ -28,6 +28,8 @@ export const profileRules = {
   suggestionDays: 30,
   /** Reviews per page on a profile. */
   reviewsPageSize: 20,
+  /** People listed under「屏蔽的人」in the settings, the latest first. */
+  blockedListed: 500,
 } as const
 
 /**
@@ -234,8 +236,8 @@ export function parseProfileInput(input: unknown): { ok: true; value: ProfileInp
   return { ok: true, value }
 }
 
-/** POST /api/follows/members { handle, on }: any case, as in an address bar. */
-export function parseFollowInput(input: unknown): { handle: string; on: boolean } | null {
+/** POST /api/follows/members and /api/account/blocks { handle, on }: any case, as in an address bar. */
+export function parseHandleSwitch(input: unknown): { handle: string; on: boolean } | null {
   const fields = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
   const handle = typeof fields.handle === 'string' ? normalizeHandle(fields.handle) : ''
   if (!isHandle(handle) || typeof fields.on !== 'boolean') return null
@@ -268,6 +270,8 @@ export type PersonRow = PersonLink & {
   following: boolean
   /** It is the reader. */
   self: boolean
+  /** One of them blocked the other (rule 23): no「关注」. */
+  blocked: boolean
 }
 
 /** A profile's top half. */
@@ -297,6 +301,37 @@ export type ProfileSettings = {
 /** POST /api/follows/members: whether the reader follows them now, and how many people do. */
 export type FollowChange = { following: boolean; followers: number }
 
+/** Who blocked whom between the reader and a member (rule 23), if either did: `mine` when it was the reader. */
+export type BlockState = 'mine' | 'theirs' | null
+
+/** Someone under「屏蔽的人」in the settings. */
+export type BlockedPerson = PersonLink & { blockedAt: string }
+
+/** POST /api/account/blocks: whether the reader blocks them now. */
+export type BlockChange = { blocked: boolean }
+
+/** Why a reader reports a member (rule 24). */
+export const memberReportReasons = ['impersonation', 'profile', 'spam', 'abuse', 'other'] as const
+export type MemberReportReason = (typeof memberReportReasons)[number]
+
+export const isMemberReportReason = (value: unknown): value is MemberReportReason =>
+  typeof value === 'string' && (memberReportReasons as readonly string[]).includes(value)
+
+/**
+ * What the site owner does about a reported member (rule 24): any of the three at once, or keep
+ * them as they are when the reports were wrong. Either way their open reports are dealt with.
+ */
+export type MemberReportAction = { clearProfile: boolean; resetHandle: boolean; resetName: boolean } | { keep: true }
+
+/** POST /api/circles/member-reports/:userId: three booleans with at least one of them on, or { keep: true }. */
+export function parseMemberReportAction(input: unknown): MemberReportAction | null {
+  const fields = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
+  if (fields.keep === true) return { keep: true }
+  const flag = (name: string) => fields[name] === true
+  const action = { clearProfile: flag('clearProfile'), resetHandle: flag('resetHandle'), resetName: flag('resetName') }
+  return action.clearProfile || action.resetHandle || action.resetName ? action : null
+}
+
 export type ProfilesError =
   | ProfileInputError
   | 'cross-site'
@@ -307,3 +342,4 @@ export type ProfilesError =
   | 'own-profile'
   | 'daily-limit'
   | 'too-many'
+  | 'blocked'

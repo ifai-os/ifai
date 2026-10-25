@@ -15,6 +15,7 @@ import { alternatesFor } from '@/lib/seo'
 import { siteUrl } from '@/lib/site-url'
 import { circlesLaunched } from '@/modules/circles/public'
 import { subscribingOpen } from '@/modules/daily/email/delivery'
+import { blockedPeople } from '@/modules/profiles/blocks'
 import { profileSettings } from '@/modules/profiles/data'
 
 type SearchParams = { deleted?: string | string[]; section?: string | string[]; provider?: string | string[]; error?: string | string[] }
@@ -55,6 +56,11 @@ async function viewFor(section: SettingsSection, session: Session, query: Search
     case 'notifications': {
       const { payload } = await getDb()
       return { section, dailyEmail: await dailyEmailState(payload, session.user), subscribing: subscribingOpen() }
+    }
+    case 'privacy': {
+      // Only once the circles are there (sections.ts).
+      const { payload } = await getDb()
+      return { section, blocked: await blockedPeople(payload, session.user.id) }
     }
     case 'profile': {
       // The page address, the line about oneself and the site come with the circles.

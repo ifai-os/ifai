@@ -2,6 +2,7 @@ import type { CollectionAfterDeleteHook, CollectionConfig } from 'payload'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 import { isAdmin, slugField } from '@/modules/apps/collections/shared'
+import { memberReportEndpoints } from '@/modules/profiles/endpoints'
 
 import { deleteCircleData } from '../admin'
 import { refreshCirclesAfterChange, refreshCirclesAfterDelete } from '../cache'
@@ -38,7 +39,7 @@ export const Circles: CollectionConfig = {
     group: { en: 'Circles', zh: '圈子' },
     defaultColumns: ['name', 'slug', 'tone', 'order', 'shown'],
     components: {
-      beforeListTable: ['/modules/circles/admin/post-reports#PostReports'],
+      beforeListTable: ['/modules/circles/admin/post-reports#PostReports', '/modules/profiles/admin/member-reports#MemberReports'],
     },
     description: {
       en: 'Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. Readers’ posts and comments go live at once: hide one in the circle’s Posts or Comments tab.',
@@ -56,7 +57,8 @@ export const Circles: CollectionConfig = {
     afterChange: [syncHantFromHans(['name', 'description']), refreshCirclesAfterChange],
     afterDelete: [deletePosts, refreshCirclesAfterDelete],
   },
-  endpoints: circleEndpoints,
+  // Reported members too: their pages come with the circles (docs/specs/circles.md rule 24).
+  endpoints: [...circleEndpoints, ...memberReportEndpoints],
   fields: [
     {
       type: 'tabs',
