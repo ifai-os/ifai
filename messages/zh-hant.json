@@ -26,7 +26,8 @@
     "submissions": "我的提交",
     "accountPage": "帳號設定",
     "signOut": "登出",
-    "search": "搜尋"
+    "search": "搜尋",
+    "appearance": "外觀"
   },
   "home": {
     "todayAI": "今天的 AI",
@@ -751,7 +752,7 @@
       "profile": "個人資料",
       "sign-in": "帳號與登入",
       "notifications": "通知",
-      "language": "語言",
+      "language": "外觀與語言",
       "data": "資料與帳號"
     },
     "avatarNote": "頭像是暱稱的第一個字。",
@@ -822,7 +823,9 @@
     "signInAgain": "你登入已經超過一天。為了確認是你本人，請登出後重新登入，再來刪除帳號。",
     "signInAgainButton": "登出並重新登入",
     "deleted": "帳號已刪除。謝謝你用過 IFAI。",
-    "home": "回到首頁"
+    "home": "回到首頁",
+    "appearanceLabel": "外觀",
+    "appearanceNote": "跟隨系統時，電腦或手機切到深色，IFAI 也跟著變。"
   },
   "reviews": {
     "title": "評價",
@@ -1202,5 +1205,11 @@
     "data": "資料分析",
     "productivity": "辦公效率",
     "life": "生活服務"
+  },
+  "theme": {
+    "label": "外觀",
+    "system": "跟隨系統",
+    "light": "淺色",
+    "dark": "深色"
   }
 }

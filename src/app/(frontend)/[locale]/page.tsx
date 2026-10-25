@@ -67,7 +67,7 @@ export default async function HomePage({ params }: Props) {
               <span className="flex items-center gap-3.5">
                 <AppTile name={pick.name} slug={pick.slug} logo={pick.logo} size="xl" />
                 <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="text-h3 font-semibold group-hover:text-accent">{pick.name}</span>
+                  <span className="text-h3 font-semibold group-hover:text-accent-ink">{pick.name}</span>
                   {pick.tagline && (
                     <span lang={pick.tagline.lang} className="text-meta text-ink-2">
                       {pick.tagline.value}
@@ -86,7 +86,7 @@ export default async function HomePage({ params }: Props) {
               className="group flex flex-col gap-1.5 rounded-hero border border-surface-2 bg-surface px-6 py-5"
             >
               <span className="text-small text-ink-4">{t('home.newSkill')}</span>
-              <span lang={pickSkill.name.lang} className="text-title font-semibold group-hover:text-accent">
+              <span lang={pickSkill.name.lang} className="text-title font-semibold group-hover:text-accent-ink">
                 {pickSkill.name.value}
               </span>
               {pickSkill.tagline && (
@@ -107,7 +107,7 @@ export default async function HomePage({ params }: Props) {
             <h2 id="trending-apps" className="text-h2">
               {t('home.trendingApps')}
             </h2>
-            <Link href="/apps" className="text-ui text-ink-4 hover:text-accent">
+            <Link href="/apps" className="text-ui text-ink-4 hover:text-accent-ink">
               {t('home.viewAll')} ›
             </Link>
           </div>
@@ -135,7 +135,7 @@ export default async function HomePage({ params }: Props) {
             <h2 id="new-skills" className="text-h2">
               {t('home.newSkills')}
             </h2>
-            <Link href="/resources" className="text-ui text-ink-4 hover:text-accent">
+            <Link href="/resources" className="text-ui text-ink-4 hover:text-accent-ink">
               {t('home.viewAll')} ›
             </Link>
           </div>

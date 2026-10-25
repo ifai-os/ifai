@@ -26,7 +26,8 @@ import * as migration_20261024_135122_daily_story_tags from './20261024_135122_d
 import * as migration_20261024_155932_daily_categories from './20261024_155932_daily_categories';
 import * as migration_20261024_181845_daily_tags from './20261024_181845_daily_tags';
 import * as migration_20261024_185906_daily_approved_at from './20261024_185906_daily_approved_at';
-import * as migration_20261025_030612_follows from './20261025_030612_follows';
+import * as migration_20261025_030735_r2_upload_columns from './20261025_030735_r2_upload_columns';
+import * as migration_20261025_032312_follows from './20261025_032312_follows';
 
 export const migrations = [
   {
@@ -170,8 +171,13 @@ export const migrations = [
     name: '20261024_185906_daily_approved_at',
   },
   {
-    up: migration_20261025_030612_follows.up,
-    down: migration_20261025_030612_follows.down,
-    name: '20261025_030612_follows'
+    up: migration_20261025_030735_r2_upload_columns.up,
+    down: migration_20261025_030735_r2_upload_columns.down,
+    name: '20261025_030735_r2_upload_columns',
+  },
+  {
+    up: migration_20261025_032312_follows.up,
+    down: migration_20261025_032312_follows.down,
+    name: '20261025_032312_follows'
   },
 ];

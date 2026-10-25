@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 
 import { MemberAvatar, memberName } from '@/components/account/member-avatar'
 import { Icon, type IconName } from '@/components/icon'
+import { ThemePicker } from '@/components/theme-picker'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth/client'
 
@@ -18,6 +19,7 @@ export function AccountButton() {
   const { data: session } = authClient.useSession()
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [appearance, setAppearance] = useState(false)
   const menuId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -47,7 +49,7 @@ export function AccountButton() {
       <Link
         href="/sign-in"
         aria-label={t('signIn')}
-        className="flex size-11 items-center justify-center text-ink transition-colors hover:text-accent"
+        className="flex size-11 items-center justify-center text-ink transition-colors hover:text-accent-ink"
       >
         <Icon name="user" size={20} />
       </Link>
@@ -72,7 +74,10 @@ export function AccountButton() {
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         aria-label={t('account')}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          setOpen((value) => !value)
+          setAppearance(false)
+        }}
         className="flex size-11 items-center justify-center"
       >
         <MemberAvatar userId={user.id} name={name} size="sm" />
@@ -80,7 +85,7 @@ export function AccountButton() {
       {open && (
         <div
           id={menuId}
-          className="absolute top-12 right-0 z-30 flex w-75 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-card border border-hairline bg-bg shadow-float"
+          className="absolute top-12 right-0 z-30 flex w-75 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-card border border-hairline bg-overlay shadow-float"
         >
           <Link href="/me/account" onClick={close} className="flex items-center gap-3 px-5 py-4.5 text-ink hover:bg-surface">
             <MemberAvatar userId={user.id} name={name} size="md" />
@@ -99,7 +104,12 @@ export function AccountButton() {
             <MenuLink href="/apps/submit#mine" icon="upload" label={t('submissions')} onClick={close} />
           </nav>
           <div className="h-px bg-surface-2" />
+          {appearance && <ThemePicker className="mx-4 mt-3" />}
           <div className="flex px-2 pt-0.5 pb-1">
+            <button type="button" aria-expanded={appearance} onClick={() => setAppearance((value) => !value)} className={footerItem}>
+              <Icon name="appearance" size={22} />
+              {t('appearance')}
+            </button>
             <Link href="/me/account" onClick={close} className={footerItem}>
               <Icon name="settings" size={22} />
               {t('accountPage')}

@@ -123,7 +123,7 @@ function FollowedGroup({ label, children }: { label: string; children: ReactNode
 function Chip({ target, name, href }: { target: FollowTarget; name: string; href: `/${string}` }) {
   return (
     <li className="flex min-h-8.5 flex-wrap items-center gap-0.5 rounded-pill border border-line bg-bg py-0.5 pr-0.5 pl-3.5 text-meta">
-      <Link href={href} className="wrap-anywhere hover:text-accent">
+      <Link href={href} className="wrap-anywhere hover:text-accent-ink">
         {name}
       </Link>
       <RemoveFollow target={target} name={name} />

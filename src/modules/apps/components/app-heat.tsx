@@ -169,10 +169,10 @@ export function HeatPlaces({ app, heat, level, id, className = '' }: HeatPlacesP
       <ul className="flex flex-col gap-3">
         {places.map((item) => (
           <li key={item.key}>
-            <Link href={item.href} className="flex items-baseline justify-between gap-3 hover:text-accent">
+            <Link href={item.href} className="flex items-baseline justify-between gap-3 hover:text-accent-ink">
               <span className="min-w-0 truncate text-meta text-ink-2">{item.label}</span>
               {item.place ? (
-                <span className="text-h3 font-semibold text-accent">#{item.place}</span>
+                <span className="text-h3 font-semibold text-accent-ink">#{item.place}</span>
               ) : (
                 <span className="text-meta text-ink-4">{t('notOnList')}</span>
               )}
@@ -201,7 +201,7 @@ function Mentions({ app }: { app: AppDetail }) {
           {app.mentions.map((mention) => (
             <li key={mention.slug} className="border-b border-surface-2">
               <Link href={`/daily/${mention.slug}`} className="group flex flex-col gap-1 py-3">
-                <span lang={mention.title.lang} className="text-body font-medium group-hover:text-accent">
+                <span lang={mention.title.lang} className="text-body font-medium group-hover:text-accent-ink">
                   {mention.title.value}
                 </span>
                 <span className="text-small text-ink-4">

@@ -56,7 +56,7 @@ export function DeleteAccount() {
     router.refresh()
   }
 
-  const danger = `${buttonBase} bg-down text-white hover:opacity-90 disabled:opacity-60`
+  const danger = `${buttonBase} bg-down text-bg hover:opacity-90 disabled:opacity-60`
 
   return (
     <>
@@ -68,7 +68,7 @@ export function DeleteAccount() {
         aria-labelledby={titleId}
         onClose={close}
         onCancel={(event) => state === 'deleting' && event.preventDefault()}
-        className="m-auto w-[calc(100%-32px)] max-w-100 overflow-visible rounded-dialog bg-bg p-0 text-ink shadow-float backdrop:bg-scrim"
+        className="m-auto w-[calc(100%-32px)] max-w-100 overflow-visible rounded-dialog bg-overlay p-0 text-ink shadow-float backdrop:bg-scrim"
       >
         <div className="relative flex flex-col gap-3 p-5">
           <h2 id={titleId} className="pr-8 text-title font-semibold">

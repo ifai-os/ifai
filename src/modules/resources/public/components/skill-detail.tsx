@@ -275,7 +275,7 @@ export async function SkillDetailView({ skill, pinned, signIn }: SkillDetailView
                     <Link href={skillHref(item.slug)} className="group flex items-center gap-3 border-b border-surface-2 py-2.5">
                       <SkillTile name={item.name.value} slug={item.slug} size="md" />
                       <span className="flex min-w-0 flex-col">
-                        <span lang={item.name.lang} className="truncate text-ui font-medium group-hover:text-accent">
+                        <span lang={item.name.lang} className="truncate text-ui font-medium group-hover:text-accent-ink">
                           {item.name.value}
                         </span>
                         <span className="text-small text-ink-4">
@@ -382,7 +382,7 @@ async function Overview({ skill, shown }: { skill: SkillDetail; shown: VersionDe
               <li key={index} className="grid grid-cols-[32px_minmax(0,1fr)] gap-3">
                 <span
                   aria-hidden="true"
-                  className={`flex size-8 items-center justify-center rounded-pill text-meta font-semibold ${index === 0 ? 'bg-ink text-white' : 'bg-surface text-ink'}`}
+                  className={`flex size-8 items-center justify-center rounded-pill text-meta font-semibold ${index === 0 ? 'bg-ink text-bg' : 'bg-surface text-ink'}`}
                 >
                   {index + 1}
                 </span>

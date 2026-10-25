@@ -16,17 +16,17 @@ const looks = {
   row: {
     base: 'inline-flex h-7 min-w-16 flex-none items-center justify-center gap-1 rounded-pill border px-2.5 text-small transition-colors',
     off: 'border-line bg-bg text-ink hover:border-ink-4',
-    on: 'border-ink bg-ink text-white',
+    on: 'border-ink bg-ink text-bg',
   },
   entity: {
     base: 'inline-flex h-8 min-w-16 flex-none items-center justify-center rounded-pill border border-line px-3 text-small transition-colors',
     off: 'bg-bg text-ink hover:border-ink-4',
-    on: 'bg-ink text-white',
+    on: 'bg-ink text-bg',
   },
   topic: {
     base: 'inline-flex h-8 flex-none items-center rounded-pill border border-ink px-3.5 text-small font-medium transition-colors',
     off: 'bg-bg text-ink hover:bg-surface',
-    on: 'bg-ink text-white',
+    on: 'bg-ink text-bg',
   },
   page: {
     base: 'inline-flex h-10 min-w-24 flex-none items-center justify-center gap-1 rounded-btn px-6 text-body font-medium whitespace-nowrap transition-colors',

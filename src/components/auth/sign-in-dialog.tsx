@@ -41,7 +41,7 @@ export function SignInDialog({ open, onClose, title, providers, callbackURL, sen
       ref={ref}
       aria-labelledby={titleId}
       onClose={onClose}
-      className="m-auto w-[calc(100%-32px)] max-w-80 overflow-visible rounded-dialog bg-bg p-0 text-ink shadow-float backdrop:bg-scrim"
+      className="m-auto w-[calc(100%-32px)] max-w-80 overflow-visible rounded-dialog bg-overlay p-0 text-ink shadow-float backdrop:bg-scrim"
     >
       {open && (
         <div className="relative flex flex-col gap-3 p-5">
