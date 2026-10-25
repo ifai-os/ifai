@@ -26,7 +26,7 @@ export function HeadlinePicks({ picks }: { picks: ArticleCard[] }) {
         className="group flex min-w-0 flex-col overflow-hidden rounded-hero border border-surface-2 bg-surface md:min-h-65 md:grow-2 md:basis-105 md:flex-row md:flex-wrap"
       >
         {lead.cover && (
-          // eslint-disable-next-line @next/next/no-img-element -- an editor's upload, served as it is (R2 or ./media)
+          // eslint-disable-next-line @next/next/no-img-element -- an upload, served as it is (R2 or a local folder)
           <img
             src={lead.cover.url}
             alt=""
@@ -48,7 +48,7 @@ export function HeadlinePicks({ picks }: { picks: ArticleCard[] }) {
             </span>
           )}
           <span className="flex flex-wrap items-center gap-x-2 text-meta text-ink-4">
-            <Byline />
+            <Byline author={lead.author} />
             <span aria-hidden="true">·</span>
             {t('minutes', { count: lead.minutes })}
           </span>

@@ -43,7 +43,8 @@ export default async function ArticlePage({ params }: Props) {
           home: t('metadata.title'),
           recommend: t('recommend.title'),
           channel: t(`recommend.channels.${article.channel}`),
-          author: t('recommend.editorial'),
+          editorial: t('recommend.editorial'),
+          anonymous: t('recommend.anonymous'),
         })}
       />
       <ArticleDetailView article={article} />

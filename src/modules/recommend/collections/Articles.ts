@@ -17,15 +17,19 @@ import {
   UploadFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
-import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
+import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { rejectField } from '@/lib/field-error'
 import { adminMessage, isAdmin, localeOptions } from '@/modules/apps/collections/shared'
 
+import { deleteReports, resolveReports } from '../admin'
 import { refreshArticlesAfterChange, refreshArticlesAfterDelete } from '../cache'
+import { articleEndpoints } from '../endpoints'
+import { deleteImages, setArticleImagesPublic } from '../images'
 import {
   articleChannels,
   cleanTags,
+  codeLanguages,
   maxPickReasonLength,
   maxSummaryLength,
   maxTagLength,
@@ -82,25 +86,27 @@ const stampAndCheck: CollectionBeforeChangeHook = ({ data, originalDoc, req }) =
   return next
 }
 
-/** Code block languages (Monaco's ids): the common ones in AI articles, plain text first. */
-const codeLanguages: Record<string, string> = {
-  plaintext: 'Plain text',
-  python: 'Python',
-  typescript: 'TypeScript',
-  javascript: 'JavaScript',
-  shell: 'Shell',
-  json: 'JSON',
-  yaml: 'YAML',
-  markdown: 'Markdown',
-  sql: 'SQL',
-  html: 'HTML',
-  css: 'CSS',
-  go: 'Go',
-  rust: 'Rust',
-  java: 'Java',
+/**
+ * A reader's article (docs/specs/recommend.md rules 14 and 17): its pictures are public while it
+ * is published, and hiding it closes the reports on it.
+ */
+const followStatus: CollectionAfterChangeHook = async ({ doc, previousDoc, req }) => {
+  if (!doc.author) return doc
+  await setArticleImagesPublic(req.payload, doc.id, doc.status === 'published', req)
+  if (doc.status === 'hidden' && previousDoc?.status !== 'hidden') await resolveReports(req.payload, doc.id)
+  return doc
+}
+
+/** Deleting an article deletes its pictures and the reports on it. */
+const clearAfterDelete: CollectionAfterDeleteHook = async ({ doc, req }) => {
+  await deleteImages(req.payload, { article: { equals: doc.id } }, req)
+  await deleteReports(req.payload, doc.id)
+  return doc
 }
 
 /** What an article's body can hold (规则 7): no internal links, tables, alignment or colors. */
+const captionField = { name: 'caption', type: 'text', label: { en: 'Caption', zh: '图注' } } as const
+
 const bodyEditor = lexicalEditor({
   features: [
     ParagraphFeature(),
@@ -114,7 +120,12 @@ const bodyEditor = lexicalEditor({
     OrderedListFeature(),
     BlockquoteFeature(),
     HorizontalRuleFeature(),
-    UploadFeature({ collections: { media: { fields: [{ name: 'caption', type: 'text', label: { en: 'Caption', zh: '图注' } }] } } }),
+    UploadFeature({
+      collections: {
+        media: { fields: [captionField] },
+        'article-images': { fields: [captionField] },
+      },
+    }),
     BlocksFeature({ blocks: [CodeBlock({ languages: codeLanguages, defaultLanguage: 'plaintext' })] }),
     FixedToolbarFeature(),
     InlineToolbarFeature(),
@@ -122,8 +133,9 @@ const bodyEditor = lexicalEditor({
 })
 
 /**
- * Long articles (docs/specs/recommend.md). In step 1 the site owner writes them here, signed
- * 「IFAI 编辑部」; readers write theirs from step 2. Each is in one language, as written.
+ * Long articles (docs/specs/recommend.md). The site owner writes theirs here, signed「IFAI 编辑部」;
+ * readers write theirs on the site (POST /api/recommend/articles) and are its `author`. Each is
+ * in one language, as written.
  */
 export const Articles: CollectionConfig = {
   slug: 'articles',
@@ -136,6 +148,9 @@ export const Articles: CollectionConfig = {
     group: recommendAdminGroup,
     defaultColumns: ['title', 'channel', 'status', 'featured', 'publishedAt'],
     listSearchableFields: ['title', 'summary'],
+    components: {
+      beforeListTable: ['/modules/recommend/admin/open-reports#OpenReports'],
+    },
     description: {
       en: 'An article is in the one language it is written in: the content-language picker above does not apply. Published articles show under Latest; tick “Picked” and give a reason to put one under Recommended and at the top of the page.',
       zh: '文章用哪种语言写就是哪种语言，上面的「内容语言」对文章不起作用。已发布的文章出现在「最新」；勾上「精选」并写理由，才进「推荐」和页面顶部。',
@@ -150,9 +165,10 @@ export const Articles: CollectionConfig = {
   },
   hooks: {
     beforeChange: [stampAndCheck],
-    afterChange: [refreshArticlesAfterChange],
-    afterDelete: [refreshArticlesAfterDelete],
+    afterChange: [followStatus, refreshArticlesAfterChange],
+    afterDelete: [clearAfterDelete, refreshArticlesAfterDelete],
   },
+  endpoints: articleEndpoints,
   fields: [
     {
       name: 'title',
@@ -186,11 +202,20 @@ export const Articles: CollectionConfig = {
       },
     },
     {
+      name: 'coverImage',
+      type: 'upload',
+      relationTo: 'article-images',
+      label: { en: 'Cover image (uploaded by the author)', zh: '头图（作者上传的）' },
+      admin: { condition: (data) => Boolean(data?.author), readOnly: true },
+    },
+    {
       name: 'body',
       type: 'richText',
       required: true,
       editor: bodyEditor,
       label: { en: 'Body', zh: '正文' },
+      // A reader's body is made from their Markdown, which the back office cannot change (rule 13).
+      access: { update: ({ doc }) => !doc?.author },
       admin: {
         description: {
           en: 'Second-level headings make the table of contents (two or more). Links open in a new tab.',
@@ -308,5 +333,14 @@ export const Articles: CollectionConfig = {
       label: { en: 'Picked at', zh: '精选时间' },
       admin: { position: 'sidebar', readOnly: true, date: { pickerAppearance: 'dayAndTime' } },
     },
+    {
+      name: 'moderation',
+      type: 'ui',
+      admin: { position: 'sidebar', components: { Field: '/modules/recommend/admin/moderation-panel#ModerationPanel' } },
+    },
+    // The member who wrote it (a Better Auth user id); none when the site owner wrote it here.
+    { name: 'author', type: 'text', index: true, admin: { hidden: true } },
+    // The Markdown a reader wrote, which the body is made from (rule 13): what they edit next time.
+    { name: 'markdown', type: 'textarea', admin: { hidden: true } },
   ],
 }

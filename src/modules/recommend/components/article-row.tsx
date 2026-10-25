@@ -27,7 +27,7 @@ export function ArticleRow({ article }: { article: ArticleCard }) {
           </p>
         )}
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-meta text-ink-4">
-          <Byline />
+          <Byline author={article.author} />
           <LocalTime iso={article.publishedAt} style="date" />
           <span>{t('minutes', { count: article.minutes })}</span>
           {article.tags.length > 0 && (
@@ -48,7 +48,7 @@ export function ArticleRow({ article }: { article: ArticleCard }) {
         </div>
       </div>
       {article.cover && (
-        // eslint-disable-next-line @next/next/no-img-element -- an editor's upload, served as it is (R2 or ./media)
+        // eslint-disable-next-line @next/next/no-img-element -- an upload, served as it is (R2 or a local folder)
         <img
           src={article.cover.url}
           alt=""

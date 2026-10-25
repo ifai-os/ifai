@@ -139,6 +139,35 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
     ],
     circleReactions: [{ postId: 40, circleId: 20, reaction: 'rocket', createdAt: day('2026-10-23') }],
     circlePostReports: [{ postId: 41, circleId: 22, reason: 'abuse', createdAt: day('2026-10-22'), resolvedAt: day('2026-10-23') }],
+    articles: [
+      {
+        id: 60,
+        title: '我怎么用 RAG',
+        summary: null,
+        markdown: '## 开始\n\n先读文档。',
+        lang: 'zh-Hans',
+        channel: 'agents',
+        tags: ['RAG'],
+        status: 'published',
+        createdAt: '2026-10-22T08:00:00.000Z',
+        publishedAt: '2026-10-22T09:00:00.000Z',
+        updatedAt: '2026-10-23T08:00:00.000Z',
+      },
+      {
+        id: 61,
+        title: 'Draft',
+        summary: 'Not yet',
+        markdown: null,
+        lang: 'en',
+        channel: 'coding',
+        tags: [],
+        status: 'draft',
+        createdAt: '2026-10-21T08:00:00.000Z',
+        publishedAt: null,
+        updatedAt: '2026-10-21T08:00:00.000Z',
+      },
+    ],
+    articleReports: [{ articleId: 70, reason: 'spam', createdAt: day('2026-10-23'), resolvedAt: null }],
     subscriber: {
       id: 5,
       email: 'reader@example.com',
@@ -262,6 +291,15 @@ describe('shapeMemberExport', () => {
     ])
   })
 
+  it('gives the member’s articles as the Markdown they wrote, with a page only when published, and keeps reported ones to their id', () => {
+    const file = shape(records())
+    expect(file.articles.map((article) => [article.id, article.text, article.status, article.url])).toEqual([
+      [60, '## 开始\n\n先读文档。', 'published', `${site}/zh-hans/recommend/60`],
+      [61, '', 'draft', null],
+    ])
+    expect(file.articleReports).toEqual([{ article: 70, reason: 'spam', reportedAt: '2026-10-23T08:00:00.000Z', resolvedAt: null }])
+  })
+
   it('includes the daily email subscription and its sends, or null when there is none', () => {
     expect(shape(records()).dailyEmail).toMatchObject({
       email: 'reader@example.com',
@@ -328,6 +366,8 @@ describe('readExportRefs', () => {
       circlePosts: [],
       circleReactions: [],
       circlePostReports: [],
+      articles: [],
+      articleReports: [],
     })
     const found = await readExportRefs({ find } as unknown as Payload, empty, 'en', site)
     expect(find).not.toHaveBeenCalled()

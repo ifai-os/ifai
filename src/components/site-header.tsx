@@ -4,8 +4,8 @@ import { AccountButton } from '@/components/account-button'
 import { Logo } from '@/components/brand/logo'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NavLink } from '@/components/nav-link'
-import { SearchLink } from '@/components/search-link'
-import { visibleNavItems } from '@/config/site'
+import { SearchLink, WriteLink } from '@/components/search-link'
+import { isLaunched, visibleNavItems } from '@/config/site'
 import { Link } from '@/i18n/navigation'
 
 export function SiteHeader() {
@@ -37,6 +37,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex min-w-30 flex-1 items-center justify-end gap-1">
+          {isLaunched('recommend') && <WriteLink />}
           <SearchLink />
           <LanguageSwitcher />
           <AccountButton />

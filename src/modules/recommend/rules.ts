@@ -29,6 +29,24 @@ export const maxSummaryLength = 140
 /** Articles on a list page. */
 export const pageSize = 20
 
+/** Code block languages (Monaco's ids): the common ones in AI articles, plain text first. */
+export const codeLanguages: Record<string, string> = {
+  plaintext: 'Plain text',
+  python: 'Python',
+  typescript: 'TypeScript',
+  javascript: 'JavaScript',
+  shell: 'Shell',
+  json: 'JSON',
+  yaml: 'YAML',
+  markdown: 'Markdown',
+  sql: 'SQL',
+  html: 'HTML',
+  css: 'CSS',
+  go: 'Go',
+  rust: 'Rust',
+  java: 'Java',
+}
+
 /** The languages an article can be written in: the site's five. */
 export const articleLanguages: readonly Locale[] = ['en', 'zh-Hans', 'zh-Hant', 'ja', 'ko']
 

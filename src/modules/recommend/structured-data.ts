@@ -10,12 +10,13 @@ const headlineLength = 110
 
 /**
  * An article as an Article at its canonical address (the page in its own language), plus the
- * breadcrumb trail of the page it is on (首页 › 推荐 › 频道 › 标题). The editors are the author in step 1.
+ * breadcrumb trail of the page it is on (首页 › 推荐 › 频道 › 标题). The author is the member who wrote
+ * it, by the name it shows (`labels.anonymous` when they have none), or the editors.
  */
 export function articleJsonLd(
   article: ArticleDetail,
   locale: Locale,
-  labels: { home: string; recommend: string; channel: string; author: string },
+  labels: { home: string; recommend: string; channel: string; editorial: string; anonymous: string },
 ): JsonLdObject[] {
   const url = pageUrl(article.lang, articleHref(article.id))
   return [
@@ -32,7 +33,9 @@ export function articleJsonLd(
       image: [absoluteUrl(article.coverFull?.url ?? defaultShareImage(article.lang).url)],
       articleSection: labels.channel,
       keywords: article.tags.length > 0 ? article.tags.join(', ') : undefined,
-      author: { ...siteOrganization(), name: labels.author },
+      author: article.author
+        ? { '@type': 'Person', name: article.author.name || labels.anonymous }
+        : { ...siteOrganization(), name: labels.editorial },
       publisher: siteOrganization(),
     },
     breadcrumbs(locale, [

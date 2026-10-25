@@ -107,6 +107,7 @@ function card(id: number, extra: Partial<ArticleCard> = {}): ArticleCard {
     channel: 'agents',
     tags: [],
     cover: null,
+    author: null,
     minutes: 3,
     publishedAt: new Date(Date.UTC(2026, 9, 25) - id * 3_600_000).toISOString(),
     updatedAt: '2026-10-25T00:00:00.000Z',

@@ -204,6 +204,12 @@ const icons = {
       <path d="M12 7v5l3 2" />
     </>
   ),
+  pen: (
+    <>
+      <path d="M16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1 1-4z" />
+      <path d="M14.5 6.5l3 3" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof icons

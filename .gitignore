@@ -17,6 +17,7 @@ next-env.d.ts
 # payload local uploads (production uses R2)
 /media/
 /arena-images/
+/article-images/
 /skill-versions/
 
 # tests
