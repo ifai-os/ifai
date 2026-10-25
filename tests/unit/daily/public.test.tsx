@@ -8,12 +8,25 @@ import { dateOfKey, dayKey, groupByDay, readerTimeZone, relativeDay } from '@/li
 import { DailyFeed } from '@/modules/daily/public/components/daily-feed'
 import { HotList } from '@/modules/daily/public/components/hot-list'
 import { HottestCard } from '@/modules/daily/public/components/hottest-card'
+import { CategoryPageView } from '@/modules/daily/public/components/category-page'
 import { MentionedApps } from '@/modules/daily/public/components/mentioned-apps'
 import { StoryDetailView } from '@/modules/daily/public/components/story-detail'
 import { TodayHeadlines } from '@/modules/daily/public/components/today-headlines'
-import { listHref, readPage, storyHref } from '@/modules/daily/public/list-params'
+import { TopicPageView } from '@/modules/daily/public/components/topic-page'
+import { listHref, readPage, readTopicKey, storyHref, topicHref } from '@/modules/daily/public/list-params'
 import { renderFeed } from '@/modules/daily/public/rss'
-import { onePerEvent, toHot, toItem, type HotStory, type RawStory, type StoryDetail, type StoryItem } from '@/modules/daily/public/story-item'
+import { storyCategoryOf } from '@/modules/daily/categories'
+import {
+  onePerEvent,
+  toHot,
+  toItem,
+  type CategoryPage,
+  type HotStory,
+  type RawStory,
+  type StoryDetail,
+  type StoryItem,
+  type TopicPage,
+} from '@/modules/daily/public/story-item'
 
 import en from '../../../messages/en.json'
 
@@ -26,13 +39,14 @@ const render = (element: ReactElement) =>
 
 const story = (overrides: Partial<StoryItem> & Pick<StoryItem, 'id' | 'publishedAt'>): StoryItem => ({
   slug: `story-${overrides.id}`,
-  category: 'product',
+  category: 'tools',
   correctedAt: null,
   title: { value: `Story ${overrides.id}`, lang: 'en' },
   summary: { value: 'What happened, in one line.', lang: 'en' },
   tryIt: null,
   moreReports: 0,
   originalName: 'Maker',
+  media: null,
   ...overrides,
 })
 
@@ -253,6 +267,10 @@ describe('a story’s page', () => {
       { name: 'Outlet', role: 'report', url: 'https://outlet.example/x', publishedAt: null },
     ],
     developments: [story({ id: 9, publishedAt: '2026-10-20T09:00:00Z', slug: 'earlier' })],
+    tags: [],
+    entities: [],
+    topic: null,
+    similar: [],
   }
 
   it('lists the sources in order with their role, and the other developments', () => {
@@ -266,10 +284,166 @@ describe('a story’s page', () => {
     expect(html).toContain('1 more outlet reported this')
   })
 
+  it('leaves out the related blocks it has nothing for', () => {
+    const html = render(<StoryDetailView story={detail} signIn={{ google: false, github: false, email: true }} />)
+    for (const heading of [en.daily.tags, en.daily.entities, en.daily.topic, en.daily.similar]) expect(html).not.toContain(heading)
+  })
+
+  it('shows the industry tags, companies and products, the topic and similar events', () => {
+    const topicStories = [
+      story({ id: 20, publishedAt: '2026-10-23T09:00:00Z', slug: 'newer' }),
+      { ...detail, sources: undefined },
+      ...[1, 2, 3, 4, 5].map((n) => story({ id: 20 + n, publishedAt: `2026-10-0${n}T09:00:00Z`, slug: `old-${n}` })),
+    ]
+    const html = render(
+      <StoryDetailView
+        story={{
+          ...detail,
+          tags: ['hardware', 'chips'],
+          entities: [
+            { name: 'MacBook Pro', kind: 'product', key: 'macbookpro', app: null },
+            { name: 'Apple', kind: 'company', key: 'apple', app: { slug: 'apple-intelligence', name: 'Apple Intelligence' } },
+          ],
+          topic: { name: 'MacBook Pro', key: 'macbookpro', stories: topicStories },
+          similar: [story({ id: 30, publishedAt: '2025-10-01T09:00:00Z', slug: 'last-year' })],
+        }}
+        signIn={{ google: false, github: false, email: true }}
+      />,
+    )
+    expect(html).toContain(`href="/en/daily/tag/hardware"`)
+    expect(html).toContain(`>${en.tags.hardware}`)
+    expect(html).toContain(`>${en.daily.entityKinds.product}<`)
+    expect(html).toContain('href="/en/apps/apple-intelligence"')
+    expect(html).toContain('href="/en/daily/topic/apple"')
+    expect(html).toContain('href="/en/daily/topic/macbookpro"')
+    // This story is marked, not linked; five of seven show before「查看更多」.
+    expect(html).toContain(`>${en.daily.thisStory}<`)
+    expect(html).not.toContain('href="/en/daily/story-1"')
+    expect(html).toContain('href="/en/daily/old-3"')
+    expect(html).not.toContain('href="/en/daily/old-4"')
+    expect(html).toContain('Show more (2)')
+    expect(html).toContain('href="/en/daily/last-year"')
+    expect(html.indexOf(en.daily.topic)).toBeLessThan(html.indexOf(en.daily.similar))
+  })
+
   it('has a save button next to share', () => {
     const html = render(<StoryDetailView story={detail} signIn={{ google: false, github: false, email: true }} />)
     expect(html).toContain(`aria-pressed="false"`)
     expect(html.indexOf(`>${en.saves.save}</button>`)).toBeLessThan(html.indexOf(en.daily.share))
+  })
+})
+
+describe('a company’s or product’s topic page', () => {
+  const topic: TopicPage = {
+    key: 'kimi',
+    name: 'Kimi',
+    kind: 'product',
+    total: 23,
+    page: 1,
+    pages: 2,
+    stories: [
+      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'k3', moreReports: 6 }),
+      story({ id: 2, publishedAt: '2026-09-11T20:15:00Z', slug: 'k28' }),
+      story({ id: 3, publishedAt: '2025-11-06T22:05:00Z', slug: 'k2-thinking' }),
+    ],
+    earlier: 3,
+    app: { slug: 'kimi', name: 'Kimi', logo: null },
+    developer: { name: 'Moonshot AI', key: 'moonshotai' },
+  }
+
+  it('has addresses only for compared names', () => {
+    expect(topicHref('kimi')).toBe('/daily/topic/kimi')
+    expect(topicHref('月之暗面', 2)).toBe('/daily/topic/%E6%9C%88%E4%B9%8B%E6%9A%97%E9%9D%A2?page=2')
+    expect(readTopicKey('kimi')).toBe('kimi')
+    expect(readTopicKey('%E6%9C%88%E4%B9%8B%E6%9A%97%E9%9D%A2')).toBe('月之暗面')
+    expect(readTopicKey('月之暗面')).toBe('月之暗面')
+    expect(readTopicKey('Kimi')).toBeNull()
+    expect(readTopicKey('kimi%20k2')).toBeNull()
+    expect(readTopicKey('%E0%A4%A')).toBeNull()
+    expect(readTopicKey('')).toBeNull()
+  })
+
+  it('names it, links its maker and app, and lists the stories under their times', () => {
+    const html = render(<TopicPageView topic={topic} serverToday="2026-10-22" />)
+    expect(html).toContain('>#</span>Kimi</h1>')
+    expect(html).toContain(`>${en.daily.entityKinds.product}<`)
+    expect(html).toMatch(/Made by <a [^>]*href="\/en\/daily\/topic\/moonshotai">Moonshot AI<\/a>/)
+    expect(html).toContain('23 stories')
+    expect(html).toContain('href="/en/apps/kimi"')
+    // Today by name, this year without the year, earlier years with it.
+    expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
+    expect(html).toContain('<span>September 11</span>')
+    expect(html).toContain('<span>November 6, 2025</span>')
+    expect(html).toContain('6 more outlets reported this')
+    expect(html).toContain('href="/en/daily/topic/kimi?page=2"')
+    expect(html).toContain('Load earlier stories (3)')
+  })
+
+  it('says when there is nothing earlier, and leaves out a maker it does not know', () => {
+    const html = render(<TopicPageView topic={{ ...topic, page: 2, earlier: 0, developer: null, app: null }} serverToday="2026-10-22" />)
+    expect(html).toContain(en.daily.noEarlier)
+    expect(html).toContain('href="/en/daily/topic/kimi"')
+    expect(html).not.toContain('Made by')
+    expect(html).not.toContain('/en/apps/')
+  })
+})
+
+describe('a category page', () => {
+  const page: CategoryPage = {
+    category: 'tools',
+    total: 23,
+    page: 1,
+    pages: 2,
+    stories: [
+      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'workspaces', moreReports: 2, tryIt: { value: 'Invite a teammate.', lang: 'en' } }),
+      story({ id: 2, publishedAt: '2026-10-21T20:15:00Z', slug: 'preview' }),
+    ],
+    week: 18,
+    latest: '2026-10-22T09:40:00Z',
+  }
+
+  it('reads the former categories as the new ones', () => {
+    expect(storyCategoryOf('product')).toBe('tools')
+    expect(storyCategoryOf('design')).toBe('aigc')
+    expect(storyCategoryOf('open')).toBe('open')
+    expect(storyCategoryOf('gossip')).toBe('industry')
+    expect(storyCategoryOf(undefined)).toBe('industry')
+  })
+
+  it('heads the cards with the banner: #name, what it covers, the week and the newest time', () => {
+    const html = render(<CategoryPageView page={page} serverToday="2026-10-22" />)
+    expect(html).toContain('>#</span>AI tools</h1>')
+    expect(html).toContain(en.categoryAbout.tools)
+    expect(html).toContain('18 stories in the last 7 days')
+    expect(html).toContain('updated 9:40 AM')
+    // Every category as a pill, this one current; no category name on its own cards.
+    const current = html.match(/<a [^>]*aria-current="page"[^>]*>([^<]*)<\/a>/)
+    expect(current?.[0]).toContain('href="/en/daily/category/tools"')
+    expect(current?.[1]).toBe(en.categories.tools)
+    // The name shows in the title and the pill only.
+    expect(html.split(`>${en.categories.tools}<`)).toHaveLength(3)
+    expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
+    expect(html).toContain('>Try it</span> Invite a teammate.')
+    expect(html).toContain('2 more outlets reported this')
+    expect(html).toContain(en.card.moreSources.match(/=0 \{([^}]*)\}/)?.[1] ?? 'missing')
+    expect(html).toContain('href="/en/daily/category/tools?page=2"')
+    expect(html).toContain(en.daily.loadEarlier)
+  })
+
+  it('names an older update by its day, links the newer page, and says when there is nothing earlier', () => {
+    const html = render(<CategoryPageView page={{ ...page, page: 2, latest: '2026-10-21T20:15:00Z' }} serverToday="2026-10-22" />)
+    expect(html).toContain('updated yesterday at 8:15 PM')
+    expect(html).toMatch(/<a [^>]*href="\/en\/daily\/category\/tools"[^>]*>Newer stories<\/a>|<a [^>]*rel="prev"[^>]*href="\/en\/daily\/category\/tools"/)
+    expect(html).toContain(en.daily.noEarlier)
+    expect(html).not.toContain('?page=3')
+  })
+
+  it('shows the empty state while the category has no stories', () => {
+    const html = render(<CategoryPageView page={{ ...page, total: 0, pages: 0, stories: [], week: 0, latest: null }} serverToday="2026-10-22" />)
+    expect(html).toContain(en.daily.emptyCategoryTitle)
+    expect(html).toContain('href="/en/daily"')
+    expect(html).not.toContain('in the last 7 days')
+    expect(html).not.toContain(en.daily.noEarlier)
   })
 })
 
@@ -291,7 +465,7 @@ describe('the RSS feed', () => {
     expect(xml).toContain('<language>ja</language>')
     expect(xml).toContain('<link>https://ifai.example/ja/daily</link>')
     expect(xml).toContain('https://ifai.example/ja/daily/story-1')
-    expect(xml).toContain('<category>cat:product</category>')
+    expect(xml).toContain('<category>cat:tools</category>')
     expect(xml).toContain('Fri, 23 Oct 2026 01:00:00 GMT')
     expect(xml).toContain('試してみる: Try now')
     // Markup in a summary is wrapped as character data, not parsed as part of the feed.

@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl'
 
-import { ButtonLink } from '@/components/button'
+import { buttonClass } from '@/components/button'
+import { ListLink } from '@/components/states/list-navigation'
 
 import type { Board, Sort } from '../boards'
 import { listHref } from '../list-params'
@@ -22,17 +23,17 @@ export function Pagination({ category, q, board, sort, page, pages }: Pagination
   return (
     <nav aria-label={t('pages')} className="flex items-center justify-between gap-3 pt-3">
       {page > 1 ? (
-        <ButtonLink href={listHref({ category, q, board, sort, page: page - 1 })} variant="secondary">
+        <ListLink href={listHref({ category, q, board, sort, page: page - 1 })} className={buttonClass('secondary')}>
           ‹ {t('previous')}
-        </ButtonLink>
+        </ListLink>
       ) : (
         <span />
       )}
       <span className="text-meta text-ink-4 tabular-nums">{t('pageOf', { page, pages })}</span>
       {page < pages ? (
-        <ButtonLink href={listHref({ category, q, board, sort, page: page + 1 })} variant="secondary">
+        <ListLink href={listHref({ category, q, board, sort, page: page + 1 })} className={buttonClass('secondary')}>
           {t('next')} ›
-        </ButtonLink>
+        </ListLink>
       ) : (
         <span />
       )}

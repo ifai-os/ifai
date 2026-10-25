@@ -54,6 +54,7 @@ function editsOf(detail: ReviewDetail): Edits {
     tryIt: detail.hans.tryIt,
     category: detail.category,
     sources: detail.sources.map((source) => ({ ...source })),
+    media: { ...detail.media },
   }
 }
 
@@ -768,6 +769,57 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
                       {t.editor.addSource}
                     </Button>
                   </div>
+                </div>
+              </div>
+
+              <div className="daily-review__field">
+                <div className="daily-review__label">
+                  <span>
+                    {t.editor.media} <small>{t.editor.mediaNote}</small>
+                  </span>
+                </div>
+                <div className="daily-review__media">
+                  {edits.media.kind !== 'none' && detail.mediaImage && (
+                    // eslint-disable-next-line @next/next/no-img-element -- a preview of our own Media file in the admin
+                    <img alt="" className="daily-review__media-preview" src={detail.mediaImage.url} />
+                  )}
+                  <div className="daily-review__chips" role="group">
+                    {(['none', 'image', 'video'] as const).map((kind) => (
+                      <button
+                        aria-pressed={edits.media.kind === kind}
+                        className="daily-review__chip"
+                        disabled={kind === 'image' && !detail.mediaImage}
+                        key={kind}
+                        onClick={() => setField('media', { ...edits.media, kind })}
+                        type="button"
+                      >
+                        {t.editor.mediaKinds[kind]}
+                      </button>
+                    ))}
+                  </div>
+                  {edits.media.kind === 'video' && (
+                    <input
+                      aria-label={t.editor.videoUrl}
+                      className="daily-review__input"
+                      onChange={(event) => setField('media', { ...edits.media, videoUrl: event.target.value })}
+                      placeholder={t.editor.videoUrlPlaceholder}
+                      type="url"
+                      value={edits.media.videoUrl}
+                    />
+                  )}
+                  {edits.media.kind !== 'none' && (
+                    <input
+                      aria-label={t.editor.mediaCredit}
+                      className="daily-review__input"
+                      onChange={(event) => setField('media', { ...edits.media, credit: event.target.value })}
+                      placeholder={t.editor.mediaCredit}
+                      type="text"
+                      value={edits.media.credit}
+                    />
+                  )}
+                  <p className="daily-review__small">
+                    <a href={`/admin/collections/stories/${detail.id}`}>{t.editor.changePicture}</a>
+                  </p>
                 </div>
               </div>
 

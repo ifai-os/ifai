@@ -677,3 +677,18 @@ textarea.daily-review__input {
 .daily-review__poster-foot a {
   align-self: center;
 }
+
+.daily-review__media {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.daily-review__media-preview {
+  width: 240px;
+  max-width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--theme-elevation-100);
+}

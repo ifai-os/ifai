@@ -33,7 +33,7 @@
 技术方案第 9 节：sitemap 和页面 `<head>` 里的 canonical / hreflang 用同一套语言映射（`src/lib/seo.ts`），只列已发布、可索引的规范地址。
 
 - `/sitemap.xml` 是索引，列出四段：`pages`（首页、三个模块的列表和分类、资源的使用指南和发布指南、应用的提交页、已生成的海报）、`daily`（已发布新闻）、`apps`（已发布应用）、`skills`（已发布 Skill 的主页）。每段一个文件 `/sitemaps/<段>-<序号>.xml`，超过 9000 个页面（× 5 种语言 = 45,000 个地址，低于 50,000 的上限）自动拆成下一个文件。
-- 每个页面的五种语言各占一条 `<url>`，每条都带完整的 hreflang（五种语言 + `x-default` 指英文），和页面 `<head>` 一致。`lastmod` 只写知道的：新闻是更正时间或发布时间，应用和 Skill 是更新时间，海报是生成或改动时间，列表页不写。
+- 每个页面的五种语言各占一条 `<url>`，每条都带完整的 hreflang（五种语言 + `x-default` 指英文），和页面 `<head>` 一致。`lastmod` 只写知道的：新闻是更正时间或上线（审核通过）的时间，应用和 Skill 是更新时间，海报是生成或改动时间，列表页不写。
 - 不列：搜索、筛选、排序、翻页、应用的其他榜单、Skill 固定版本和文件页、下架的 Skill（页面还在但不进 sitemap）、撤回或待审的新闻、草稿、个人页、登录页、管理订阅页。
 - 数据跟着各模块自己的缓存标签走（`daily`、`apps`、`skills`），发布、撤回、下架后随页面一起刷新；CDN 缓存 10 分钟。
 - `robots.txt`：只拦不是页面的地址（`/admin`、`/api/`、应用的「打开网站」跳转 `/*/apps/*/visit`，爬虫点它会算进应用热度）。noindex 的页面不拦，否则爬虫读不到 noindex。Vercel 预览环境整站 `Disallow: /`。
@@ -43,7 +43,7 @@
 技术方案「SEO 验收」：页面标题、描述、结构化数据与可见内容、日期一致。JSON-LD 只写页面上看得到的东西，用 `<JsonLd>` 输出（`<`、`>`、`&` 转义，空字段不写）。
 
 - 首页：`WebSite`（这种语言的首页地址、站点简介）和 `Organization`（IFAI 和 logo）。搜索框（`SearchAction`）等全站搜索上线后再加。
-- 日报详情：`NewsArticle`。标题（超过 110 字截断）、摘要、语言是标题实际显示的语言（缺译回退英文时就是 `en`）；`datePublished` 是审核通过的时间，`dateModified` 是更正时间（没更正过就同发布时间）；`isBasedOn` 是原始公告的链接；作者和发布者都是 IFAI。
+- 日报详情：`NewsArticle`。标题（超过 110 字截断）、摘要、语言是标题实际显示的语言（缺译回退英文时就是 `en`）；`datePublished` 是页面上显示的发布时间（新闻源的时间，见 daily.md「发布时间」），`dateModified` 是更正时间（没更正过就同发布时间）；`isBasedOn` 是原始公告的链接；作者和发布者都是 IFAI。
 - 应用详情：`SoftwareApplication`。名字、介绍、主分类、logo、官网图、功能标题、开发者，`sameAs` 是官网。不写评分：评价在浏览器里读，满 5 条才有平均分；价格只在「免费」「开源」时写 0。常见问题不写 `FAQPage`（Google 只给政府和医疗网站显示）。
 - Skill 详情：`SoftwareSourceCode`。名字、简介、仓库、许可证（SPDX 链接）、作者（「IFAI 官方」写成 IFAI）、显示的版本和它的发布时间、标签。固定版本页（noindex）和下架的 Skill 不写。
 - 三个详情页都带面包屑 `BreadcrumbList`：首页 › 模块 › 分类 › 本页。
