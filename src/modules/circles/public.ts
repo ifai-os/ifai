@@ -1,8 +1,8 @@
-import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 
 import { isLaunched } from '@/config/site'
 import type { Locale } from '@/i18n/config'
+import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
 
 import { circlesCacheTag } from './cache'
@@ -15,7 +15,7 @@ export function circlesLaunched(): boolean {
 }
 
 // Back-office saves refresh this right away; the hour only bounds changes made outside Payload's hooks.
-const loadCircles = unstable_cache(
+const loadCircles = cached(
   async (locale: Locale): Promise<CircleView[]> => {
     const { payload } = await getDb()
     const { docs } = await payload.find({
@@ -53,7 +53,7 @@ export async function shownCircleIds(): Promise<number[]> {
  * The numbers in the page's first paint: a few minutes old at most. The page's own requests bring
  * fresh ones (GET /api/circles/feed) right after.
  */
-const loadOverview = unstable_cache(
+const loadOverview = cached(
   async (ids: number[]): Promise<CirclesOverview> => {
     const { payload } = await getDb()
     return circlesOverview(payload, ids)

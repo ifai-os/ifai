@@ -1,12 +1,14 @@
 import { revalidateTag } from 'next/cache'
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, PayloadRequest } from 'payload'
 
+import { dataTag } from '@/lib/data-cache'
+
 /** The cached circles (names, colors, order) carry this tag, so a change in the back office shows at once. */
 export const circlesCacheTag = 'circles'
 
 export function refreshCirclesCache(onError: (error: unknown) => void = (error) => console.warn('Could not refresh the circles page', error)) {
   try {
-    revalidateTag(circlesCacheTag, { expire: 0 })
+    revalidateTag(dataTag(circlesCacheTag), { expire: 0 })
   } catch (error) {
     // Scripts and migrations run outside Next.js, where there is no page cache to refresh.
     if (error instanceof Error && error.message.includes('static generation store missing')) return

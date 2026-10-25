@@ -126,7 +126,7 @@ describe('the frozen content', () => {
   const raw = {
     id: 7,
     slug: 'acme-ships-model-2',
-    category: 'product',
+    category: 'llm',
     title: { en: 'Acme ships Model 2', 'zh-Hans': 'Acme 发布 Model 2', 'zh-Hant': 'Acme 發布 Model 2' },
     summary: { en: 'Out today.', 'zh-Hans': '今天发布。' },
     sources: [
@@ -150,7 +150,9 @@ describe('the frozen content', () => {
     const snapshot: PosterSnapshot = { date: '2026-10-21', generatedAt: '2026-10-21T10:00:00.000Z', updatedAt: '2026-10-21T10:00:00.000Z', entries: [entryOf(raw)] }
     expect(readSnapshot(JSON.parse(JSON.stringify(snapshot)))).toEqual(snapshot)
     expect(readSnapshot(null)).toBeNull()
-    expect(readSnapshot({ ...snapshot, entries: [{ ...snapshot.entries[0], category: 'gossip' }] })).toBeNull()
+    expect(readSnapshot({ ...snapshot, entries: [{ ...snapshot.entries[0], category: 7 }] })).toBeNull()
+    // Posters generated before the categories changed (2026-10-24) keep the former ones; they read as the new ones.
+    expect(readSnapshot({ ...snapshot, entries: [{ ...snapshot.entries[0], category: 'design' }] })?.entries[0].category).toBe('aigc')
     expect(readSnapshot({ ...snapshot, updatedAt: undefined })).toBeNull()
   })
 

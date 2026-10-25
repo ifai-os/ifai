@@ -1,14 +1,14 @@
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 
+import { cached } from '@/lib/data-cache'
 import type { SitemapPage } from '@/lib/sitemap'
 
 import { appsCacheTag } from './cache'
 import { getCategories } from './data'
 import { listHref, submitHref } from './list-params'
 
-const findApps = unstable_cache(
+const findApps = cached(
   async () => {
     const { docs } = await (await getPayload({ config })).find({
       collection: 'apps',

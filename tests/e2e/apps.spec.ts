@@ -67,6 +67,65 @@ test.describe('with the sample apps', () => {
     await expect(table.getByRole('link', { name: /^Orbit Notes/ })).toContainText('Added 3 days ago')
   })
 
+  test('another board keeps the page and puts a skeleton, then a retry, where the results were', async ({ page }) => {
+    await page.clock.install()
+    await page.goto('/en/apps', { waitUntil: 'networkidle' })
+    const main = page.getByRole('main')
+
+    // Hold the next view of the list back, as a slow connection would.
+    let release = (): void => undefined
+    const held = new Promise<void>((resolve) => (release = resolve))
+    await page.route(
+      (url) => url.pathname === '/en/apps' && url.searchParams.get('board') === 'rising' && url.searchParams.has('_rsc'),
+      async (route) => {
+        await held
+        await route.continue()
+      },
+    )
+
+    await main.getByRole('navigation', { name: en.apps.boardsLabel }).first().getByRole('link', { name: en.apps.boards.rising }).click()
+    const skeleton = main.getByRole('status', { name: en.states.loadingList })
+    await expect(skeleton).toBeVisible()
+    await expect(main.getByRole('table')).toHaveCount(0)
+    await expect(main.getByRole('search')).toBeVisible()
+
+    await page.clock.fastForward(10_000)
+    await expect(main.getByRole('alert')).toContainText(en.states.failedTitle)
+    await main.getByRole('button', { name: en.states.retry }).click()
+    await expect(skeleton).toBeVisible()
+
+    release()
+    await expect(page).toHaveURL(/\/en\/apps\?board=rising$/)
+    await expect(main.getByRole('table').getByRole('link', { name: names })).toHaveText([/Kitecode/])
+    await expect(skeleton).toHaveCount(0)
+  })
+
+  test("an app's page shows its skeleton while it comes in over a slow connection", async ({ page, context }) => {
+    // As when the reader clicks before the list has prefetched the app.
+    await page.route(/\/en\/apps\/[^/?]+\?_rsc=/, (route) => (route.request().headers()['next-router-prefetch'] ? route.abort() : route.fallback()))
+    await page.goto('/en/apps', { waitUntil: 'networkidle' })
+    const cdp = await context.newCDPSession(page)
+    await cdp.send('Network.enable')
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 400, downloadThroughput: 12 * 1024, uploadThroughput: 12 * 1024 })
+
+    await page.getByRole('main').getByRole('table').getByRole('link', { name: appLink('Kitecode') }).click()
+    const skeleton = page.getByRole('status', { name: en.states.loadingPage })
+    await expect(skeleton).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Kitecode' })).toBeVisible({ timeout: 20_000 })
+    await expect(skeleton).toHaveCount(0)
+  })
+
+  test('the apps the list shows are prefetched, so they open without waiting on the server', async ({ page }) => {
+    await page.goto('/en/apps', { waitUntil: 'networkidle' })
+    const fetched: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('_rsc=') && !request.headers()['next-router-prefetch']) fetched.push(new URL(request.url()).pathname)
+    })
+    await page.getByRole('main').getByRole('table').getByRole('link', { name: appLink('Kitecode') }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Kitecode' })).toBeVisible()
+    expect(fetched).toEqual([])
+  })
+
   test('column headings sort the list through the address', async ({ page }) => {
     await page.goto('/en/apps')
     const table = page.getByRole('main').getByRole('table')

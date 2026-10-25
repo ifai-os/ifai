@@ -16,6 +16,7 @@ import { EMBEDDING_DIMENSIONS } from '@/lib/ai/purposes'
 
 import { storyCategories } from './categories'
 import type { AnalysisFlag } from './judge/rules'
+import type { FoundMedia } from './media'
 import type { Structure } from './prompts/structure'
 
 /** fresh: recent enough for "today" and the queue. archived: kept for the record only. */
@@ -44,6 +45,8 @@ export const rawItems = pgTable(
     content: text('content'),
     /** Links inside the article body; how roundups point at the stories they mention. */
     links: jsonb('links').$type<string[]>(),
+    /** The article page's picture and video (docs/specs/daily.md「配图与视频」), found with the body. */
+    media: jsonb('media').$type<FoundMedia>(),
     language: text('language').default('en').notNull(),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     discoveredAt: timestamp('discovered_at', { withTimezone: true }).defaultNow().notNull(),

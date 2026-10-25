@@ -1,37 +1,53 @@
 import type { ReactNode, SVGProps } from 'react'
 
-/** Line icons from the design canvas: 24×24 grid, 1.8 stroke, round caps. */
+/** Line icons on a 24×24 grid with round caps (1.8 stroke by default; the nav uses 2). */
 const icons = {
+  // Module icons (nav, coming-soon cards): rounded, a little playful, after
+  // sspai's nav. Drawn to fill the 24 grid so they read at text height.
   recommend: (
     <>
-      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
-      <path d="M19 16v4M17 18h4" />
+      <path d="M11 3.5c.7 4.1 2.4 5.8 6.5 6.5-4.1.7-5.8 2.4-6.5 6.5-.7-4.1-2.4-5.8-6.5-6.5 4.1-.7 5.8-2.4 6.5-6.5z" />
+      <path d="M18.5 15.5v5M16 18h5" />
     </>
   ),
   circles: (
     <>
-      <circle cx="9" cy="10" r="6" />
-      <circle cx="15" cy="14" r="6" />
+      <path d="M12 3.5c4.7 0 8.5 3.4 8.5 7.8s-3.8 7.7-8.5 7.7c-1.2 0-2.3-.2-3.3-.6L4 20l1.2-3.9a7.4 7.4 0 0 1-1.7-4.8c0-4.4 3.8-7.8 8.5-7.8z" />
+      <path d="M9 11.5c1.6 1.8 4.4 1.8 6 0" />
     </>
   ),
   daily: (
     <>
-      <path d="M4 19V5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v14a1 1 0 0 0 1 1H5a1 1 0 0 1-1-1z" />
-      <path d="M18 8h2v11a1 1 0 0 1-1 1M8 8h6M8 12h6M8 16h4" />
+      <path d="M3.5 6.5a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v14h-10a3 3 0 0 1-3-3z" />
+      <path d="M16.5 9h2a2 2 0 0 1 2 2v6.5a3 3 0 0 1-3 3h-1M7.5 8.5h5M7.5 12.5h5M7.5 16.5h2.5" />
     </>
   ),
-  apps: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
-  rankings: <path d="M6 20V10M12 20V4M18 20v-7" />,
+  apps: (
+    <>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="2" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="2" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="2" />
+      <circle cx="17" cy="7" r="3.5" />
+    </>
+  ),
+  rankings: (
+    <>
+      <rect x="3.5" y="11.5" width="5" height="9" rx="1.5" />
+      <rect x="9.5" y="3.5" width="5" height="17" rx="1.5" />
+      <rect x="15.5" y="8.5" width="5" height="12" rx="1.5" />
+    </>
+  ),
+  // A package: Skills install as one.
   resources: (
     <>
-      <path d="M3 7l9-4 9 4-9 4z" />
-      <path d="M3 12l9 4 9-4M3 17l9 4 9-4" />
+      <path d="M10.5 3.4a3 3 0 0 1 3 0l5.5 3.2a3 3 0 0 1 1.5 2.6v5.6a3 3 0 0 1-1.5 2.6l-5.5 3.2a3 3 0 0 1-3 0L5 17.4a3 3 0 0 1-1.5-2.6V9.2A3 3 0 0 1 5 6.6z" />
+      <path d="M4 7.8 12 12.3l8-4.5M12 12.3v8.7" />
     </>
   ),
   wiki: (
     <>
-      <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" />
-      <path d="M4 21a2 2 0 0 1 2-2h13v2M9 7h6" />
+      <path d="M4.5 18V6.5a3 3 0 0 1 3-3h12v13h-12a3 3 0 0 0-3 3 2 2 0 0 0 2 2h13" />
+      <path d="M9 8h6" />
     </>
   ),
   globe: (
@@ -174,6 +190,12 @@ const icons = {
   list: <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />,
   grid: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof icons
