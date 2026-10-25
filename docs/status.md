@@ -203,7 +203,7 @@ Wiki（2026-10-24 按推荐默认值起草，站长还没确认；细节见 wiki
 - 两个并行 PR 各自带 Payload 迁移时，后合并的要先合并 main、删掉自己的迁移再重新 `pnpm payload migrate:create`，因为迁移快照会缺对方的表（应用 PR #6 和日报的迁移就是这种情况）。
 - 安装时 inngest 依赖的 OpenTelemetry 会报 `@opentelemetry/api` 的 peer 警告，不影响运行。
 - 结束 `next start` 进程时按 PID 结束，不要用 `pkill -f`，否则会连自己的 shell 一起结束。
-- 新闻、应用、Skill 详情页的 `generateStaticParams` 不要改回空数组：Next.js 16 只给构建时生成过的路由写预取信息（`.next/server/prefetch-hints.json`），没有的路由，列表里的链接只预取到路由结构，点了要等服务器。本机验证预取时要先填示例数据再构建，否则构建时没有页面可生成。
+- 新闻、应用、Skill 详情页和 Wiki 的条目页、主题页的 `generateStaticParams` 不要改回空数组：Next.js 16 只给构建时生成过的路由写预取信息（`.next/server/prefetch-hints.json`），没有的路由，列表里的链接只预取到路由结构，点了要等服务器。本机验证预取时要先填示例数据再构建，否则构建时没有页面可生成。
 - `loading.tsx` 里不要在服务器上取文案（服务端的 `useTranslations` / `getTranslations`）：它拿不到 `params`，没法 `setRequestLocale`，next-intl 就去读请求头，静态生成的页面因此报 `DYNAMIC_SERVER_USAGE`，返回 500。骨架里要文案（`aria-label`）就写成客户端组件，像 `skill-detail-skeleton.tsx`。
 - 在 Payload 钩子里调用 Local API 并传入 `req`（为了留在同一个事务里）时，Payload 会就地改写这个 `req` 的语言、回退语言、`depth` 和 `context`，保存后面的步骤会拿到被改过的请求。`syncHantFromHans` 已经在调用后还原（见 `hant-sync.ts` 的 `keepingRequest`），别的钩子这样调用时照着做；资源模块的钩子用 `src/modules/resources/collections/guards.ts` 里的 `peek` / `systemUpdate`，它们已经包了一层。
 - `revalidateTag` 只能在 Next.js 里调用。`pnpm payload run` 的脚本和迁移在 Next.js 之外，应用页面的缓存刷新钩子在那里什么也不做；用脚本改了应用数据，页面最晚一小时后更新。

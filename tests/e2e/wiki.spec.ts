@@ -69,6 +69,21 @@ test.describe('with the sample Wiki', () => {
     await expect(page).toHaveURL(/\/en\/wiki\/topics\/sample-agents$/)
   })
 
+  test('the topics and entries a page shows are prefetched, so they open without waiting on the server', async ({ page }) => {
+    // Neither was rendered at build time: only the first topic and the newest entry are.
+    await page.goto('/en/wiki', { waitUntil: 'networkidle' })
+    const fetched: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('_rsc=') && !request.headers()['next-router-prefetch']) fetched.push(new URL(request.url()).pathname)
+    })
+    await page.getByRole('region', { name: en.wiki.topicsTitle }).getByRole('link', { name: /^Agents and execution/ }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Agents and execution' })).toBeVisible()
+    await page.goto('/en/wiki/topics/sample-agents', { waitUntil: 'networkidle' })
+    await page.getByRole('region', { name: en.wiki.mustRead }).getByRole('link', { name: 'Harness', exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Harness' })).toBeVisible()
+    expect(fetched).toEqual([])
+  })
+
   test('an entry has its names, its sections, both sides of its relations, its sources and when it was checked', async ({ page }) => {
     const response = await page.goto('/en/wiki/sample-agent')
     expect(response?.status()).toBe(200)
