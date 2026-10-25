@@ -2,7 +2,9 @@
 
 import { useLocale, useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+
+import { Icon } from '@/components/icon'
 
 import { localizePath, type Locale } from '@/i18n/config'
 import { Link, useRouter } from '@/i18n/navigation'
@@ -14,6 +16,9 @@ type Status = 'idle' | 'sending' | 'sent' | 'invalid' | 'failed'
 
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
+/** Seconds before the same link can be asked for again (docs/specs/account.md). Better Auth allows 5 a minute. */
+const RESEND_AFTER = 60
+
 type SignInFormProps = {
   providers: AuthProviders
   /** Where signing in lands: a path on this site, with the locale prefix. The home page unless given. */
@@ -22,9 +27,11 @@ type SignInFormProps = {
   sentNote?: string
   /** In a dialog (the「需要登录」board): the email form first, the other two ways side by side. */
   compact?: boolean
+  /** The sign-in page's own heading: above the form, and replaced by「登录链接已发送」as the page's heading once the link is sent. */
+  header?: ReactNode
 }
 
-export function SignInForm({ providers, callbackURL, sentNote, compact = false }: SignInFormProps) {
+export function SignInForm({ providers, callbackURL, sentNote, compact = false, header }: SignInFormProps) {
   const t = useTranslations('auth')
   const locale = useLocale() as Locale
   const router = useRouter()
@@ -32,13 +39,34 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false }
   const { data: session } = authClient.useSession()
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<Status>(searchParams.get('error') ? 'failed' : 'idle')
+  // Once sent: the countdown to「重新发送」, and how sending again went.
+  const [wait, setWait] = useState(0)
+  const [resend, setResend] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle')
+  // Back from「换个邮箱」: the email field takes the focus as it comes back.
+  const refocus = useRef(false)
+
+  useEffect(() => {
+    if (status !== 'sent' || wait <= 0) return
+    const timer = setTimeout(() => setWait((seconds) => seconds - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [status, wait])
 
   const landing = callbackURL ?? localizePath(locale, '/')
   const errorCallbackURL = localizePath(locale, '/sign-in')
   const hasSocial = providers.google || providers.github
+  // The page's heading goes above everything but「登录链接已发送」, which takes its place.
+  const headed = (content: ReactNode) =>
+    header ? (
+      <div className="flex flex-col gap-8">
+        {header}
+        {content}
+      </div>
+    ) : (
+      content
+    )
 
   if (session?.user) {
-    return (
+    return headed(
       <div className="flex flex-col items-center gap-4 rounded-card border border-surface-2 bg-surface p-6 text-center">
         <p className="text-body text-ink-2">{t('signedInAs', { email: session.user.email })}</p>
         <button
@@ -51,27 +79,60 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false }
         >
           {t('signOut')}
         </button>
-      </div>
+      </div>,
     )
   }
 
   if (!hasSocial && !providers.email) {
-    return <p className="rounded-card bg-warn p-4 text-center text-ui text-warn-ink">{t('unavailable')}</p>
+    return headed(<p className="rounded-card bg-warn p-4 text-center text-ui text-warn-ink">{t('unavailable')}</p>)
   }
 
   if (status === 'sent') {
+    const address = email.trim()
+    const Title = header ? 'h1' : 'p'
     return (
-      <div className="flex flex-col items-start gap-2">
-        <div role="status" className="flex w-full flex-col gap-1 rounded-card bg-success-soft p-4 text-success-ink">
-          <p className="text-ui font-medium">{t('sentTitle')}</p>
-          <p className="text-meta">
-            {t('sentBody', { email: email.trim() })}
+      <div className="flex flex-col items-start gap-5">
+        <span aria-hidden="true" className={`flex items-center justify-center rounded-pill bg-success-soft text-success-ink ${compact ? 'size-11' : 'size-14'}`}>
+          <Icon name="mail" size={compact ? 22 : 26} />
+        </span>
+        <div role="status" className="flex flex-col gap-1.5">
+          <Title className={header ? 'text-h2' : 'text-title font-semibold'}>{t('sentTitle')}</Title>
+          <p className="text-body text-ink-3">
+            {t.rich('sentBody', { email: () => <b className="font-semibold break-all text-ink">{address}</b> })}
             {sentNote && `${sentenceGap(locale)}${sentNote}`}
           </p>
         </div>
-        <button type="button" onClick={() => setStatus('idle')} className="h-8 text-meta text-link hover:underline">
-          {t('resend')}
-        </button>
+        <p className="w-full rounded-tile bg-surface px-4 py-3.5 text-meta text-ink-3">{t('sentTip')}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <button
+            type="button"
+            onClick={() => {
+              refocus.current = true
+              setResend('idle')
+              setStatus('idle')
+            }}
+            className={`${secondaryButton} h-11`}
+          >
+            {t('changeEmail')}
+          </button>
+          {wait > 0 ? (
+            <span className="text-meta text-ink-4">{t('resendIn', { seconds: wait })}</span>
+          ) : (
+            <button type="button" onClick={sendAgain} disabled={resend === 'sending'} className="h-11 text-meta text-link hover:underline disabled:opacity-60">
+              {resend === 'sending' ? t('sending') : t('resendNow')}
+            </button>
+          )}
+        </div>
+        {resend === 'sent' && (
+          <p role="status" className="text-small text-up">
+            {t('resent')}
+          </p>
+        )}
+        {resend === 'failed' && (
+          <p role="alert" className="text-small text-down">
+            {t('failed')}
+          </p>
+        )}
       </div>
     )
   }
@@ -92,6 +153,16 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false }
     setStatus('sending')
     const { error } = await authClient.signIn.magicLink({ email: address, callbackURL: landing, errorCallbackURL })
     setStatus(error ? 'failed' : 'sent')
+    if (!error) setWait(RESEND_AFTER)
+  }
+
+  async function sendAgain() {
+    setResend('sending')
+    const { error } = await authClient.signIn
+      .magicLink({ email: email.trim(), callbackURL: landing, errorCallbackURL })
+      .catch(() => ({ error: { code: 'NETWORK' } }))
+    setResend(error ? 'failed' : 'sent')
+    if (!error) setWait(RESEND_AFTER)
   }
 
   const social = hasSocial && (
@@ -115,6 +186,12 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false }
         {t('emailLabel')}
       </label>
       <input
+        ref={(node) => {
+          if (node && refocus.current) {
+            refocus.current = false
+            node.focus()
+          }
+        }}
         id="sign-in-email"
         type="email"
         name="email"
@@ -143,6 +220,7 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false }
       >
         {status === 'sending' ? t('sending') : t('sendLink')}
       </button>
+      {!compact && <p className="text-center text-small text-ink-4">{t('noPassword')}</p>}
     </form>
   )
 
@@ -154,7 +232,7 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false }
     </div>
   )
 
-  return (
+  return headed(
     <div className={`flex flex-col ${compact ? 'gap-3' : 'gap-5'}`}>
       {compact ? emailForm : social}
       {divider}
@@ -172,7 +250,7 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false }
           privacy: (chunks) => legalLink(legalHref.privacy, chunks),
         })}
       </p>
-    </div>
+    </div>,
   )
 }
 
