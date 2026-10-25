@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import sharp from 'sharp'
 
 import type enMessages from '../../messages/en.json'
 
@@ -51,6 +52,16 @@ test.describe('the circles', () => {
     expect((await request.post('/api/circles/report', { data: { post: nowhere, reason: 'spam' } })).status()).toBe(404)
     const fromElsewhere = await request.post('/api/circles/report', { data: { post: 1, reason: 'spam' }, headers: { 'sec-fetch-site': 'cross-site' } })
     expect(fromElsewhere.status()).toBe(403)
+
+    // Pictures and video links, for members writing a post on IFAI's own pages.
+    const file = { name: 'photo.jpg', mimeType: 'image/jpeg', buffer: await picture('#3d7dd9') }
+    const crossSite = { 'sec-fetch-site': 'cross-site' }
+    expect((await request.post('/api/circles/images', { multipart: { file } })).status()).toBe(401)
+    expect((await request.post('/api/circles/images', { multipart: { file }, headers: crossSite })).status()).toBe(403)
+    const video = { url: 'https://youtu.be/dQw4w9WgXcQ' }
+    expect((await request.post('/api/circles/videos', { data: video })).status()).toBe(401)
+    expect((await request.post('/api/circles/videos', { data: video, headers: crossSite })).status()).toBe(403)
+    expect((await request.post('/api/circles/videos', { data: { url: ' ' } })).status()).toBe(400)
   })
 
   test('a visitor sees the circles and is asked to sign in to join, post or react', async ({ page }) => {
@@ -199,7 +210,136 @@ test.describe('the circles', () => {
       await other.remove()
     }
   })
+
+  test('a member posts pictures and a video link', async ({ page, context, request, baseURL }) => {
+    test.skip(
+      !process.env.DATABASE_URI || !process.env.BETTER_AUTH_SECRET,
+      'Signs members in through the database: needs DATABASE_URI and BETTER_AUTH_SECRET, as in CI.',
+    )
+    // Uploads, and a video site that may take a few seconds to say it has no such video.
+    test.slow()
+    const member = await createMember(baseURL ?? 'http://localhost:3000', 'Ada Pictures')
+    try {
+      const aiArt = (await member.query<{ id: number }>(`select id from circles where slug = 'ai-art'`)).rows[0].id
+      const fileName = async (id: number) => (await member.query<{ filename: string }>('select filename from circle_images where id = $1', [id])).rows[0].filename
+      await context.addCookies([member.cookie])
+      const api = page.request
+
+      // Only pictures, read from the bytes, and at most 4 MB of them.
+      const jpeg = { name: 'photo.jpg', mimeType: 'image/jpeg' }
+      const svg = { name: 'logo.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>') }
+      expect((await api.post('/api/circles/images', { multipart: { file: svg } })).status()).toBe(422)
+      expect((await api.post('/api/circles/images', { multipart: { file: { ...jpeg, buffer: Buffer.from('not a picture') } } })).status()).toBe(422)
+      expect((await api.post('/api/circles/images', { multipart: { file: { ...jpeg, buffer: Buffer.alloc(5 * 1024 * 1024) } } })).status()).toBe(413)
+      const unsupported = await api.post('/api/circles/videos', { data: { url: 'https://example.com/watch?v=dQw4w9WgXcQ' } })
+      expect(unsupported.status()).toBe(422)
+      expect(await unsupported.json()).toEqual({ error: 'unsupported-video' })
+
+      // Three pictures in one post. Nobody can open them before the post is published, nor post them twice.
+      const ids: number[] = []
+      for (const color of ['#d94f3d', '#3dd97d', '#3d7dd9']) {
+        const buffer = await picture(color, { png: true })
+        const uploaded = await api.post('/api/circles/images', { multipart: { file: { name: 'shot.png', mimeType: 'image/png', buffer } } })
+        expect(uploaded.status()).toBe(200)
+        ids.push(((await uploaded.json()) as { image: { id: number } }).image.id)
+      }
+      const firstFile = `/api/circle-images/file/${await fileName(ids[0])}`
+      expect((await request.get(firstFile)).status()).toBe(403)
+      const posted = await api.post('/api/circles/posts', { data: { circle: aiArt, body: 'Three tries at the same prompt', locale: 'en', images: ids } })
+      expect(posted.status()).toBe(200)
+      expect((await request.get(firstFile)).status()).toBe(200)
+      const twice = await api.post('/api/circles/posts', { data: { circle: aiArt, body: 'Again', locale: 'en', images: [ids[0]] } })
+      expect(await twice.json()).toEqual({ error: 'invalid-images' })
+
+      // The grid, and the viewer: arrows, keys, Esc.
+      await page.goto('/en/circles?tab=latest')
+      const feed = page.getByRole('tabpanel')
+      const three = feed.getByRole('listitem').filter({ hasText: 'Three tries at the same prompt' })
+      const view = (index: number, count: number) => c.viewImage.replace('{index}', String(index)).replace('{count}', String(count))
+      await expect(three.getByRole('button', { name: /^View picture \d of 3$/ })).toHaveCount(3)
+      await three.getByRole('button', { name: view(2, 3) }).click()
+      const viewer = page.getByRole('dialog', { name: c.imageViewer })
+      await expect(viewer.getByText('2 / 3')).toBeVisible()
+      await page.keyboard.press('ArrowRight')
+      await expect(viewer.getByText('3 / 3')).toBeVisible()
+      await expect(viewer.getByRole('button', { name: c.nextImage })).toHaveCount(0)
+      await viewer.getByRole('button', { name: c.previousImage }).click()
+      await expect(viewer.getByText('2 / 3')).toBeVisible()
+      await page.keyboard.press('Escape')
+      await expect(viewer).toBeHidden()
+
+      // From the post box: a photo taken sideways, with EXIF, and a video link, and no text.
+      const photo = await sharp(await picture('#3d7dd9', { width: 300, height: 200 }))
+        .withExif({ IFD0: { Artist: 'Smoke test', Copyright: 'Somewhere secret' } })
+        .withMetadata({ orientation: 6 })
+        .toBuffer()
+      const form = page.getByRole('form', { name: c.composerLabel })
+      await expect(form.getByRole('textbox', { name: c.composerLabel })).toBeEnabled()
+      await form.locator('input[type=file]').setInputFiles({ name: 'IMG_0001.jpg', mimeType: 'image/jpeg', buffer: photo })
+      const drafts = form.getByRole('list', { name: c.draftImages.replace('{count}', '1').replace('{max}', '9') })
+      await expect(drafts.getByRole('img', { name: c.imageNumber.replace('{index}', '1') })).toBeVisible()
+      await expect(drafts.getByText(c.uploading)).toHaveCount(0)
+      await expect(drafts.getByRole('button', { name: c.retryUpload })).toHaveCount(0)
+      await form.getByRole('button', { name: c.addVideo }).click()
+      const videoLink = form.getByRole('textbox', { name: c.videoLink })
+      // No video has this id: the card is a plain link.
+      await videoLink.fill('https://youtu.be/-----------?t=42')
+      await videoLink.press('Enter')
+      await expect(form.getByText(c.videoNoInfo.replace('{site}', 'YouTube'))).toBeVisible({ timeout: 20_000 })
+      await form.getByRole('button', { name: c.publish, exact: true }).click()
+      await expect(drafts).toHaveCount(0)
+
+      const own = feed.getByRole('listitem').first()
+      const watch = own.getByRole('link', { name: new RegExp(`^${c.watchOn.replace('{site}', 'YouTube')}`) })
+      await expect(watch).toHaveAttribute('href', 'https://www.youtube.com/watch?v=-----------')
+      await expect(watch).toHaveAttribute('rel', /nofollow ugc/)
+      await own.getByRole('button', { name: view(1, 1) }).click()
+      const full = page.getByRole('dialog', { name: c.imageViewer }).getByRole('img', { name: c.imageNumber.replace('{index}', '1') })
+      await expect(full).toBeVisible()
+      const fullUrl = (await full.getAttribute('src')) ?? ''
+      await page.keyboard.press('Escape')
+
+      // What readers get: WebP, turned upright, and nothing of the EXIF.
+      const served = await request.get(fullUrl)
+      expect(served.status()).toBe(200)
+      expect(served.headers()['content-type']).toBe('image/webp')
+      const kept = await sharp(await served.body()).metadata()
+      expect({ format: kept.format, width: kept.width, height: kept.height, exif: kept.exif, orientation: kept.orientation }).toEqual({
+        format: 'webp',
+        width: 200,
+        height: 300,
+        exif: undefined,
+        orientation: undefined,
+      })
+
+      // The export lists the post's pictures and video.
+      const exported = await (await api.get('/api/account/export?locale=en')).json()
+      expect(exported.circlePosts.find((post: { text: string }) => post.text === '')).toMatchObject({
+        images: [expect.stringMatching(/\/api\/circle-images\/file\/[0-9a-f]{24}\.webp$/)],
+        video: { site: 'youtube', url: 'https://www.youtube.com/watch?v=-----------', title: null },
+      })
+
+      // Deleting the post deletes its pictures.
+      const postId = (await member.query<{ id: number }>(`select id from circle_posts where user_id = $1 and body = ''`, [member.id])).rows[0].id
+      await own.getByRole('button', { name: c.moreName.replace('{name}', 'Ada Pictures') }).click()
+      await own.getByRole('button', { name: c.delete, exact: true }).click()
+      await own.getByRole('group', { name: c.deleteConfirm }).getByRole('button', { name: c.deleteYes }).click()
+      await expect(feed.getByRole('link', { name: new RegExp(`^${c.watchOn.replace('{site}', 'YouTube')}`) })).toHaveCount(0)
+      await expect.poll(async () => (await member.query('select id from circle_images where post = $1', [postId])).rows).toEqual([])
+      expect((await request.get(fullUrl)).status()).toBe(403)
+    } finally {
+      await member.query('delete from circle_images where uploader = $1', [member.id])
+      await member.query('delete from circle_videos where requested_by = $1', [member.id])
+      await member.remove()
+    }
+  })
 })
+
+/** A plain picture, as a phone would save it: a JPEG, or PNG when asked. */
+function picture(color: string, { width = 640, height = 480, png = false } = {}) {
+  const image = sharp({ create: { width, height, channels: 3, background: color } })
+  return (png ? image.png() : image.jpeg()).toBuffer()
+}
 
 /** The sign-in dialog opens, titled for what the visitor pressed, and closes again. */
 async function expectSignIn(page: Page, title: string) {

@@ -23,6 +23,7 @@ import { AppReports } from './modules/apps/collections/AppReports'
 import { AppSubmissions } from './modules/apps/collections/AppSubmissions'
 import { Apps } from './modules/apps/collections/Apps'
 import { appsTables } from './modules/apps/schema'
+import { CircleImages } from './modules/circles/collections/CircleImages'
 import { Circles } from './modules/circles/collections/Circles'
 import { circlesTables } from './modules/circles/schema'
 import { Posters } from './modules/daily/collections/posters'
@@ -118,6 +119,7 @@ export default buildConfig({
     SkillTags,
     SkillSubmissions,
     Circles,
+    CircleImages,
     Arenas,
     ArenaModels,
     ArenaPrompts,
@@ -188,6 +190,8 @@ export default buildConfig({
       collections: {
         media: { prefix: 'media' },
         'arena-images': { prefix: 'arena' },
+        // Pictures in circle posts; who can open one is the collection's `read` (published ones only).
+        'circle-images': { prefix: 'circles' },
         // Downloads go to a short-lived R2 address; the site's own reads (the file viewer) stream through.
         'skill-versions': {
           prefix: 'skills',

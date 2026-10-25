@@ -7,7 +7,9 @@ import { localizePath, messagesFileName, type Locale } from '@/i18n/config'
 import type { ReportReason, ReviewStatus, TranslatedTexts, TranslationStatus } from '@/modules/apps/reviews/rules'
 import { appReviewReports, appReviews, appReviewTranslations } from '@/modules/apps/schema'
 import { normalizeEmail } from '@/modules/daily/email/address'
-import type { PostStatus, Reaction, ReportReason as PostReportReason } from '@/modules/circles/rules'
+import { imageViews } from '@/modules/circles/media/images'
+import { videoViews } from '@/modules/circles/media/videos'
+import type { PostStatus, Reaction, ReportReason as PostReportReason, VideoProvider } from '@/modules/circles/rules'
 import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from '@/modules/circles/schema'
 import { emailSends, type EmailSendStatus } from '@/modules/daily/email/schema'
 import { listHref, storyHref, topicHref } from '@/modules/daily/public/list-params'
@@ -109,8 +111,17 @@ export type MemberExport = {
   }[]
   /** The circles the member joined, newest first. */
   circles: { circle: ExportRef; joinedAt: string }[]
-  /** Their posts in circles, newest first, hidden ones too. */
-  circlePosts: { id: number; circle: ExportRef; text: string; language: string; status: PostStatus; postedAt: string }[]
+  /** Their posts in circles, newest first, hidden ones too (a hidden post's pictures no longer open). */
+  circlePosts: {
+    id: number
+    circle: ExportRef
+    text: string
+    language: string
+    status: PostStatus
+    images: string[]
+    video: { site: VideoProvider; url: string; title: string | null } | null
+    postedAt: string
+  }[]
   /** Their reactions to posts: on which post, not its text or author. */
   circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string }[]
   /** Posts by others the member reported: which one and why, not its text or author. */
@@ -164,7 +175,17 @@ export type MemberRecords = {
   appSubmissions: AppSubmission[]
   skillSubmissions: SkillSubmission[]
   circleMembers: { circleId: number; createdAt: Date }[]
-  circlePosts: { id: number; circleId: number; body: string; lang: string; status: PostStatus; createdAt: Date }[]
+  circlePosts: {
+    id: number
+    circleId: number
+    body: string
+    lang: string
+    status: PostStatus
+    createdAt: Date
+    /** Picture addresses as Payload gives them, in order. */
+    images: string[]
+    video: { provider: VideoProvider; url: string; title: string | null } | null
+  }[]
   circleReactions: { postId: number; circleId: number; reaction: Reaction; createdAt: Date }[]
   circlePostReports: { postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
   subscriber: Subscriber | null
@@ -368,6 +389,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
         body: circlePosts.body,
         lang: circlePosts.lang,
         status: circlePosts.status,
+        videoId: circlePosts.videoId,
         createdAt: circlePosts.createdAt,
       })
       .from(circlePosts)
@@ -405,7 +427,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
 
   const reviewIds = reviews.map((review) => review.id)
   const subscriber = subscribers.docs[0] ?? null
-  const [translations, sends] = await Promise.all([
+  const [translations, sends, { byPost: postImages }, videos] = await Promise.all([
     reviewIds.length
       ? db
           .select({
@@ -430,6 +452,8 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
           .where(eq(emailSends.subscriberId, subscriber.id))
           .orderBy(desc(emailSends.localDate))
       : Promise.resolve([]),
+    imageViews(payload, { postIds: posts.map((post) => post.id), coverIds: [] }),
+    videoViews(payload, [...new Set(posts.flatMap((post) => (post.videoId ? [post.videoId] : [])))]),
   ])
 
   return {
@@ -445,7 +469,14 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     appSubmissions: appSubmissions.docs,
     skillSubmissions: skillSubmissions.docs,
     circleMembers: memberships,
-    circlePosts: posts,
+    circlePosts: posts.map(({ videoId, ...post }) => {
+      const video = videoId ? videos.get(videoId) : undefined
+      return {
+        ...post,
+        images: (postImages.get(post.id) ?? []).map((image) => image.full),
+        video: video ? { provider: video.provider, url: video.url, title: video.title } : null,
+      }
+    }),
     circleReactions: postReactions,
     circlePostReports: postReports,
     subscriber,
@@ -626,6 +657,8 @@ export function shapeMemberExport(
       text: post.body,
       language: post.lang,
       status: post.status,
+      images: post.images.map((url) => new URL(url, site).toString()),
+      video: post.video && { site: post.video.provider, url: post.video.url, title: post.video.title },
       postedAt: iso(post.createdAt),
     })),
     circleReactions: records.circleReactions.map((reaction) => ({

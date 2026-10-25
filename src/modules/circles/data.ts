@@ -20,6 +20,8 @@ import {
   type ReactionView,
   type ReportReason,
 } from './rules'
+import { attachImages, claimable, deleteImages, imageViews } from './media/images'
+import { videoExists, videoViews } from './media/videos'
 import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from './schema'
 
 /**
@@ -140,6 +142,7 @@ const postColumns = {
   body: circlePosts.body,
   lang: circlePosts.lang,
   status: circlePosts.status,
+  videoId: circlePosts.videoId,
   createdAt: circlePosts.createdAt,
   name: authUsers.name,
 }
@@ -151,16 +154,23 @@ type PostRow = {
   body: string
   lang: string
   status: PostStatus
+  videoId: number | null
   createdAt: Date
   name: string
 }
 
 async function toViews(payload: Payload, rows: PostRow[], userId: string | null): Promise<PostView[]> {
-  const reacted = await reactionsFor(
-    payload,
-    rows.map((row) => row.id),
-    userId,
-  )
+  // A hidden post's pictures are no longer public, and its video goes with them.
+  const shown = rows.filter((row) => row.status === 'shown')
+  const [reacted, { byPost }, videos] = await Promise.all([
+    reactionsFor(
+      payload,
+      rows.map((row) => row.id),
+      userId,
+    ),
+    imageViews(payload, { postIds: shown.map((row) => row.id), coverIds: [] }),
+    videoViews(payload, [...new Set(shown.flatMap((row) => (row.videoId ? [row.videoId] : [])))]),
+  ])
   return rows.map((row) => ({
     id: row.id,
     circle: row.circleId,
@@ -171,6 +181,8 @@ async function toViews(payload: Payload, rows: PostRow[], userId: string | null)
     hidden: row.status === 'hidden',
     createdAt: row.createdAt.toISOString(),
     reactions: reacted.get(row.id) ?? [],
+    images: row.status === 'shown' ? (byPost.get(row.id) ?? []) : [],
+    video: row.status === 'shown' && row.videoId ? (videos.get(row.videoId) ?? null) : null,
   }))
 }
 
@@ -248,35 +260,45 @@ export async function postView(payload: Payload, postId: number, circleIds: numb
   return view ?? null
 }
 
-export type CreatePostResult = { status: 'created'; postId: number } | { status: 'daily-limit' }
+export type CreatePostResult = { status: 'created'; postId: number } | { status: 'daily-limit' | 'invalid-images' | 'invalid-video' }
 
 /**
  * Publishes the member's post in the circle and joins them to it. At most `dailyPosts` a Shanghai
- * day; a post they deleted no longer counts.
+ * day; a post they deleted no longer counts. The pictures must be ones they uploaded and have not
+ * posted yet; they become public with the post.
  */
 export async function createPost(
   payload: Payload,
-  post: { circleId: number; userId: string; body: string; lang: string },
+  post: { circleId: number; userId: string; body: string; lang: string; images?: number[]; videoId?: number | null },
   now = new Date(),
 ): Promise<CreatePostResult> {
+  const { images = [], videoId = null, ...values } = post
   const db = drizzleOf(payload)
   const [today] = await db
     .select({ count: count() })
     .from(circlePosts)
     .where(and(eq(circlePosts.userId, post.userId), gte(circlePosts.createdAt, shanghaiDayStart(now))))
   if (Number(today?.count ?? 0) >= circleRules.dailyPosts) return { status: 'daily-limit' }
-  const [created] = await db.insert(circlePosts).values(post).returning({ id: circlePosts.id })
+  if (!(await claimable(payload, images, post.userId))) return { status: 'invalid-images' }
+  if (videoId !== null && !(await videoExists(payload, videoId))) return { status: 'invalid-video' }
+  const [created] = await db
+    .insert(circlePosts)
+    .values({ ...values, videoId })
+    .returning({ id: circlePosts.id })
+  await attachImages(payload, images, { postId: created.id, circleId: post.circleId })
   await setMembership(payload, post.circleId, post.userId, true)
   return { status: 'created', postId: created.id }
 }
 
-/** Deletes the member's own post, with its reactions and reports; false when they have no such post. */
+/** Deletes the member's own post, with its reactions, reports and pictures; false when they have no such post. */
 export async function deletePost(payload: Payload, postId: number, userId: string): Promise<boolean> {
   const deleted = await drizzleOf(payload)
     .delete(circlePosts)
     .where(and(eq(circlePosts.id, postId), eq(circlePosts.userId, userId)))
     .returning({ id: circlePosts.id })
-  return deleted.length > 0
+  if (deleted.length === 0) return false
+  await deleteImages(payload, { post: { equals: postId } })
+  return true
 }
 
 /** Whether readers can see the post (shown, in a circle they can see): only those take reactions and reports. */

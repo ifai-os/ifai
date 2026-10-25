@@ -5,13 +5,16 @@ import type { Payload } from 'payload'
 import { authUsers } from '@/lib/auth/schema'
 import { cleanName } from '@/modules/apps/reviews/rules'
 
-import type { PostStatus, ReportReason } from './rules'
+import { deleteImages, imageViews, setPostImagesPublic } from './media/images'
+import { videoViews } from './media/videos'
+import type { PostStatus, ReportReason, VideoProvider } from './rules'
 import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from './schema'
 
 /**
  * What the back office reads and changes about circles: a circle's posts with their reports,
  * hiding and showing them again, the reports nobody has looked at yet, and clearing out a circle
  * that is deleted. Free of the Payload config, so the collection (through ./endpoints) can import it.
+ * The site owner sees a hidden post's pictures too: admins can open any picture.
  */
 
 const drizzleOf = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
@@ -26,6 +29,8 @@ export type AdminPost = {
   /** People who reacted. */
   reactions: number
   reports: { open: number; total: number; reasons: Partial<Record<ReportReason, number>> }
+  images: { square: string; full: string }[]
+  video: { provider: VideoProvider; url: string; title: string | null } | null
 }
 
 /** A circle's posts, shown and hidden, newest first, with how often and why each was reported. */
@@ -37,6 +42,7 @@ export async function adminPosts(payload: Payload, circleId: number, limit = 200
       body: circlePosts.body,
       lang: circlePosts.lang,
       status: circlePosts.status,
+      videoId: circlePosts.videoId,
       createdAt: circlePosts.createdAt,
       name: authUsers.name,
       email: authUsers.email,
@@ -49,7 +55,7 @@ export async function adminPosts(payload: Payload, circleId: number, limit = 200
   if (rows.length === 0) return []
 
   const ids = rows.map((row) => row.id)
-  const [reports, people] = await Promise.all([
+  const [reports, people, { byPost }, videos] = await Promise.all([
     db
       .select({
         postId: circlePostReports.postId,
@@ -68,6 +74,8 @@ export async function adminPosts(payload: Payload, circleId: number, limit = 200
       .from(circlePostReactions)
       .where(inArray(circlePostReactions.postId, ids))
       .groupBy(circlePostReactions.postId),
+    imageViews(payload, { postIds: ids, coverIds: [] }),
+    videoViews(payload, [...new Set(rows.flatMap((row) => (row.videoId ? [row.videoId] : [])))]),
   ])
   const reacted = new Map(people.map((row) => [row.postId, row.people]))
 
@@ -86,9 +94,13 @@ export async function adminPosts(payload: Payload, circleId: number, limit = 200
         total: mine.reduce((sum, report) => sum + Number(report.total), 0),
         reasons: Object.fromEntries(mine.map((report) => [report.reason, Number(report.total)])),
       },
+      images: (byPost.get(row.id) ?? []).map((image) => ({ square: image.square, full: image.full })),
+      video: row.videoId && videos.has(row.videoId) ? pickVideo(videos.get(row.videoId)!) : null,
     }
   })
 }
+
+const pickVideo = ({ provider, url, title }: { provider: VideoProvider; url: string; title: string | null }) => ({ provider, url, title })
 
 /** Marks a post's open reports as dealt with. */
 async function resolveReports(payload: Payload, postId: number, now: Date): Promise<void> {
@@ -99,8 +111,8 @@ async function resolveReports(payload: Payload, postId: number, now: Date): Prom
 }
 
 /**
- * Hides a post in the circle, or shows it again; or, with `keep`, leaves it as it is and closes
- * its reports. Hiding closes them too. False when the circle has no such post.
+ * Hides a post in the circle, or shows it again, its pictures with it; or, with `keep`, leaves it
+ * as it is and closes its reports. Hiding closes them too. False when the circle has no such post.
  */
 export async function moderatePost(
   payload: Payload,
@@ -114,6 +126,7 @@ export async function moderatePost(
   if ('status' in change) {
     const updated = await db.update(circlePosts).set({ status: change.status }).where(where).returning({ id: circlePosts.id })
     if (updated.length === 0) return false
+    await setPostImagesPublic(payload, postId, change.status === 'shown')
     if (change.status === 'hidden') await resolveReports(payload, postId, now)
     return true
   }
@@ -187,9 +200,10 @@ export async function openPostReports(payload: Payload, limit = 10): Promise<{ t
   }
 }
 
-/** A deleted circle takes its posts (with their reactions and reports) and its members with it. */
+/** A deleted circle takes its posts (with their reactions, reports and pictures) and its members with it. */
 export async function deleteCircleData(payload: Payload, circleId: number): Promise<void> {
   const db = drizzleOf(payload)
   await db.delete(circlePosts).where(eq(circlePosts.circleId, circleId))
   await db.delete(circleMembers).where(eq(circleMembers.circleId, circleId))
+  await deleteImages(payload, { circle: { equals: circleId } })
 }

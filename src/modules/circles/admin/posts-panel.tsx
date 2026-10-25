@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import type { AdminPost } from '../admin'
 import type { AdminPostsResponse } from '../endpoints'
-import type { ReportReason } from '../rules'
+import type { ReportReason, VideoProvider } from '../rules'
 
 // The back office is for the site owner; its text follows Payload's own admin language (zh / en).
 const text = {
@@ -27,6 +27,10 @@ const text = {
     failedRequest: '操作失败',
     separator: '、',
     colon: '：',
+    image: (index: number) => `第 ${index} 张图片（新窗口打开原图）`,
+    video: '视频',
+    noTitle: '（没读到标题）',
+    providers: { youtube: 'YouTube', bilibili: '哔哩哔哩', vimeo: 'Vimeo' } satisfies Record<VideoProvider, string>,
   },
   en: {
     saveFirst: 'Once saved, readers can post in this circle on the circles page.',
@@ -46,6 +50,10 @@ const text = {
     failedRequest: 'Failed',
     separator: ', ',
     colon: ': ',
+    image: (index: number) => `Picture ${index} (opens the full size in a new tab)`,
+    video: 'Video',
+    noTitle: '(no title could be read)',
+    providers: { youtube: 'YouTube', bilibili: 'Bilibili', vimeo: 'Vimeo' } satisfies Record<VideoProvider, string>,
   },
 }
 
@@ -64,9 +72,11 @@ const row = {
 
 const flagged = { color: 'var(--theme-error-500)' } as const
 
+const thumb = { display: 'block', width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--style-radius-s)' } as const
+
 type Change = { status: 'hidden' | 'shown' } | { keep: true }
 
-/** The「动态」tab of a circle: every post, newest first, with its reports; hide, show again, or keep a reported one. */
+/** The「动态」tab of a circle: every post, newest first, with its pictures, video and reports; hide, show again, or keep a reported one. */
 export function PostsPanel() {
   const { id } = useDocumentInfo()
   const { i18n } = useTranslation()
@@ -122,9 +132,31 @@ export function PostsPanel() {
             {post.reactions > 0 && <small> · {t.reactions(post.reactions)}</small>}
             {post.status === 'hidden' && <strong> · {t.hiddenBadge}</strong>}
           </p>
-          <p lang={post.lang} style={{ margin: '0.25em 0', whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
-            {post.body}
-          </p>
+          {post.body && (
+            <p lang={post.lang} style={{ margin: '0.25em 0', whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+              {post.body}
+            </p>
+          )}
+          {post.images.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, margin: '0.25em 0' }}>
+              {post.images.map((image, index) => (
+                <a key={image.full} href={image.full} target="_blank" rel="noreferrer" aria-label={t.image(index + 1)} title={t.image(index + 1)}>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- a sized copy made on upload */}
+                  <img src={image.square} alt="" width={64} height={64} loading="lazy" style={thumb} />
+                </a>
+              ))}
+            </div>
+          )}
+          {post.video && (
+            <p style={{ margin: '0.25em 0', wordBreak: 'break-word' }}>
+              {t.video}
+              {t.colon}
+              {t.providers[post.video.provider]} ·{' '}
+              <a href={post.video.url} target="_blank" rel="noreferrer">
+                {post.video.title ?? t.noTitle}
+              </a>
+            </p>
+          )}
           {post.reports.total > 0 && (
             <p style={{ margin: '0 0 0.25em', ...(post.reports.open > 0 ? flagged : {}) }}>
               {t.reported(post.reports.open, post.reports.total)}

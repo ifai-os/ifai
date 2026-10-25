@@ -24,6 +24,7 @@ import {
   type Reaction,
   type ReactionView,
   type ReportReason,
+  type VideoView,
 } from '../rules'
 
 type Status = 'loading' | 'ready' | 'failed'
@@ -33,6 +34,17 @@ type Feed = { key: string; posts: PostView[]; next: number | null; loadedAt: num
 
 /** What sending the post form came to: done, or why not. */
 export type PublishResult = 'ok' | 'sign-in' | 'failed' | CirclesError
+
+/** What the post carries besides its text: uploaded pictures in order, a looked-up video. */
+export type PostMedia = { images: number[]; video: number | null }
+
+export type UploadResult = { ok: true; id: number } | { ok: false; error: 'sign-in' | 'failed' | CirclesError }
+
+export type VideoResult = { ok: true; video: VideoView } | { ok: false; error: 'sign-in' | 'failed' | CirclesError }
+
+/** Pictures can take a while on a phone; reading a video's site too. */
+const uploadTimeoutMs = 60_000
+const videoTimeoutMs = 30_000
 
 /** What a visitor pressed before being asked to sign in: it names the dialog. */
 type SignInReason = 'join' | 'post' | 'react'
@@ -62,7 +74,11 @@ type CirclesContextValue = {
   retry: () => void
   /** Joins or leaves; a visitor gets the sign-in dialog and joins on coming back. */
   join: (circle: CircleView, joined: boolean) => Promise<boolean>
-  publish: (circleId: number, body: string) => Promise<PublishResult>
+  publish: (circleId: number, body: string, media: PostMedia) => Promise<PublishResult>
+  /** Sends one picture for the post being written. */
+  uploadImage: (file: Blob) => Promise<UploadResult>
+  /** The card for a pasted video link. */
+  lookUpVideo: (url: string) => Promise<VideoResult>
   remove: (postId: number) => Promise<boolean>
   react: (post: PostView, reaction: Reaction, on: boolean) => void
   report: (postId: number, reason: ReportReason) => Promise<boolean>
@@ -246,8 +262,8 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
   }, [])
 
   const publish = useCallback(
-    async (circleId: number, body: string): Promise<PublishResult> => {
-      const result = await request<CirclesChange>('/api/circles/posts', json({ circle: circleId, body, locale }))
+    async (circleId: number, body: string, media: PostMedia): Promise<PublishResult> => {
+      const result = await request<CirclesChange>('/api/circles/posts', json({ circle: circleId, body, locale, ...media }))
       if (result.status === 401) {
         askToSignIn('post')
         return 'sign-in'
@@ -266,6 +282,35 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
       return 'ok'
     },
     [locale, tab, circle, router, applyChange, askToSignIn, setPosts],
+  )
+
+  const uploadImage = useCallback(
+    async (file: Blob): Promise<UploadResult> => {
+      const form = new FormData()
+      form.set('file', file)
+      const { data, status, error } = await request<{ image: { id: number } }>('/api/circles/images', {
+        method: 'POST',
+        body: form,
+        signal: AbortSignal.timeout(uploadTimeoutMs),
+      })
+      if (data) return { ok: true, id: data.image.id }
+      if (status === 401) askToSignIn('post')
+      return { ok: false, error: status === 401 ? 'sign-in' : (error ?? 'failed') }
+    },
+    [askToSignIn],
+  )
+
+  const lookUpVideo = useCallback(
+    async (url: string): Promise<VideoResult> => {
+      const { data, status, error } = await request<{ video: VideoView }>('/api/circles/videos', {
+        ...json({ url }),
+        signal: AbortSignal.timeout(videoTimeoutMs),
+      })
+      if (data) return { ok: true, video: data.video }
+      if (status === 401) askToSignIn('post')
+      return { ok: false, error: status === 401 ? 'sign-in' : (error ?? 'failed') }
+    },
+    [askToSignIn],
   )
 
   const remove = useCallback(
@@ -341,6 +386,8 @@ export function CirclesProvider({ circles, overview: initialOverview, signIn, ch
         retry,
         join,
         publish,
+        uploadImage,
+        lookUpVideo,
         remove,
         react,
         report,

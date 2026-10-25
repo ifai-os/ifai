@@ -304,7 +304,11 @@
     "reactionNames": {
       "like": "讚"
     },
-    "failed": "動態沒有載入出來。"
+    "failed": "動態沒有載入出來。",
+    "errors": {
+      "imagesGone": "有圖片已經不在了，移除後重新加入。",
+      "videoGone": "這個影片已經不在了，移除後重新加入。"
+    }
   },
   "legal": {
     "privacy": {

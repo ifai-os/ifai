@@ -83,6 +83,7 @@ export interface Config {
     'skill-tags': SkillTag;
     'skill-submissions': SkillSubmission;
     circles: Circle;
+    'circle-images': CircleImage;
     arenas: Arena;
     'arena-models': ArenaModel;
     'arena-prompts': ArenaPrompt;
@@ -115,6 +116,7 @@ export interface Config {
     'skill-tags': SkillTagsSelect<false> | SkillTagsSelect<true>;
     'skill-submissions': SkillSubmissionsSelect<false> | SkillSubmissionsSelect<true>;
     circles: CirclesSelect<false> | CirclesSelect<true>;
+    'circle-images': CircleImagesSelect<false> | CircleImagesSelect<true>;
     arenas: ArenasSelect<false> | ArenasSelect<true>;
     'arena-models': ArenaModelsSelect<false> | ArenaModelsSelect<true>;
     'arena-prompts': ArenaPromptsSelect<false> | ArenaPromptsSelect<true>;
@@ -1046,6 +1048,50 @@ export interface Circle {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circle-images".
+ */
+export interface CircleImage {
+  id: number;
+  kind: 'post' | 'cover';
+  uploader?: string | null;
+  post?: number | null;
+  circle?: number | null;
+  position?: number | null;
+  public?: boolean | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    square?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    feed?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
  * Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. The rankings are recomputed every Monday at 06:00 Shanghai time.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1311,6 +1357,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'circles';
         value: number | Circle;
+      } | null)
+    | ({
+        relationTo: 'circle-images';
+        value: number | CircleImage;
       } | null)
     | ({
         relationTo: 'arenas';
@@ -1850,6 +1900,55 @@ export interface CirclesSelect<T extends boolean = true> {
   shown?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circle-images_select".
+ */
+export interface CircleImagesSelect<T extends boolean = true> {
+  kind?: T;
+  uploader?: T;
+  post?: T;
+  circle?: T;
+  position?: T;
+  public?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        square?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        feed?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
