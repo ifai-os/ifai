@@ -317,6 +317,24 @@ test.describe('members’ pages', () => {
       expect(await (await request.get(`/api/circles/comments?post=${mine}`)).json()).toMatchObject({ count: 1, comments: [{ id: comment }] })
       expect((await others.request.get(`/api/circles/comments?post=${mine}`)).status()).toBe(404)
 
+      // Nor her face among the last people to post on a circle's card: she posted last in Desks & Gear.
+      const desks = (await member.query<{ id: number }>(`select id from circles where slug = 'desks-and-gear'`)).rows[0].id
+      const shelf = (
+        await member.query<{ id: number }>(`insert into circle_posts (circle_id, user_id, body, lang) values ($1, $2, 'A walnut monitor shelf.', 'en') returning id`, [
+          desks,
+          other.id,
+        ])
+      ).rows[0].id
+      const faces = async (api: APIRequestContext) => {
+        const { overview } = (await (await api.get('/api/circles/feed?tab=latest')).json()) as {
+          overview: { circles: { id: number; recent: { name: string }[] }[] }
+        }
+        return overview.circles.find((circle) => circle.id === desks)?.recent.map((person) => person.name) ?? []
+      }
+      expect(await faces(request)).toContain('Grace Blocks')
+      expect(await faces(page.request)).not.toContain('Grace Blocks')
+      await member.query('delete from circle_posts where id = $1', [shelf])
+
       // Neither can follow, react to, comment on or answer the other.
       const followHim = await others.request.post('/api/follows/members', { data: { handle: member.handle, on: true } })
       expect(followHim.status()).toBe(403)

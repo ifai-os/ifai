@@ -45,6 +45,16 @@ export async function blockedAmong(payload: Payload, readerId: string | null, us
   return new Set(rows.map((row) => (row.blockerId === readerId ? row.blockedId : row.blockerId)))
 }
 
+/** Whether the member blocked anyone or was blocked by anyone. */
+export async function hasBlocks(payload: Payload, userId: string): Promise<boolean> {
+  const [row] = await drizzleOf(payload)
+    .select({ id: memberBlocks.id })
+    .from(memberBlocks)
+    .where(or(eq(memberBlocks.blockerId, userId), eq(memberBlocks.blockedId, userId)))
+    .limit(1)
+  return Boolean(row)
+}
+
 /** Whether the reader blocked the member (`mine`), the member blocked the reader (`theirs`), or neither. */
 export async function blockState(payload: Payload, readerId: string | null, userId: string): Promise<BlockState> {
   if (!readerId || readerId === userId) return null

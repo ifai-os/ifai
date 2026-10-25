@@ -6,6 +6,7 @@ import type { Locale } from '@/i18n/config'
 import { auth } from '@/lib/auth/auth'
 import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
+import { hasBlocks } from '@/modules/profiles/blocks'
 
 import { circlesCacheTag } from './cache'
 import { commentsPage } from './comments'
@@ -67,7 +68,13 @@ const loadOverview = cached(
   { revalidate: 300 },
 )
 
+/** Everyone shares the cached numbers, except a member in a block, whose cards leave the other one out (rule 23). */
 export async function getOverview(ids: number[]): Promise<CirclesOverview> {
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (session) {
+    const { payload } = await getDb()
+    if (await hasBlocks(payload, session.user.id)) return circlesOverview(payload, ids, session.user.id)
+  }
   return loadOverview(ids)
 }
 

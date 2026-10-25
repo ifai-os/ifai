@@ -59,9 +59,10 @@ function readable(circleIds: number[], userId: string | null): SQL | undefined {
 /**
  * The numbers on the circles' cards and in the header: members, posts today (Shanghai day), the
  * last few people who posted, the busiest two circles, and how many people posted today.
- * Hidden posts do not count.
+ * Hidden posts do not count. With a reader, the last people who posted leave out anyone the
+ * reader blocked or was blocked by (rule 23); the numbers stay the same for everyone.
  */
-export async function circlesOverview(payload: Payload, circleIds: number[], now = new Date()): Promise<CirclesOverview> {
+export async function circlesOverview(payload: Payload, circleIds: number[], readerId: string | null = null, now = new Date()): Promise<CirclesOverview> {
   if (circleIds.length === 0) return { postersToday: 0, circles: [] }
   const db = drizzleOf(payload)
   const dayStart = shanghaiDayStart(now)
@@ -73,7 +74,7 @@ export async function circlesOverview(payload: Payload, circleIds: number[], now
       select ${circlePosts.circleId} as circle_id, ${circlePosts.userId} as user_id, ${authUsers.name} as name,
         row_number() over (partition by ${circlePosts.circleId} order by max(${circlePosts.id}) desc) as place
       from ${circlePosts} inner join ${authUsers} on ${authUsers.id} = ${circlePosts.userId}
-      where ${and(inArray(circlePosts.circleId, circleIds), eq(circlePosts.status, 'shown'), gte(circlePosts.createdAt, since))}
+      where ${and(inArray(circlePosts.circleId, circleIds), eq(circlePosts.status, 'shown'), gte(circlePosts.createdAt, since), notBlocked(circlePosts.userId, readerId))}
       group by ${circlePosts.circleId}, ${circlePosts.userId}, ${authUsers.name}
     ) as recent
     where place <= ${circleRules.recentPosters}
