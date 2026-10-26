@@ -203,12 +203,16 @@ jobs:
       # `pnpm run ci` (vercel.json) migrates the database, then builds. Variables set here win over the
       # pulled ones, so a preview migrates and builds against its own Neon branch, never production.
       # (Only when there is a branch: even an empty DATABASE_URI here would hide the pulled one.)
+      # Production reads its connection string from the PRODUCTION_DATABASE_URI secret when it is set:
+      # Vercel may mark DATABASE_URI Sensitive, and `vercel pull` then only writes "[SENSITIVE]".
       # main's preview also learns its fixed address, for links and sign-in (src/lib/site-url.ts).
       - name: Build
         env:
           NEON_DATABASE_URI: ${{ steps.fresh.outputs.db_url_pooled || steps.neon.outputs.db_url_pooled }}
+          PRODUCTION_DATABASE_URI: ${{ matrix.target == 'production' && secrets.PRODUCTION_DATABASE_URI || '' }}
         run: |
           if [ -n "$NEON_DATABASE_URI" ]; then export DATABASE_URI="$NEON_DATABASE_URI"; fi
+          if [ -n "$PRODUCTION_DATABASE_URI" ]; then export DATABASE_URI="$PRODUCTION_DATABASE_URI"; fi
           if [ -n "$DOMAIN" ]; then export PREVIEW_SITE_URL="https://$DOMAIN"; fi
           vercel build $PROD_FLAG --token="$VERCEL_TOKEN"
 
@@ -216,11 +220,14 @@ jobs:
         id: deploy
         env:
           NEON_DATABASE_URI: ${{ steps.fresh.outputs.db_url_pooled || steps.neon.outputs.db_url_pooled }}
+          PRODUCTION_DATABASE_URI: ${{ matrix.target == 'production' && secrets.PRODUCTION_DATABASE_URI || '' }}
         run: |
           # One archive instead of thousands of files: Hobby allows 5000 uploaded files a day (api-upload-free).
           args=(--prebuilt --archive=tgz $PROD_FLAG --token="$VERCEL_TOKEN")
           # The preview's functions read the same Neon branch (and fixed address) at runtime.
           if [ -n "$NEON_DATABASE_URI" ]; then args+=(--env "DATABASE_URI=$NEON_DATABASE_URI"); fi
+          # Production's functions too, so build and runtime use the same database.
+          if [ -n "$PRODUCTION_DATABASE_URI" ]; then args+=(--env "DATABASE_URI=$PRODUCTION_DATABASE_URI"); fi
           if [ -n "$DOMAIN" ]; then args+=(--env "PREVIEW_SITE_URL=https://$DOMAIN"); fi
           url=$(vercel deploy "${args[@]}")
           echo "Deployed to $url" >> "$GITHUB_STEP_SUMMARY"
