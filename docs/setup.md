@@ -49,6 +49,7 @@ pnpm dev                 # http://localhost:3000
 | `NEON_API_KEY` | Neon 控制台 → Account settings → API keys → Create new API key（也可以建只限这个项目的 Project API key）。 |
 | `NEON_PROJECT_ID` | Neon 项目 → Settings → General 里的 Project ID（形如 `cool-name-123456`）。 |
 | `VERCEL_AUTOMATION_BYPASS_SECRET` | 见第 5 条，预览开着访问保护时才需要。 |
+| `PRODUCTION_DATABASE_URI` | 生产库（Neon `main` 分支）带连接池的连接串，和 Vercel 生产的 `DATABASE_URI` 一样。填了以后生产的构建（迁移）和运行都用它；Vercel 把 `DATABASE_URI` 标成 Sensitive 时必须填，见第 6 条。 |
 
    Vercel 的团队 ID 和项目 ID 已经写在 workflow 里（不是密钥）；换项目时在同一页的 **Variables** 里加 `VERCEL_ORG_ID`、`VERCEL_PROJECT_ID` 覆盖。前三个 secret 填齐之前，Deploy 会提示缺哪个并跳过，不会报错。`main` 预览的固定地址也可以在 **Variables** 里用 `MAIN_PREVIEW_DOMAIN` 换成别的 `*.vercel.app` 名字。
 
@@ -82,6 +83,8 @@ pnpm dev                 # http://localhost:3000
 
 5. 预览环境默认开着 Vercel 的访问保护。要让 GitHub Actions 对预览环境跑冒烟测试：Settings → Deployment Protection → Protection Bypass for Automation 生成一个密钥，把它加到 GitHub 仓库的 Settings → Secrets → Actions，名字叫 `VERCEL_AUTOMATION_BYPASS_SECRET`。没有这个 secret 时，Deploy 照常部署预览，只跳过冒烟测试（不然每条测试都会被保护页挡住）。如果决定关掉预览的访问保护，就不用这个 secret，改在仓库 Variables 里加 `PREVIEW_UNPROTECTED` = `true`，冒烟测试照样会跑。带这个密钥时，预览的冒烟测试不录 trace，也不上传 Playwright 报告：两者都会写下请求头，密钥会跟着进 artifact。测试失败时看那次 job 的日志，日志里的密钥会被 Actions 打码。
 6. 这些环境变量**不要勾 Sensitive**。构建在 GitHub Actions 上跑，要用 `vercel pull` 把变量取下来；标成 Sensitive 的变量取不到值，只拿到占位符 `[SENSITIVE]`：`DATABASE_URI` 拿到占位符，构建时的迁移就连不上数据库；`NEXT_PUBLIC_*` 拿到占位符，写进页面的也是它。只在运行时用的密钥勾了也能用，网站运行时读得到真值，预览的 `PAYLOAD_SECRET`、`BETTER_AUTH_SECRET` 现在就标着 Sensitive；这时构建日志里 Better Auth 会警告密钥不到 32 个字符（`at least 32 characters`）、熵太低（`low-entropy`），说的是占位符，不用换密钥。改了环境变量要重新部署才生效：生产和 `main` 的预览在 Actions → Deploy 里重跑 `main` 最近一次，PR 的预览往 PR 推一个提交或重跑它的 Deploy。Vercel 控制台的 Redeploy 也可以。
+
+   Vercel 有时会自动把新加的变量标成 Sensitive（保存时关着开关也一样，变量旁边出现小锁，编辑时值是空的），改回去要邮箱验证码。生产的 `DATABASE_URI` 被标上时，构建日志里会有 `Secret values cannot be pulled`，迁移报 `getaddrinfo ENOTFOUND base`。这时在 GitHub 的 Actions Secrets 里加 `PRODUCTION_DATABASE_URI`（第 3 条的表），Deploy 在生产的构建和部署时用它代替拉下来的占位符；Vercel 上那条可以留着。
 7. 正式域名：`ifai.io` 现在在 Cloudflare 上指向别的服务。接到 Vercel 之前（Vercel 项目 → Settings → Domains 添加，再按提示改 Cloudflare 的 DNS），生产只能用 Vercel 分配的 `*.vercel.app` 地址访问，依赖正式域名的回调都收不到：Resend 的退信和投诉回调（第 7 步）、Google 和 GitHub 登录的回调地址（第 5、6 步）。
 
 ## 4. Cloudflare R2（图片与文件）
