@@ -6,8 +6,9 @@ name: Deploy
 #                   and a fixed address that moves to each new deployment; production too once
 #                   PRODUCTION_DEPLOY is true
 #   pull request  → preview deployment with its own Neon branch, then the smoke tests against it; the
-#                   branch is reset from its parent first if it has applied a migration the PR no longer has
+#                   branch is copied again first if it has applied a migration the PR no longer has
 #   PR closed     → the PR's Neon branch is deleted
+#   every run     → first deletes the Neon branches of any other closed PRs left behind
 # Secrets (repository → Settings → Secrets and variables → Actions), see docs/setup.md step 3:
 # VERCEL_TOKEN, NEON_API_KEY, NEON_PROJECT_ID and, if previews are protected, VERCEL_AUTOMATION_BYPASS_SECRET.
 on:
@@ -87,7 +88,7 @@ jobs:
 
   deploy:
     name: Deploy to ${{ matrix.label }}
-    needs: config
+    needs: [config, prune]
     if: needs.config.outputs.targets != '[]'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -145,8 +146,8 @@ jobs:
       # A PR that regenerates its migration after main moves (docs/status.md, 已知问题) leaves the old
       # one applied on its reused branch under a name the code no longer has, and migrating again then
       # fails on CREATE statements that already ran ("type ... already exists"). So when the branch has
-      # applied a migration that src/migrations no longer has, it is reset from its parent (Neon's
-      # default branch, which it was copied from) and the build migrates a clean copy. Whatever was
+      # applied a migration that src/migrations no longer has, it is deleted and copied again from Neon's
+      # default branch (as the first time) and the build migrates the clean copy. Whatever was
       # written on that PR's preview is lost. Only ever a PR's own branch: never preview/main or production.
       - name: Compare ${{ matrix.neon_branch }}'s migrations with this commit's
         id: migrations
@@ -165,19 +166,36 @@ jobs:
             echo "Every migration applied on $NEON_BRANCH is still in src/migrations; keeping the branch."
             exit 0
           fi
-          echo "::notice::Resetting $NEON_BRANCH from its parent: it has applied migrations this commit no longer has: $stale"
-          echo "Reset $NEON_BRANCH from its parent (applied migrations no longer in the code: $stale)." >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice::Recreating $NEON_BRANCH: it has applied migrations this commit no longer has: $stale"
+          echo "Recreated $NEON_BRANCH (applied migrations no longer in the code: $stale)." >> "$GITHUB_STEP_SUMMARY"
           echo "reset=true" >> "$GITHUB_OUTPUT"
 
-      # The branch keeps its id, host and password, so the connection strings above still hold.
-      - name: Reset ${{ matrix.neon_branch }} from its parent
+      # Not Neon's "reset from parent": it counts against the project's branch limit and fails with
+      # "branches limit exceeded" once that is full. Deleting first frees the slot the new copy takes.
+      # The new branch has a new host and password, so Build and Deploy read its outputs instead.
+      - name: Delete ${{ matrix.neon_branch }}
         if: steps.migrations.outputs.reset == 'true'
-        uses: neondatabase/reset-branch-action@v1
+        uses: neondatabase/delete-branch-action@v3
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           api_key: ${{ secrets.NEON_API_KEY }}
           branch: ${{ steps.neon.outputs.branch_id }}
-          parent: true
+
+      - name: Neon branch ${{ matrix.neon_branch }}, copied again
+        id: fresh
+        if: steps.migrations.outputs.reset == 'true'
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: ${{ matrix.neon_branch }}
+
+      # If Neon still listed the old branch, the action above reused it instead of copying a new one.
+      - name: Check ${{ matrix.neon_branch }} is a new copy
+        if: steps.migrations.outputs.reset == 'true' && steps.fresh.outputs.created != 'true'
+        run: |
+          echo "::error::$NEON_BRANCH was not deleted in time and got reused; run the deployment again."
+          exit 1
 
       - name: Pull Vercel settings and ${{ env.TARGET }} environment variables
         run: vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
@@ -188,7 +206,7 @@ jobs:
       # main's preview also learns its fixed address, for links and sign-in (src/lib/site-url.ts).
       - name: Build
         env:
-          NEON_DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
+          NEON_DATABASE_URI: ${{ steps.fresh.outputs.db_url_pooled || steps.neon.outputs.db_url_pooled }}
         run: |
           if [ -n "$NEON_DATABASE_URI" ]; then export DATABASE_URI="$NEON_DATABASE_URI"; fi
           if [ -n "$DOMAIN" ]; then export PREVIEW_SITE_URL="https://$DOMAIN"; fi
@@ -197,7 +215,7 @@ jobs:
       - name: Deploy
         id: deploy
         env:
-          NEON_DATABASE_URI: ${{ steps.neon.outputs.db_url_pooled }}
+          NEON_DATABASE_URI: ${{ steps.fresh.outputs.db_url_pooled || steps.neon.outputs.db_url_pooled }}
         run: |
           # One archive instead of thousands of files: Hobby allows 5000 uploaded files a day (api-upload-free).
           args=(--prebuilt --archive=tgz $PROD_FLAG --token="$VERCEL_TOKEN")
@@ -270,3 +288,48 @@ jobs:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           api_key: ${{ secrets.NEON_API_KEY }}
           branch: ${{ env.NEON_BRANCH }}
+
+  # The branch limit is small (10 on Neon's free plan), and a branch left behind by a failed cleanup
+  # run, or by a PR closed before the secrets existed, keeps its slot until someone deletes it by hand.
+  # So every run first deletes the preview/pr-<n> branches whose pull request is no longer open, and
+  # the deploy job waits for it: a new PR's branch then finds a free slot. Only names of exactly that
+  # form: preview/main and production never match. A failure here never holds up a deployment.
+  prune:
+    name: Delete Neon branches of closed PRs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions:
+      pull-requests: read
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Delete leftover preview branches
+        run: |
+          if [ -z "$NEON_API_KEY" ] || [ -z "$NEON_PROJECT_ID" ]; then
+            echo "::notice::Not pruning: NEON_API_KEY or NEON_PROJECT_ID is not set."
+            exit 0
+          fi
+          api="https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID"
+          neon() {
+            curl -fsS -H "Authorization: Bearer $NEON_API_KEY" -H 'Accept: application/json' "$@"
+          }
+          neon "$api/branches" \
+            | jq -r '.branches[] | select(.name | test("^preview/pr-[1-9][0-9]*$")) | "\(.id) \(.name)"' \
+            | while read -r id name; do
+                pr=${name#preview/pr-}
+                state=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$pr" --jq .state 2>/dev/null || echo unknown)
+                # Kept unless GitHub says for sure that the PR is closed (merged counts as closed).
+                if [ "$state" != closed ]; then
+                  echo "$name: PR #$pr is $state, keeping it."
+                  continue
+                fi
+                # The cleanup job above may have just deleted this PR's own branch.
+                if neon -X DELETE "$api/branches/$id" >/dev/null; then
+                  echo "Deleted $name (PR #$pr is closed)." | tee -a "$GITHUB_STEP_SUMMARY"
+                else
+                  echo "::warning::Could not delete $name (already gone?)."
+                fi
+              done
