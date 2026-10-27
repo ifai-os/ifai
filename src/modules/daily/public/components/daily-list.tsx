@@ -104,6 +104,8 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
             categories as chips. Where all three share a row (lg), the two side columns stay put while
             the stories scroll (站长, 2026-10-27, after sspai.com). */}
         <div
+          // The header's line comes in when this one reaches it (./header-line.tsx).
+          data-header-line={firstRow || subscribe ? '' : undefined}
           className={`flex flex-col gap-5 md:flex-row md:flex-wrap md:items-start md:gap-x-14 md:gap-y-10 ${
             firstRow ? 'md:border-t md:border-line md:pt-6' : subscribe ? 'lg:border-t lg:border-line lg:pt-6' : ''
           }`}
