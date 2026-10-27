@@ -93,7 +93,35 @@ export type CategoryPage = {
   latest: string | null
 }
 
+/** A piece of a story's body: a paragraph, or a subheading (a line starting with "## "). */
+export type BodyBlock = { kind: 'paragraph' | 'heading'; text: string }
+
+/** A body as stored (paragraphs split by blank lines, "## " subheadings) in the order to show it. */
+export function bodyBlocks(text: string | null | undefined): BodyBlock[] {
+  if (!text) return []
+  const blocks: BodyBlock[] = []
+  for (const chunk of text.replace(/\r\n?/g, '\n').split(/\n\s*\n/)) {
+    const lines = chunk.split('\n').map((line) => line.trim()).filter(Boolean)
+    let paragraph: string[] = []
+    const flush = () => {
+      if (paragraph.length) blocks.push({ kind: 'paragraph', text: paragraph.join('\n') })
+      paragraph = []
+    }
+    for (const line of lines) {
+      const heading = line.match(/^#{1,3}\s+(.+)$/)
+      if (heading) {
+        flush()
+        blocks.push({ kind: 'heading', text: heading[1].trim() })
+      } else paragraph.push(line)
+    }
+    flush()
+  }
+  return blocks
+}
+
 export type StoryDetail = StoryItem & {
+  /** The full story, in the reader's language when written in it; null while it has none. */
+  body: InLanguage<BodyBlock[]> | null
   sources: StorySource[]
   /** Other published stories of the same event, newest first. */
   developments: StoryItem[]
@@ -115,10 +143,18 @@ export function entitiesOf(doc: Pick<Story, 'entities'>, key: (name: string) => 
 }
 
 /** A story as Payload returns it with `locale: 'all'`. */
-export type RawStory = Omit<Story, 'title' | 'summary' | 'tryIt'> & {
+export type RawStory = Omit<Story, 'title' | 'summary' | 'body' | 'tryIt'> & {
   title: Localized<string>
   summary: Localized<string>
+  body?: Localized<string>
   tryIt?: Localized<string>
+}
+
+/** The body in the reader's language (else English) as blocks; null while there is none. */
+export function bodyOf(doc: Pick<RawStory, 'body'>, locale: Locale): InLanguage<BodyBlock[]> | null {
+  const text = inReaderLanguage(doc.body, locale)
+  const blocks = bodyBlocks(text?.value)
+  return text && blocks.length ? { value: blocks, lang: text.lang } : null
 }
 
 export function isStoryCategory(value: string): value is StoryCategory {

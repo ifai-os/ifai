@@ -33,7 +33,7 @@ function hostOf(url: string): string {
 }
 
 /**
- * A story's page (「IFAI 资讯详情页 · v1」board): title and times, summary, try-it, sources, save
+ * A story's page (「IFAI 资讯详情页 · v1」board): title and times, summary, picture, body, sources, save
  * and share, the topic's timeline and similar events; beside them the industry tags, other
  * developments and the companies and products. The page stays static; the save and follow states
  * are read in the browser.
@@ -96,6 +96,22 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
             )}
 
             <StoryFigure story={story} />
+
+            {story.body && (
+              <div lang={story.body.lang} className="flex flex-col gap-5 text-body-article text-ink">
+                {story.body.value.map((block, index) =>
+                  block.kind === 'heading' ? (
+                    <h2 key={index} className="pt-2 text-h3 font-semibold">
+                      {block.text}
+                    </h2>
+                  ) : (
+                    <p key={index} className="whitespace-pre-line">
+                      {block.text}
+                    </p>
+                  ),
+                )}
+              </div>
+            )}
 
             {story.correctedAt && (
               <p role="note" className="rounded-tile bg-info-soft px-4 py-3 text-meta text-ink-2">

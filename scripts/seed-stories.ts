@@ -23,7 +23,7 @@ import { ReviewError } from '../src/modules/daily/review/actions'
 import { rawItems } from '../src/modules/daily/schema'
 import { assertSeedTarget } from './seed-target'
 
-type Text = Pick<Story, 'title' | 'summary'> & Partial<Pick<Story, 'tryIt'>>
+type Text = Pick<Story, 'title' | 'summary'> & Partial<Pick<Story, 'body' | 'tryIt'>>
 
 type SampleStory = Pick<Story, 'slug' | 'category' | 'status' | 'eventId' | 'representativeItemId' | 'sources' | 'heat'> &
   Partial<Pick<Story, 'heatTrend' | 'tags' | 'entities'>> & {
@@ -65,11 +65,27 @@ const sampleStories: SampleStory[] = [
       en: {
         title: 'Sample: Lumen Chat adds shared workspaces for teams',
         summary: 'A made-up assistant now lets a whole team work in one shared workspace. Sample data for development and tests.',
+        body: [
+          'Lumen Labs, a made-up company, says its assistant Lumen Chat now has shared workspaces: everyone on a team sees the same chats, files and instructions, and new members start with all of them.',
+          '## What changes',
+          'Until now each person kept their own history. A workspace keeps one history for the team, and its owner decides who can edit the shared instructions.',
+          'Workspaces come with the team plan; the company has not said whether the free plan will get them.',
+          '## Why it matters',
+          'This is sample text for development and tests. It shows how a story body reads with paragraphs and subheadings.',
+        ].join('\n\n'),
         tryIt: 'Open a workspace and invite a teammate.',
       },
       'zh-Hans': {
         title: '示例：Lumen Chat 推出团队共享工作区',
         summary: '一个虚构的助手现在支持整个团队共用一个工作区。这是开发和测试用的示例数据。',
+        body: [
+          '虚构的公司 Lumen Labs 表示，旗下助手 Lumen Chat 新增团队共享工作区：团队里每个人看到同样的对话、文件和指令，新成员加入后也能直接看到全部内容。',
+          '## 有什么变化',
+          '以前每个人的记录各管各的。工作区让整个团队共用一份记录，由工作区的所有者决定谁能修改共享的指令。',
+          '工作区随团队版提供，公司还没说免费版会不会有。',
+          '## 为什么值得关注',
+          '这是开发和测试用的示例正文，用来看正文带段落和小标题时的样子。',
+        ].join('\n\n'),
         tryIt: '新建一个工作区，邀请一位同事。',
       },
       ja: {

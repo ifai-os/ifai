@@ -469,6 +469,10 @@ export interface Story {
   title: string;
   summary: string;
   /**
+   * The full story on its page, written from several sources. Leave a blank line between paragraphs; a line starting with "## " is a subheading.
+   */
+  body?: string | null;
+  /**
    * Optional; shown at the end of the item.
    */
   tryIt?: string | null;
@@ -1650,6 +1654,7 @@ export interface SourcesSelect<T extends boolean = true> {
 export interface StoriesSelect<T extends boolean = true> {
   title?: T;
   summary?: T;
+  body?: T;
   tryIt?: T;
   slug?: T;
   category?: T;
