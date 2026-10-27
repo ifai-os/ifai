@@ -174,6 +174,22 @@ export function toHot(doc: RawStory, locale: Locale): HotStory {
   }
 }
 
+/**
+ * 「头条」, never left empty while anything is published: the hottest story of the last `withinMs`,
+ * else the hottest of any age (the heat job keeps heat to the last 48 hours), else the newest story.
+ * `hot` comes hottest first, `latest` newest first.
+ */
+export function pickHeadline<T extends { publishedAt?: string | null }>(
+  hot: readonly T[],
+  latest: readonly T[],
+  now: Date,
+  withinMs: number,
+): T | null {
+  const since = now.getTime() - withinMs
+  const recent = hot.find((story) => story.publishedAt && new Date(story.publishedAt).getTime() >= since)
+  return recent ?? hot[0] ?? latest[0] ?? null
+}
+
 /** The hottest story of each event, hottest first: stories come sorted by heat, then newest first. */
 export function onePerEvent<T extends { eventId: number }>(stories: readonly T[], limit: number): T[] {
   const seen = new Set<number>()
