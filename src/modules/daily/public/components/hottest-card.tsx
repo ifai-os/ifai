@@ -20,7 +20,7 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
   return (
     <section
       aria-labelledby="hottest-title"
-      className="group relative isolate flex min-w-0 flex-col justify-end gap-3.5 overflow-hidden rounded-hero bg-night p-6 text-white min-h-60 md:min-h-80 md:grow-2 md:basis-100 md:p-8"
+      className="group relative isolate flex min-w-0 flex-col justify-end gap-2 overflow-hidden rounded-hero bg-night p-6 text-white min-h-60 md:min-h-80 md:grow-2 md:basis-100 md:p-8"
     >
       <Image
         src={story.media?.picture?.url ?? `/news/hottest/${story.category}.webp`}
@@ -39,7 +39,7 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
         )}
       </p>
       {/* The strip reaches the card's edges and fades out just above the title, under the label. */}
-      <div className="-mx-6 -mb-6 bg-linear-to-t from-black/65 from-45% to-black/0 px-6 pt-5 pb-6 md:-mx-8 md:-mb-8 md:px-8 md:pt-6 md:pb-8">
+      <div className="-mx-6 -mb-6 bg-linear-to-t from-black/65 from-45% to-black/0 px-6 pt-3 pb-6 md:-mx-8 md:-mb-8 md:px-8 md:pt-4 md:pb-8">
         <h2 id="hottest-title" lang={story.title.lang} className="text-h2 md:text-display-phone md:leading-9.75">
           <Link href={storyHref(story.slug)} className="text-white after:absolute after:inset-0">
             {story.title.value}
