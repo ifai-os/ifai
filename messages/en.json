@@ -1024,7 +1024,6 @@
     "allCategories": "All",
     "today": "Today",
     "yesterday": "Yesterday",
-    "groupCount": "{count, plural, one {# story} other {# stories}}",
     "loadEarlier": "Load earlier stories",
     "loadNewer": "Newer stories",
     "emptyTitle": "No stories published yet",
@@ -1085,6 +1084,7 @@
   },
   "poster": {
     "title": "Daily AI highlights",
+    "today": "Today's AI highlights",
     "brand": "IFAI · AI highlights",
     "dateLine": "{date} · Shanghai time",
     "count": "{count, plural, one {# story} other {# stories}}",
@@ -1102,8 +1102,7 @@
     "later": "Next poster"
   },
   "subscribe": {
-    "title": "AI Daily, 8 a.m. in your inbox",
-    "note": "Your time zone, your language. Unsubscribe anytime.",
+    "title": "Best of AI",
     "email": "Your email",
     "submit": "Subscribe",
     "done": "You're in. See you at 8 a.m.",

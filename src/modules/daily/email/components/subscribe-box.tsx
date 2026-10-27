@@ -16,13 +16,13 @@ import { isEmailAddress, normalizeEmail, suggestEmail, type EmailSuggestion } fr
  */
 export type SubscribeBoxVariant = 'column' | 'card' | 'band'
 
-const looks: Record<SubscribeBoxVariant, { box: string; text: string; title: string; note: string; form: string; row: string; input: string; idle: string; button: string }> = {
-  // The board stacks title, note, address and button 12 apart.
+const looks: Record<SubscribeBoxVariant, { box: string; text: string; title: string; form: string; row: string; input: string; idle: string; button: string }> = {
+  // The board stacks title, address and button 12 apart. It grows to the bottom of the first row,
+  // so the column keeps its height once the form gives way to「订阅成功」.
   column: {
-    box: 'flex flex-col gap-3 rounded-hero border border-surface-2 bg-surface p-5',
+    box: 'flex grow flex-col gap-3 rounded-hero border border-surface-2 bg-surface p-4',
     text: 'flex flex-col gap-3',
     title: 'text-body font-medium',
-    note: 'text-small leading-4.75 text-ink-4',
     form: 'flex flex-col gap-2',
     row: 'flex flex-col gap-3',
     input: 'h-10 w-full rounded-pill border bg-bg px-3.5 text-meta',
@@ -33,7 +33,6 @@ const looks: Record<SubscribeBoxVariant, { box: string; text: string; title: str
     box: 'flex flex-col gap-3 rounded-card border border-line p-4.5',
     text: 'flex flex-col gap-1',
     title: 'text-title font-semibold',
-    note: 'text-meta text-ink-4',
     form: 'flex flex-col gap-2',
     row: 'flex flex-col gap-2',
     input: 'h-11 w-full rounded-pill border bg-surface px-4 text-body',
@@ -44,7 +43,6 @@ const looks: Record<SubscribeBoxVariant, { box: string; text: string; title: str
     box: 'flex flex-wrap items-center justify-between gap-x-8 gap-y-4 rounded-hero border border-line px-5 py-5 sm:px-7 sm:py-6',
     text: 'flex min-w-0 flex-[1_1_360px] flex-col gap-1.5',
     title: 'text-h3 font-semibold',
-    note: 'text-meta text-ink-4',
     form: 'flex min-w-0 flex-[1_1_380px] flex-col gap-1.5',
     row: 'flex gap-2',
     input: 'h-11 min-w-0 flex-1 rounded-pill border bg-surface px-4 text-ui',
@@ -146,7 +144,6 @@ export function SubscribeBox({ variant }: { variant: SubscribeBoxVariant }) {
         <h2 id={`${id}-title`} className={look.title}>
           {t('title')}
         </h2>
-        <p className={look.note}>{t('note')}</p>
       </div>
 
       {/* Present from the start, so screen readers announce the success when it appears. */}

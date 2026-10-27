@@ -1024,7 +1024,6 @@
     "allCategories": "전체",
     "today": "오늘",
     "yesterday": "어제",
-    "groupCount": "소식 {count}개",
     "loadEarlier": "이전 소식 더 보기",
     "loadNewer": "최신 소식 보기",
     "emptyTitle": "아직 게시된 소식이 없어요",
@@ -1085,6 +1084,7 @@
   },
   "poster": {
     "title": "AI 데일리 하이라이트",
+    "today": "오늘의 AI 하이라이트",
     "brand": "IFAI · AI 하이라이트",
     "dateLine": "{date} · 상하이 시간",
     "count": "{count, plural, other {#개 소식}}",
@@ -1102,8 +1102,7 @@
     "later": "다음 호"
   },
   "subscribe": {
-    "title": "매일 아침 8시, AI 데일리",
-    "note": "계신 곳 시간에 맞춰 보내요. 언제든 해지할 수 있어요",
+    "title": "AI 콘텐츠 픽",
     "email": "이메일 주소",
     "submit": "구독하기",
     "done": "구독 완료! 내일 아침 8시에 만나요",

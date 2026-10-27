@@ -36,16 +36,13 @@ export function DailyFeed({ stories, serverToday }: DailyFeedProps) {
           : format.dateTime(group.date, { month: 'long', day: 'numeric', weekday: 'long', timeZone: 'UTC' })
         return (
           <section key={group.key} aria-labelledby={`day-${group.key}`} className="flex flex-col">
-            {/* 「IFAI 日报（新版）」: the calendar tile, then the day and its count on one line, all centred;
-                8 above, 16 down to the first story's line. */}
+            {/* 「IFAI 日报（新版）」: the calendar tile, then the day, centred; 8 above, 16 down to the
+                first story's line. No count after the day (站长, 2026-10-27). */}
             <header className="flex items-center gap-3 pt-2 pb-4">
               <DateBadge date={group.date} size="sm" />
-              <div className="flex min-w-0 flex-wrap items-center gap-x-3">
-                <h2 id={`day-${group.key}`} className="text-h3">
-                  {relative ? t(relative) : date}
-                </h2>
-                <span className="text-meta text-ink-4">{t('groupCount', { count: group.items.length })}</span>
-              </div>
+              <h2 id={`day-${group.key}`} className="min-w-0 text-h3">
+                {relative ? t(relative) : date}
+              </h2>
             </header>
             <ol>
               {group.items.map((story) => (

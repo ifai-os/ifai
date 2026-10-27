@@ -116,7 +116,7 @@ test.describe('with the sample stories', () => {
     const save = page.getByRole('link', { name: en.poster.save })
     await expect(save).toHaveAttribute('download', /^ifai-\d{4}-\d{2}-\d{2}-en\.png$/)
     await expect(save).toHaveAttribute('href', /^\/en\/daily\/poster\/\d{4}-\d{2}-\d{2}\/image\.png\?v=\w+$/)
-    await page.getByRole('link', { name: en.poster.title, exact: true }).click()
+    await page.getByRole('link', { name: en.poster.today, exact: true }).click()
     await expect(page).toHaveURL(/\/en\/daily\/poster\/\d{4}-\d{2}-\d{2}$/)
     const date = new URL(page.url()).pathname.split('/').at(-1)
     await expect(page.getByRole('heading', { level: 1, name: en.poster.title })).toBeVisible()
@@ -186,10 +186,11 @@ test.describe('with the sample stories', () => {
     })
   })
 
-  test('day headings put the count on the same line, with a space before the weekday in Chinese', async ({ page }) => {
+  test('day headings have no story count, with a space before the weekday in Chinese', async ({ page }) => {
     await page.goto('/zh-hans/daily')
     const day = page.locator('header').filter({ has: page.getByRole('heading', { level: 2, name: /^10月20日 星期二$/ }) })
-    await expect(day).toContainText('1 条')
+    await expect(day).toBeVisible()
+    await expect(day).not.toContainText('条')
     // A sample story went up exactly a day before the samples were added.
     await expect(page.getByRole('heading', { level: 2, name: '昨天' })).toBeVisible()
   })

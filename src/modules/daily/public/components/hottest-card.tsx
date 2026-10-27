@@ -19,7 +19,7 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
   return (
     <section
       aria-labelledby="hottest-title"
-      className="relative isolate flex min-w-0 flex-col justify-end gap-3.5 overflow-hidden rounded-hero bg-night p-6 text-white md:min-h-90 md:grow-2 md:basis-100 md:p-8"
+      className="relative isolate flex min-w-0 flex-col justify-end gap-3.5 overflow-hidden rounded-hero bg-night p-6 text-white md:min-h-80 md:grow-2 md:basis-100 md:p-8"
     >
       <Image
         src={story.media?.picture?.url ?? `/daily/hottest/${story.category}.webp`}

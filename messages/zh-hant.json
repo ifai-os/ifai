@@ -1024,7 +1024,6 @@
     "allCategories": "全部",
     "today": "今天",
     "yesterday": "昨天",
-    "groupCount": "{count, plural, other {# 則}}",
     "loadEarlier": "載入更早的新聞",
     "loadNewer": "檢視更新的新聞",
     "emptyTitle": "還沒有發布新聞",
@@ -1085,6 +1084,7 @@
   },
   "poster": {
     "title": "每日 AI 大事",
+    "today": "今日 AI 大事",
     "brand": "IFAI · AI 大事",
     "dateLine": "{date} · 上海時間",
     "count": "{count, plural, other {# 件大事}}",
@@ -1103,7 +1103,6 @@
   },
   "subscribe": {
     "title": "每天早上 8 點收 AI 日報",
-    "note": "依你的時區寄送，隨時取消訂閱",
     "email": "你的電子郵件",
     "submit": "訂閱",
     "done": "訂閱成功，明早 8 點見",
