@@ -186,10 +186,11 @@ test.describe('with the sample stories', () => {
     })
   })
 
-  test('day headings put the count on the same line, with a space before the weekday in Chinese', async ({ page }) => {
+  test('day headings have no story count, with a space before the weekday in Chinese', async ({ page }) => {
     await page.goto('/zh-hans/daily')
     const day = page.locator('header').filter({ has: page.getByRole('heading', { level: 2, name: /^10月20日 星期二$/ }) })
-    await expect(day).toContainText('1 条')
+    await expect(day).toBeVisible()
+    await expect(day).not.toContainText('条')
     // A sample story went up exactly a day before the samples were added.
     await expect(page.getByRole('heading', { level: 2, name: '昨天' })).toBeVisible()
   })
