@@ -36,7 +36,7 @@ export function HotList({ stories }: { stories: HotStory[] }) {
                 {story.title.value}
               </Link>
               <span className="flex flex-wrap items-center gap-1.5 text-small text-ink-4">
-                <SpreadIndex value={story.spread} />
+                <SpreadIndex value={story.spread} compact />
                 {story.trend && <span className={`rounded-tag px-1.5 font-medium ${badges[story.trend]}`}>{t(`trend.${story.trend}`)}</span>}
               </span>
             </span>

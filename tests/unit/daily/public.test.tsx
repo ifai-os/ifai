@@ -224,6 +224,9 @@ describe('the hottest events', () => {
     expect(html).toContain('text-heat-2">53<')
     expect(html).toContain('text-heat-1">22<')
     expect(html).not.toContain('outlet')
+    // The bolt stands for the label; the words stay for screen readers and as the tooltip.
+    expect(html).toContain(`title="${en.card.spread}"`)
+    expect(html).toContain(`<span class="sr-only">${en.card.spread}</span>`)
     expect(html).toContain(`>${en.daily.trend.rising}</span>`)
     expect(html).toContain(`>${en.daily.trend.new}</span>`)
     expect(html).toContain('href="/en/news/story-3"')
