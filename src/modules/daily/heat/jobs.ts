@@ -1,5 +1,6 @@
 import { inngest } from '@/lib/inngest/client'
 
+import { runChecks } from './external/checks'
 import { activeEventIds, refreshHeat } from './heat'
 import { syncEventSources } from './sources'
 
@@ -25,4 +26,26 @@ export const refreshDailyHeat = inngest.createFunction(
   },
 )
 
-export const dailyHeatFunctions = [refreshDailyHeat]
+/**
+ * Every 2 hours (or on `daily/heat.check`): check how far the hottest stories of the last 48
+ * hours have spread outside our sources, with a news search (Brave) and a search of X (xAI),
+ * each story at most every 12 hours, then work out those events' heat again. Each channel
+ * stays off until its key is set (./external/checks.ts).
+ */
+export const checkDailyReach = inngest.createFunction(
+  {
+    id: 'daily-heat-check',
+    triggers: [{ cron: '35 */2 * * *' }, { event: 'daily/heat.check' }],
+    concurrency: { limit: 1 },
+    retries: 1,
+  },
+  async ({ step }) => {
+    const search = await step.run('search', () => runChecks('search'))
+    const x = await step.run('x', () => runChecks('x'))
+    const eventIds = [...new Set([...search.events, ...x.events])]
+    const heat = eventIds.length ? await step.run('heat', () => refreshHeat(eventIds)) : null
+    return { search, x, heat }
+  },
+)
+
+export const dailyHeatFunctions = [refreshDailyHeat, checkDailyReach]

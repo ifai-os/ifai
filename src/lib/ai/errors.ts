@@ -49,3 +49,10 @@ export class MissingApiKeyError extends ModelCallError {
     super('OPENROUTER_API_KEY is not set.', false)
   }
 }
+
+/** XAI_API_KEY is missing (the X search purposes call xAI directly). */
+export class MissingXaiKeyError extends ModelCallError {
+  constructor() {
+    super('XAI_API_KEY is not set.', false)
+  }
+}

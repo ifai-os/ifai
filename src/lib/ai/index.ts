@@ -1,3 +1,4 @@
+import { createXai, xaiTools } from '@ai-sdk/xai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
 import { siteUrl } from '@/lib/site-url'
@@ -8,11 +9,12 @@ import type { ReceiptStore } from './receipts'
 import { postgresReceiptStore } from './store'
 
 export * from './errors'
-export { DEFAULT_DAILY_BUDGET_USD, type AiResult, type ContestImage, type ContestImageOutput, type ContestOutput, type UsageToday } from './client'
-export { contestPurposes, EMBEDDING_DIMENSIONS, modelFor, purposes, type ContestPurpose, type Purpose } from './purposes'
+export { DEFAULT_DAILY_BUDGET_USD, type AiResult, type XSearchOutput, type ContestImage, type ContestImageOutput, type ContestOutput, type UsageToday } from './client'
+export { contestPurposes, xSearchPurposes, EMBEDDING_DIMENSIONS, modelFor, purposes, type ContestPurpose, type Purpose, type XSearchPurpose } from './purposes'
 export { untrusted } from './untrusted'
 
 let provider: ReturnType<typeof createOpenRouter> | undefined
+let xai: ReturnType<typeof createXai> | undefined
 let instance: Ai | undefined
 
 function openRouter() {
@@ -25,9 +27,19 @@ function openRouter() {
   return provider
 }
 
+/** Whether the X search purposes can run: they call xAI directly and need XAI_API_KEY. */
+export function xSearchAvailable(env: Record<string, string | undefined> = process.env): boolean {
+  return Boolean(env.XAI_API_KEY?.trim())
+}
+
+function xaiProvider() {
+  xai ??= createXai({ apiKey: process.env.XAI_API_KEY?.trim() })
+  return xai
+}
+
 /**
  * Model calls for background jobs: `ai.object({ purpose, instructions, prompt, schema })`,
- * `ai.text(...)`, `ai.embed(...)`, `ai.contest(...)` and `ai.contestImage(...)` (the model arena),
+ * `ai.text(...)`, `ai.embed(...)`, `ai.xSearch(...)` (X through xAI), `ai.contest(...)` and `ai.contestImage(...)` (the model arena),
  * `ai.usageToday()`.
  * Pages never call models.
  */
@@ -35,6 +47,7 @@ export const ai: Ai = {
   text: (call) => client().text(call),
   object: (call) => client().object(call),
   embed: (call) => client().embed(call),
+  xSearch: (call) => client().xSearch(call),
   contest: (call) => client().contest(call),
   contestImage: (call) => client().contestImage(call),
   usageToday: () => client().usageToday(),
@@ -50,6 +63,9 @@ export function createOpenRouterAi(store: ReceiptStore = postgresReceiptStore): 
     // `usage.include` makes OpenRouter report the cost of each call, which feeds the budget.
     languageModel: (model) => openRouter().chat(model, { usage: { include: true } }),
     embeddingModel: (model) => openRouter().textEmbeddingModel(model),
+    xSearchModel: xSearchAvailable()
+      ? (model, dates) => ({ model: xaiProvider().responses(model), tools: { x_search: xaiTools.xSearch(dates) } })
+      : undefined,
   })
 }
 
