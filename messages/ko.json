@@ -1035,7 +1035,6 @@
     "publishedAt": "게시",
     "correctedAt": "최근 업데이트",
     "corrected": "정정",
-    "tryIt": "직접 해 보기",
     "hottest": "헤드라인",
     "hotTitle": "48시간 인기 소식",
     "hotBy": "사건별",
@@ -1102,7 +1101,7 @@
     "later": "다음 호"
   },
   "subscribe": {
-    "title": "AI 콘텐츠 픽",
+    "title": "매일 AI 콘텐츠 픽",
     "email": "이메일 주소",
     "submit": "구독하기",
     "done": "구독 완료! 내일 아침 8시에 만나요",

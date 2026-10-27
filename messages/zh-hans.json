@@ -1035,7 +1035,6 @@
     "publishedAt": "首次发布",
     "correctedAt": "最后更新",
     "corrected": "更正于",
-    "tryIt": "试一试",
     "hottest": "头条",
     "hotTitle": "48 小时热门",
     "hotBy": "按事件",
@@ -1102,7 +1101,7 @@
     "later": "下一期"
   },
   "subscribe": {
-    "title": "AI 内容精选",
+    "title": "每日 AI 内容精选",
     "email": "你的邮箱地址",
     "submit": "订阅",
     "done": "订阅成功，明早 8 点见",

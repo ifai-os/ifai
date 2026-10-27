@@ -19,17 +19,14 @@ type StoryCardProps = {
   serverToday: string
   /** The story's category by name; left out on its own category's page. */
   category?: string
-  /** Shows the story's「试一试」, as the category page does. */
-  tryIt?: boolean
 }
 
 /**
  * One story on a topic or category page (「IFAI 公司与产品话题页」「IFAI 日报 · 分类页」boards): the
  * reader's local day and time, then a white card with the other reports, the title, at most
- * three lines of summary and, on a category page, the「试一试」.
+ * three lines of summary.
  */
-export function StoryCard({ story, serverToday, category, tryIt = false }: StoryCardProps) {
-  const t = useTranslations('daily')
+export function StoryCard({ story, serverToday, category }: StoryCardProps) {
   const card = useTranslations('card')
 
   return (
@@ -48,11 +45,6 @@ export function StoryCard({ story, serverToday, category, tryIt = false }: Story
         {story.summary && (
           <p lang={story.summary.lang} className="line-clamp-3 text-body text-ink-3">
             {story.summary.value}
-          </p>
-        )}
-        {tryIt && story.tryIt && (
-          <p lang={story.tryIt.lang} className="rounded-tile bg-surface px-3.5 py-2.5 text-ui text-ink-2">
-            <span className="font-medium text-accent-ink">{t('tryIt')}</span> {story.tryIt.value}
           </p>
         )}
       </article>

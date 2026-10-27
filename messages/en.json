@@ -1035,7 +1035,6 @@
     "publishedAt": "Published",
     "correctedAt": "Updated",
     "corrected": "Corrected",
-    "tryIt": "Try it",
     "hottest": "Top story",
     "hotTitle": "Hot in the last 48 hours",
     "hotBy": "By story",
@@ -1102,7 +1101,7 @@
     "later": "Next poster"
   },
   "subscribe": {
-    "title": "Best of AI",
+    "title": "Best of AI, daily",
     "email": "Your email",
     "submit": "Subscribe",
     "done": "You're in. See you at 8 a.m.",

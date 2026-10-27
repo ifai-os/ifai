@@ -1035,7 +1035,6 @@
     "publishedAt": "首次發布",
     "correctedAt": "最後更新",
     "corrected": "更正於",
-    "tryIt": "試一試",
     "hottest": "頭條",
     "hotTitle": "48 小時熱門",
     "hotBy": "按事件",
@@ -1102,7 +1101,7 @@
     "later": "下一期"
   },
   "subscribe": {
-    "title": "每天早上 8 點收 AI 日報",
+    "title": "每日 AI 內容精選",
     "email": "你的電子郵件",
     "submit": "訂閱",
     "done": "訂閱成功，明早 8 點見",

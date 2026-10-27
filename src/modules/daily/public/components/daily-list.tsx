@@ -62,7 +62,7 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
 
   return (
     <ListNavigationProvider>
-      <main id="main" className="mx-auto flex w-full max-w-240 flex-col gap-5 px-4 pt-5 pb-16 md:gap-10 md:pt-8 md:pb-24">
+      <main id="main" className="mx-auto flex w-full max-w-248 flex-col gap-5 px-4 pt-5 pb-16 md:gap-10 md:pt-8 md:pb-24">
         {tag ? (
           // No board has the tag page; its「+ 关注」is the topic page's (docs/specs/daily.md「关注」).
           <FollowProvider targets={[{ type: 'tag', key: tag }]} signIn={authProviders()}>
@@ -98,17 +98,18 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
           </div>
         )}
 
-        {/* The board's second part, under a line: the categories (140), the stories and the column beside
-            them (200), 48 apart; what doesn't fit wraps under, as on the board. Phones stack them, the
+        {/* The board's second part, under a line: the categories, the stories and the column beside them.
+            Widths as sspai.com's home (站长, 2026-10-27): 960 in all, 164 · 520 · 164, 56 apart; what
+            doesn't fit wraps under. Phones stack them, the
             categories as chips. Where all three share a row (lg), the two side columns stay put while
             the stories scroll (站长, 2026-10-27, after sspai.com). */}
         <div
-          className={`flex flex-col gap-5 md:flex-row md:flex-wrap md:items-start md:gap-x-12 md:gap-y-10 ${
+          className={`flex flex-col gap-5 md:flex-row md:flex-wrap md:items-start md:gap-x-14 md:gap-y-10 ${
             firstRow ? 'md:border-t md:border-line md:pt-6' : subscribe ? 'lg:border-t lg:border-line lg:pt-6' : ''
           }`}
         >
           {!tag && (
-            <StickyColumn className="md:basis-35 lg:sticky">
+            <StickyColumn className="md:shrink-0 md:basis-41 lg:sticky">
               <CategoryNav current={null} />
             </StickyColumn>
           )}
@@ -151,7 +152,7 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
           </div>
 
           {(hot.length > 0 || apps.length > 0) && (
-            <StickyColumn className="max-md:mt-7 md:grow md:basis-50 lg:sticky">
+            <StickyColumn className="max-md:mt-7 min-w-0 md:grow md:basis-41 lg:sticky lg:grow-0">
               <aside className="flex flex-col gap-8">
                 <MentionedApps apps={apps} serverToday={serverToday} />
                 {hot.length > 0 && <HotList stories={hot} />}

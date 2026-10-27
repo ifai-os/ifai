@@ -21,7 +21,6 @@ export function StoryRow({
   story: StoryItem;
   category: string;
 }) {
-  const t = useTranslations("daily");
   const card = useTranslations("card");
 
   return (
@@ -55,20 +54,7 @@ export function StoryRow({
             </p>
           )}
         </div>
-        {/* Beside the try-it too on wide screens, so it follows the summary rather than the picture. */}
-        <StoryThumb
-          story={story}
-          className={story.tryIt ? "md:row-span-2" : ""}
-        />
-        {story.tryIt && (
-          <p
-            lang={story.tryIt.lang}
-            className="col-span-full rounded-thumb bg-surface px-3.5 py-2.5 text-meta leading-5.25 text-ink-2 md:col-span-1"
-          >
-            <span className="me-2 font-medium text-accent-ink">{t("tryIt")}</span>{" "}
-            {story.tryIt.value}
-          </p>
-        )}
+        <StoryThumb story={story} />
       </article>
     </li>
   );

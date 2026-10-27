@@ -84,7 +84,8 @@ test.describe('with the sample stories', () => {
     await expect(main.getByText('Sample pending story')).toHaveCount(0)
     await expect(main.getByText('Sample withdrawn story')).toHaveCount(0)
     await expect(rows.filter({ hasText: titles.workspaces }).getByText('2 more outlets reported this')).toBeVisible()
-    await expect(main.getByText('Open a workspace and invite a teammate.')).toBeVisible()
+    // No「试一试」(站长, 2026-10-27).
+    await expect(main.getByText('Open a workspace and invite a teammate.')).toHaveCount(0)
   })
 
   test("today's hottest story leads, and the hottest events of 48 hours are listed once each", async ({ page }) => {
@@ -235,9 +236,9 @@ test.describe('with the sample stories', () => {
     await expect(filter.getByRole('link')).toHaveCount(8)
     await expect(filter.getByRole('link', { name: en.categories.tools, exact: true })).toHaveAttribute('aria-current', 'page')
     const cards = page.getByRole('main').getByRole('article')
-    // Newest first, under their times; the「试一试」in its grey box.
+    // Newest first, under their times; no「试一试」(站长, 2026-10-27).
     await expect(cards.getByRole('link')).toHaveText([titles.workspaces, titles.preview])
-    await expect(cards.first()).toContainText(`${en.daily.tryIt} Open a workspace and invite a teammate.`)
+    await expect(cards.first()).not.toContainText('Open a workspace and invite a teammate.')
     await expect(cards.nth(1)).toContainText(en.card.moreSources.match(/=0 \{([^}]*)\}/)![1])
     await expect(page.getByText(en.daily.noEarlier)).toBeVisible()
 
