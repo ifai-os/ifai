@@ -47,7 +47,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
       <nav aria-label={t('breadcrumb')} className="text-meta text-ink-4">
         <ol className="flex flex-wrap items-center gap-2">
           <li className="flex items-center gap-2">
-            <Link href="/daily" className="hover:text-ink">
+            <Link href="/news" className="hover:text-ink">
               {t('title')}
             </Link>
             <span aria-hidden="true">/</span>

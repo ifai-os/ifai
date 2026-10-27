@@ -7,7 +7,7 @@ import { isStoryTag } from '@/modules/daily/tags'
 
 /**
  * GET /api/daily/list?locale=zh-Hans&page=2[&tag=agents] → { stories, page, pages }: what
- * `/daily?page=2` lists, for「加载更多」to add under the stories already shown. The same short CDN
+ * `/news?page=2` lists, for「加载更多」to add under the stories already shown. The same short CDN
  * cache as the RSS feed; the list pages themselves stay the addresses search engines follow.
  */
 export async function GET(request: NextRequest) {

@@ -42,7 +42,7 @@ describe('industry tags', () => {
   })
 
   it('has a list page per tag', () => {
-    expect(listHref({ tag: 'chips' })).toBe('/daily/tag/chips')
-    expect(listHref({ tag: 'chips', page: 2 })).toBe('/daily/tag/chips?page=2')
+    expect(listHref({ tag: 'chips' })).toBe('/news/tag/chips')
+    expect(listHref({ tag: 'chips', page: 2 })).toBe('/news/tag/chips?page=2')
   })
 })

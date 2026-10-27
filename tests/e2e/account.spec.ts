@@ -120,7 +120,7 @@ test.describe('a signed-in member', () => {
                 type: 'story',
                 id: story,
                 name: 'Sample: Orbit Notes reports a new summarization benchmark',
-                url: expect.stringMatching(/\/en\/daily\/sample-orbit-notes-benchmark$/),
+                url: expect.stringMatching(/\/en\/news\/sample-orbit-notes-benchmark$/),
                 savedAt: expect.any(String),
               },
             ]),
@@ -131,14 +131,14 @@ test.describe('a signed-in member', () => {
           key: 'kitecode',
           // Without the sample stories, no published story is about Kitecode.
           name: kitecode ? 'Kitecode' : null,
-          url: kitecode ? expect.stringMatching(/\/en\/daily\/topic\/kitecode$/) : null,
+          url: kitecode ? expect.stringMatching(/\/en\/news\/topic\/kitecode$/) : null,
           followedAt: expect.any(String),
         },
         {
           type: 'tag',
           key: 'vibe-coding',
           name: 'Vibe coding',
-          url: expect.stringMatching(/\/en\/daily\/tag\/vibe-coding$/),
+          url: expect.stringMatching(/\/en\/news\/tag\/vibe-coding$/),
           followedAt: expect.any(String),
         },
       ])
@@ -361,7 +361,7 @@ test.describe('a signed-in member', () => {
       await page.reload()
       await expect(page.getByText(en.account.dailySubscribed)).toBeVisible()
       await page.getByRole('link', { name: en.account.manageDaily }).click()
-      await expect(page).toHaveURL(/\/en\/daily\/subscription\?token=/)
+      await expect(page).toHaveURL(/\/en\/news\/subscription\?token=/)
       await expect(page.getByRole('heading', { level: 1, name: en.subscription.title })).toBeVisible()
     } finally {
       if (subscriber !== undefined) await member.query('delete from subscribers where id = $1', [subscriber])

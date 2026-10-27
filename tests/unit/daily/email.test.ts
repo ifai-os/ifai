@@ -165,8 +165,8 @@ describe('sending at 8 in the morning, local time', () => {
 describe('subscribe requests', () => {
   it('cleans the body the box sends', () => {
     expect(
-      readSubscribeRequest({ email: ' Name@Gmail.com ', locale: 'ja', timeZone: 'Asia/Tokyo', page: '/ja/daily', website: '' }),
-    ).toEqual({ email: 'name@gmail.com', locale: 'ja', timeZone: 'Asia/Tokyo', page: '/ja/daily', robot: false })
+      readSubscribeRequest({ email: ' Name@Gmail.com ', locale: 'ja', timeZone: 'Asia/Tokyo', page: '/ja/news', website: '' }),
+    ).toEqual({ email: 'name@gmail.com', locale: 'ja', timeZone: 'Asia/Tokyo', page: '/ja/news', robot: false })
   })
 
   it('falls back to English and UTC, drops odd pages and spots the hidden field', () => {
@@ -241,7 +241,7 @@ describe('managing a subscription', () => {
   })
 
   it('lets the reader lift an unsubscribe, a bounce or a complaint, but not the owner’s stop', () => {
-    const back = { status: 'subscribed', stopReason: null, unsubscribedAt: null, subscribedAt: now.toISOString(), sourcePage: '/en/daily/subscription' }
+    const back = { status: 'subscribed', stopReason: null, unsubscribedAt: null, subscribedAt: now.toISOString(), sourcePage: '/en/news/subscription' }
     expect(planManage({ ...subscribed, status: 'unsubscribed' }, { type: 'resubscribe' }, now)).toEqual(back)
     expect(planManage({ ...subscribed, status: 'stopped', stopReason: 'bounce' }, { type: 'resubscribe' }, now)).toEqual(back)
     expect(planManage({ ...subscribed, status: 'stopped', stopReason: 'complaint' }, { type: 'resubscribe' }, now)).toEqual(back)
@@ -391,7 +391,7 @@ describe('the welcome email', () => {
   it('carries signed manage and unsubscribe links, and the one-click headers', async () => {
     const email = await buildWelcomeEmail(subscriber({ locale: 'ko' }), now)
     const token = subscriberToken(7, 'test-secret')
-    const manage = `https://ifai.example/ko/daily/subscription?token=${token}`
+    const manage = `https://ifai.example/ko/news/subscription?token=${token}`
     expect(email.text).toContain(manage)
     expect(email.text).toContain(`${manage}&unsubscribe=1`)
     expect(email.html).toContain(`${manage}&amp;unsubscribe=1`)

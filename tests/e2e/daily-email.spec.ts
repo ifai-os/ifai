@@ -35,7 +35,7 @@ test.describe('daily email subscription', () => {
     await page.setViewportSize({ width: 1280, height: 900 })
     for (const lang of languages) {
       const messages = load(lang)
-      await page.goto(`/${lang}/daily`)
+      await page.goto(`/${lang}/news`)
       await expect(page.getByRole('heading', { level: 2, name: messages.subscribe.title }), lang).toBeVisible()
       await expect(page.getByRole('button', { name: messages.subscribe.submit, exact: true })).toBeVisible()
     }
@@ -43,7 +43,7 @@ test.describe('daily email subscription', () => {
     await expect(page.getByRole('heading', { level: 2, name: en.subscribe.title })).toBeVisible()
 
     await page.setViewportSize({ width: 375, height: 800 })
-    for (const path of ['/zh-hans/daily', '/zh-hans']) {
+    for (const path of ['/zh-hans/news', '/zh-hans']) {
       await page.goto(path)
       await expect(page.getByRole('heading', { level: 2, name: load('zh-hans').subscribe.title }), path).toBeVisible()
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
@@ -53,7 +53,7 @@ test.describe('daily email subscription', () => {
 
   test('a malformed address is refused and a mistyped provider is fixed with one click', async ({ page }) => {
     await asVisitor(page)
-    await page.goto('/en/daily')
+    await page.goto('/en/news')
     const box = page.getByRole('region', { name: en.subscribe.title })
     const input = box.getByRole('textbox', { name: en.subscribe.email })
     const submit = box.getByRole('button', { name: en.subscribe.submit, exact: true })
@@ -151,7 +151,7 @@ test.describe('daily email subscription, with the database', () => {
     const email = address()
     created.push(email)
     await asVisitor(page)
-    await page.goto('/en/daily')
+    await page.goto('/en/news')
     const box = page.getByRole('region', { name: en.subscribe.title })
     await box.getByRole('textbox', { name: en.subscribe.email }).fill(email)
     await box.getByRole('button', { name: en.subscribe.submit, exact: true }).click()
@@ -159,7 +159,7 @@ test.describe('daily email subscription, with the database', () => {
 
     await expect.poll(async () => (await row(email))?.welcome_sent_at ?? null).not.toBeNull()
     const first = await row(email)
-    expect(first).toMatchObject({ locale: 'en', status: 'subscribed', source_page: '/en/daily' })
+    expect(first).toMatchObject({ locale: 'en', status: 'subscribed', source_page: '/en/news' })
 
     // The same address again: the same answer, no second welcome, no change to its settings.
     const again = await request.post('/api/subscriptions', { headers: visitor(), data: { email, locale: 'ja', timeZone: 'Asia/Tokyo' } })
@@ -182,7 +182,7 @@ test.describe('daily email subscription, with the database', () => {
     expect(await response.json()).toEqual({ ok: true })
     expect((await row(email))?.status).toBe('stopped')
 
-    await page.goto(`/en/daily/subscription?token=${token}`)
+    await page.goto(`/en/news/subscription?token=${token}`)
     await expect(page.getByText(en.subscription.stopped.complaint)).toBeVisible()
     await page.getByRole('button', { name: en.subscription.resubscribe }).click()
     await expect(page.getByText(en.subscription.resubscribed)).toBeVisible()
@@ -191,7 +191,7 @@ test.describe('daily email subscription, with the database', () => {
 
   test('the manage page changes language and time zone, unsubscribes and subscribes again', async ({ page }) => {
     const { email, token } = await insert()
-    await page.goto(`/en/daily/subscription?token=${token}`)
+    await page.goto(`/en/news/subscription?token=${token}`)
     await expect(page.getByRole('heading', { level: 1, name: en.subscription.title })).toBeVisible()
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
     await expect(page.locator('meta[name="referrer"]')).toHaveAttribute('content', 'no-referrer')
@@ -220,7 +220,7 @@ test.describe('daily email subscription, with the database', () => {
   test('「退订」in an email unsubscribes as the page opens', async ({ page }) => {
     const { email, token } = await insert({ locale: 'ja' })
     const ja = load('ja')
-    await page.goto(`/ja/daily/subscription?token=${token}&unsubscribe=1`)
+    await page.goto(`/ja/news/subscription?token=${token}&unsubscribe=1`)
     await expect(page.getByText(ja.subscription.unsubscribed)).toBeVisible()
     expect((await row(email))?.status).toBe('unsubscribed')
     await expect(page.getByRole('button', { name: ja.subscription.resubscribe })).toBeVisible()
@@ -230,7 +230,7 @@ test.describe('daily email subscription, with the database', () => {
     const { email, token } = await insert({ locale: 'ko' })
     const opened = await request.get(`/api/subscriptions/unsubscribe?token=${token}`, { maxRedirects: 0 })
     expect(opened.status()).toBe(303)
-    expect(opened.headers().location).toContain(`/ko/daily/subscription?token=${encodeURIComponent(token)}&unsubscribe=1`)
+    expect(opened.headers().location).toContain(`/ko/news/subscription?token=${encodeURIComponent(token)}&unsubscribe=1`)
     expect((await row(email))?.status).toBe('subscribed')
 
     const response = await request.post(`/api/subscriptions/unsubscribe?token=${token}`, { form: { 'List-Unsubscribe': 'One-Click' } })
@@ -244,7 +244,7 @@ test.describe('daily email subscription, with the database', () => {
   })
 
   test('a wrong link says so and offers the box', async ({ page }) => {
-    await page.goto('/en/daily/subscription?token=1.not-a-signature')
+    await page.goto('/en/news/subscription?token=1.not-a-signature')
     await expect(page.getByRole('heading', { level: 1, name: en.subscription.invalidTitle })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: en.subscribe.title })).toBeVisible()
   })

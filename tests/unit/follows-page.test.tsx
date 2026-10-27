@@ -50,7 +50,7 @@ describe('「我的关注」', () => {
     const empty: FollowingPage = { tags: [], topics: [], stories: { stories: [], total: 0, page: 1, pages: 0 } }
     const html = render(<FollowingPageView following={empty} signIn={signIn} serverToday="2026-10-24" />)
     expect(html).toContain(en.follows.emptyTitle)
-    expect(html).toContain('href="/en/daily"')
+    expect(html).toContain('href="/en/news"')
   })
 
   it('lists what the member follows, each with an ×, then its news a page at a time', () => {
@@ -64,13 +64,13 @@ describe('「我的关注」', () => {
     }
     const html = render(<FollowingPageView following={following} signIn={signIn} serverToday="2026-10-24" />)
     expect(html).toContain(`${en.follows.followed} <span class="font-normal text-ink-4">3</span>`)
-    expect(html).toContain(`href="/en/daily/tag/vibe-coding"`)
+    expect(html).toContain(`href="/en/news/tag/vibe-coding"`)
     expect(html).toContain(`>${en.tags['vibe-coding']}</a>`)
-    expect(html).toContain('href="/en/daily/topic/kimi"')
+    expect(html).toContain('href="/en/news/topic/kimi"')
     expect(html).toContain('aria-label="Unfollow Kimi"')
     expect(html).toContain(`aria-label="Unfollow ${en.tags['vibe-coding']}"`)
-    expect(html).toContain('href="/en/daily/story-1"')
-    expect(html).toContain('href="/en/daily/story-2"')
+    expect(html).toContain('href="/en/news/story-1"')
+    expect(html).toContain('href="/en/news/story-2"')
     expect(html).toContain(`href="/en${followingHref(2)}"`)
     expect(html).not.toContain(en.daily.loadNewer)
   })

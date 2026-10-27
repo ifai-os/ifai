@@ -67,7 +67,7 @@ export function TodayHeadlines({ stories, serverToday }: TodayHeadlinesProps) {
           ))}
         </ol>
       )}
-      <Link href="/daily" className="flex min-h-8 items-center self-start text-ui font-medium text-link">
+      <Link href="/news" className="flex min-h-8 items-center self-start text-ui font-medium text-link">
         {t('readDaily')} ›
       </Link>
     </>

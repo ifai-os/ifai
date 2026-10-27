@@ -200,7 +200,7 @@ function Mentions({ app }: { app: AppDetail }) {
         <ul className="flex flex-col border-t border-surface-2">
           {app.mentions.map((mention) => (
             <li key={mention.slug} className="border-b border-surface-2">
-              <Link href={`/daily/${mention.slug}`} className="group flex flex-col gap-1 py-3">
+              <Link href={`/news/${mention.slug}`} className="group flex flex-col gap-1 py-3">
                 <span lang={mention.title.lang} className="text-body font-medium group-hover:text-accent-ink">
                   {mention.title.value}
                 </span>

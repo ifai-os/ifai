@@ -31,7 +31,7 @@ test.describe('dark mode', () => {
       const member = await createMember(baseURL ?? 'http://localhost:3000')
       try {
         await context.addCookies([member.cookie])
-        await page.goto('/en/daily')
+        await page.goto('/en/news')
         await expect.poll(() => background(page)).toBe(dark)
 
         await page.getByRole('button', { name: en.header.account }).click()

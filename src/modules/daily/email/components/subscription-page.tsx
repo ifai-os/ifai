@@ -15,7 +15,7 @@ type SubscriptionPageProps = {
   unsubscribe: boolean
 }
 
-/** /[locale]/daily/subscription?token=…: one reader's subscription, or「链接已失效」and a fresh box. */
+/** /[locale]/news/subscription?token=…: one reader's subscription, or「链接已失效」and a fresh box. */
 export async function SubscriptionPage({ locale, token, unsubscribe }: SubscriptionPageProps) {
   const t = await getTranslations('subscription')
   const subscriber = token ? await subscriberForToken(token) : null

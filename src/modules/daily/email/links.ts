@@ -13,9 +13,9 @@ export function subscriberIdFromToken(token: unknown): number | null {
   return subscriberIdOf(token, secret())
 }
 
-/** The manage page, under the language's prefix: /zh-hans/daily/subscription. */
+/** The manage page, under the language's prefix: /zh-hans/news/subscription. */
 export function managePath(locale: Locale): string {
-  return localizePath(locale, '/daily/subscription')
+  return localizePath(locale, '/news/subscription')
 }
 
 export type SubscriptionLinks = {
