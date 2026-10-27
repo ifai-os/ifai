@@ -548,6 +548,10 @@ export interface Story {
    */
   heat?: number | null;
   /**
+   * The highest heat the event has reached; never drops. The pages show it.
+   */
+  heatPeak?: number | null;
+  /**
    * Compared with 6 hours earlier.
    */
   heatTrend?: ('rising' | 'new') | null;
@@ -1680,6 +1684,7 @@ export interface StoriesSelect<T extends boolean = true> {
   representativeItemId?: T;
   score?: T;
   heat?: T;
+  heatPeak?: T;
   heatTrend?: T;
   sourcesSeen?: T;
   flags?: T;

@@ -56,7 +56,8 @@
     "rank": "{rank}위",
     "install": "설치",
     "installs": "설치 {count}회",
-    "moreSources": "{count, plural, =0 {단독 출처} other {외 #곳 보도}}"
+    "moreSources": "{count, plural, =0 {단독 출처} other {외 #곳 보도}}",
+    "spread": "확산 지수"
   },
   "auth": {
     "title": "IFAI 로그인",
@@ -1037,8 +1038,6 @@
     "corrected": "정정",
     "hottest": "헤드라인",
     "hotTitle": "48시간 인기 소식",
-    "hotBy": "사건별",
-    "outlets": "{count, plural, other {#곳 보도}}",
     "trend": {
       "rising": "상승",
       "new": "신규"

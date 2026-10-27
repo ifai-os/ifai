@@ -56,7 +56,8 @@
     "rank": "{rank}位",
     "install": "インストール",
     "installs": "{count}回インストール",
-    "moreSources": "{count, plural, =0 {単独の情報源} other {ほか#社が報道}}"
+    "moreSources": "{count, plural, =0 {単独の情報源} other {ほか#社が報道}}",
+    "spread": "拡散指数"
   },
   "auth": {
     "title": "IFAIにログイン",
@@ -1037,8 +1038,6 @@
     "corrected": "訂正",
     "hottest": "トップニュース",
     "hotTitle": "48時間の注目ニュース",
-    "hotBy": "出来事ごと",
-    "outlets": "{count, plural, other {#社が報道}}",
     "trend": {
       "rising": "上昇",
       "new": "新着"

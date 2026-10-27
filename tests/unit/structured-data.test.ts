@@ -44,6 +44,7 @@ describe('storyJsonLd', () => {
     summary: { value: '一句话摘要。', lang: 'zh-Hans' },
     tryIt: null,
     moreReports: 1,
+    spread: 0,
     originalName: 'OpenAI',
     sources: [
       { name: 'The Verge', role: 'report', url: 'https://www.theverge.com/x', publishedAt: null },

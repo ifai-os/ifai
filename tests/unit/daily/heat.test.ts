@@ -6,8 +6,11 @@ import {
   eventHeat,
   heatScore,
   hotWeight,
+  peakHeat,
+  peakOf,
   rawHeat,
   signalsOf,
+  spreadTier,
   trendOf,
   type HeatMember,
   type HeatSignal,
@@ -274,5 +277,31 @@ describe("joining later reports to a story's sources", () => {
     expect(planSources({ members: [report(1)], threads: [], stories: [story({ id: 10, representativeItemId: 1, seen: null })], eventReportId: 1 })).toEqual([
       { storyId: 10, sources: null, seen: [] },
     ])
+  })
+})
+
+describe('the reach index', () => {
+  it('keeps the highest heat, so it never drops', () => {
+    expect(peakOf(null, 22.4)).toBe(22.4)
+    expect(peakOf(71.3, 40)).toBe(71.3)
+    // Past the 48 hours the heat is 0; the index stays.
+    expect(peakOf(71.3, 0)).toBe(71.3)
+  })
+
+  it('finds the peak at the moment a source started to count, long after it has decayed', () => {
+    const at = (hours: number) => new Date(Date.UTC(2026, 9, 20) + hours * 3_600_000)
+    const signal = (sourceId: number, hours: number): HeatSignal => ({ sourceId, at: at(hours), knownAt: at(hours), weight: 1 })
+    const signals = [signal(1, 0), signal(2, 0), signal(3, 12)]
+    // Highest when the third source came in: two sources half a day old plus a fresh one.
+    expect(peakHeat(signals)).toBe(heatScore(2 * 0.5 ** 0.5 + 1))
+    expect(peakHeat(signals)).toBeGreaterThan(eventHeat(signals, at(20)).heat)
+    expect(eventHeat(signals, at(72)).heat).toBe(0)
+    expect(peakHeat([])).toBe(0)
+  })
+
+  it('colours it in four tiers: one source green, then orange, red, magenta', () => {
+    expect([1, 22, 39, 40, 59, 60, 79, 80, 100].map(spreadTier)).toEqual([1, 1, 1, 2, 2, 3, 3, 4, 4])
+    // One fresh source ≈ 22, three ≈ 53, five ≈ 71, ten ≈ 92.
+    expect([1, 3, 5, 10].map((sources) => spreadTier(heatScore(sources)))).toEqual([1, 2, 3, 4])
   })
 })

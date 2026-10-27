@@ -85,10 +85,16 @@ const select = {
   tags: true,
   entities: true,
   representativeItemId: true,
+  heat: true,
+  heatPeak: true,
 } as const
 
 /** The story's picture comes along (depth 1), with only what the pages need; Payload builds `url` from `filename`. */
 const populate = { media: { url: true, filename: true, width: true, height: true } } as const
+
+// Part of every cache key: change it when what the queries return changes (fields added to
+// `select`), so a deployment never reads entries an earlier one stored without them.
+const shape = 'reach-index'
 
 // Publishing refreshes the cache right away; the hour only bounds changes made outside the review screen.
 const cacheOptions = { tags: [DAILY_CACHE_TAG], revalidate: 3600 }
@@ -115,7 +121,7 @@ const findStories = cached(
     })
     return { docs: result.docs as unknown as RawStory[], total: result.totalDocs, pages: result.totalPages }
   },
-  ['daily-list'],
+  [shape, 'daily-list'],
   cacheOptions,
 )
 
@@ -136,7 +142,7 @@ const findCategoryPage = cached(
     })
     return { docs: result.docs as unknown as RawStory[], total: result.totalDocs, pages: result.totalPages }
   },
-  ['daily-category-page'],
+  [shape, 'daily-category-page'],
   cacheOptions,
 )
 
@@ -166,7 +172,7 @@ const findCategorySummary = cached(
     const doc = newest.docs[0]
     return { week: week.totalDocs, latest: doc ? (doc.publishedAt ?? doc.createdAt) : null }
   },
-  ['daily-category-summary'],
+  [shape, 'daily-category-summary'],
   cacheOptions,
 )
 
@@ -185,7 +191,7 @@ const findLatest = cached(
     })
     return docs as unknown as RawStory[]
   },
-  ['daily-latest'],
+  [shape, 'daily-latest'],
   cacheOptions,
 )
 
@@ -203,7 +209,7 @@ const findStory = cached(
     })
     return (docs[0] as unknown as RawStory | undefined) ?? null
   },
-  ['daily-story'],
+  [shape, 'daily-story'],
   cacheOptions,
 )
 
@@ -222,7 +228,7 @@ const findDevelopments = cached(
     })
     return docs as unknown as RawStory[]
   },
-  ['daily-developments'],
+  [shape, 'daily-developments'],
   cacheOptions,
 )
 
@@ -242,7 +248,7 @@ const findTopic = cached(
     })
     return docs as unknown as RawStory[]
   },
-  ['daily-topic'],
+  [shape, 'daily-topic'],
   cacheOptions,
 )
 
@@ -263,7 +269,7 @@ const findTopicPage = cached(
     })
     return { docs: result.docs as unknown as RawStory[], total: result.totalDocs, pages: result.totalPages }
   },
-  ['daily-topic-page'],
+  [shape, 'daily-topic-page'],
   cacheOptions,
 )
 
@@ -287,7 +293,7 @@ const findTopicApps = cached(
       logo: logoOf(app.logo),
     }))
   },
-  ['daily-topic-apps'],
+  [shape, 'daily-topic-apps'],
   { tags: [DAILY_CACHE_TAG, appsCacheTag], revalidate: 3600 },
 )
 
@@ -328,7 +334,7 @@ const findSimilar = cached(
     const byId = new Map((docs as unknown as RawStory[]).map((doc) => [doc.id, doc]))
     return ids.flatMap((id) => byId.get(id) ?? [])
   },
-  ['daily-similar'],
+  [shape, 'daily-similar'],
   cacheOptions,
 )
 
@@ -356,27 +362,27 @@ const findStoryApps = cached(
       return app ? [{ keys: [entityKey(row.matched), entityKey(app.name)], slug: app.slug, name: app.name }] : []
     })
   },
-  ['daily-story-apps'],
+  [shape, 'daily-story-apps'],
   { tags: [DAILY_CACHE_TAG, appsCacheTag], revalidate: 3600 },
 )
 
-// Stories of every event with heat (the heat job keeps it to the last 48 hours), hottest first.
+// Stories of every event with heat (the heat job keeps it to the last 48 hours), highest reach index first.
 const findHot = cached(
   async () => {
     const { docs } = await (await payload()).find({
       collection: 'stories',
       where: { and: [published, { heat: { greater_than: 0 } }] },
-      sort: ['-heat', '-publishedAt'],
+      sort: ['-heatPeak', '-heat', '-publishedAt'],
       limit: 40,
       locale: 'all',
       depth: 1,
       populate,
-      select: { ...select, heat: true, heatTrend: true },
+      select: { ...select, heatTrend: true },
       overrideAccess: false,
     })
     return docs as unknown as RawStory[]
   },
-  ['daily-hot'],
+  [shape, 'daily-hot'],
   cacheOptions,
 )
 
@@ -429,7 +435,7 @@ const findMentionedApps = cached(
     }
     return result
   },
-  ['daily-mentioned-apps'],
+  [shape, 'daily-mentioned-apps'],
   { tags: [DAILY_CACHE_TAG, appsCacheTag], revalidate: 3600 },
 )
 
@@ -455,7 +461,7 @@ const findPoster = cached(
     const snapshot = readSnapshot(docs[0]?.snapshot)
     return snapshot?.entries.length ? snapshot : null
   },
-  ['daily-poster'],
+  [shape, 'daily-poster'],
   cacheOptions,
 )
 
@@ -472,7 +478,7 @@ const findPosterDates = cached(
     })
     return docs.map((doc) => doc.date)
   },
-  ['daily-poster-dates'],
+  [shape, 'daily-poster-dates'],
   cacheOptions,
 )
 
@@ -663,7 +669,7 @@ export async function topicNames(keys: readonly string[]): Promise<Map<string, T
   return readTopicNames(db, keys)
 }
 
-/** The five hottest events of the last 48 hours, one story each (the newest of its event). */
+/** The five events of the last 48 hours with the highest reach index (传播指数), one story each (the newest of its event). */
 export async function hotStories(locale: Locale): Promise<HotStory[]> {
   return onePerEvent(await findHot(), hotShown).map((doc) => toHot(doc, locale))
 }

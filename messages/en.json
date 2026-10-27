@@ -56,7 +56,8 @@
     "rank": "Rank {rank}",
     "install": "Install",
     "installs": "{count} installs",
-    "moreSources": "{count, plural, =0 {Single source} one {# more outlet reported this} other {# more outlets reported this}}"
+    "moreSources": "{count, plural, =0 {Single source} one {# more outlet reported this} other {# more outlets reported this}}",
+    "spread": "Reach"
   },
   "auth": {
     "title": "Sign in to IFAI",
@@ -1037,8 +1038,6 @@
     "corrected": "Corrected",
     "hottest": "Top story",
     "hotTitle": "Hot in the last 48 hours",
-    "hotBy": "By story",
-    "outlets": "{count, plural, one {# outlet} other {# outlets}}",
     "trend": {
       "rising": "Rising",
       "new": "New"

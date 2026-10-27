@@ -56,7 +56,8 @@
     "rank": "第 {rank} 名",
     "install": "安装",
     "installs": "{count} 次安装",
-    "moreSources": "{count, plural, =0 {单一来源} other {另有 # 家报道}}"
+    "moreSources": "{count, plural, =0 {单一来源} other {另有 # 家报道}}",
+    "spread": "传播指数"
   },
   "auth": {
     "title": "登录 IFAI",
@@ -1037,8 +1038,6 @@
     "corrected": "更正于",
     "hottest": "头条",
     "hotTitle": "48 小时热门",
-    "hotBy": "按事件",
-    "outlets": "{count, plural, other {# 家报道}}",
     "trend": {
       "rising": "上升",
       "new": "新"

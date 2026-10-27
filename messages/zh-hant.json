@@ -56,7 +56,8 @@
     "rank": "第 {rank} 名",
     "install": "安裝",
     "installs": "{count} 次安裝",
-    "moreSources": "{count, plural, =0 {單一來源} other {另有 # 家報導}}"
+    "moreSources": "{count, plural, =0 {單一來源} other {另有 # 家報導}}",
+    "spread": "傳播指數"
   },
   "auth": {
     "title": "登入 IFAI",
@@ -1037,8 +1038,6 @@
     "corrected": "更正於",
     "hottest": "頭條",
     "hotTitle": "48 小時熱門",
-    "hotBy": "按事件",
-    "outlets": "{count, plural, other {# 家報導}}",
     "trend": {
       "rising": "上升",
       "new": "新"

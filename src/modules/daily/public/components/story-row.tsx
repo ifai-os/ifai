@@ -1,16 +1,15 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-
 import { LocalTime } from "@/components/local-time";
 import { Link } from "@/i18n/navigation";
 
 import type { StoryItem } from "../story-item";
 import { storyHref } from "../list-params";
+import { SpreadIndex } from "./spread-index";
 import { StoryThumb } from "./story-media";
 
 /**
- * One story in the list (「IFAI 日报（新版）」board): local time, category, other reports; title;
+ * One story in the list (「IFAI 日报（新版）」board): local time, category, reach index; title;
  * summary; try-it; and 28 to the right its picture or video when it has one. Phones put the
  * try-it under both.
  */
@@ -21,8 +20,6 @@ export function StoryRow({
   story: StoryItem;
   category: string;
 }) {
-  const card = useTranslations("card");
-
   return (
     <li>
       <article
@@ -38,7 +35,7 @@ export function StoryRow({
               className="font-medium text-accent-ink tabular-nums"
             />
             <span>{category}</span>
-            <span>{card("moreSources", { count: story.moreReports })}</span>
+            <SpreadIndex value={story.spread} />
           </p>
           <h3 lang={story.title.lang} className="text-title md:text-h3">
             <Link

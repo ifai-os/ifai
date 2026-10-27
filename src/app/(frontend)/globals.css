@@ -58,6 +58,11 @@
   --color-star: #d97a1e; /* rating stars, always with the number or a text alternative — 3.1:1 */
   --color-up: #2e7d4f; /* rising, passed */
   --color-down: #b42318; /* falling, risk, errors */
+  /* The daily's reach index (传播指数), cold to hot: green, orange, red, magenta — 5.1, 4.7, 4.9, 6.7:1 */
+  --color-heat-1: #2e7d4f;
+  --color-heat-2: #b35c00;
+  --color-heat-3: #da282a;
+  --color-heat-4: #b0136b;
   --color-warn: #fff4e6; /* demo banner, notices */
   --color-warn-ink: #7a4a12;
   --color-success-soft: #e3eee5; /* "security check passed" badge */
@@ -208,6 +213,10 @@
       --color-star: #f0a040;
       --color-up: #4fbf86;
       --color-down: #ff7a6b;
+      --color-heat-1: #4fbf86; /* 7.2:1 */
+      --color-heat-2: #f0a040; /* 7.7:1 */
+      --color-heat-3: #ff6d55; /* 5.9:1 */
+      --color-heat-4: #f06bb5; /* 5.9:1 */
       --color-warn: #3a2c18;
       --color-warn-ink: #f3c98b;
       --color-success-soft: #1d3326;

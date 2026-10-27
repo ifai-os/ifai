@@ -109,6 +109,7 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
       sources: storySources(reports.all, reports.self),
       score: analysis.scoreAverage,
       heat: heat?.heat ?? 0,
+      heatPeak: heat?.heat ?? 0,
       heatTrend: heat ? trendOf(heat.heat, heat.before) : null,
       flags: analysis.flags ?? [],
       verification,

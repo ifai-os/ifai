@@ -4,7 +4,7 @@ import { getDb } from '@/lib/db/drizzle'
 
 import { refreshDailyCache } from '../review/cache'
 import { eventItems, events, hotSignals, rawItems } from '../schema'
-import { HEAT_LOOKBACK_MS, eventHeat, signalsOf, type EventHeat, type HeatMember } from './rules'
+import { HEAT_LOOKBACK_MS, eventHeat, peakHeat, peakOf, signalsOf, type EventHeat, type HeatMember } from './rules'
 
 export type HeatRun = { events: number; stories: number; published: number }
 
@@ -32,7 +32,7 @@ export async function activeEventIds(now = new Date()): Promise<number[]> {
 /**
  * Work out these events' heat (./rules.ts), store it on the events and copy it to their
  * stories (the review queue and the pages read it there). Refreshes the site's pages when a
- * published story's heat or mark changed.
+ * published story's heat, reach index (its peak) or mark changed.
  */
 export async function refreshHeat(eventIds: readonly number[], now = new Date()): Promise<HeatRun> {
   const ids = [...new Set(eventIds)]
@@ -75,10 +75,10 @@ export async function refreshHeat(eventIds: readonly number[], now = new Date())
     (sourceId) => hot.has(sourceId),
   )
 
-  const results = new Map<number, EventHeat>()
+  const results = new Map<number, EventHeat & { peak: number }>()
   for (const id of ids) {
     const result = eventHeat(signals.get(id) ?? [], now)
-    results.set(id, result)
+    results.set(id, { ...result, peak: peakHeat(signals.get(id) ?? []) })
     await db.update(events).set({ heat: result.heat, heatBefore: result.before, heatUpdatedAt: now }).where(eq(events.id, id))
   }
 
@@ -87,18 +87,20 @@ export async function refreshHeat(eventIds: readonly number[], now = new Date())
     where: { eventId: { in: ids } },
     pagination: false,
     depth: 0,
-    select: { eventId: true, heat: true, heatTrend: true, status: true },
+    select: { eventId: true, heat: true, heatPeak: true, heatTrend: true, status: true },
   })
   let stories = 0
   let published = 0
   for (const doc of docs) {
     const result = results.get(doc.eventId)
-    if (!result || ((doc.heat ?? 0) === result.heat && (doc.heatTrend ?? null) === result.trend)) continue
+    if (!result) continue
+    const peak = peakOf(doc.heatPeak, result.peak)
+    if ((doc.heat ?? 0) === result.heat && (doc.heatPeak ?? 0) === peak && (doc.heatTrend ?? null) === result.trend) continue
     await payload.update({
       collection: 'stories',
       id: doc.id,
       locale: 'zh-Hans',
-      data: { heat: result.heat, heatTrend: result.trend },
+      data: { heat: result.heat, heatPeak: peak, heatTrend: result.trend },
       context: { skipHantSync: true },
     })
     stories++

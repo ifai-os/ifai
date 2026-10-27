@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation'
 
 import type { HotStory } from '../story-item'
 import { storyHref } from '../list-params'
+import { SpreadIndex } from './spread-index'
 
 /**
  * 「头条」(「IFAI 日报（新版）」board): the hottest story of the last 24 hours (else the hottest or
@@ -15,7 +16,6 @@ import { storyHref } from '../list-params'
  */
 export function HottestCard({ story, category }: { story: HotStory; category: string }) {
   const t = useTranslations('daily')
-  const card = useTranslations('card')
 
   return (
     <section
@@ -30,7 +30,13 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
         className="-z-10 object-cover"
       />
       <p className="self-start rounded-pill bg-black/35 px-2.5 py-1 text-small backdrop-blur-md">
-        {t('hottest')} · {category} · {card('moreSources', { count: story.moreReports })}
+        {t('hottest')} · {category}
+        {story.spread > 0 && (
+          <>
+            {' · '}
+            <SpreadIndex value={story.spread} plain />
+          </>
+        )}
       </p>
       {/* The strip reaches the card's edges and fades out just above the title, under the label. */}
       <div className="-mx-6 -mb-6 bg-linear-to-t from-black/65 from-45% to-black/0 px-6 pt-5 pb-6 md:-mx-8 md:-mb-8 md:px-8 md:pt-6 md:pb-8">
