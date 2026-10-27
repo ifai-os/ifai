@@ -481,7 +481,7 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
           <Button buttonStyle="secondary" el="link" size="small" to={`${adminRoute}/collections/stories`}>
             {t.allStories}
           </Button>
-          <Button buttonStyle="secondary" el="anchor" newTab size="small" url={`${sitePrefix}/daily`}>
+          <Button buttonStyle="secondary" el="anchor" newTab size="small" url={`${sitePrefix}/news`}>
             {t.openSite}
           </Button>
           <Button buttonStyle="secondary" size="small" onClick={() => refreshQueue().then((fresh) => fresh && setNote({ text: t.notes.loaded(time(fresh.loadedAt)), tone: 'muted' }))}>

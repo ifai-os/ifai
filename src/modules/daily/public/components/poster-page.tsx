@@ -15,7 +15,7 @@ type Props = {
 }
 
 /**
- * A day's poster (docs/specs/daily.md「页面」`/[locale]/daily/poster/[YYYY-MM-DD]`): the image in
+ * A day's poster (docs/specs/daily.md「页面」`/[locale]/news/poster/[YYYY-MM-DD]`): the image in
  * the reader's language, downloads in all five, and the stories on it linking to their pages.
  * Everything comes from what the editor generated, so the page matches the images.
  */
@@ -32,7 +32,7 @@ export function PosterPageView({ snapshot, locale, neighbours }: Props) {
       <nav aria-label={daily('breadcrumb')} className="text-meta text-ink-4">
         <ol className="flex flex-wrap items-center gap-2">
           <li className="flex items-center gap-2">
-            <Link href="/daily" className="hover:text-ink">
+            <Link href="/news" className="hover:text-ink">
               {daily('title')}
             </Link>
             <span aria-hidden="true">/</span>

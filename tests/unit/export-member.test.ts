@@ -146,7 +146,7 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
       timeZone: 'Asia/Shanghai',
       status: 'subscribed',
       stopReason: null,
-      sourcePage: '/zh-hans/daily',
+      sourcePage: '/zh-hans/news',
       subscribedAt: '2026-10-05T01:00:00.000Z',
       unsubscribedAt: null,
       welcomeSentAt: '2026-10-05T01:00:05.000Z',
@@ -174,8 +174,8 @@ const refs: ExportRefs = {
 }
 
 const followRefs: FollowRefs = new Map([
-  ['topic-kimi', { name: 'Kimi', url: `${site}/en/daily/topic/kimi` }],
-  ['tag-vibe-coding', { name: 'Vibe coding', url: `${site}/en/daily/tag/vibe-coding` }],
+  ['topic-kimi', { name: 'Kimi', url: `${site}/en/news/topic/kimi` }],
+  ['tag-vibe-coding', { name: 'Vibe coding', url: `${site}/en/news/tag/vibe-coding` }],
   ['topic-gone', { name: null, url: null }],
 ])
 
@@ -214,8 +214,8 @@ describe('shapeMemberExport', () => {
 
   it('names what the member follows, newest first, and keeps only the key of a company no story is about now', () => {
     expect(shape(records()).follows).toEqual([
-      { type: 'topic', key: 'kimi', name: 'Kimi', url: `${site}/en/daily/topic/kimi`, followedAt: '2026-10-22T08:00:00.000Z' },
-      { type: 'tag', key: 'vibe-coding', name: 'Vibe coding', url: `${site}/en/daily/tag/vibe-coding`, followedAt: '2026-10-21T08:00:00.000Z' },
+      { type: 'topic', key: 'kimi', name: 'Kimi', url: `${site}/en/news/topic/kimi`, followedAt: '2026-10-22T08:00:00.000Z' },
+      { type: 'tag', key: 'vibe-coding', name: 'Vibe coding', url: `${site}/en/news/tag/vibe-coding`, followedAt: '2026-10-21T08:00:00.000Z' },
       { type: 'topic', key: 'gone', name: null, url: null, followedAt: '2026-10-18T08:00:00.000Z' },
     ])
   })
@@ -267,7 +267,7 @@ describe('shapeMemberExport', () => {
       email: 'reader@example.com',
       status: 'subscribed',
       timeZone: 'Asia/Shanghai',
-      subscribedFrom: '/zh-hans/daily',
+      subscribedFrom: '/zh-hans/news',
       emails: [
         { date: '2026-10-23', language: 'zh-Hans', status: 'sent', stories: 8, sentAt: '2026-10-23T08:00:00.000Z' },
         { date: '2026-10-22', language: 'zh-Hans', status: 'failed', stories: null, sentAt: null },
@@ -342,8 +342,8 @@ describe('readFollowRefs', () => {
     const found = await readFollowRefs(payload, records(), { locale: 'ja', site, tagName: (tag) => `tag:${tag}` })
     expect(execute).toHaveBeenCalledTimes(1)
     expect(Object.fromEntries(found)).toEqual({
-      'topic-kimi': { name: 'Kimi', url: `${site}/ja/daily/topic/kimi` },
-      'tag-vibe-coding': { name: 'tag:vibe-coding', url: `${site}/ja/daily/tag/vibe-coding` },
+      'topic-kimi': { name: 'Kimi', url: `${site}/ja/news/topic/kimi` },
+      'tag-vibe-coding': { name: 'tag:vibe-coding', url: `${site}/ja/news/tag/vibe-coding` },
       'topic-gone': { name: null, url: null },
     })
   })
@@ -357,7 +357,7 @@ describe('readFollowRefs', () => {
       tagName: () => 'AI agents',
     })
     expect(execute).not.toHaveBeenCalled()
-    expect(found.get('tag-agents')).toEqual({ name: 'AI agents', url: `${site}/en/daily/tag/agents` })
+    expect(found.get('tag-agents')).toEqual({ name: 'AI agents', url: `${site}/en/news/tag/agents` })
   })
 })
 

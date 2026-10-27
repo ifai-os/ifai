@@ -185,7 +185,7 @@ export function PosterColumn({ desk, api, t, selectedId, onSelect, onDesk, error
           {note}
         </p>
         {generated && (
-          <a href={`${sitePrefix}/daily/poster/${desk.date}`} rel="noreferrer" target="_blank">
+          <a href={`${sitePrefix}/news/poster/${desk.date}`} rel="noreferrer" target="_blank">
             {t.poster.preview}
           </a>
         )}

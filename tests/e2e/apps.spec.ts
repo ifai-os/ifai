@@ -182,7 +182,7 @@ test.describe('with the sample apps', () => {
     const mentions = page.getByRole('region', { name: en.apps.mentionsTitle })
     await expect(mentions.getByRole('link', { name: /^Sample: Lumen Chat adds shared workspaces/ })).toHaveAttribute(
       'href',
-      '/en/daily/sample-lumen-chat-adds-shared-workspaces',
+      '/en/news/sample-lumen-chat-adds-shared-workspaces',
     )
     await expect(mentions.getByRole('link', { name: /^Sample: Kitecode/ })).toHaveCount(0)
   })

@@ -26,7 +26,7 @@ export default function NotFound() {
         <Link href="/" className="flex min-h-11 items-center text-link">
           {t('back')}
         </Link>
-        <Link href="/daily" className="flex min-h-11 items-center text-link">
+        <Link href="/news" className="flex min-h-11 items-center text-link">
           {t('daily')}
         </Link>
       </div>

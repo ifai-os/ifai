@@ -1,7 +1,7 @@
 /**
  * Industry tags of a story (docs/specs/daily.md「详情页：行业标签…」). A story has one category
  * but up to three tags; the structuring step picks them from this fixed list only. Keys match
- * `tags.*` in messages/*.json and the address `/daily/tag/<key>`.
+ * `tags.*` in messages/*.json and the address `/news/tag/<key>`.
  */
 export const storyTags = [
   'assistants',

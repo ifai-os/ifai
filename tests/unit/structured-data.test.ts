@@ -61,7 +61,7 @@ describe('storyJsonLd', () => {
       headline: 'OpenAI 发布新模型',
       description: '一句话摘要。',
       inLanguage: 'zh-Hans',
-      url: 'https://ifai.io/zh-hans/daily/openai-ships-a-thing',
+      url: 'https://ifai.io/zh-hans/news/openai-ships-a-thing',
       datePublished: '2026-10-22T08:00:00.000Z',
       dateModified: '2026-10-22T08:00:00.000Z',
       image: ['https://ifai.io/og-image-zh.png'],
@@ -83,9 +83,9 @@ describe('storyJsonLd', () => {
     expect(trail['@type']).toBe('BreadcrumbList')
     expect(trail.itemListElement.map((item: { position: number; item: string }) => [item.position, item.item])).toEqual([
       [1, 'https://ifai.io/en'],
-      [2, 'https://ifai.io/en/daily'],
-      [3, 'https://ifai.io/en/daily/category/tools'],
-      [4, 'https://ifai.io/en/daily/openai-ships-a-thing'],
+      [2, 'https://ifai.io/en/news'],
+      [3, 'https://ifai.io/en/news/category/tools'],
+      [4, 'https://ifai.io/en/news/openai-ships-a-thing'],
     ])
   })
 })

@@ -26,12 +26,12 @@ export function listHref({
   tag,
   page,
 }: { category?: StoryCategory | null; tag?: StoryTag | null; page?: number } = {}): `/${string}` {
-  const path: `/${string}` = category ? `/daily/category/${category}` : tag ? `/daily/tag/${tag}` : '/daily'
+  const path: `/${string}` = category ? `/news/category/${category}` : tag ? `/news/tag/${tag}` : '/news'
   return page && page > 1 ? `${path}?page=${page}` : path
 }
 
 export function storyHref(slug: string): `/${string}` {
-  return `/daily/${slug}`
+  return `/news/${slug}`
 }
 
 /**
@@ -50,15 +50,15 @@ export function readTopicKey(segment: string): string | null {
 
 /** A company's or product's topic page, by its compared name (`entityKey`), plus the page when it is not the first. */
 export function topicHref(key: string, page?: number): `/${string}` {
-  const path: `/${string}` = `/daily/topic/${encodeURIComponent(key)}`
+  const path: `/${string}` = `/news/topic/${encodeURIComponent(key)}`
   return page && page > 1 ? `${path}?page=${page}` : path
 }
 
-export const feedPath = '/daily/rss.xml'
+export const feedPath = '/news/rss.xml'
 
 /** The poster page of a Shanghai calendar day (YYYY-MM-DD). */
 export function posterHref(date: string): `/${string}` {
-  return `/daily/poster/${date}`
+  return `/news/poster/${date}`
 }
 
 /** A poster's image in one language; `version` makes browsers fetch it again after the next generation. */

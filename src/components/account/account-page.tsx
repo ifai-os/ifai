@@ -123,7 +123,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
               description={t(dailyEmail.status === 'subscribed' ? 'dailySubscribed' : dailyEmail.status === 'stopped' ? 'dailyStopped' : 'dailyNone')}
               action={
                 dailyEmail.status !== 'none' && (
-                  <Link href={`/daily/subscription?token=${encodeURIComponent(dailyEmail.token)}`} className="text-meta whitespace-nowrap text-link hover:underline">
+                  <Link href={`/news/subscription?token=${encodeURIComponent(dailyEmail.token)}`} className="text-meta whitespace-nowrap text-link hover:underline">
                     {t('manageDaily')} ›
                   </Link>
                 )

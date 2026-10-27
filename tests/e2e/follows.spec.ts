@@ -50,7 +50,7 @@ test.describe('with the sample stories', () => {
   const assistants = en.tags.assistants
 
   test('a visitor who presses follow is asked to sign in', async ({ page }) => {
-    await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces')
+    await page.goto('/en/news/sample-lumen-chat-adds-shared-workspaces')
     const follow = page.getByRole('main').getByRole('button', { name: 'Follow Lumen Labs', exact: true })
     await expect(follow).toHaveAttribute('aria-pressed', 'false')
     await follow.click()
@@ -74,10 +74,10 @@ test.describe('with the sample stories', () => {
 
       // Back from signing in with the follow in the address: it finishes by itself, and the address is cleaned up.
       const returned = answered()
-      await page.goto('/en/daily/sample-lumen-chat-adds-shared-workspaces?follow=topic-lumenchat')
+      await page.goto('/en/news/sample-lumen-chat-adds-shared-workspaces?follow=topic-lumenchat')
       await returned
       await expect(main.getByRole('button', { name: en.follows.followingTopic, exact: true })).toHaveAttribute('aria-pressed', 'true')
-      await expect(page).toHaveURL(/\/en\/daily\/sample-lumen-chat-adds-shared-workspaces$/)
+      await expect(page).toHaveURL(/\/en\/news\/sample-lumen-chat-adds-shared-workspaces$/)
       // The topic's own row has no second button.
       await expect(main.getByRole('button', { name: /Lumen Chat$/ })).toHaveCount(0)
 
@@ -102,7 +102,7 @@ test.describe('with the sample stories', () => {
 
       // The topic page counts who follows it; following it there says where its news goes.
       await followed.getByRole('link', { name: 'Lumen Chat' }).click()
-      await expect(page).toHaveURL(/\/en\/daily\/topic\/lumenchat$/)
+      await expect(page).toHaveURL(/\/en\/news\/topic\/lumenchat$/)
       const button = main.getByRole('button', { name: /^Follow(ing)? Lumen Chat$/ })
       await expect(button).toHaveAttribute('aria-pressed', 'true')
       await expect(main.getByText('1 follower', { exact: true })).toBeVisible()
@@ -116,7 +116,7 @@ test.describe('with the sample stories', () => {
       await expect(main.getByRole('link', { name: en.follows.title, exact: true })).toHaveAttribute('href', '/en/me/following')
 
       // So does the tag's page.
-      await page.goto('/en/daily/tag/assistants')
+      await page.goto('/en/news/tag/assistants')
       await expect(main.getByRole('button', { name: `Following ${assistants}`, exact: true })).toHaveAttribute('aria-pressed', 'true')
 
       await page.goto('/en/me/following')
@@ -125,7 +125,7 @@ test.describe('with the sample stories', () => {
       await followed.getByRole('button', { name: en.follows.removeName.replace('{name}', 'Lumen Labs') }).click()
       await followed.getByRole('button', { name: en.follows.removeName.replace('{name}', assistants) }).click()
       await expect(page.getByText(en.follows.emptyTitle)).toBeVisible()
-      await expect(page.getByRole('link', { name: en.follows.browseDaily })).toHaveAttribute('href', '/en/daily')
+      await expect(page.getByRole('link', { name: en.follows.browseDaily })).toHaveAttribute('href', '/en/news')
     } finally {
       await member.remove()
     }

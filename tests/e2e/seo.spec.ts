@@ -33,7 +33,7 @@ test('the pages file lists the home page and the module lists in every language'
   const pages = await xml(request, '/sitemaps/pages-1.xml')
   for (const prefix of ['/en', '/zh-hans', '/zh-hant', '/ja', '/ko']) {
     expect(pages).toMatch(new RegExp(`<loc>[^<]+${prefix}</loc>`))
-    expect(pages).toContain(`${prefix}/daily</loc>`)
+    expect(pages).toContain(`${prefix}/news</loc>`)
     expect(pages).toContain(`${prefix}/apps</loc>`)
     expect(pages).toContain(`${prefix}/resources/guide</loc>`)
   }
@@ -48,7 +48,7 @@ test.describe('with the sample content', () => {
 
   test('lists published items only', async ({ request }) => {
     const daily = await xml(request, '/sitemaps/daily-1.xml')
-    expect(daily).toContain('/zh-hans/daily/sample-kitecode-opens-its-model-weights</loc>')
+    expect(daily).toContain('/zh-hans/news/sample-kitecode-opens-its-model-weights</loc>')
     expect(daily).not.toContain('sample-pending-story')
     expect(daily).not.toContain('sample-withdrawn-story')
 

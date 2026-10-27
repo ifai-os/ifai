@@ -174,9 +174,9 @@ describe('the morning email', () => {
 
   it('links every title to the story page in that language, plus the daily list, without tracking', async () => {
     const email = await buildDigestEmail(reader('ja'), '2026-10-24', ten)
-    for (const story of ten) expect(email.html).toContain(`href="https://ifai.example/ja/daily/${story.slug}"`)
-    expect(email.html).toContain('href="https://ifai.example/ja/daily"')
-    expect(email.text).toContain('サイトですべて見る: https://ifai.example/ja/daily')
+    for (const story of ten) expect(email.html).toContain(`href="https://ifai.example/ja/news/${story.slug}"`)
+    expect(email.html).toContain('href="https://ifai.example/ja/news"')
+    expect(email.text).toContain('サイトですべて見る: https://ifai.example/ja/news')
     expect(email.html).toContain('研究 · Lab 2')
     expect(email.html).not.toMatch(/utm_|<script/i)
   })
@@ -196,7 +196,7 @@ describe('the morning email', () => {
   it('carries the reader’s signed links, the one-click headers and the ids for the webhooks', async () => {
     const email = await buildDigestEmail(reader('en'), '2026-10-24', ten)
     const token = subscriberToken(7, 'test-secret')
-    expect(email.text).toContain(`https://ifai.example/en/daily/subscription?token=${token}`)
+    expect(email.text).toContain(`https://ifai.example/en/news/subscription?token=${token}`)
     expect(email.headers).toEqual({
       'List-Unsubscribe': `<https://ifai.example/api/subscriptions/unsubscribe?token=${token}>`,
       'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -209,7 +209,7 @@ describe('the morning email', () => {
     expect(email.kind).toBe('daily_test')
     expect(email.headers).toEqual({})
     expect(email.tags).toEqual({})
-    expect(email.text).toContain('https://ifai.example/zh-hant/daily/subscription\n')
+    expect(email.text).toContain('https://ifai.example/zh-hant/news/subscription\n')
     expect(email.text).not.toContain('token=')
   })
 

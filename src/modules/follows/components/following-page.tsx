@@ -57,7 +57,7 @@ export function FollowingPageView({ following, signIn, serverToday }: FollowingP
         </div>
       ) : following.tags.length + following.topics.length === 0 ? (
         <EmptyState icon="plus" title={t('emptyTitle')} body={t('emptyBody')}>
-          <ButtonLink href="/daily">{t('browseDaily')}</ButtonLink>
+          <ButtonLink href="/news">{t('browseDaily')}</ButtonLink>
         </EmptyState>
       ) : (
         <div className="flex w-full max-w-190 flex-col gap-8">

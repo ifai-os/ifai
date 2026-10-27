@@ -25,7 +25,7 @@ import { PosterCard } from './poster-card'
 
 type DailyListProps = {
   locale: Locale
-  /** The industry tag being shown (`/daily/tag/<tag>`), if any; null for every story. */
+  /** The industry tag being shown (`/news/tag/<tag>`), if any; null for every story. */
   tag?: StoryTag | null
   page: number
 }
@@ -126,7 +126,7 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
                 />
               ) : tag ? (
                 <EmptyState title={t('emptyCategoryTitle')} body={t('emptyCategoryBody')}>
-                  <ListLink href="/daily" className={buttonClass('secondary')}>
+                  <ListLink href="/news" className={buttonClass('secondary')}>
                     {t('allStories')}
                   </ListLink>
                 </EmptyState>

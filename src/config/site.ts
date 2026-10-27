@@ -16,7 +16,7 @@ export type NavItem = {
 export const navItems: readonly NavItem[] = [
   { key: 'recommend', href: '/recommend', icon: 'recommend', phase: 2 },
   { key: 'circles', href: '/circles', icon: 'circles', phase: 2 },
-  { key: 'daily', href: '/daily', icon: 'daily', phase: 1 },
+  { key: 'daily', href: '/news', icon: 'daily', phase: 1 },
   { key: 'apps', href: '/apps', icon: 'apps', phase: 1 },
   { key: 'rankings', href: '/rankings', icon: 'rankings', phase: 3 },
   { key: 'resources', href: '/resources', icon: 'resources', phase: 1 },

@@ -100,11 +100,11 @@ describe('list addresses', () => {
   })
 
   it('builds list and story addresses', () => {
-    expect(listHref()).toBe('/daily')
-    expect(listHref({ category: 'open' })).toBe('/daily/category/open')
-    expect(listHref({ category: 'open', page: 2 })).toBe('/daily/category/open?page=2')
-    expect(listHref({ page: 1 })).toBe('/daily')
-    expect(storyHref('a-story')).toBe('/daily/a-story')
+    expect(listHref()).toBe('/news')
+    expect(listHref({ category: 'open' })).toBe('/news/category/open')
+    expect(listHref({ category: 'open', page: 2 })).toBe('/news/category/open?page=2')
+    expect(listHref({ page: 1 })).toBe('/news')
+    expect(storyHref('a-story')).toBe('/news/a-story')
   })
 })
 
@@ -180,14 +180,16 @@ describe('the daily feed', () => {
     expect(html).toContain('11:30 PM')
     // The reach index in its tier's colour instead of the other reports (站长, 2026-10-27).
     expect(html).toContain(`${en.card.spread} <span class="font-semibold tabular-nums text-heat-3">64</span>`)
+    // A bolt before it, in the same colour.
+    expect(html).toMatch(/<svg[^>]*class="flex-none text-heat-3"[^>]*><path d="M13 2.5/)
     expect(html).not.toContain('more outlets')
     // No「试一试」in the list (站长, 2026-10-27).
     expect(html.match(new RegExp(en.card.spread, 'g'))).toHaveLength(1)
     expect(html).not.toContain('Open the app.')
     expect(html).toContain('lang="zh-Hans"')
-    expect(html).toContain('href="/en/daily/story-2"')
+    expect(html).toContain('href="/en/news/story-2"')
     // The category leads to its page (站长, 2026-10-27).
-    expect(html).toContain('href="/en/daily/category/tools"')
+    expect(html).toContain('href="/en/news/category/tools"')
   })
 })
 
@@ -224,7 +226,7 @@ describe('the hottest events', () => {
     expect(html).not.toContain('outlet')
     expect(html).toContain(`>${en.daily.trend.rising}</span>`)
     expect(html).toContain(`>${en.daily.trend.new}</span>`)
-    expect(html).toContain('href="/en/daily/story-3"')
+    expect(html).toContain('href="/en/news/story-3"')
     // The first three ranks stand out.
     expect(html.match(/tabular-nums text-accent/g)).toHaveLength(3)
   })
@@ -248,7 +250,7 @@ describe('the hottest events', () => {
     const html = render(<HottestCard story={hot({ id: 5, eventId: 5, spread: 81 })} category="Product" />)
     expect(html).toContain(`${en.daily.hottest} · Product`)
     expect(html).toContain(`<span>${en.card.spread} <span class="font-semibold tabular-nums">81</span></span>`)
-    expect(html).toContain('href="/en/daily/story-5"')
+    expect(html).toContain('href="/en/news/story-5"')
     // The title only, no summary (站长, 2026-10-27).
     expect(html).not.toContain('What happened, in one line.')
   })
@@ -310,7 +312,7 @@ describe('a story’s page', () => {
     expect(html).toContain(`>${en.daily.roles.original}<`)
     expect(html).toContain('maker.example')
     expect(html).toContain(`>${en.daily.corrected} <time dateTime="2026-10-22T12:00:00Z">`)
-    expect(html).toContain('href="/en/daily/earlier"')
+    expect(html).toContain('href="/en/news/earlier"')
     expect(html).toContain('text-heat-4">85<')
   })
 
@@ -340,20 +342,20 @@ describe('a story’s page', () => {
         signIn={{ google: false, github: false, email: true }}
       />,
     )
-    expect(html).toContain(`href="/en/daily/tag/hardware"`)
+    expect(html).toContain(`href="/en/news/tag/hardware"`)
     expect(html).toContain(`>${en.tags.hardware}`)
     expect(html).toContain(`>${en.follows.tagsNote}<`)
     expect(html).toContain(`>${en.daily.entityKinds.product}<`)
     expect(html).toContain('href="/en/apps/apple-intelligence"')
-    expect(html).toContain('href="/en/daily/topic/apple"')
-    expect(html).toContain('href="/en/daily/topic/macbookpro"')
+    expect(html).toContain('href="/en/news/topic/apple"')
+    expect(html).toContain('href="/en/news/topic/macbookpro"')
     // This story is marked, not linked; five of seven show before「查看更多」.
     expect(html).toContain(`>${en.daily.thisStory}<`)
-    expect(html).not.toContain('href="/en/daily/story-1"')
-    expect(html).toContain('href="/en/daily/old-3"')
-    expect(html).not.toContain('href="/en/daily/old-4"')
+    expect(html).not.toContain('href="/en/news/story-1"')
+    expect(html).toContain('href="/en/news/old-3"')
+    expect(html).not.toContain('href="/en/news/old-4"')
     expect(html).toContain('Show more (2)')
-    expect(html).toContain('href="/en/daily/last-year"')
+    expect(html).toContain('href="/en/news/last-year"')
     expect(html.indexOf(en.daily.topic)).toBeLessThan(html.indexOf(en.daily.similar))
   })
 
@@ -402,8 +404,8 @@ describe('a company’s or product’s topic page', () => {
   }
 
   it('has addresses only for compared names', () => {
-    expect(topicHref('kimi')).toBe('/daily/topic/kimi')
-    expect(topicHref('月之暗面', 2)).toBe('/daily/topic/%E6%9C%88%E4%B9%8B%E6%9A%97%E9%9D%A2?page=2')
+    expect(topicHref('kimi')).toBe('/news/topic/kimi')
+    expect(topicHref('月之暗面', 2)).toBe('/news/topic/%E6%9C%88%E4%B9%8B%E6%9A%97%E9%9D%A2?page=2')
     expect(readTopicKey('kimi')).toBe('kimi')
     expect(readTopicKey('%E6%9C%88%E4%B9%8B%E6%9A%97%E9%9D%A2')).toBe('月之暗面')
     expect(readTopicKey('月之暗面')).toBe('月之暗面')
@@ -417,7 +419,7 @@ describe('a company’s or product’s topic page', () => {
     const html = render(<TopicPageView topic={topic} serverToday="2026-10-22" signIn={{ google: false, github: false, email: true }} />)
     expect(html).toContain('>#</span>Kimi</h1>')
     expect(html).toContain(`>${en.daily.entityKinds.product}<`)
-    expect(html).toMatch(/Made by <a [^>]*href="\/en\/daily\/topic\/moonshotai">Moonshot AI<\/a>/)
+    expect(html).toMatch(/Made by <a [^>]*href="\/en\/news\/topic\/moonshotai">Moonshot AI<\/a>/)
     expect(html).toContain('23 stories')
     expect(html).toContain('href="/en/apps/kimi"')
     // Today by name, this year without the year, earlier years with it.
@@ -425,7 +427,7 @@ describe('a company’s or product’s topic page', () => {
     expect(html).toContain('<span>September 11</span>')
     expect(html).toContain('<span>November 6, 2025</span>')
     expect(html).toContain('text-heat-3">66<')
-    expect(html).toContain('href="/en/daily/topic/kimi?page=2"')
+    expect(html).toContain('href="/en/news/topic/kimi?page=2"')
     expect(html).toContain('Load earlier stories (3)')
     // 「+ 关注」at the top; the follower count is read in the browser, so none yet.
     expect(html).toContain('aria-label="Follow Kimi"')
@@ -441,7 +443,7 @@ describe('a company’s or product’s topic page', () => {
       />,
     )
     expect(html).toContain(en.daily.noEarlier)
-    expect(html).toContain('href="/en/daily/topic/kimi"')
+    expect(html).toContain('href="/en/news/topic/kimi"')
     expect(html).not.toContain('Made by')
     expect(html).not.toContain('/en/apps/')
   })
@@ -477,7 +479,7 @@ describe('a category page', () => {
     expect(html).toContain('updated 9:40 AM')
     // Every category as a pill, this one current; no category name on its own cards.
     const current = html.match(/<a [^>]*aria-current="page"[^>]*>([^<]*)<\/a>/)
-    expect(current?.[0]).toContain('href="/en/daily/category/tools"')
+    expect(current?.[0]).toContain('href="/en/news/category/tools"')
     expect(current?.[1]).toBe(en.categories.tools)
     // The name shows in the title and the pill only.
     expect(html.split(`>${en.categories.tools}<`)).toHaveLength(3)
@@ -486,14 +488,14 @@ describe('a category page', () => {
     expect(html).toContain('text-heat-2">45<')
     // A story that never had any heat shows no reach index.
     expect(html.match(new RegExp(`${en.card.spread} `, 'g'))).toHaveLength(1)
-    expect(html).toContain('href="/en/daily/category/tools?page=2"')
+    expect(html).toContain('href="/en/news/category/tools?page=2"')
     expect(html).toContain(en.daily.loadEarlier)
   })
 
   it('names an older update by its day, links the newer page, and says when there is nothing earlier', () => {
     const html = render(<CategoryPageView page={{ ...page, page: 2, latest: '2026-10-21T20:15:00Z' }} serverToday="2026-10-22" />)
     expect(html).toContain('updated yesterday at 8:15 PM')
-    expect(html).toMatch(/<a [^>]*href="\/en\/daily\/category\/tools"[^>]*>Newer stories<\/a>|<a [^>]*rel="prev"[^>]*href="\/en\/daily\/category\/tools"/)
+    expect(html).toMatch(/<a [^>]*href="\/en\/news\/category\/tools"[^>]*>Newer stories<\/a>|<a [^>]*rel="prev"[^>]*href="\/en\/news\/category\/tools"/)
     expect(html).toContain(en.daily.noEarlier)
     expect(html).not.toContain('?page=3')
   })
@@ -501,7 +503,7 @@ describe('a category page', () => {
   it('shows the empty state while the category has no stories', () => {
     const html = render(<CategoryPageView page={{ ...page, total: 0, pages: 0, stories: [], week: 0, latest: null }} serverToday="2026-10-22" />)
     expect(html).toContain(en.daily.emptyCategoryTitle)
-    expect(html).toContain('href="/en/daily"')
+    expect(html).toContain('href="/en/news"')
     expect(html).not.toContain('in the last 7 days')
     expect(html).not.toContain(en.daily.noEarlier)
   })
@@ -522,8 +524,8 @@ describe('the RSS feed', () => {
     })
     expect(xml).toContain('<rss')
     expect(xml).toContain('<language>ja</language>')
-    expect(xml).toContain('<link>https://ifai.example/ja/daily</link>')
-    expect(xml).toContain('https://ifai.example/ja/daily/story-1')
+    expect(xml).toContain('<link>https://ifai.example/ja/news</link>')
+    expect(xml).toContain('https://ifai.example/ja/news/story-1')
     expect(xml).toContain('<category>cat:tools</category>')
     expect(xml).toContain('Fri, 23 Oct 2026 01:00:00 GMT')
     // Markup in a summary is wrapped as character data, not parsed as part of the feed.

@@ -24,7 +24,7 @@ export function renderFeed({ locale, stories, title, description, categoryName, 
 
   return generateRssFeed({
     title,
-    link: absolute('/daily'),
+    link: absolute('/news'),
     description,
     language: locale.toLowerCase(),
     lastBuildDate: updatedAt ? new Date(updatedAt) : undefined,

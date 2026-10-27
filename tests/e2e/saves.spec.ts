@@ -154,7 +154,7 @@ test.describe('with the sample stories', () => {
   test.skip(!process.env.E2E_SAMPLE_STORIES, 'Run `pnpm payload run scripts/seed-stories.ts` and set E2E_SAMPLE_STORIES=1.')
 
   test('a visitor who saves a story is asked to sign in', async ({ page }) => {
-    await page.goto('/en/daily/sample-orbit-notes-benchmark')
+    await page.goto('/en/news/sample-orbit-notes-benchmark')
     const save = page.getByRole('main').getByRole('button', { name: en.saves.save, exact: true })
     await expect(save).toHaveAttribute('aria-pressed', 'false')
     await save.click()
@@ -175,9 +175,9 @@ test.describe('with the sample stories', () => {
       const main = page.getByRole('main')
 
       // Back from signing in with the save in the address: it finishes by itself, and the address is cleaned up.
-      await page.goto(`/en/daily/sample-orbit-notes-benchmark?save=story-${await member.storyId('sample-orbit-notes-benchmark')}`)
+      await page.goto(`/en/news/sample-orbit-notes-benchmark?save=story-${await member.storyId('sample-orbit-notes-benchmark')}`)
       await expect(main.getByRole('button', { name: en.saves.saved, exact: true })).toHaveAttribute('aria-pressed', 'true')
-      await expect(page).toHaveURL(/\/en\/daily\/sample-orbit-notes-benchmark$/)
+      await expect(page).toHaveURL(/\/en\/news\/sample-orbit-notes-benchmark$/)
 
       // Only published stories are saved.
       for (const slug of ['sample-withdrawn-story', 'sample-pending-story']) {
@@ -188,7 +188,7 @@ test.describe('with the sample stories', () => {
       await page.goto('/en/me/saves')
       const saved = page.getByRole('region', { name: new RegExp(`^${en.saves.stories}`) })
       await expect(saved.getByRole('link')).toHaveText([/Orbit Notes reports a new summarization benchmark/])
-      await expect(saved.getByRole('link')).toHaveAttribute('href', '/en/daily/sample-orbit-notes-benchmark')
+      await expect(saved.getByRole('link')).toHaveAttribute('href', '/en/news/sample-orbit-notes-benchmark')
       await saved
         .getByRole('button', { name: en.saves.removeName.replace('{name}', 'Sample: Orbit Notes reports a new summarization benchmark') })
         .click()
