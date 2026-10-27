@@ -4,10 +4,11 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useState, type MouseEvent } from 'react'
 
 import { Link } from '@/i18n/navigation'
+import type { StoryCategory } from '../../categories'
 import type { StoryTag } from '../../tags'
 
 import type { StoryItem } from '../story-item'
-import { listHref } from '../list-params'
+import { filterHref, listHref } from '../list-params'
 import { DailyFeed } from './daily-feed'
 import { pagePill, pageEnd } from './story-card'
 
@@ -17,6 +18,8 @@ type DailyPagesProps = {
   page: number
   pages: number
   tag: StoryTag | null
+  /** The category the list is filtered to (`/news?category=`), if any. */
+  category?: StoryCategory | null
   serverToday: string
 }
 
@@ -26,13 +29,14 @@ type DailyPagesProps = {
  * adds that page's stories under these instead and puts its address in the address bar. After the
  * last page it says there is nothing earlier. A later page links back to the newest stories.
  */
-export function DailyPages({ stories: first, page, pages, tag, serverToday }: DailyPagesProps) {
+export function DailyPages({ stories: first, page, pages, tag, category = null, serverToday }: DailyPagesProps) {
   const t = useTranslations('daily')
   const locale = useLocale()
   const [stories, setStories] = useState(first)
   const [last, setLast] = useState(page)
   const [state, setState] = useState<'idle' | 'loading' | 'failed'>('idle')
   const next = last + 1
+  const pageHref = (number?: number) => (category ? filterHref({ category, page: number }) : listHref({ tag, page: number }))
 
   const loadMore = async (event: MouseEvent<HTMLAnchorElement>) => {
     // A modified click opens the page in a new tab, as a link.
@@ -42,7 +46,7 @@ export function DailyPages({ stories: first, page, pages, tag, serverToday }: Da
     if (state === 'loading') return
     setState('loading')
     try {
-      const query = new URLSearchParams({ locale, page: String(next), ...(tag ? { tag } : {}) })
+      const query = new URLSearchParams({ locale, page: String(next), ...(tag ? { tag } : {}), ...(category ? { category } : {}) })
       const response = await fetch(`/api/daily/list?${query}`)
       if (!response.ok) throw new Error(String(response.status))
       const body = (await response.json()) as { stories: StoryItem[] }
@@ -61,13 +65,13 @@ export function DailyPages({ stories: first, page, pages, tag, serverToday }: Da
       <DailyFeed stories={stories} serverToday={serverToday} />
       <nav aria-label={t('pages')} className="flex flex-wrap justify-center gap-3">
         {page > 1 && (
-          <Link href={listHref({ tag })} className={pagePill}>
+          <Link href={pageHref()} className={pagePill}>
             {t('loadNewer')}
           </Link>
         )}
         {next <= pages ? (
           <Link
-            href={listHref({ tag, page: next })}
+            href={pageHref(next)}
             rel="next"
             prefetch={false}
             onClick={loadMore}

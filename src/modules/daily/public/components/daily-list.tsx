@@ -11,6 +11,7 @@ import { dayKey, serverTimeZone } from '@/lib/local-time'
 import { FollowButton } from '@/modules/follows/components/follow-button'
 import { FollowProvider } from '@/modules/follows/components/follow-provider'
 
+import type { StoryCategory } from '../../categories'
 import type { StoryTag } from '../../tags'
 import { SubscribeBox } from '../../email/components/subscribe-box'
 import { subscribingOpen } from '../../email/delivery'
@@ -27,24 +28,28 @@ type DailyListProps = {
   locale: Locale
   /** The industry tag being shown (`/news/tag/<tag>`), if any; null for every story. */
   tag?: StoryTag | null
+  /** The category the list is filtered to (`/news?category=<category>`, the left column), if any. */
+  category?: StoryCategory | null
   page: number
 }
 
 /**
  * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): 「头条」and the latest「每日 AI 大事」
- * poster (first page of every story only), then under a line the categories (each has its own page,
+ * poster (first page of every story only), then under a line the categories (a click filters the
+ * list in place, `/news?category=`; each also has its own page,
  * ./category-page.tsx), stories by day, two weeks at a time with「加载更多」(./daily-pages.tsx), and the apps in today's news and the
  * hottest events of the last 48 hours. The email subscribe box sits under the poster on wide
  * screens (in the poster's place when there is none) and after the stories on phones and tablets.
  * A tag's page is the same list without the first row and the categories.
  */
-export async function DailyList({ locale, tag = null, page }: DailyListProps) {
+export async function DailyList({ locale, tag = null, category = null, page }: DailyListProps) {
+  // Filtering by category keeps the first row: only the stories under it change.
   const front = !tag && page === 1
   const [t, names, tagNames, result, hottest, poster, hot, apps] = await Promise.all([
     getTranslations('daily'),
     getTranslations('categories'),
     getTranslations('tags'),
-    listStories({ locale, tag, page }),
+    listStories({ locale, tag, category, page }),
     front ? hottestStory(locale) : null,
     front ? latestPoster() : null,
     hotStories(locale),
@@ -69,7 +74,7 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
             </div>
           </FollowProvider>
         ) : (
-          <h1 className="sr-only">{t('title')}</h1>
+          <h1 className="sr-only">{category ? t('categoryTitle', { category: names(category) }) : t('title')}</h1>
         )}
         {/* The board's first row: 「头条」and the poster share it 2 : 1 and wrap when there is no room.
             Without them only the subscribe box is left, which wide screens show here. */}
@@ -109,7 +114,7 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
         >
           {!tag && (
             <StickyColumn className="md:shrink-0 md:basis-41 lg:sticky">
-              <CategoryNav current={null} />
+              <CategoryNav current={category} filter />
             </StickyColumn>
           )}
 
@@ -117,14 +122,15 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
             <ListResults skeleton={<DailyFeedSkeleton count={Math.min(Math.max(result.stories.length, 3), 6)} />}>
               {result.stories.length > 0 ? (
                 <DailyPages
-                  key={`${tag}-${page}`}
+                  key={`${tag}-${category}-${page}`}
                   stories={result.stories}
                   page={page}
                   pages={result.pages}
                   tag={tag}
+                  category={category}
                   serverToday={serverToday}
                 />
-              ) : tag ? (
+              ) : tag || category ? (
                 <EmptyState title={t('emptyCategoryTitle')} body={t('emptyCategoryBody')}>
                   <ListLink href="/news" className={buttonClass('secondary')}>
                     {t('allStories')}
