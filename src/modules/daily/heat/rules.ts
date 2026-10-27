@@ -138,3 +138,33 @@ export function signalsOf(
   }
   return result
 }
+
+/**
+ * 传播指数, what the pages show: the highest heat the event has reached, so it never drops, not
+ * even after the 48 hours (站长, 2026-10-27). Shown as a whole number in one of four colours.
+ */
+export function peakOf(peak: number | null | undefined, heat: number): number {
+  return Math.max(peak ?? 0, heat)
+}
+
+/** Where the colours change: under 40 (one source) green, then orange, red, and from 80 (eight sources or so) magenta. */
+export const SPREAD_TIERS = [40, 60, 80] as const
+
+export type SpreadTier = 1 | 2 | 3 | 4
+
+export function spreadTier(value: number): SpreadTier {
+  return (1 + SPREAD_TIERS.filter((step) => value >= step).length) as SpreadTier
+}
+
+/**
+ * The highest heat these signals ever gave the event. Heat only rises when a signal starts to
+ * count and decays in between, so the peak is the heat at one of those moments.
+ */
+export function peakHeat(signals: readonly HeatSignal[]): number {
+  let peak = 0
+  for (const signal of signals) {
+    const at = new Date(Math.max(signal.at.getTime(), signal.knownAt.getTime()))
+    peak = Math.max(peak, heatScore(rawHeat(signals, at)))
+  }
+  return peak
+}

@@ -219,7 +219,7 @@ const zh = {
     llm: '大模型',
     tools: 'AI工具',
     aigc: 'AIGC',
-    open: '开源',
+    open: '开源项目',
     industry: '行业动态',
     research: 'AI科研',
     robotics: '机器人',

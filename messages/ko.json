@@ -56,7 +56,8 @@
     "rank": "{rank}위",
     "install": "설치",
     "installs": "설치 {count}회",
-    "moreSources": "{count, plural, =0 {단독 출처} other {외 #곳 보도}}"
+    "moreSources": "{count, plural, =0 {단독 출처} other {외 #곳 보도}}",
+    "spread": "확산 지수"
   },
   "auth": {
     "title": "IFAI 로그인",
@@ -1026,6 +1027,9 @@
     "yesterday": "어제",
     "loadEarlier": "이전 소식 더 보기",
     "loadNewer": "최신 소식 보기",
+    "loadMore": "더 보기",
+    "loadingMore": "불러오는 중…",
+    "loadMoreFailed": "불러오지 못했어요. 다시 시도",
     "emptyTitle": "아직 게시된 소식이 없어요",
     "emptyBody": "첫 소식을 확인하고 있어요. 곧 여기에 표시돼요.",
     "emptyCategoryTitle": "이 카테고리에는 아직 소식이 없어요",
@@ -1037,8 +1041,6 @@
     "corrected": "정정",
     "hottest": "헤드라인",
     "hotTitle": "48시간 인기 소식",
-    "hotBy": "사건별",
-    "outlets": "{count, plural, other {#곳 보도}}",
     "trend": {
       "rising": "상승",
       "new": "신규"
@@ -1085,14 +1087,13 @@
     "title": "AI 데일리 하이라이트",
     "today": "오늘의 AI 하이라이트",
     "brand": "IFAI · AI 하이라이트",
-    "dateLine": "{date} · 상하이 시간",
     "count": "{count, plural, other {#개 소식}}",
     "save": "포스터 다운로드",
     "head": "톱뉴스",
-    "imageLine": "{year} · {weekday} · 상하이 시간 · {count, plural, other {#개 소식}}",
+    "imageLine": "{year} · {weekday} · {count, plural, other {#개 소식}}",
     "imageFooter": "모든 소식은 출처를 확인했어요 · {site}",
     "pageTitle": "AI 데일리 하이라이트 · {date}",
-    "pageDescription": "{date}(상하이 시간)의 AI 소식 {count, plural, other {#개}}. 톱뉴스: {head}",
+    "pageDescription": "{date}의 AI 소식 {count, plural, other {#개}}. 톱뉴스: {head}",
     "imageAlt": "{date} AI 하이라이트 포스터, {count, plural, other {#개 소식}}",
     "downloads": "5개 언어 포스터",
     "download": "{language} 버전 다운로드",

@@ -56,7 +56,8 @@
     "rank": "Rank {rank}",
     "install": "Install",
     "installs": "{count} installs",
-    "moreSources": "{count, plural, =0 {Single source} one {# more outlet reported this} other {# more outlets reported this}}"
+    "moreSources": "{count, plural, =0 {Single source} one {# more outlet reported this} other {# more outlets reported this}}",
+    "spread": "Reach"
   },
   "auth": {
     "title": "Sign in to IFAI",
@@ -1026,6 +1027,9 @@
     "yesterday": "Yesterday",
     "loadEarlier": "Load earlier stories",
     "loadNewer": "Newer stories",
+    "loadMore": "Load more",
+    "loadingMore": "Loading…",
+    "loadMoreFailed": "Couldn’t load. Try again",
     "emptyTitle": "No stories published yet",
     "emptyBody": "The first stories are being checked and will appear here soon.",
     "emptyCategoryTitle": "No stories in this category yet",
@@ -1037,8 +1041,6 @@
     "corrected": "Corrected",
     "hottest": "Top story",
     "hotTitle": "Hot in the last 48 hours",
-    "hotBy": "By story",
-    "outlets": "{count, plural, one {# outlet} other {# outlets}}",
     "trend": {
       "rising": "Rising",
       "new": "New"
@@ -1085,14 +1087,13 @@
     "title": "Daily AI highlights",
     "today": "Today's AI highlights",
     "brand": "IFAI · AI highlights",
-    "dateLine": "{date} · Shanghai time",
     "count": "{count, plural, one {# story} other {# stories}}",
     "save": "Download poster",
     "head": "Top story",
-    "imageLine": "{weekday}, {year} · Shanghai time · {count, plural, one {# story} other {# stories}}",
+    "imageLine": "{weekday}, {year} · {count, plural, one {# story} other {# stories}}",
     "imageFooter": "Every story checked against its sources · {site}",
     "pageTitle": "Daily AI highlights · {date}",
-    "pageDescription": "{count, plural, one {# AI story} other {# AI stories}} of {date} (Shanghai time). Top story: {head}",
+    "pageDescription": "{count, plural, one {# AI story} other {# AI stories}} of {date}. Top story: {head}",
     "imageAlt": "Poster of the AI highlights of {date}, {count, plural, one {# story} other {# stories}}",
     "downloads": "The poster in five languages",
     "download": "Download {language}",

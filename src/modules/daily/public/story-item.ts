@@ -4,6 +4,7 @@ import type { Media, Story } from '@/payload-types'
 
 import { storyCategories, storyCategoryOf, type StoryCategory } from '../categories'
 import type { EntityKind, StoryEntity } from '../entities'
+import { peakOf } from '../heat/rules'
 import { parseVideo, type Video } from '../media'
 import type { HeatTrend, SourceRole } from '../story-fields'
 import type { StoryTag } from '../tags'
@@ -32,19 +33,19 @@ export type StoryItem = {
   tryIt: InLanguage<string> | null
   /** Other outlets that reported the same happening: the sources with the role "report". */
   moreReports: number
+  /** 传播指数, 0–100 as a whole number: the highest heat the story's event reached (../heat/rules.ts `peakOf`); 0 when it never had any. */
+  spread: number
   /** Publisher of the original announcement (or of the first report). */
   originalName: string | null
   media: StoryMedia | null
 }
 
-/** A story in「48 小时热门」and「头条」: its event's heat and how many outlets reported it. */
+/** A story in「48 小时热门」and「头条」: its event's heat now and its mark. */
 export type HotStory = StoryItem & {
   eventId: number
   /** 0–100, the event's heat (src/modules/daily/heat/rules.ts). */
   heat: number
   trend: HeatTrend | null
-  /** Outlets that reported it, the original publisher included; discussion threads do not count. */
-  outlets: number
 }
 
 /** A company or product the story is about; `key` names its topic page; `app` when the apps module matched it to a published app. */
@@ -141,6 +142,7 @@ export function toItem(doc: RawStory, locale: Locale): StoryItem {
     summary: inReaderLanguage(doc.summary, locale),
     tryIt: inReaderLanguage(doc.tryIt, locale),
     moreReports: sources.filter((source) => source.role === 'report').length,
+    spread: Math.round(peakOf(doc.heatPeak, doc.heat ?? 0)),
     originalName: (sources.find((source) => source.role === 'original') ?? sources[0])?.name ?? null,
     media: mediaOf(doc.media),
   }
@@ -170,7 +172,6 @@ export function toHot(doc: RawStory, locale: Locale): HotStory {
     eventId: doc.eventId,
     heat: doc.heat ?? 0,
     trend: doc.heatTrend ?? null,
-    outlets: Math.max(1, sourcesOf(doc).filter((source) => source.role !== 'discussion').length),
   }
 }
 

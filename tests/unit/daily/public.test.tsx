@@ -46,6 +46,7 @@ const story = (overrides: Partial<StoryItem> & Pick<StoryItem, 'id' | 'published
   summary: { value: 'What happened, in one line.', lang: 'en' },
   tryIt: null,
   moreReports: 0,
+  spread: 0,
   originalName: 'Maker',
   media: null,
   ...overrides,
@@ -147,10 +148,12 @@ describe('a story in the reader’s language', () => {
     expect(item.publishedAt).toBe('2026-10-22T09:42:00.000Z')
   })
 
-  it('counts the outlets of a hot story without the discussion threads', () => {
-    const hot = toHot({ ...raw, heat: 71.3, heatTrend: 'rising' } as RawStory, 'en')
-    expect(hot).toMatchObject({ eventId: 1, heat: 71.3, trend: 'rising', outlets: 3 })
-    expect(toHot({ ...raw, sources: [] } as RawStory, 'en')).toMatchObject({ heat: 0, trend: null, outlets: 1 })
+  it('gives a hot story its heat and mark, and every story the highest heat it reached as its reach index', () => {
+    const hot = toHot({ ...raw, heat: 71.3, heatPeak: 64.2, heatTrend: 'rising' } as RawStory, 'en')
+    expect(hot).toMatchObject({ eventId: 1, heat: 71.3, trend: 'rising', spread: 71 })
+    // Past the 48 hours the heat is 0 but the reach index stays.
+    expect(toItem({ ...raw, heat: 0, heatPeak: 88.6 } as RawStory, 'en').spread).toBe(89)
+    expect(toHot({ ...raw, sources: [] } as RawStory, 'en')).toMatchObject({ heat: 0, trend: null, spread: 0 })
   })
 
   it('shows a title in any language rather than none', () => {
@@ -164,7 +167,7 @@ describe('the daily feed', () => {
     const html = render(
       <DailyFeed
         stories={[
-          story({ id: 1, publishedAt: '2026-10-22T23:30:00Z', moreReports: 2, tryIt: { value: 'Open the app.', lang: 'en' } }),
+          story({ id: 1, publishedAt: '2026-10-22T23:30:00Z', spread: 64, tryIt: { value: 'Open the app.', lang: 'en' } }),
           story({ id: 2, publishedAt: '2026-10-21T02:00:00Z', title: { value: '一个开源模型', lang: 'zh-Hans' } }),
         ]}
         serverToday="2026-10-22"
@@ -175,11 +178,16 @@ describe('the daily feed', () => {
     // React writes the attribute as dateTime; HTML attribute names are case-insensitive.
     expect(html).toContain('dateTime="2026-10-22T23:30:00Z"')
     expect(html).toContain('11:30 PM')
-    expect(html).toContain('2 more outlets reported this')
+    // The reach index in its tier's colour instead of the other reports (站长, 2026-10-27).
+    expect(html).toContain(`${en.card.spread} <span class="font-semibold tabular-nums text-heat-3">64</span>`)
+    expect(html).not.toContain('more outlets')
     // No「试一试」in the list (站长, 2026-10-27).
+    expect(html.match(new RegExp(en.card.spread, 'g'))).toHaveLength(1)
     expect(html).not.toContain('Open the app.')
     expect(html).toContain('lang="zh-Hans"')
     expect(html).toContain('href="/en/daily/story-2"')
+    // The category leads to its page (站长, 2026-10-27).
+    expect(html).toContain('href="/en/daily/category/tools"')
   })
 })
 
@@ -188,7 +196,6 @@ describe('the hottest events', () => {
     ...story({ id: overrides.id, publishedAt: '2026-10-22T09:00:00Z' }),
     heat: 50,
     trend: null,
-    outlets: 1,
     ...overrides,
   })
 
@@ -197,20 +204,24 @@ describe('the hottest events', () => {
     expect(onePerEvent(stories, 2).map((item) => item.id)).toEqual([1, 3])
   })
 
-  it('ranks them with the outlets and the rising and new marks', () => {
+  it('ranks them with the reach index and the rising and new marks', () => {
     const html = render(
       <HotList
         stories={[
-          hot({ id: 1, eventId: 1, outlets: 7, trend: 'rising' }),
-          hot({ id: 2, eventId: 2, outlets: 1, trend: 'new' }),
-          hot({ id: 3, eventId: 3, outlets: 4 }),
-          hot({ id: 4, eventId: 4, outlets: 2 }),
+          hot({ id: 1, eventId: 1, spread: 92, trend: 'rising' }),
+          hot({ id: 2, eventId: 2, spread: 71, trend: 'new' }),
+          hot({ id: 3, eventId: 3, spread: 53 }),
+          hot({ id: 4, eventId: 4, spread: 22 }),
         ]}
       />,
     )
     expect(html).toContain(`>${en.daily.hotTitle}</h2>`)
-    expect(html).toContain('7 outlets')
-    expect(html).toContain('1 outlet<')
+    // Cold to hot: green, orange, red, magenta.
+    expect(html).toContain('text-heat-4">92<')
+    expect(html).toContain('text-heat-3">71<')
+    expect(html).toContain('text-heat-2">53<')
+    expect(html).toContain('text-heat-1">22<')
+    expect(html).not.toContain('outlet')
     expect(html).toContain(`>${en.daily.trend.rising}</span>`)
     expect(html).toContain(`>${en.daily.trend.new}</span>`)
     expect(html).toContain('href="/en/daily/story-3"')
@@ -234,8 +245,9 @@ describe('the hottest events', () => {
   })
 
   it("leads with today's hottest story, the whole card a link to it", () => {
-    const html = render(<HottestCard story={hot({ id: 5, eventId: 5, moreReports: 6 })} category="Product" />)
-    expect(html).toContain(`${en.daily.hottest} · Product · 6 more outlets reported this`)
+    const html = render(<HottestCard story={hot({ id: 5, eventId: 5, spread: 81 })} category="Product" />)
+    expect(html).toContain(`${en.daily.hottest} · Product`)
+    expect(html).toContain(`<span>${en.card.spread} <span class="font-semibold tabular-nums">81</span></span>`)
     expect(html).toContain('href="/en/daily/story-5"')
     // The title only, no summary (站长, 2026-10-27).
     expect(html).not.toContain('What happened, in one line.')
@@ -279,7 +291,7 @@ describe('「今天的 AI」on the home page', () => {
 
 describe('a story’s page', () => {
   const detail: StoryDetail = {
-    ...story({ id: 1, publishedAt: '2026-10-22T09:42:00Z', correctedAt: '2026-10-22T12:00:00Z', moreReports: 1 }),
+    ...story({ id: 1, publishedAt: '2026-10-22T09:42:00Z', correctedAt: '2026-10-22T12:00:00Z', spread: 85 }),
     sources: [
       { name: 'Maker', role: 'original', url: 'https://www.maker.example/post', publishedAt: '2026-10-22T08:00:00Z' },
       { name: 'Outlet', role: 'report', url: 'https://outlet.example/x', publishedAt: null },
@@ -299,7 +311,7 @@ describe('a story’s page', () => {
     expect(html).toContain('maker.example')
     expect(html).toContain(`>${en.daily.corrected} <time dateTime="2026-10-22T12:00:00Z">`)
     expect(html).toContain('href="/en/daily/earlier"')
-    expect(html).toContain('1 more outlet reported this')
+    expect(html).toContain('text-heat-4">85<')
   })
 
   it('leaves out the related blocks it has nothing for', () => {
@@ -380,7 +392,7 @@ describe('a company’s or product’s topic page', () => {
     page: 1,
     pages: 2,
     stories: [
-      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'k3', moreReports: 6 }),
+      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'k3', spread: 66 }),
       story({ id: 2, publishedAt: '2026-09-11T20:15:00Z', slug: 'k28' }),
       story({ id: 3, publishedAt: '2025-11-06T22:05:00Z', slug: 'k2-thinking' }),
     ],
@@ -412,7 +424,7 @@ describe('a company’s or product’s topic page', () => {
     expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
     expect(html).toContain('<span>September 11</span>')
     expect(html).toContain('<span>November 6, 2025</span>')
-    expect(html).toContain('6 more outlets reported this')
+    expect(html).toContain('text-heat-3">66<')
     expect(html).toContain('href="/en/daily/topic/kimi?page=2"')
     expect(html).toContain('Load earlier stories (3)')
     // 「+ 关注」at the top; the follower count is read in the browser, so none yet.
@@ -442,7 +454,7 @@ describe('a category page', () => {
     page: 1,
     pages: 2,
     stories: [
-      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'workspaces', moreReports: 2, tryIt: { value: 'Invite a teammate.', lang: 'en' } }),
+      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'workspaces', spread: 45, tryIt: { value: 'Invite a teammate.', lang: 'en' } }),
       story({ id: 2, publishedAt: '2026-10-21T20:15:00Z', slug: 'preview' }),
     ],
     week: 18,
@@ -471,8 +483,9 @@ describe('a category page', () => {
     expect(html.split(`>${en.categories.tools}<`)).toHaveLength(3)
     expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
     expect(html).not.toContain('Invite a teammate.')
-    expect(html).toContain('2 more outlets reported this')
-    expect(html).toContain(en.card.moreSources.match(/=0 \{([^}]*)\}/)?.[1] ?? 'missing')
+    expect(html).toContain('text-heat-2">45<')
+    // A story that never had any heat shows no reach index.
+    expect(html.match(new RegExp(`${en.card.spread} `, 'g'))).toHaveLength(1)
     expect(html).toContain('href="/en/daily/category/tools?page=2"')
     expect(html).toContain(en.daily.loadEarlier)
   })

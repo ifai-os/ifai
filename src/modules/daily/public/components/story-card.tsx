@@ -1,9 +1,8 @@
-import { useTranslations } from 'next-intl'
-
 import { Link } from '@/i18n/navigation'
 
 import type { StoryItem } from '../story-item'
-import { storyHref } from '../list-params'
+import { listHref, storyHref } from '../list-params'
+import { SpreadIndex } from './spread-index'
 import { StoryTime } from './story-time'
 
 const pillShape = 'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-6 text-meta'
@@ -23,20 +22,24 @@ type StoryCardProps = {
 
 /**
  * One story on a topic or category page (「IFAI 公司与产品话题页」「IFAI 日报 · 分类页」boards): the
- * reader's local day and time, then a white card with the other reports, the title, at most
+ * reader's local day and time, then a white card with the reach index, the title, at most
  * three lines of summary.
  */
 export function StoryCard({ story, serverToday, category }: StoryCardProps) {
-  const card = useTranslations('card')
-
   return (
     <li className="flex flex-col gap-2.5">
       <StoryTime iso={story.publishedAt} serverToday={serverToday} />
       <article className="flex flex-col gap-3 rounded-card bg-bg px-5 py-5 md:px-7 md:py-6">
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-4">
-          {category && <span>{category}</span>}
-          <span>{card('moreSources', { count: story.moreReports })}</span>
-        </p>
+        {(category || story.spread > 0) && (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-4">
+            {category && (
+              <Link href={listHref({ category: story.category })} className="hover:text-ink">
+                {category}
+              </Link>
+            )}
+            <SpreadIndex value={story.spread} />
+          </p>
+        )}
         <h2 lang={story.title.lang} className="text-h3">
           <Link href={storyHref(story.slug)} className="hover:text-accent-ink">
             {story.title.value}

@@ -12,6 +12,7 @@ import { SaveProvider } from '@/modules/saves/components/save-provider'
 
 import type { StoryDetail } from '../story-item'
 import { listHref, storyHref } from '../list-params'
+import { SpreadIndex } from './spread-index'
 import { StoryFigure } from './story-media'
 import { EntityList, SimilarStories, TagList, TopicTrack } from './story-related'
 
@@ -40,7 +41,6 @@ function hostOf(url: string): string {
 export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn: AuthProviders }) {
   const t = useTranslations('daily')
   const names = useTranslations('categories')
-  const card = useTranslations('card')
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-6 px-4 pt-5 pb-16 md:gap-8 md:pt-8 md:pb-24">
@@ -68,7 +68,11 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
           <article className="flex w-full max-w-read min-w-0 flex-col gap-6">
             <header className="flex flex-col gap-3">
-              <p className="text-meta font-medium text-accent-ink">{names(story.category)}</p>
+              <p className="text-meta font-medium">
+                <Link href={listHref({ category: story.category })} className="text-accent-ink hover:underline">
+                  {names(story.category)}
+                </Link>
+              </p>
               <h1 lang={story.title.lang} className="text-h1 wrap-anywhere md:text-h1-article">
                 {story.title.value}
               </h1>
@@ -81,7 +85,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
                     {t('correctedAt')} <LocalTime iso={story.correctedAt} />
                   </span>
                 )}
-                <span>{card('moreSources', { count: story.moreReports })}</span>
+                <SpreadIndex value={story.spread} />
               </p>
             </header>
 

@@ -34,6 +34,7 @@ const story = (id: number, publishedAt: string): StoryItem => ({
   summary: null,
   tryIt: null,
   moreReports: 0,
+  spread: 0,
   originalName: null,
   media: null,
 })

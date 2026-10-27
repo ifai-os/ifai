@@ -437,6 +437,18 @@ export const Stories: CollectionConfig = {
       },
     },
     {
+      name: "heatPeak",
+      type: "number",
+      label: { en: "Reach index", zh: "传播指数" },
+      admin: {
+        ...readOnly,
+        description: {
+          en: "The highest heat the event has reached; never drops. The pages show it.",
+          zh: "所属事件到过的最高热度，只升不降；前台显示的就是它。",
+        },
+      },
+    },
+    {
       name: "heatTrend",
       type: "select",
       label: { en: "Heat trend", zh: "热度走势" },

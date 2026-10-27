@@ -188,7 +188,6 @@
     "roles": {
       "report": "報導"
     },
-    "outlets": "{count, plural, other {# 家報導}}",
     "showMore": "檢視更多（{count} 則）",
     "topicNote": "這個話題的歷次新聞，最新的在上面。",
     "thisStory": "本則",
