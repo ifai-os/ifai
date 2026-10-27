@@ -176,7 +176,8 @@ describe('the daily feed', () => {
     expect(html).toContain('dateTime="2026-10-22T23:30:00Z"')
     expect(html).toContain('11:30 PM')
     expect(html).toContain('2 more outlets reported this')
-    expect(html).toContain(`${en.daily.tryIt}</span> Open the app.`)
+    // No「试一试」in the list (站长, 2026-10-27).
+    expect(html).not.toContain('Open the app.')
     expect(html).toContain('lang="zh-Hans"')
     expect(html).toContain('href="/en/daily/story-2"')
   })
@@ -468,7 +469,7 @@ describe('a category page', () => {
     // The name shows in the title and the pill only.
     expect(html.split(`>${en.categories.tools}<`)).toHaveLength(3)
     expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
-    expect(html).toContain('>Try it</span> Invite a teammate.')
+    expect(html).not.toContain('Invite a teammate.')
     expect(html).toContain('2 more outlets reported this')
     expect(html).toContain(en.card.moreSources.match(/=0 \{([^}]*)\}/)?.[1] ?? 'missing')
     expect(html).toContain('href="/en/daily/category/tools?page=2"')
@@ -497,12 +498,11 @@ describe('the RSS feed', () => {
     const xml = renderFeed({
       locale: 'ja',
       stories: [
-        story({ id: 1, publishedAt: '2026-10-22T09:42:00Z', summary: { value: 'A <b>bold</b> claim & more', lang: 'en' }, tryIt: { value: 'Try now', lang: 'ja' } }),
+        story({ id: 1, publishedAt: '2026-10-22T09:42:00Z', summary: { value: 'A <b>bold</b> claim & more', lang: 'en' } }),
         story({ id: 2, publishedAt: '2026-10-21T09:00:00Z', correctedAt: '2026-10-23T01:00:00Z', summary: null }),
       ],
       title: 'IFAI デイリー',
       description: 'AI news',
-      tryItLabel: '試してみる',
       categoryName: (category) => `cat:${category}`,
       origin: 'https://ifai.example',
     })
@@ -512,7 +512,6 @@ describe('the RSS feed', () => {
     expect(xml).toContain('https://ifai.example/ja/daily/story-1')
     expect(xml).toContain('<category>cat:tools</category>')
     expect(xml).toContain('Fri, 23 Oct 2026 01:00:00 GMT')
-    expect(xml).toContain('試してみる: Try now')
     // Markup in a summary is wrapped as character data, not parsed as part of the feed.
     expect(xml).toContain('<![CDATA[A <b>bold</b> claim & more')
   })

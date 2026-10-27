@@ -235,9 +235,9 @@ test.describe('with the sample stories', () => {
     await expect(filter.getByRole('link')).toHaveCount(8)
     await expect(filter.getByRole('link', { name: en.categories.tools, exact: true })).toHaveAttribute('aria-current', 'page')
     const cards = page.getByRole('main').getByRole('article')
-    // Newest first, under their times; the「试一试」in its grey box.
+    // Newest first, under their times; no「试一试」(站长, 2026-10-27).
     await expect(cards.getByRole('link')).toHaveText([titles.workspaces, titles.preview])
-    await expect(cards.first()).toContainText(`${en.daily.tryIt} Open a workspace and invite a teammate.`)
+    await expect(cards.first()).not.toContainText('Open a workspace and invite a teammate.')
     await expect(cards.nth(1)).toContainText(en.card.moreSources.match(/=0 \{([^}]*)\}/)![1])
     await expect(page.getByText(en.daily.noEarlier)).toBeVisible()
 

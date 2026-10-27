@@ -84,7 +84,7 @@ export function CategoryPageView({ page, serverToday }: { page: CategoryPage; se
           {page.stories.length > 0 ? (
             <ol className="flex flex-col gap-7">
               {page.stories.map((story) => (
-                <StoryCard key={story.id} story={story} serverToday={serverToday} tryIt />
+                <StoryCard key={story.id} story={story} serverToday={serverToday} />
               ))}
             </ol>
           ) : (

@@ -26,7 +26,6 @@ export async function GET(_request: Request, { params }: Context) {
     stories,
     title: t('feedTitle'),
     description: t('feedDescription'),
-    tryItLabel: t('tryIt'),
     categoryName: (category) => names(category),
     origin: siteUrl(),
   })

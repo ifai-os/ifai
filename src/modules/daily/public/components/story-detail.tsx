@@ -93,17 +93,6 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
 
             <StoryFigure story={story} />
 
-            {story.tryIt && (
-              <section aria-labelledby="try-it" className="flex flex-col gap-1.5 rounded-card bg-surface px-5 py-4">
-                <h2 id="try-it" className="text-ui font-semibold text-accent-ink">
-                  {t('tryIt')}
-                </h2>
-                <p lang={story.tryIt.lang} className="text-body whitespace-pre-line text-ink-2">
-                  {story.tryIt.value}
-                </p>
-              </section>
-            )}
-
             {story.correctedAt && (
               <p role="note" className="rounded-tile bg-info-soft px-4 py-3 text-meta text-ink-2">
                 {t('corrected')} <LocalTime iso={story.correctedAt} zone />
