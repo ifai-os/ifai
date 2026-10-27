@@ -57,7 +57,7 @@ export function PosterPageView({ snapshot, locale, neighbours }: Props) {
           <header className="flex flex-col gap-2">
             <h1 className="text-h1">{t('title')}</h1>
             <p className="text-meta text-ink-4">
-              {t('dateLine', { date: day })} · {t('count', { count })}
+              {day} · {t('count', { count })}
             </p>
           </header>
 

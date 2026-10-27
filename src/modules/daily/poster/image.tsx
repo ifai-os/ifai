@@ -39,7 +39,7 @@ export type PosterLabels = {
   brand: string
   /** The date large: "10月21日", "October 21". */
   day: string
-  /** Year, weekday, time zone and the count: "2026年 · 星期三 · 上海时间 · 8 件大事". */
+  /** Year, weekday and the count: "2026年 · 星期三 · 8 件大事" (no time zone: 站长, 2026-10-27). */
   line: string
   head: string
   footer: string
