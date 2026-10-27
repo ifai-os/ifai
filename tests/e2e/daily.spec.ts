@@ -116,7 +116,7 @@ test.describe('with the sample stories', () => {
     const save = page.getByRole('link', { name: en.poster.save })
     await expect(save).toHaveAttribute('download', /^ifai-\d{4}-\d{2}-\d{2}-en\.png$/)
     await expect(save).toHaveAttribute('href', /^\/en\/daily\/poster\/\d{4}-\d{2}-\d{2}\/image\.png\?v=\w+$/)
-    await page.getByRole('link', { name: en.poster.title, exact: true }).click()
+    await page.getByRole('link', { name: en.poster.today, exact: true }).click()
     await expect(page).toHaveURL(/\/en\/daily\/poster\/\d{4}-\d{2}-\d{2}$/)
     const date = new URL(page.url()).pathname.split('/').at(-1)
     await expect(page.getByRole('heading', { level: 1, name: en.poster.title })).toBeVisible()

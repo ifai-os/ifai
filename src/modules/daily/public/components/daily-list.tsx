@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { buttonClass } from '@/components/button'
 import { EmptyState } from '@/components/states/empty-state'
+import { StickyColumn } from '@/components/sticky-column'
 import { ListLink, ListNavigationProvider, ListResults } from '@/components/states/list-navigation'
 import type { Locale } from '@/i18n/config'
 import { authProviders } from '@/lib/auth/providers'
@@ -76,20 +77,20 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
         {/* The board's first row: 「头条」and the poster share it 2 : 1 and wrap when there is no room.
             Without them only the subscribe box is left, which wide screens show here. */}
         {(firstRow || subscribe) && (
-          <div className={`flex-col gap-4 md:flex-row md:flex-wrap ${firstRow ? 'flex' : 'hidden lg:flex'}`}>
+          <div className={`flex-col gap-3 md:flex-row md:flex-wrap ${firstRow ? 'flex' : 'hidden lg:flex'}`}>
             {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
             {poster ? (
-              <div className={`flex flex-col gap-4 ${hottest ? 'md:grow md:basis-54' : 'md:w-side md:flex-none'}`}>
+              <div className={`flex flex-col gap-3 ${hottest ? 'md:grow md:basis-54' : 'md:w-side md:flex-none'}`}>
                 <PosterCard poster={poster} locale={locale} />
                 {subscribe && (
-                  <div className="hidden lg:block">
+                  <div className="hidden lg:flex lg:grow lg:flex-col">
                     <SubscribeBox variant="column" />
                   </div>
                 )}
               </div>
             ) : (
               subscribe && (
-                <div className={`hidden lg:block ${hottest ? 'lg:grow lg:basis-54' : 'lg:w-side lg:flex-none'}`}>
+                <div className={`hidden lg:flex lg:flex-col ${hottest ? 'lg:grow lg:basis-54' : 'lg:w-side lg:flex-none'}`}>
                   <SubscribeBox variant="column" />
                 </div>
               )
@@ -99,16 +100,17 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
 
         {/* The board's second part, under a line: the categories (140), the stories and the column beside
             them (200), 48 apart; what doesn't fit wraps under, as on the board. Phones stack them, the
-            categories as chips. */}
+            categories as chips. Where all three share a row (lg), the two side columns stay put while
+            the stories scroll (站长, 2026-10-27, after sspai.com). */}
         <div
           className={`flex flex-col gap-5 md:flex-row md:flex-wrap md:items-start md:gap-x-12 md:gap-y-10 ${
             firstRow ? 'md:border-t md:border-line md:pt-6' : subscribe ? 'lg:border-t lg:border-line lg:pt-6' : ''
           }`}
         >
           {!tag && (
-            <div className="md:basis-35">
+            <StickyColumn className="md:basis-35 lg:sticky">
               <CategoryNav current={null} />
-            </div>
+            </StickyColumn>
           )}
 
           <div className="flex min-w-0 flex-col gap-6 md:grow-999 md:basis-105">
@@ -149,10 +151,12 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
           </div>
 
           {(hot.length > 0 || apps.length > 0) && (
-            <aside className="flex flex-col gap-8 max-md:mt-7 md:grow md:basis-50">
-              <MentionedApps apps={apps} serverToday={serverToday} />
-              {hot.length > 0 && <HotList stories={hot} />}
-            </aside>
+            <StickyColumn className="max-md:mt-7 md:grow md:basis-50 lg:sticky">
+              <aside className="flex flex-col gap-8">
+                <MentionedApps apps={apps} serverToday={serverToday} />
+                {hot.length > 0 && <HotList stories={hot} />}
+              </aside>
+            </StickyColumn>
           )}
         </div>
       </main>

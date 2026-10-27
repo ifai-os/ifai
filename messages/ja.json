@@ -1024,7 +1024,6 @@
     "allCategories": "すべて",
     "today": "今日",
     "yesterday": "昨日",
-    "groupCount": "{count}件",
     "loadEarlier": "さらに前のニュースを読み込む",
     "loadNewer": "新しいニュースを見る",
     "emptyTitle": "まだニュースはありません",
@@ -1085,6 +1084,7 @@
   },
   "poster": {
     "title": "AIデイリーハイライト",
+    "today": "今日のAIハイライト",
     "brand": "IFAI · AIハイライト",
     "dateLine": "{date} · 上海時間",
     "count": "{count, plural, other {#件}}",
@@ -1102,8 +1102,7 @@
     "later": "次の号"
   },
   "subscribe": {
-    "title": "毎朝8時にAIデイリーを",
-    "note": "お住まいの時間帯に配信。いつでも停止できます",
+    "title": "AIピックアップ",
     "email": "メールアドレス",
     "submit": "登録する",
     "done": "登録しました。明朝8時にお届けします",

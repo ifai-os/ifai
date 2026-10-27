@@ -1024,7 +1024,6 @@
     "allCategories": "全部",
     "today": "今天",
     "yesterday": "昨天",
-    "groupCount": "{count, plural, other {# 条}}",
     "loadEarlier": "加载更早的新闻",
     "loadNewer": "查看更新的新闻",
     "emptyTitle": "还没有发布新闻",
@@ -1085,6 +1084,7 @@
   },
   "poster": {
     "title": "每日 AI 大事",
+    "today": "今日 AI 大事",
     "brand": "IFAI · AI 大事",
     "dateLine": "{date} · 上海时间",
     "count": "{count, plural, other {# 件大事}}",
@@ -1102,8 +1102,7 @@
     "later": "下一期"
   },
   "subscribe": {
-    "title": "每天早上 8 点收 AI 日报",
-    "note": "按你的时区发送，随时退订",
+    "title": "AI 内容精选",
     "email": "你的邮箱地址",
     "submit": "订阅",
     "done": "订阅成功，明早 8 点见",
