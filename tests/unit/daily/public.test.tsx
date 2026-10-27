@@ -237,7 +237,8 @@ describe('the hottest events', () => {
     const html = render(<HottestCard story={hot({ id: 5, eventId: 5, moreReports: 6 })} category="Product" />)
     expect(html).toContain(`${en.daily.hottest} · Product · 6 more outlets reported this`)
     expect(html).toContain('href="/en/daily/story-5"')
-    expect(html).toContain('What happened, in one line.')
+    // The title only, no summary (站长, 2026-10-27).
+    expect(html).not.toContain('What happened, in one line.')
   })
 })
 
