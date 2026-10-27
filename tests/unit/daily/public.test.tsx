@@ -186,6 +186,8 @@ describe('the daily feed', () => {
     expect(html).not.toContain('Open the app.')
     expect(html).toContain('lang="zh-Hans"')
     expect(html).toContain('href="/en/daily/story-2"')
+    // The category leads to its page (站长, 2026-10-27).
+    expect(html).toContain('href="/en/daily/category/tools"')
   })
 })
 

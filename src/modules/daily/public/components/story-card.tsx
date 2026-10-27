@@ -1,7 +1,7 @@
 import { Link } from '@/i18n/navigation'
 
 import type { StoryItem } from '../story-item'
-import { storyHref } from '../list-params'
+import { listHref, storyHref } from '../list-params'
 import { SpreadIndex } from './spread-index'
 import { StoryTime } from './story-time'
 
@@ -32,7 +32,11 @@ export function StoryCard({ story, serverToday, category }: StoryCardProps) {
       <article className="flex flex-col gap-3 rounded-card bg-bg px-5 py-5 md:px-7 md:py-6">
         {(category || story.spread > 0) && (
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-4">
-            {category && <span>{category}</span>}
+            {category && (
+              <Link href={listHref({ category: story.category })} className="hover:text-ink">
+                {category}
+              </Link>
+            )}
             <SpreadIndex value={story.spread} />
           </p>
         )}

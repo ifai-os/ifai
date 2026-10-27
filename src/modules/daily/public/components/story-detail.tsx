@@ -68,7 +68,11 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
           <article className="flex w-full max-w-read min-w-0 flex-col gap-6">
             <header className="flex flex-col gap-3">
-              <p className="text-meta font-medium text-accent-ink">{names(story.category)}</p>
+              <p className="text-meta font-medium">
+                <Link href={listHref({ category: story.category })} className="text-accent-ink hover:underline">
+                  {names(story.category)}
+                </Link>
+              </p>
               <h1 lang={story.title.lang} className="text-h1 wrap-anywhere md:text-h1-article">
                 {story.title.value}
               </h1>

@@ -4,12 +4,12 @@ import { LocalTime } from "@/components/local-time";
 import { Link } from "@/i18n/navigation";
 
 import type { StoryItem } from "../story-item";
-import { storyHref } from "../list-params";
+import { listHref, storyHref } from "../list-params";
 import { SpreadIndex } from "./spread-index";
 import { StoryThumb } from "./story-media";
 
 /**
- * One story in the list (「IFAI 日报（新版）」board): local time, category, reach index; title;
+ * One story in the list (「IFAI 日报（新版）」board): local time, category (a link to its page), reach index; title;
  * summary; try-it; and 28 to the right its picture or video when it has one. Phones put the
  * try-it under both.
  */
@@ -34,7 +34,9 @@ export function StoryRow({
               style="time"
               className="font-medium text-accent-ink tabular-nums"
             />
-            <span>{category}</span>
+            <Link href={listHref({ category: story.category })} className="hover:text-ink">
+              {category}
+            </Link>
             <SpreadIndex value={story.spread} />
           </p>
           <h3 lang={story.title.lang} className="text-title md:text-h3">
