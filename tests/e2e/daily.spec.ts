@@ -84,7 +84,8 @@ test.describe('with the sample stories', () => {
     await expect(main.getByText('Sample pending story')).toHaveCount(0)
     await expect(main.getByText('Sample withdrawn story')).toHaveCount(0)
     await expect(rows.filter({ hasText: titles.workspaces }).getByText('2 more outlets reported this')).toBeVisible()
-    await expect(main.getByText('Open a workspace and invite a teammate.')).toBeVisible()
+    // No「试一试」(站长, 2026-10-27).
+    await expect(main.getByText('Open a workspace and invite a teammate.')).toHaveCount(0)
   })
 
   test("today's hottest story leads, and the hottest events of 48 hours are listed once each", async ({ page }) => {
