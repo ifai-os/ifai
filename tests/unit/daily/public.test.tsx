@@ -180,6 +180,8 @@ describe('the daily feed', () => {
     expect(html).toContain('11:30 PM')
     // The reach index in its tier's colour instead of the other reports (站长, 2026-10-27).
     expect(html).toContain(`${en.card.spread} <span class="font-semibold tabular-nums text-heat-3">64</span>`)
+    // A bolt before it, in the same colour.
+    expect(html).toMatch(/<svg[^>]*class="flex-none text-heat-3"[^>]*><path d="M13 2.5/)
     expect(html).not.toContain('more outlets')
     // No「试一试」in the list (站长, 2026-10-27).
     expect(html.match(new RegExp(en.card.spread, 'g'))).toHaveLength(1)
