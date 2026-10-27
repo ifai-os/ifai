@@ -1,4 +1,4 @@
-import { embedMany, generateText, Output, type EmbeddingModel, type LanguageModel, type ProviderMetadata } from 'ai'
+import { embedMany, generateText, Output, type EmbeddingModel, type LanguageModel, type ProviderMetadata, type ToolSet } from 'ai'
 import { z } from 'zod'
 
 import { shanghaiDayStart } from '@/lib/shanghai-day'
@@ -6,12 +6,13 @@ import { modelCallsEnabled } from '@/lib/switches'
 
 import {
   BudgetExceededError,
+  MissingXaiKeyError,
   ModelCallsDisabledError,
   ReceiptExhaustedError,
   ReceiptInFlightError,
 } from './errors'
 import { dailyBudgetUsd, MAX_ATTEMPTS, STALE_AFTER_MS } from './limits'
-import { modelFor, type ContestPurpose, type EmbeddingPurpose, type Purpose, type TextPurpose } from './purposes'
+import { modelFor, type ContestPurpose, type EmbeddingPurpose, type Purpose, type TextPurpose, type XSearchPurpose } from './purposes'
 import { hashInput, type Receipt, type ReceiptStore, type ReceiptUsage } from './receipts'
 import { EXTERNAL_DATA_RULE } from './untrusted'
 
@@ -21,6 +22,8 @@ export type AiDeps = {
   store: ReceiptStore
   languageModel: (modelId: string) => LanguageModel
   embeddingModel: (modelId: string) => EmbeddingModel
+  /** An xAI model with its X search tool for the dates given; missing when XAI_API_KEY is not set. */
+  xSearchModel?: (modelId: string, dates: XSearchDates) => { model: LanguageModel; tools: ToolSet }
   env?: Record<string, string | undefined>
   now?: () => Date
 }
@@ -41,6 +44,17 @@ type CallOptions = {
 export type TextCall = CallOptions & { purpose: TextPurpose }
 export type ObjectCall<S extends z.ZodType> = CallOptions & { purpose: TextPurpose; schema: S }
 export type EmbedCall = { purpose: EmbeddingPurpose; values: string[]; subject?: string }
+
+/** The days X search looks at, YYYY-MM-DD, both included. */
+export type XSearchDates = { fromDate: string; toDate: string }
+
+/**
+ * A search of X by an xAI model (purposes.ts `xSearchPurposes`): the model searches X itself and
+ * answers in `schema`. `sources` are the post URLs xAI cited, so callers can drop anything the
+ * model reports that the search did not actually return.
+ */
+export type XSearchCall<S extends z.ZodType> = CallOptions & { purpose: XSearchPurpose; schema: S } & XSearchDates
+export type XSearchOutput<T> = { answer: T; sources: string[] }
 
 /**
  * A contestant's answer in the model arena: the same instructions and prompt for every model,
@@ -90,9 +104,14 @@ export type UsageToday = {
 
 export type Ai = ReturnType<typeof createAi>
 
+/** xAI reports cost in ticks: 10^10 ticks to the dollar. */
+const XAI_TICKS_PER_USD = 1e10
+
 function costOf(metadata: ProviderMetadata | undefined): number {
   const usage = metadata?.openrouter?.usage as { cost?: unknown } | undefined
-  return typeof usage?.cost === 'number' && Number.isFinite(usage.cost) ? usage.cost : 0
+  if (typeof usage?.cost === 'number' && Number.isFinite(usage.cost)) return usage.cost
+  const ticks = metadata?.xai?.costInUsdTicks
+  return typeof ticks === 'number' && Number.isFinite(ticks) ? ticks / XAI_TICKS_PER_USD : 0
 }
 
 function message(error: unknown): string {
@@ -104,7 +123,7 @@ function message(error: unknown): string {
  * picks its model by purpose, writes a receipt first so retries never pay twice,
  * stops when MODEL_CALLS_ENABLED is off or the daily budget is used up.
  */
-export function createAi({ store, languageModel, embeddingModel, env = process.env, now = () => new Date() }: AiDeps) {
+export function createAi({ store, languageModel, embeddingModel, xSearchModel, env = process.env, now = () => new Date() }: AiDeps) {
   const enabled = () => modelCallsEnabled(env)
 
   const budgetUsd = () => dailyBudgetUsd(env)
@@ -243,6 +262,36 @@ export function createAi({ store, languageModel, embeddingModel, env = process.e
     )
   }
 
+  /** An xAI model's answer after searching X (`xSearchPurposes`); needs XAI_API_KEY. */
+  function xSearch<S extends z.ZodType>(call: XSearchCall<S>): Promise<AiResult<XSearchOutput<z.infer<S>>>> {
+    const searchModel = xSearchModel
+    if (!searchModel) return Promise.reject(new MissingXaiKeyError())
+    return withReceipt(
+      call.purpose,
+      { kind: 'x-search', schema: z.toJSONSchema(call.schema), fromDate: call.fromDate, toDate: call.toDate, ...promptInput(call) },
+      call.subject,
+      async (model) => {
+        const { model: xai, tools } = searchModel(model, { fromDate: call.fromDate, toDate: call.toDate })
+        const result = await generateText({
+          model: xai,
+          tools,
+          output: Output.object({ schema: call.schema }),
+          ...settings(call),
+        })
+        const sources = result.sources.flatMap((source) => (source.sourceType === 'url' ? [source.url] : []))
+        return {
+          output: { answer: result.output as z.infer<S>, sources: [...new Set(sources)] },
+          usage: {
+            inputTokens: result.usage.inputTokens ?? 0,
+            outputTokens: result.usage.outputTokens ?? 0,
+            costUsd: costOf(result.providerMetadata),
+          },
+        }
+      },
+      (stored) => z.object({ answer: call.schema, sources: z.array(z.string()) }).parse(stored) as XSearchOutput<z.infer<S>>,
+    )
+  }
+
   /** One contestant's answer to an arena question (src/modules/rankings/answers). */
   function contest(call: ContestCall): Promise<AiResult<ContestOutput>> {
     return withReceipt(
@@ -299,5 +348,5 @@ export function createAi({ store, languageModel, embeddingModel, env = process.e
     )
   }
 
-  return { text, object, embed, contest, contestImage, usageToday }
+  return { text, object, embed, xSearch, contest, contestImage, usageToday }
 }

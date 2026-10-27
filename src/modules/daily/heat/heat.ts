@@ -3,7 +3,8 @@ import { and, eq, gt, gte, inArray, ne, or } from '@payloadcms/db-postgres/drizz
 import { getDb } from '@/lib/db/drizzle'
 
 import { refreshDailyCache } from '../review/cache'
-import { eventItems, events, hotSignals, rawItems } from '../schema'
+import { eventItems, events, heatChecks, hotSignals, rawItems } from '../schema'
+import { checkSignals } from './external/rules'
 import { HEAT_LOOKBACK_MS, eventHeat, peakHeat, peakOf, signalsOf, type EventHeat, type HeatMember } from './rules'
 
 export type HeatRun = { events: number; stories: number; published: number }
@@ -30,16 +31,17 @@ export async function activeEventIds(now = new Date()): Promise<number[]> {
 }
 
 /**
- * Work out these events' heat (./rules.ts), store it on the events and copy it to their
- * stories (the review queue and the pages read it there). Refreshes the site's pages when a
- * published story's heat, reach index (its peak) or mark changed.
+ * Work out these events' heat (./rules.ts, with the outside checks of ./external), store it
+ * on the events and copy it to their stories (the review queue and the pages read it there).
+ * Refreshes the site's pages when a published story's heat, reach index (its peak) or mark
+ * changed.
  */
 export async function refreshHeat(eventIds: readonly number[], now = new Date()): Promise<HeatRun> {
   const ids = [...new Set(eventIds)]
   if (!ids.length) return { events: 0, stories: 0, published: 0 }
   const { payload, db } = await getDb()
 
-  const [members, sources] = await Promise.all([
+  const [members, sources, checks] = await Promise.all([
     db
       .select({
         eventId: eventItems.eventId,
@@ -54,6 +56,10 @@ export async function refreshHeat(eventIds: readonly number[], now = new Date())
       .innerJoin(rawItems, eq(rawItems.id, eventItems.itemId))
       .where(inArray(eventItems.eventId, ids)),
     payload.find({ collection: 'sources', pagination: false, depth: 0, select: { use: true } }),
+    db
+      .select({ eventId: heatChecks.eventId, kind: heatChecks.kind, weight: heatChecks.weight, checkedAt: heatChecks.checkedAt })
+      .from(heatChecks)
+      .where(and(inArray(heatChecks.eventId, ids), gt(heatChecks.weight, 0))),
   ])
   const itemIds = [...new Set(members.map((member) => member.itemId))]
   const threads = itemIds.length
@@ -75,10 +81,13 @@ export async function refreshHeat(eventIds: readonly number[], now = new Date())
     (sourceId) => hot.has(sourceId),
   )
 
+  const outside = checkSignals(checks)
+
   const results = new Map<number, EventHeat & { peak: number }>()
   for (const id of ids) {
-    const result = eventHeat(signals.get(id) ?? [], now)
-    results.set(id, { ...result, peak: peakHeat(signals.get(id) ?? []) })
+    const all = [...(signals.get(id) ?? []), ...(outside.get(id) ?? [])]
+    const result = eventHeat(all, now)
+    results.set(id, { ...result, peak: peakHeat(all) })
     await db.update(events).set({ heat: result.heat, heatBefore: result.before, heatUpdatedAt: now }).where(eq(events.id, id))
   }
 

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/xai':
+        specifier: 5.0.18
+        version: 5.0.18(zod@4.6.5)
       '@mozilla/readability':
         specifier: 0.6.0
         version: 0.6.0
@@ -144,6 +147,12 @@ packages:
   '@ai-sdk/provider@4.0.24':
     resolution: {integrity: sha512-iztFqJTdxNN0ZzqZAAnVPMhRMaL1bfQFa3GIPAffWQ0+dP2FXIkyMD8kHeEI7EpB/C6TR45cqOkrS7YZZ1sATA==}
     engines: {node: '>=22'}
+
+  '@ai-sdk/xai@5.0.18':
+    resolution: {integrity: sha512-diKz88lZhabZBFPput5/fKof0d6/xoOjYH1zB6NNlYdTiuQkpIkiwnQhTOA0Qgl9YV9nm82i/OYC0uZFzK099A==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   '@alloc/quick-lru@5.3.0':
     resolution: {integrity: sha512-U4+70Pc5ZS9osnCBCE5Jha/ciHM+Yp+CNMNC/7HvYbNRk1Ldd+f7qO65W5qfhu/TCv+/ozljlXXe9Nj8419DMA==}
@@ -6096,6 +6105,12 @@ snapshots:
   '@ai-sdk/provider@4.0.24':
     dependencies:
       json-schema: 0.4.0
+
+  '@ai-sdk/xai@5.0.18(zod@4.6.5)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.24
+      '@ai-sdk/provider-utils': 5.0.56(zod@4.6.5)
+      zod: 4.6.5
 
   '@alloc/quick-lru@5.3.0': {}
 

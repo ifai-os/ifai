@@ -4,7 +4,7 @@
  * days the daily budget counts.
  */
 import { shanghaiDate } from '@/lib/shanghai-day'
-import { contestPurposes, embeddingPurposes, modelFor, textPurposes, type ContestPurpose, type Purpose } from '@/lib/ai/purposes'
+import { contestPurposes, embeddingPurposes, modelFor, textPurposes, xSearchPurposes, type ContestPurpose, type Purpose } from '@/lib/ai/purposes'
 
 type Env = Record<string, string | undefined>
 
@@ -37,6 +37,7 @@ export const purposeModules: Record<Purpose | ContestPurpose, Module> = {
   group: 'daily',
   write: 'daily',
   assist: 'daily',
+  reach: 'daily',
   embed: 'daily',
   profile: 'apps',
   translate: 'apps',
@@ -44,7 +45,7 @@ export const purposeModules: Record<Purpose | ContestPurpose, Module> = {
   arena: 'rankings',
 }
 
-const defaultModels: Record<Purpose, string> = { ...textPurposes, ...embeddingPurposes }
+const defaultModels: Record<Purpose, string> = { ...textPurposes, ...xSearchPurposes, ...embeddingPurposes }
 const knownPurposes = Object.keys(purposeModules) as (Purpose | ContestPurpose)[]
 const isKnown = (purpose: string): purpose is Purpose | ContestPurpose => Object.hasOwn(purposeModules, purpose)
 /** A purpose whose model comes with each call (the arena's contestants), so it has no model of its own to show. */

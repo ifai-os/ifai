@@ -153,6 +153,36 @@ export const hotSignals = pgTable(
   ],
 )
 
+/** Outside checks of how far an event has spread: a news search (Brave) and a search of X (xAI). */
+export const heatCheckKinds = ['search', 'x'] as const
+export type HeatCheckKind = (typeof heatCheckKinds)[number]
+
+/**
+ * One outside check of an event's reach (docs/specs/daily.md「传播指数」): how many other outlets
+ * a news search found in the last day, or how much the posts about it on X were liked and
+ * shared. Each check is one heat signal from the time it ran (./heat/external/rules.ts).
+ */
+export const heatChecks = pgTable(
+  'heat_checks',
+  {
+    id: serial('id').primaryKey(),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    kind: text('kind', { enum: heatCheckKinds }).notNull(),
+    /** Outlets the search found, or posts on X about it. */
+    hits: integer('hits').default(0).notNull(),
+    /** Likes plus twice the reposts of those posts (X only). */
+    engagement: integer('engagement').default(0).notNull(),
+    /** The signal's weight when fresh, 0 to the kind's cap. */
+    weight: real('weight').default(0).notNull(),
+    /** What was found, for the back office: outlet host names, or the posts' links and counts. */
+    details: jsonb('details').$type<unknown[]>().default([]).notNull(),
+    checkedAt: timestamp('checked_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('heat_checks_event_kind_idx').on(table.eventId, table.kind, table.checkedAt), index('heat_checks_checked_idx').on(table.checkedAt)],
+)
+
 /** How far judging got; each stage's result stays on the row so a retry picks up where it stopped. */
 export const analysisStages = ['pending', 'prefiltered', 'scored', 'structured', 'embedded', 'grouped'] as const
 export type AnalysisStage = (typeof analysisStages)[number]
@@ -210,4 +240,4 @@ export const itemAnalyses = pgTable(
   ],
 )
 
-export const dailyTables = { raw_items: rawItems, events, event_items: eventItems, item_analyses: itemAnalyses, hot_signals: hotSignals }
+export const dailyTables = { raw_items: rawItems, events, event_items: eventItems, item_analyses: itemAnalyses, hot_signals: hotSignals, heat_checks: heatChecks }

@@ -30,6 +30,16 @@ export const textPurposes = {
   translate: CHEAP,
 } as const
 
+/**
+ * Purposes that search X (Twitter) through xAI's own API: OpenRouter does not offer xAI's
+ * `x_search` tool, so these IDs are xAI model IDs and the calls need XAI_API_KEY. They still
+ * go through the same receipts, switch and budget as every other call (`ai.xSearch`).
+ */
+export const xSearchPurposes = {
+  /** How widely X is discussing a daily story (daily heat, docs/specs/daily.md「传播指数」). */
+  reach: 'grok-4.20-non-reasoning',
+} as const
+
 export const embeddingPurposes = {
   /** Vectors for grouping similar reports (pgvector). */
   embed: 'openai/text-embedding-3-small',
@@ -44,9 +54,10 @@ export const embeddingPurposes = {
 export const contestPurposes = ['arena'] as const
 
 export type TextPurpose = keyof typeof textPurposes
+export type XSearchPurpose = keyof typeof xSearchPurposes
 export type EmbeddingPurpose = keyof typeof embeddingPurposes
 export type ContestPurpose = (typeof contestPurposes)[number]
-export type Purpose = TextPurpose | EmbeddingPurpose
+export type Purpose = TextPurpose | XSearchPurpose | EmbeddingPurpose
 
 /**
  * Vector size of the default embedding model. The vector columns are created with this size,
@@ -54,7 +65,7 @@ export type Purpose = TextPurpose | EmbeddingPurpose
  */
 export const EMBEDDING_DIMENSIONS = 1536
 
-const defaults: Record<Purpose, string> = { ...textPurposes, ...embeddingPurposes }
+const defaults: Record<Purpose, string> = { ...textPurposes, ...xSearchPurposes, ...embeddingPurposes }
 
 export const purposes = Object.keys(defaults) as Purpose[]
 
