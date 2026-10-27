@@ -15,9 +15,8 @@ import type { StoryTag } from '../../tags'
 import { SubscribeBox } from '../../email/components/subscribe-box'
 import { subscribingOpen } from '../../email/delivery'
 import { hotStories, hottestStory, latestPoster, listStories, mentionedApps } from '../data'
-import { listHref } from '../list-params'
 import { CategoryNav } from './category-nav'
-import { DailyFeed } from './daily-feed'
+import { DailyPages } from './daily-pages'
 import { DailyFeedSkeleton } from './daily-skeletons'
 import { HotList } from './hot-list'
 import { HottestCard } from './hottest-card'
@@ -34,7 +33,7 @@ type DailyListProps = {
 /**
  * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): 「头条」and the latest「每日 AI 大事」
  * poster (first page of every story only), then under a line the categories (each has its own page,
- * ./category-page.tsx), stories by day and earlier pages, and the apps in today's news and the
+ * ./category-page.tsx), stories by day, two weeks at a time with「加载更多」(./daily-pages.tsx), and the apps in today's news and the
  * hottest events of the last 48 hours. The email subscribe box sits under the poster on wide
  * screens (in the poster's place when there is none) and after the stories on phones and tablets.
  * A tag's page is the same list without the first row and the categories.
@@ -57,8 +56,6 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
   const subscribe = subscribingOpen()
   const serverToday = dayKey(new Date(), serverTimeZone)
   const firstRow = Boolean(hottest || poster)
-  const pill =
-    'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-6 text-meta text-ink-2 transition-colors hover:border-ink-4'
 
   return (
     <ListNavigationProvider>
@@ -119,7 +116,14 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
           <div className="flex min-w-0 flex-col gap-6 md:grow-999 md:basis-105">
             <ListResults skeleton={<DailyFeedSkeleton count={Math.min(Math.max(result.stories.length, 3), 6)} />}>
               {result.stories.length > 0 ? (
-                <DailyFeed stories={result.stories} serverToday={serverToday} />
+                <DailyPages
+                  key={`${tag}-${page}`}
+                  stories={result.stories}
+                  page={page}
+                  pages={result.pages}
+                  tag={tag}
+                  serverToday={serverToday}
+                />
               ) : tag ? (
                 <EmptyState title={t('emptyCategoryTitle')} body={t('emptyCategoryBody')}>
                   <ListLink href="/daily" className={buttonClass('secondary')}>
@@ -130,21 +134,6 @@ export async function DailyList({ locale, tag = null, page }: DailyListProps) {
                 <EmptyState title={t('emptyTitle')} body={t('emptyBody')} />
               )}
             </ListResults>
-
-            {(page > 1 || page < result.pages) && (
-              <nav aria-label={t('pages')} className="flex flex-wrap justify-center gap-3">
-                {page > 1 && (
-                  <ListLink rel="prev" href={listHref({ tag, page: page - 1 })} className={pill}>
-                    {t('loadNewer')}
-                  </ListLink>
-                )}
-                {page < result.pages && (
-                  <ListLink rel="next" href={listHref({ tag, page: page + 1 })} className={pill}>
-                    {t('loadEarlier')}
-                  </ListLink>
-                )}
-              </nav>
-            )}
 
             {subscribe && (
               <div className="lg:hidden">

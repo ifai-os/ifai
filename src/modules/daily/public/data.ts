@@ -17,6 +17,7 @@ import { posterVersion, readSnapshot, type PosterSnapshot } from '../poster/snap
 import { DAILY_CACHE_TAG } from '../review/cache'
 import { tagsOf, type StoryTag } from '../tags'
 import { readTopicNames, type TopicName } from '../topic-names'
+import { listPages, pageBounds } from './list-pages'
 import {
   entitiesOf,
   onePerEvent,
@@ -105,21 +106,47 @@ async function payload() {
 
 type ListArgs = { tag?: StoryTag | null; page: number }
 
+// The list's pages (./list-pages.ts): published stories per UTC day, every story or one tag's.
+const findListPages = cached(
+  async (tag: StoryTag | null) => {
+    const { db } = await getDb()
+    const day = sql`to_char(coalesce(s.published_at, s.created_at) at time zone 'UTC', 'YYYY-MM-DD')`
+    const rows = await db.execute<{ day: string; count: string }>(sql`
+      select ${day} as day, count(*) as count from stories s
+      where s.status = 'published'
+        ${tag ? sql`and exists (select 1 from stories_tags t where t.parent_id = s.id and t.value = ${tag})` : sql``}
+      group by 1`)
+    return listPages(rows.rows.map((row) => ({ day: row.day, count: Number(row.count) })))
+  },
+  [shape, 'daily-list-pages'],
+  cacheOptions,
+)
+
 const findStories = cached(
   async ({ tag, page }: ListArgs) => {
-    const result = await (await payload()).find({
+    const pages = await findListPages(tag ?? null)
+    const range = pages[page - 1]
+    if (!range) return { docs: [] as RawStory[], total: 0, pages: pages.length }
+    const { since, until } = pageBounds(range)
+    const { docs } = await (await payload()).find({
       collection: 'stories',
-      where: { and: [published, ...(tag ? [{ tags: { contains: tag } }] : [])] },
+      where: {
+        and: [
+          published,
+          { publishedAt: { greater_than_equal: since } },
+          { publishedAt: { less_than: until } },
+          ...(tag ? [{ tags: { contains: tag } }] : []),
+        ],
+      },
       sort: '-publishedAt',
-      page,
-      limit: storiesPerPage,
+      pagination: false,
       locale: 'all',
       depth: 1,
       populate,
       select,
       overrideAccess: false,
     })
-    return { docs: result.docs as unknown as RawStory[], total: result.totalDocs, pages: result.totalPages }
+    return { docs: docs as unknown as RawStory[], total: range.count, pages: pages.length }
   },
   [shape, 'daily-list'],
   cacheOptions,

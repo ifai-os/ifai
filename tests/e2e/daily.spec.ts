@@ -88,6 +88,10 @@ test.describe('with the sample stories', () => {
     await expect(main).not.toContainText('more outlets')
     // No「试一试」(站长, 2026-10-27).
     await expect(main.getByText('Open a workspace and invite a teammate.')).toHaveCount(0)
+    // Two weeks a page: the samples fit on the first, so the list ends there (站长, 2026-10-27).
+    await expect(main.getByText(en.daily.noEarlier)).toBeVisible()
+    expect((await page.request.get('/api/daily/list?locale=en&page=1')).status()).toBe(200)
+    expect((await page.request.get('/api/daily/list?locale=en&page=2')).status()).toBe(404)
   })
 
   test("today's hottest story leads, and the hottest events of 48 hours are listed once each", async ({ page }) => {
@@ -367,7 +371,7 @@ test.describe('with the sample stories', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('#Lumen Chat')
     const main = page.getByRole('main')
     await expect(main.getByText('2 stories')).toBeVisible()
-    await expect(main.getByRole('article').getByRole('link')).toHaveText([titles.workspaces, titles.preview])
+    await expect(main.getByRole('article').getByRole('heading').getByRole('link')).toHaveText([titles.workspaces, titles.preview])
     await expect(main.getByText(en.daily.noEarlier)).toBeVisible()
     await expect(main.getByRole('link', { name: /^App page/ })).toHaveAttribute('href', '/en/apps/lumen-chat')
     // The app's developer has a topic page of its own: a company.
