@@ -17,6 +17,8 @@ import { listHref, readPage, readTopicKey, storyHref, topicHref } from '@/module
 import { renderFeed } from '@/modules/daily/public/rss'
 import { storyCategoryOf } from '@/modules/daily/categories'
 import {
+  bodyBlocks,
+  bodyOf,
   onePerEvent,
   pickHeadline,
   toHot,
@@ -297,6 +299,7 @@ describe('「今天的 AI」on the home page', () => {
 describe('a story’s page', () => {
   const detail: StoryDetail = {
     ...story({ id: 1, publishedAt: '2026-10-22T09:42:00Z', correctedAt: '2026-10-22T12:00:00Z', spread: 85 }),
+    body: null,
     sources: [
       { name: 'Maker', role: 'original', url: 'https://www.maker.example/post', publishedAt: '2026-10-22T08:00:00Z' },
       { name: 'Outlet', role: 'report', url: 'https://outlet.example/x', publishedAt: null },
@@ -317,6 +320,24 @@ describe('a story’s page', () => {
     expect(html).toContain(`>${en.daily.corrected} <time dateTime="2026-10-22T12:00:00Z">`)
     expect(html).toContain('href="/en/news/earlier"')
     expect(html).toContain('text-heat-4">85<')
+  })
+
+  it('shows the body after the summary, with its paragraphs and subheadings', () => {
+    const body = { lang: 'en' as const, value: bodyBlocks('First paragraph.\n\n## What changes\nSecond paragraph,\nsame paragraph.\n\n\nThird.') }
+    expect(body.value).toEqual([
+      { kind: 'paragraph', text: 'First paragraph.' },
+      { kind: 'heading', text: 'What changes' },
+      { kind: 'paragraph', text: 'Second paragraph,\nsame paragraph.' },
+      { kind: 'paragraph', text: 'Third.' },
+    ])
+    const html = render(<StoryDetailView story={{ ...detail, body }} signIn={{ google: false, github: false, email: true }} />)
+    expect(html).toContain('<div lang="en" class="flex flex-col gap-5 text-body-article text-ink">')
+    expect(html).toContain('<h2 class="pt-2 text-h3 font-semibold">What changes</h2>')
+    expect(html.indexOf(detail.summary?.value ?? '')).toBeLessThan(html.indexOf('First paragraph.'))
+    expect(html.indexOf('Third.')).toBeLessThan(html.indexOf(en.daily.sources))
+    expect(bodyBlocks('  \n\n ')).toEqual([])
+    expect(bodyOf({ body: { en: 'Only English.' } }, 'ja')).toEqual({ lang: 'en', value: [{ kind: 'paragraph', text: 'Only English.' }] })
+    expect(bodyOf({ body: { en: ' ' } }, 'en')).toBeNull()
   })
 
   it('leaves out the related blocks it has nothing for', () => {

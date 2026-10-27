@@ -19,6 +19,7 @@ import { tagsOf, type StoryTag } from '../tags'
 import { readTopicNames, type TopicName } from '../topic-names'
 import { listPages, pageBounds } from './list-pages'
 import {
+  bodyOf,
   entitiesOf,
   onePerEvent,
   pickHeadline,
@@ -95,7 +96,7 @@ const populate = { media: { url: true, filename: true, width: true, height: true
 
 // Part of every cache key: change it when what the queries return changes (fields added to
 // `select`), so a deployment never reads entries an earlier one stored without them.
-const shape = 'reach-index'
+const shape = 'story-body'
 
 // Publishing refreshes the cache right away; the hour only bounds changes made outside the review screen.
 const cacheOptions = { tags: [DAILY_CACHE_TAG], revalidate: 3600 }
@@ -231,7 +232,8 @@ const findStory = cached(
       locale: 'all',
       depth: 1,
       populate,
-      select,
+      // Only the story's own page reads the body; lists leave it out.
+      select: { ...select, body: true },
       overrideAccess: false,
     })
     return (docs[0] as unknown as RawStory | undefined) ?? null
@@ -589,6 +591,7 @@ export const getStory = cache(async (slug: string, locale: Locale): Promise<Stor
   const similar = await findSimilar(doc.representativeItemId, [...new Set([doc.eventId, ...topicStories.map((other) => other.eventId)])])
   return {
     ...toItem(doc, locale),
+    body: bodyOf(doc, locale),
     sources: sourcesOf(doc),
     developments: developments.map((other) => toItem(other, locale)),
     tags: tagsOf(doc.tags),

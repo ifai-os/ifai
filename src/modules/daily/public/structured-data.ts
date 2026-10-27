@@ -24,6 +24,7 @@ export function storyJsonLd(
     '@type': 'NewsArticle',
     headline: clip(story.title.value, headlineLength),
     description: story.summary?.value,
+    articleBody: story.body?.value.map((block) => block.text).join('\n\n'),
     inLanguage: story.title.lang,
     url,
     mainEntityOfPage: url,

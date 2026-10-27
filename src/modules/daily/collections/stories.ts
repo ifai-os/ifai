@@ -86,7 +86,7 @@ const trendLabels: Record<HeatTrend, { en: string; zh: string }> = {
 const readOnly = { readOnly: true, position: "sidebar" } as const;
 
 /** Localized text fields; zh-Hant is converted from zh-Hans on every zh-Hans save. */
-const hantFields = ["title", "summary", "tryIt"] as const;
+const hantFields = ["title", "summary", "body", "tryIt"] as const;
 
 /**
  * A written story (docs/specs/daily.md, `stories`). The writing job creates one per queued
@@ -166,6 +166,19 @@ export const Stories: CollectionConfig = {
       required: true,
       localized: true,
       label: { en: "Summary", zh: "摘要" },
+    },
+    {
+      name: "body",
+      type: "textarea",
+      localized: true,
+      label: { en: "Body", zh: "正文" },
+      admin: {
+        rows: 16,
+        description: {
+          en: "The full story on its page, written from several sources. Leave a blank line between paragraphs; a line starting with \"## \" is a subheading.",
+          zh: "详情页上的正文，综合几个来源自己写。段落之间空一行；以「## 」开头的一行是小标题。",
+        },
+      },
     },
     {
       name: "tryIt",
