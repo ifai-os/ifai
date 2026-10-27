@@ -42,6 +42,7 @@ test('unknown stories, categories, pages and posters answer 404', async ({ page,
     '/en/news/topic/nobodyhere',
     '/en/news/topic/Not%20Compared',
     '/en/news?page=0',
+    '/en/news?category=not-a-category',
     '/en/news?page=x',
     '/en/news/poster/2020-01-01',
     '/en/news/poster/2026-02-30',
@@ -324,7 +325,7 @@ test.describe('with the sample stories', () => {
     let release = (): void => undefined
     const held = new Promise<void>((resolve) => (release = resolve))
     await page.route(
-      (url) => url.pathname === '/en/news/category/research' && url.searchParams.has('_rsc'),
+      (url) => url.pathname === '/en/news' && url.searchParams.get('category') === 'research' && url.searchParams.has('_rsc'),
       async (route) => {
         await held
         await route.continue()
@@ -343,9 +344,16 @@ test.describe('with the sample stories', () => {
     await expect(skeleton).toBeVisible()
 
     release()
-    await expect(page).toHaveURL(/\/en\/news\/category\/research$/)
+    // The left column filters the list in place (站长, 2026-10-27); a story's category name opens the category's page.
+    await expect(page).toHaveURL(/\/en\/news\?category=research$/)
     await expect(main.getByRole('link', { name: titles.benchmark }).first()).toBeVisible()
     await expect(skeleton).toHaveCount(0)
+    await expect(categories.getByRole('link', { name: en.categories.research })).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByRole('region', { name: en.daily.hotTitle })).toBeVisible()
+    await expect(main.getByRole('article').first().getByRole('link', { name: en.categories.research, exact: true })).toHaveAttribute(
+      'href',
+      '/en/news/category/research',
+    )
   })
 
   test("a story's page shows its skeleton while it comes in over a slow connection", async ({ page, context }) => {

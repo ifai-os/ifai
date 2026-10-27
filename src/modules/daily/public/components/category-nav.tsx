@@ -3,12 +3,14 @@ import { useTranslations } from 'next-intl'
 import { ListLink } from '@/components/states/list-navigation'
 
 import { storyCategories, type StoryCategory } from '../../categories'
-import { listHref } from '../list-params'
+import { filterHref, listHref } from '../list-params'
 
 type CategoryNavProps = {
   current: StoryCategory | null
   /** The category pages' larger pills (「IFAI 日报 · 分类页」board), which wrap on wide screens. */
   large?: boolean
+  /** The daily list's column: filter the list in place instead of opening the category's page. */
+  filter?: boolean
 }
 
 /**
@@ -16,7 +18,7 @@ type CategoryNavProps = {
  * stories, a red dot by the current one; on phones a row of chips that scrolls sideways
  * (「手机 · 日报」). The category pages have pills instead.
  */
-export function CategoryNav({ current, large = false }: CategoryNavProps) {
+export function CategoryNav({ current, large = false, filter = false }: CategoryNavProps) {
   const t = useTranslations('daily')
   const names = useTranslations('categories')
   const items: { key: StoryCategory | null; name: string }[] = [
@@ -32,7 +34,7 @@ export function CategoryNav({ current, large = false }: CategoryNavProps) {
           return (
             <li key={item.key ?? 'all'} className="flex-none">
               <ListLink
-                href={listHref({ category: item.key })}
+                href={filter ? filterHref({ category: item.key }) : listHref({ category: item.key })}
                 aria-current={active ? 'page' : undefined}
                 className={
                   large

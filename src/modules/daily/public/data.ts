@@ -105,17 +105,18 @@ async function payload() {
   return getPayload({ config })
 }
 
-type ListArgs = { tag?: StoryTag | null; page: number }
+type ListArgs = { tag?: StoryTag | null; category?: StoryCategory | null; page: number }
 
-// The list's pages (./list-pages.ts): published stories per UTC day, every story or one tag's.
+// The list's pages (./list-pages.ts): published stories per UTC day, every story, one tag's or one category's.
 const findListPages = cached(
-  async (tag: StoryTag | null) => {
+  async (tag: StoryTag | null, category: StoryCategory | null) => {
     const { db } = await getDb()
     const day = sql`to_char(coalesce(s.published_at, s.created_at) at time zone 'UTC', 'YYYY-MM-DD')`
     const rows = await db.execute<{ day: string; count: string }>(sql`
       select ${day} as day, count(*) as count from stories s
       where s.status = 'published'
         ${tag ? sql`and exists (select 1 from stories_tags t where t.parent_id = s.id and t.value = ${tag})` : sql``}
+        ${category ? sql`and s.category = ${category}` : sql``}
       group by 1`)
     return listPages(rows.rows.map((row) => ({ day: row.day, count: Number(row.count) })))
   },
@@ -124,8 +125,8 @@ const findListPages = cached(
 )
 
 const findStories = cached(
-  async ({ tag, page }: ListArgs) => {
-    const pages = await findListPages(tag ?? null)
+  async ({ tag, category, page }: ListArgs) => {
+    const pages = await findListPages(tag ?? null, category ?? null)
     const range = pages[page - 1]
     if (!range) return { docs: [] as RawStory[], total: 0, pages: pages.length }
     const { since, until } = pageBounds(range)
@@ -137,6 +138,7 @@ const findStories = cached(
           { publishedAt: { greater_than_equal: since } },
           { publishedAt: { less_than: until } },
           ...(tag ? [{ tags: { contains: tag } }] : []),
+          ...(category ? [{ category: { equals: category } }] : []),
         ],
       },
       sort: '-publishedAt',

@@ -1,6 +1,6 @@
 import { localizePath, type Locale } from '@/i18n/config'
 
-import type { StoryCategory } from '../categories'
+import { storyCategories, type StoryCategory } from '../categories'
 import { entityKey } from '../entities'
 import type { StoryTag } from '../tags'
 
@@ -28,6 +28,22 @@ export function listHref({
 }: { category?: StoryCategory | null; tag?: StoryTag | null; page?: number } = {}): `/${string}` {
   const path: `/${string}` = category ? `/news/category/${category}` : tag ? `/news/tag/${tag}` : '/news'
   return page && page > 1 ? `${path}?page=${page}` : path
+}
+
+/**
+ * The daily list filtered to one category in place (站长, 2026-10-27): the left column's links.
+ * The category's own page (`listHref({ category })`) is where a story's category name leads.
+ */
+export function filterHref({ category, page }: { category?: StoryCategory | null; page?: number } = {}): `/${string}` {
+  if (!category) return listHref({ page })
+  return page && page > 1 ? `/news?category=${category}&page=${page}` : `/news?category=${category}`
+}
+
+/** The list's `?category=` filter: null without one, undefined when it names no category (404). */
+export function readCategory(params: SearchParams): StoryCategory | null | undefined {
+  const category = first(params.category)
+  if (category === '') return null
+  return (storyCategories as readonly string[]).includes(category) ? (category as StoryCategory) : undefined
 }
 
 export function storyHref(slug: string): `/${string}` {
