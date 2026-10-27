@@ -18,6 +18,7 @@ import { renderFeed } from '@/modules/daily/public/rss'
 import { storyCategoryOf } from '@/modules/daily/categories'
 import {
   onePerEvent,
+  pickHeadline,
   toHot,
   toItem,
   type CategoryPage,
@@ -214,6 +215,21 @@ describe('the hottest events', () => {
     expect(html).toContain('href="/en/daily/story-3"')
     // The first three ranks stand out.
     expect(html.match(/tabular-nums text-accent/g)).toHaveLength(3)
+  })
+
+  it('picks the top story, never leaving it empty while something is published', () => {
+    const now = new Date('2026-10-27T08:00:00Z')
+    const day = 24 * 3_600_000
+    const old = hot({ id: 1, eventId: 1, publishedAt: '2026-10-25T09:00:00Z' })
+    const fresh = hot({ id: 2, eventId: 2, publishedAt: '2026-10-27T01:00:00Z' })
+    const newest = hot({ id: 3, eventId: 3, publishedAt: '2026-10-24T09:00:00Z' })
+    // The hottest of the last 24 hours, even when an older story is hotter.
+    expect(pickHeadline([old, fresh], [newest], now, day)?.id).toBe(2)
+    // None in the last 24 hours: the hottest there is.
+    expect(pickHeadline([old], [newest], now, day)?.id).toBe(1)
+    // Nothing has heat: the newest story.
+    expect(pickHeadline([], [newest], now, day)?.id).toBe(3)
+    expect(pickHeadline([], [], now, day)).toBeNull()
   })
 
   it("leads with today's hottest story, the whole card a link to it", () => {

@@ -20,6 +20,7 @@ import { readTopicNames, type TopicName } from '../topic-names'
 import {
   entitiesOf,
   onePerEvent,
+  pickHeadline,
   sourcesOf,
   toHot,
   toItem,
@@ -667,10 +668,13 @@ export async function hotStories(locale: Locale): Promise<HotStory[]> {
   return onePerEvent(await findHot(), hotShown).map((doc) => toHot(doc, locale))
 }
 
-/**「头条」: the hottest story published in the last 24 hours; null when none has heat. */
+/**
+ *「头条」: the hottest story published in the last 24 hours; when none of them has heat yet, the
+ * hottest of the last 48, else the newest published story. Null only when nothing is published.
+ */
 export async function hottestStory(locale: Locale, now = new Date()): Promise<HotStory | null> {
-  const since = now.getTime() - hottestWithinMs
-  const doc = (await findHot()).find((story) => story.publishedAt && new Date(story.publishedAt).getTime() >= since)
+  const hot = await findHot()
+  const doc = pickHeadline(hot, hot.length ? [] : await findLatest(1), now, hottestWithinMs)
   return doc ? toHot(doc, locale) : null
 }
 

@@ -7,9 +7,10 @@ import type { HotStory } from '../story-item'
 import { storyHref } from '../list-params'
 
 /**
- * 「头条」(「IFAI 日报（新版）」board): the hottest story of the last 24 hours, the whole card a
- * link to it. Its picture (or video cover) is the backdrop, else its category's (public/daily/hottest/),
- * under a dark scrim that keeps the white text readable.
+ * 「头条」(「IFAI 日报（新版）」board): the hottest story of the last 24 hours (else the hottest or
+ * the newest there is, see ../data.ts `hottestStory`), the whole card a link to it. Its picture
+ * (or video cover) is the backdrop, else its category's (public/daily/hottest/), under a dark
+ * scrim that keeps the white text readable.
  */
 export function HottestCard({ story, category }: { story: HotStory; category: string }) {
   const t = useTranslations('daily')
