@@ -316,16 +316,17 @@ test.describe('with the sample stories', () => {
     await expect(page.getByRole('link', { name: titles.prism })).toHaveCount(0)
   })
 
-  test('another category keeps the page and puts a skeleton, then a retry, where the stories were', async ({ page }) => {
+  test('another category keeps the page where it is and puts a skeleton, then a retry, where the stories were', async ({ page }) => {
     await page.clock.install()
+    await page.setViewportSize({ width: 1280, height: 720 })
     await page.goto('/en/news', { waitUntil: 'networkidle' })
     const main = page.getByRole('main')
 
-    // Hold the next view of the list back, as a slow connection would.
+    // Hold the category's stories back, as a slow connection would.
     let release = (): void => undefined
     const held = new Promise<void>((resolve) => (release = resolve))
     await page.route(
-      (url) => url.pathname === '/en/news' && url.searchParams.get('category') === 'research' && url.searchParams.has('_rsc'),
+      (url) => url.pathname === '/api/daily/list' && url.searchParams.get('category') === 'research',
       async (route) => {
         await held
         await route.continue()
@@ -333,10 +334,14 @@ test.describe('with the sample stories', () => {
     )
 
     const categories = main.getByRole('navigation', { name: en.daily.filterLabel })
+    // Down to where the categories are pinned beside the stories.
+    await categories.scrollIntoViewIfNeeded()
+    await page.evaluate(() => window.scrollBy(0, 200))
+    const before = await page.evaluate(() => window.scrollY)
     await categories.getByRole('link', { name: en.categories.research }).click()
     const skeleton = main.getByRole('status', { name: en.states.loadingList })
     await expect(skeleton).toBeVisible()
-    await expect(categories).toBeVisible()
+    await expect(categories.getByRole('link', { name: en.categories.research })).toHaveAttribute('aria-current', 'page')
 
     await page.clock.fastForward(10_000)
     await expect(main.getByRole('alert')).toContainText(en.states.failedTitle)
@@ -344,16 +349,25 @@ test.describe('with the sample stories', () => {
     await expect(skeleton).toBeVisible()
 
     release()
-    // The left column filters the list in place (站长, 2026-10-27); a story's category name opens the category's page.
-    await expect(page).toHaveURL(/\/en\/news\?category=research$/)
     await expect(main.getByRole('link', { name: titles.benchmark }).first()).toBeVisible()
     await expect(skeleton).toHaveCount(0)
-    await expect(categories.getByRole('link', { name: en.categories.research })).toHaveAttribute('aria-current', 'page')
+    // In place, as sspai.com's home (站长, 2026-10-28): the address stays and the page doesn't move,
+    // unless the shorter list would leave the reader below its end.
+    await expect(page).toHaveURL(/\/en\/news$/)
+    const after = await page.evaluate(() => window.scrollY)
+    const listTop = await main.locator('#daily-stories').evaluate((element) => element.getBoundingClientRect().top)
+    expect(after === before || listTop >= 0).toBe(true)
     await expect(page.getByRole('region', { name: en.daily.hotTitle })).toBeVisible()
     await expect(main.getByRole('article').first().getByRole('link', { name: en.categories.research, exact: true })).toHaveAttribute(
       'href',
       '/en/news/category/research',
     )
+
+    // Back to every story: already fetched, so no skeleton.
+    await categories.getByRole('link', { name: en.daily.allCategories }).click()
+    await expect(categories.getByRole('link', { name: en.daily.allCategories })).toHaveAttribute('aria-current', 'page')
+    await expect(main.getByRole('link', { name: titles.preview }).first()).toBeVisible()
+    await expect(page).toHaveURL(/\/en\/news$/)
   })
 
   test("a story's page shows its skeleton while it comes in over a slow connection", async ({ page, context }) => {

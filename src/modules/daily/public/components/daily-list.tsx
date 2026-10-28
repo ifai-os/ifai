@@ -16,6 +16,7 @@ import type { StoryTag } from '../../tags'
 import { SubscribeBox } from '../../email/components/subscribe-box'
 import { subscribingOpen } from '../../email/delivery'
 import { hotStories, hottestStory, latestPoster, listStories, mentionedApps } from '../data'
+import { CategoryFilter, FilteredStories } from './category-filter'
 import { CategoryNav } from './category-nav'
 import { DailyPages } from './daily-pages'
 import { DailyFeedSkeleton } from './daily-skeletons'
@@ -36,7 +37,7 @@ type DailyListProps = {
 /**
  * The daily list (「IFAI 日报（新版）」and「手机 · 日报」boards): 「头条」and the latest「每日 AI 大事」
  * poster (first page of every story only), then under a line the categories (a click filters the
- * list in place, `/news?category=`; each also has its own page,
+ * list in place without moving the page or changing the address, ./category-filter.tsx; each also has its own page,
  * ./category-page.tsx), stories by day, two weeks at a time with「加载更多」(./daily-pages.tsx), and the apps in today's news and the
  * hottest events of the last 48 hours. The email subscribe box sits under the poster on wide
  * screens (in the poster's place when there is none) and after the stories on phones and tablets.
@@ -105,58 +106,70 @@ export async function DailyList({ locale, tag = null, category = null, page }: D
             doesn't fit wraps under. Phones stack them, the
             categories as chips. Where all three share a row (lg), the two side columns stay put while
             the stories scroll (站长, 2026-10-27, after sspai.com). */}
-        <div
-          // The header's line comes in when this one reaches it (./header-line.tsx).
-          data-header-line={firstRow || subscribe ? '' : undefined}
-          className={`flex flex-col gap-5 md:flex-row md:flex-wrap md:items-start md:gap-x-14 md:gap-y-10 ${
-            firstRow ? 'md:border-t md:border-line md:pt-6' : subscribe ? 'lg:border-t lg:border-line lg:pt-6' : ''
-          }`}
+        <CategoryFilter
+          // A new address (「查看更新的新闻」from a later page) starts over from what the server sent.
+          key={`${category}-${page}`}
+          initial={{
+            category,
+            stories: result.stories,
+            page,
+            pages: result.pages,
+          }}
         >
-          {!tag && (
-            <StickyColumn className="md:shrink-0 md:basis-41 lg:sticky">
-              <CategoryNav current={category} filter />
-            </StickyColumn>
-          )}
+          <div
+            // The header's line comes in when this one reaches it (./header-line.tsx).
+            data-header-line={firstRow || subscribe ? '' : undefined}
+            className={`flex flex-col gap-5 md:flex-row md:flex-wrap md:items-start md:gap-x-14 md:gap-y-10 ${
+              firstRow ? 'md:border-t md:border-line md:pt-6' : subscribe ? 'lg:border-t lg:border-line lg:pt-6' : ''
+            }`}
+          >
+            {!tag && (
+              <StickyColumn className="md:shrink-0 md:basis-41 lg:sticky">
+                <CategoryNav current={category} filter />
+              </StickyColumn>
+            )}
 
-          <div className="flex min-w-0 flex-col gap-6 md:grow-999 md:basis-105">
-            <ListResults skeleton={<DailyFeedSkeleton count={Math.min(Math.max(result.stories.length, 3), 6)} />}>
-              {result.stories.length > 0 ? (
-                <DailyPages
-                  key={`${tag}-${category}-${page}`}
-                  stories={result.stories}
-                  page={page}
-                  pages={result.pages}
-                  tag={tag}
-                  category={category}
-                  serverToday={serverToday}
-                />
-              ) : tag || category ? (
-                <EmptyState title={t('emptyCategoryTitle')} body={t('emptyCategoryBody')}>
-                  <ListLink href="/news" className={buttonClass('secondary')}>
-                    {t('allStories')}
-                  </ListLink>
-                </EmptyState>
+            <div className="flex min-w-0 flex-col gap-6 md:grow-999 md:basis-105">
+              {tag ? (
+                <ListResults skeleton={<DailyFeedSkeleton count={Math.min(Math.max(result.stories.length, 3), 6)} />}>
+                  {result.stories.length > 0 ? (
+                    <DailyPages
+                      key={`${tag}-${page}`}
+                      stories={result.stories}
+                      page={page}
+                      pages={result.pages}
+                      tag={tag}
+                      serverToday={serverToday}
+                    />
+                  ) : (
+                    <EmptyState title={t('emptyCategoryTitle')} body={t('emptyCategoryBody')}>
+                      <ListLink href="/news" className={buttonClass('secondary')}>
+                        {t('allStories')}
+                      </ListLink>
+                    </EmptyState>
+                  )}
+                </ListResults>
               ) : (
-                <EmptyState title={t('emptyTitle')} body={t('emptyBody')} />
+                <FilteredStories serverToday={serverToday} />
               )}
-            </ListResults>
 
-            {subscribe && (
-              <div className="lg:hidden">
-                <SubscribeBox variant="card" />
-              </div>
+              {subscribe && (
+                <div className="lg:hidden">
+                  <SubscribeBox variant="card" />
+                </div>
+              )}
+            </div>
+
+            {(hot.length > 0 || apps.length > 0) && (
+              <StickyColumn className="max-md:mt-7 min-w-0 md:grow md:basis-41 lg:sticky lg:grow-0">
+                <aside className="flex flex-col gap-8">
+                  <MentionedApps apps={apps} serverToday={serverToday} />
+                  {hot.length > 0 && <HotList stories={hot} />}
+                </aside>
+              </StickyColumn>
             )}
           </div>
-
-          {(hot.length > 0 || apps.length > 0) && (
-            <StickyColumn className="max-md:mt-7 min-w-0 md:grow md:basis-41 lg:sticky lg:grow-0">
-              <aside className="flex flex-col gap-8">
-                <MentionedApps apps={apps} serverToday={serverToday} />
-                {hot.length > 0 && <HotList stories={hot} />}
-              </aside>
-            </StickyColumn>
-          )}
-        </div>
+        </CategoryFilter>
       </main>
     </ListNavigationProvider>
   )
