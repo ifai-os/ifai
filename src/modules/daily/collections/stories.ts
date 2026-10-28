@@ -5,6 +5,7 @@ import { syncHantFromHans } from "@/lib/i18n/hant-sync";
 import { storyCategories } from "../categories";
 import { entityKey, entityKinds, type EntityKind } from "../entities";
 import { parseVideo, storyMediaKinds, type StoryMediaKind } from "../media";
+import { importEndpoint } from "../import/endpoint";
 import { followPublishing, leaveOnDelete } from "../poster/hooks";
 import { stampPublishing } from "../publish-time";
 import { reviewEndpoints } from "../review/endpoints";
@@ -97,6 +98,7 @@ const hantFields = ["title", "summary", "body", "tryIt"] as const;
  * Chinese changed, sets the times and refreshes the site's cache. A story going on the site by
  * any path gets its approval time and, when it has none, a publish time from its sources
  * (../publish-time.ts). The day's poster follows a story going on or off the site (../poster/hooks.ts).
+ * Stories from the editors' pipeline come in through POST /api/stories/import (../import/).
  */
 export const Stories: CollectionConfig = {
   slug: "stories",
@@ -109,7 +111,7 @@ export const Stories: CollectionConfig = {
     afterChange: [syncHantFromHans(hantFields), followPublishing],
     afterDelete: [leaveOnDelete],
   },
-  endpoints: reviewEndpoints,
+  endpoints: [...reviewEndpoints, importEndpoint],
   admin: {
     useAsTitle: "title",
     group: { en: "Daily", zh: "日报" },

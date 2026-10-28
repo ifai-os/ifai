@@ -6,7 +6,7 @@
 
 ## 现在到哪了
 
-- **全站走查（2026-10-27，进行中）**：站长在 `main` 的预览上逐页走，问题记在项目文件 `walkthrough/走查清单.md`，按页分 PR 改。日报列表已改（PR #87 及之后一个）：日期标题后不再写「N 条」；海报卡改叫「今日 AI 大事」，只留标题、「下载海报」和缩略；订阅框标题改成「每日 AI 内容精选」、去掉副标题（首页、设置页同一套）；头条一行变矮；桌面上分类栏和右栏滚动时固定（`src/components/sticky-column.tsx`）；「试一试」前台不再显示（数据和后台编辑留着）；头条卡的暗色只垫在标题那一段；新闻上的「另有 N 家报道」换成按四档上色的传播指数（事件热度到过的最高值，新字段 `heatPeak`，迁移 `story_heat_peak`），「48 小时热门」按它排。海报页和海报图不再写「上海时间」。新闻上的分类名可以点，进分类页。列表每页改成两周，底部「加载更多」原地接上（仍是可抓取的 `?page=` 链接）；分类「全部」「开源」改叫「全部内容」「开源项目」。日报网址从 `/daily` 改成 `/news`，旧地址 308 永久跳转；头条卡标题悬停不再出下划线；「48 小时热门」里传播指数只留闪电图标和数字。传播指数接了两路外部信号：Brave 新闻搜索和 xAI 的 X 搜索（任务 `daily-heat-check`，表 `heat_checks`，迁移 `heat_checks`；`src/lib/ai` 加了 `ai.xSearch`，用途 `reach` 直连 xAI），各有上限，key（`BRAVE_SEARCH_API_KEY`、`XAI_API_KEY`）填进 Vercel 之前不运行。新闻加了多语言「正文」字段 `body`（迁移 `story_body`），详情页在配图后显示（见 daily.md「正文」）。详见 [specs/daily.md](./specs/daily.md) 海报那节后的「2026-10-27」一段。
+- **全站走查（2026-10-27，进行中）**：站长在 `main` 的预览上逐页走，问题记在项目文件 `walkthrough/走查清单.md`，按页分 PR 改。日报列表已改（PR #87 及之后一个）：日期标题后不再写「N 条」；海报卡改叫「今日 AI 大事」，只留标题、「下载海报」和缩略；订阅框标题改成「每日 AI 内容精选」、去掉副标题（首页、设置页同一套）；头条一行变矮；桌面上分类栏和右栏滚动时固定（`src/components/sticky-column.tsx`）；「试一试」前台不再显示（数据和后台编辑留着）；头条卡的暗色只垫在标题那一段；新闻上的「另有 N 家报道」换成按四档上色的传播指数（事件热度到过的最高值，新字段 `heatPeak`，迁移 `story_heat_peak`），「48 小时热门」按它排。海报页和海报图不再写「上海时间」。新闻上的分类名可以点，进分类页。列表每页改成两周，底部「加载更多」原地接上（仍是可抓取的 `?page=` 链接）；分类「全部」「开源」改叫「全部内容」「开源项目」。日报网址从 `/daily` 改成 `/news`，旧地址 308 永久跳转；头条卡标题悬停不再出下划线；「48 小时热门」里传播指数只留闪电图标和数字。传播指数接了两路外部信号：Brave 新闻搜索和 xAI 的 X 搜索（任务 `daily-heat-check`，表 `heat_checks`，迁移 `heat_checks`；`src/lib/ai` 加了 `ai.xSearch`，用途 `reach` 直连 xAI），各有上限，key（`BRAVE_SEARCH_API_KEY`、`XAI_API_KEY`）填进 Vercel 之前不运行。新闻加了多语言「正文」字段 `body`（迁移 `story_body`），详情页在配图后显示（见 daily.md「正文」）。编辑本地流水线导出的新闻（JSON Lines）可以 `POST /api/stories/import` 直接进站，按飞书 record_id 新增或更新，用 `STORY_IMPORT_TOKEN` 认证（见 daily.md「从本地流水线导入」）。详见 [specs/daily.md](./specs/daily.md) 海报那节后的「2026-10-27」一段。
 - **地基（第 1–2 周）已完成**，在 `main` 上，CI 通过。当时首页用的是演示数据、三个入口是「即将上线」占位页，现在都已换成各模块的真实页面（最后的占位页和演示数据在资源第 4 步删掉）。详见 [specs/foundation.md](./specs/foundation.md)。
 - **深色模式已完成**：按画布「设计令牌 · 深色」画板，深色只是一组变量覆盖（`globals.css`），新增 `accent-ink`（红色文字）、`overlay`（菜单、弹窗的底）、`shadow-raised` 三个令牌；`tests/unit/theme.test.ts` 检查黑底白字、红字、浮层这几种写法。默认跟随系统；头像菜单的「外观」和设置页「外观与语言」可以选跟随系统 / 浅色 / 深色，记在 `IFAI_THEME` cookie，`<head>` 里的一小段脚本在首屏前写 `data-theme`，页面仍是静态的、不闪白。游客没有切换入口，跟随系统。
 - **账号页与删除账号已完成**：设置页的「数据与账号」分区（`/[locale]/me/account?section=data`），读者可以自己删除账号，收藏、评价、应用提交和 Skill 投稿一起删，日报订阅不受影响。一天内登录过才能删，否则先重新登录。详见 [specs/foundation.md](./specs/foundation.md)「账号页与删除账号」。
@@ -168,6 +168,7 @@
 ## 待站长处理
 
 - [x] 把 Claude 的 GitHub 应用装到 ifai-os 组织，只授权 `ifai` 这一个仓库（2026-10-22 已完成）。以后要给它加仓库：ifai-os 组织 → Settings → GitHub Apps → Claude → Configure → Repository access。
+- [ ] Vercel 生产和预览各填一个 `STORY_IMPORT_TOKEN`（`openssl rand -hex 32` 生成的随机串，两边不同），再把它交给本地新闻流水线，导入新闻用（daily.md「从本地流水线导入」）。
 - [ ] 删除临时的 `bootstrap` 分支和两个「Temporary bootstrap」草稿 release。
 - [ ] 按 `docs/setup.md` 开账号、配 Vercel。
 - [x] 在 GitHub 仓库 Settings → Secrets and variables → Actions 填 `VERCEL_TOKEN`、`NEON_API_KEY`、`NEON_PROJECT_ID`，见 setup.md 第 3 步；Vercel 的环境变量不要勾 Sensitive。2026-10-23 已填（Neon 新建了项目 `ifai`，us-east-1；本机开发用的 `dev` 分支还没建，见 setup.md 第 2 步第 2 条），PR 会部署预览环境。`ifai.io` 接到 Vercel 之前，Resend 回调和第三方登录的回调都收不到。
