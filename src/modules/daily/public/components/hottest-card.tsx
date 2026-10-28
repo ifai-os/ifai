@@ -29,14 +29,13 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
         sizes="(min-width: 768px) 66vw, 100vw"
         className="-z-10 object-cover transition-transform duration-500 group-hover:scale-103 motion-reduce:transition-none"
       />
-      <p className="self-start rounded-pill bg-black/35 px-2.5 py-1 text-small backdrop-blur-md">
-        {t('hottest')} · {category}
-        {story.spread > 0 && (
-          <>
-            {' · '}
-            <SpreadIndex value={story.spread} plain />
-          </>
-        )}
+      {/* One flex row so the words and the bolt share a centre line (站长, 2026-10-28). */}
+      <p className="flex items-center gap-1 self-start rounded-pill bg-black/35 px-2.5 py-1 text-small backdrop-blur-md">
+        <span>
+          {t('hottest')} · {category}
+          {story.spread > 0 && ' ·'}
+        </span>
+        {story.spread > 0 && <SpreadIndex value={story.spread} plain />}
       </p>
       {/* The strip reaches the card's edges and fades out just above the title, under the label. */}
       <div className="-mx-6 -mb-6 bg-linear-to-t from-black/65 from-45% to-black/0 px-6 pt-3 pb-6 md:-mx-8 md:-mb-8 md:px-8 md:pt-4 md:pb-8">
