@@ -33,7 +33,7 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
       <p className="flex items-center gap-1 self-start rounded-pill bg-black/35 px-2.5 py-1 text-small backdrop-blur-md">
         <span>
           {t('hottest')} · {category}
-          {story.spread > 0 && ' ·'}
+          {story.spread > 0 && ' · '}
         </span>
         {story.spread > 0 && <SpreadIndex value={story.spread} plain />}
       </p>
