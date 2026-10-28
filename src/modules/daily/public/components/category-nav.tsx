@@ -1,15 +1,22 @@
+'use client'
+
 import { useTranslations } from 'next-intl'
 
 import { ListLink } from '@/components/states/list-navigation'
+import { Link } from '@/i18n/navigation'
 
 import { storyCategories, type StoryCategory } from '../../categories'
 import { filterHref, listHref } from '../list-params'
+import { pickCategory, useCategoryFilter } from './category-filter'
 
 type CategoryNavProps = {
   current: StoryCategory | null
   /** The category pages' larger pills (「IFAI 日报 · 分类页」board), which wrap on wide screens. */
   large?: boolean
-  /** The daily list's column: filter the list in place instead of opening the category's page. */
+  /**
+   * The daily list's column: filter the list in place instead of opening the category's page —
+   * without moving the page or changing the address inside `CategoryFilter` (./category-filter.tsx).
+   */
   filter?: boolean
 }
 
@@ -18,8 +25,10 @@ type CategoryNavProps = {
  * stories, a red dot by the current one; on phones a row of chips that scrolls sideways
  * (「手机 · 日报」). The category pages have pills instead.
  */
-export function CategoryNav({ current, large = false, filter = false }: CategoryNavProps) {
+export function CategoryNav({ current: given, large = false, filter = false }: CategoryNavProps) {
   const t = useTranslations('daily')
+  const inPlace = useCategoryFilter()
+  const current = filter && inPlace ? inPlace.picked : given
   const names = useTranslations('categories')
   const items: { key: StoryCategory | null; name: string }[] = [
     { key: null, name: t('allCategories') },
@@ -31,10 +40,12 @@ export function CategoryNav({ current, large = false, filter = false }: Category
       <ul className={`flex ${large ? 'gap-2.5 md:flex-wrap' : 'gap-2 md:flex-col'}`}>
         {items.map((item) => {
           const active = item.key === current
+          const Item = filter && inPlace ? Link : ListLink
           return (
             <li key={item.key ?? 'all'} className="flex-none">
-              <ListLink
+              <Item
                 href={filter ? filterHref({ category: item.key }) : listHref({ category: item.key })}
+                onClick={filter && inPlace ? (event) => pickCategory(event, inPlace, item.key) : undefined}
                 aria-current={active ? 'page' : undefined}
                 className={
                   large
@@ -50,7 +61,7 @@ export function CategoryNav({ current, large = false, filter = false }: Category
                   <span aria-hidden="true" className={`hidden size-1.5 flex-none rounded-pill md:block ${active ? 'bg-accent' : ''}`} />
                 )}
                 {item.name}
-              </ListLink>
+              </Item>
             </li>
           )
         })}
