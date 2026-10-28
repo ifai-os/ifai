@@ -247,6 +247,16 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 - 详情页顺序：标题、时间与传播指数、摘要、配图、正文、来源。正文按读者语言取，没有就用英文，都没有就不显示这一块。列表页不读正文。结构化数据带上 `articleBody`。
 - 正文由日报流水线写（飞书导入映射到 `body`）。审核页改了简体正文后，其他语言暂不自动重写，要在编辑页里改。
 
+## 从本地流水线导入
+
+2026-10-28 站长定：编辑在本地跑的新闻流水线（采集、两个模型打分、写四种语言、飞书里审）导出的新闻直接进网站。
+
+- 接口 `POST /api/stories/import`，请求体是 `newscrawler export-stories` 的 JSON Lines（一行一条，也收一个 JSON 数组），一次最多 200 条。登录的后台管理员可以调；流水线用 `Authorization: Bearer $STORY_IMPORT_TOKEN`（Vercel 环境变量）。代码在 `src/modules/daily/import/`。
+- 每行：`slug`、`category`（七个分类之一）、`tags`（`tags.ts` 里的，最多 3 个，不认识的丢掉）、`publishedAt`（UTC）、`locales` 的 `zh-Hans`/`en`/`ja`/`ko` 各有 `title`、`summary`、`tryIt`、`body`、`sources`（原文在前，每个 `{url, publisher, title, publishedAt}`）、`score`（0–100）、`feishu {month, record_id}`。英文的标题和摘要、`record_id`、至少一个 http(s) 来源是必需的；缺了这一行不导入，回复里写明第几行、为什么。繁体照常由简体经 OpenCC 转换。
+- 按飞书 `record_id` 认同一条：再导一次就更新文字、分类、标签、来源、评分和发布时间，网址和状态不动（撤回的不会被重新发布）。新的一条直接发布，审核通过的时间记成它的发布时间（不晚于导入时刻），晨报邮件不会因为补导旧新闻而一下子塞满。slug 被别的新闻占了就在后面加日期（`-2026-10-21`），还冲突再加 `-2`。
+- 每条新闻在 `raw_items` 里记一条已归档的报道（`external_id` = `feishu:<record_id>`，属于停用的信源「本地流水线（飞书导入）」，正文不抓），再建一个自己的事件，这样热度和传播指数（Brave、X）照常算。来源里第一个之后的 Hacker News、Reddit、X 等标成「讨论」，其他是「报道」。
+- 导入后刷新页面缓存，并像审核发布一样发 `daily/story.changed`（应用页据此匹配提到的应用）。回复：`{ created, updated, stories: [{recordId, id, slug, action}], failed: [{line, recordId, error}] }`。
+
 ## 详情页：行业标签、公司与产品、话题追踪、同类事件
 
 2026-10-24 站长在画布「IFAI 资讯详情页 · v1」上补了四块，要求实现。
