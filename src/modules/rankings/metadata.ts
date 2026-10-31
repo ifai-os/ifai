@@ -5,6 +5,7 @@ import type { Locale } from '@/i18n/config'
 import { alternatesFor } from '@/lib/seo'
 
 import type { PublicArena } from './data'
+import { externalHref, type BoardRef, type ExternalFilters } from './external/sources'
 import { boardHref, type BoardFilters } from './rules'
 
 /**
@@ -30,6 +31,15 @@ export async function boardMetadata({
     description: t('description'),
     alternates: alternatesFor(boardHref(first ? null : arena.slug), locale),
   }
+}
+
+/** An outside source's board (「外部榜单」): titled with the source and the board; filtered tables stay out of search engines. */
+export async function externalMetadata({ locale, board, filters }: { locale: Locale; board: BoardRef; filters: ExternalFilters }): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: 'rankingsExternal' })
+  const copy = board.source === 'arena' ? 'arena' : 'artificialAnalysis'
+  const title = t(`${copy}.metaTitle`, { board: t(`boards.${board.label}`) })
+  if (filters.weights) return { title, robots: { index: false, follow: true } }
+  return { title, description: t(`${copy}.description`), alternates: alternatesFor(externalHref(board.source, board.slug), locale) }
 }
 
 /** The blind vote: one address for every question, kept out of search engines. */
