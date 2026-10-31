@@ -14,7 +14,8 @@ import {
 
 import { authUsers } from '@/lib/auth/schema'
 
-import { outcomes } from './rules'
+import { externalSources } from './external/sources'
+import { outcomes, weightsKinds } from './rules'
 
 /**
  * The model arena's own tables (docs/specs/rankings.md「数据」): written by readers' votes and the
@@ -96,8 +97,55 @@ export const arenaSnapshotRows = pgTable(
   (table) => [index('arena_snapshot_rows_snapshot_idx').on(table.snapshotId), index('arena_snapshot_rows_model_idx').on(table.modelId)],
 )
 
+/**
+ * An outside leaderboard (docs/specs/rankings.md「外部榜单」) on the day its source published it:
+ * one board of one source (Arena's 文本, 文生图…). Written only by the import job, which keeps every
+ * published day, so the pages can draw a board's history; the checksum lets it skip a day it
+ * already has and replace one the source corrected.
+ */
+export const externalSnapshots = pgTable(
+  'rankings_external_snapshots',
+  {
+    id: serial('id').primaryKey(),
+    source: text('source', { enum: externalSources }).notNull(),
+    board: text('board').notNull(),
+    /** The day the source published this board. */
+    publishedOn: date('published_on').notNull(),
+    fetchedAt: timestamp('fetched_at', { withTimezone: true }).defaultNow().notNull(),
+    models: integer('models').notNull(),
+    /** Fingerprint of the rows (./external/store.ts `rowsChecksum`). */
+    checksum: text('checksum').notNull(),
+  },
+  (table) => [uniqueIndex('rankings_external_snapshots_board_day_idx').on(table.source, table.board, table.publishedOn)],
+)
+
+/** A model's line on an outside board, as the source published it. */
+export const externalRows = pgTable(
+  'rankings_external_rows',
+  {
+    id: serial('id').primaryKey(),
+    snapshotId: integer('snapshot_id')
+      .notNull()
+      .references(() => externalSnapshots.id, { onDelete: 'cascade' }),
+    rank: integer('rank').notNull(),
+    model: text('model').notNull(),
+    /** The maker as the source writes it; the pages spell it (./external/sources.ts `makerName`). */
+    org: text('org'),
+    license: text('license'),
+    /** 开放权重 / 闭源 from the license; null when the source gives none. */
+    weights: text('weights', { enum: weightsKinds }),
+    score: doublePrecision('score').notNull(),
+    lower: doublePrecision('lower'),
+    upper: doublePrecision('upper'),
+    votes: integer('votes'),
+  },
+  (table) => [index('rankings_external_rows_snapshot_idx').on(table.snapshotId)],
+)
+
 export const rankingsTables = {
   arena_battles: arenaBattles,
   arena_snapshots: arenaSnapshots,
   arena_snapshot_rows: arenaSnapshotRows,
+  rankings_external_snapshots: externalSnapshots,
+  rankings_external_rows: externalRows,
 }

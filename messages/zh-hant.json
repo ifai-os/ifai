@@ -1273,7 +1273,57 @@
     "makerModels": "{count, plural, other {# 個}}",
     "makersNote": "進入前 {places} 的模型數",
     "emptyTitle": "第一份排行還在路上",
-    "emptyBody": "投票夠了以後的週一就會出來，現在就去投一票吧。"
+    "emptyBody": "投票夠了以後的週一就會出來，現在就去投一票吧。",
+    "trendMonths": "分數走勢 · 近 {months} 個月",
+    "trendMonthsChart": "近 {months} 個月閉源第一和開放權重第一的分數走勢。"
+  },
+  "rankingsExternal": {
+    "sourcesLabel": "資料來源",
+    "sources": {
+      "ifai": "IFAI 盲測",
+      "arena": "Arena",
+      "artificialAnalysis": "Artificial Analysis"
+    },
+    "boardsLabel": "榜單",
+    "boards": {
+      "text": "文字",
+      "webdev": "網頁開發",
+      "vision": "視覺",
+      "document": "文件",
+      "search": "搜尋",
+      "textToImage": "文生圖",
+      "imageEdit": "影像編輯",
+      "textToVideo": "文生影片",
+      "imageToVideo": "圖生影片",
+      "videoEdit": "影片編輯",
+      "intelligence": "智慧指數",
+      "textToSpeech": "語音合成"
+    },
+    "published": "<date></date> 發布",
+    "updated": "<date></date> 更新",
+    "models": "{count, plural, other {# 個模型}}",
+    "days": "{count, plural, other {期榜單}}，最早一期 {since}",
+    "moreModels": "其餘 {count} 個模型",
+    "emptyTitle": "這個榜還沒同步到資料",
+    "emptyBody": "每天上海時間 7:30 同步一次，第一次同步完這裡就有了。",
+    "arena": {
+      "metaTitle": "{board} · Arena 模型排行",
+      "description": "Arena（arena.ai）的模型排行：文字、程式設計、視覺、影像和影片等榜單，來自使用者的匿名對戰投票，每天同步。",
+      "eyebrow": "模型排行 · 來自 Arena · 每天同步",
+      "headline": "Arena 排行：真實使用者的匿名對戰投票",
+      "intro": "Arena（arena.ai）把同一個問題交給兩個匿名模型，使用者看完兩份回答再投票，按 Bradley–Terry 模型算出分數。",
+      "visit": "去 Arena 看原榜",
+      "attribution": "資料來源：<arena>Arena</arena> 在 Hugging Face 公開的 <dataset>Arena Leaderboard Dataset</dataset>，按 <license>CC BY 4.0</license> 許可使用。每個榜只取總榜（overall），分數和排名未作改動。"
+    },
+    "artificialAnalysis": {
+      "metaTitle": "{board} · Artificial Analysis 模型排行",
+      "description": "Artificial Analysis 的模型排行：語言模型的智慧指數，以及影像、影片和語音模型的盲測投票榜，每天同步。",
+      "eyebrow": "模型排行 · 來自 Artificial Analysis · 每天同步",
+      "headline": "Artificial Analysis 排行：獨立評測和盲測投票",
+      "intro": "Artificial Analysis 用同一套評測給各家語言模型打分，得出智慧指數；影像、影片和語音模型按使用者的盲測投票（Elo）排名。",
+      "visit": "去 Artificial Analysis 看原榜",
+      "attribution": "資料來源：<aa>Artificial Analysis（artificialanalysis.ai）</aa>。分數未作改動，名次按分數排出。"
+    }
   },
   "rankingsVote": {
     "title": "盲測投票",

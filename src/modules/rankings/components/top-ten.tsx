@@ -8,8 +8,14 @@ function barWidth(score: number, low: number, high: number): string {
   return `${high > low ? 40 + ((score - low) / (high - low)) * 60 : 100}%`
 }
 
-/** 「<赛道> · 前 10」: the placed models as bars by score, the first black, the top three's places red. */
-export function TopTen({ arenaName, rows }: { arenaName: string; rows: BoardRow[] }) {
+/** What a bar needs: a blind-test row, or an outside board's line (keyed by its place in the list). */
+export type TopTenRow = Pick<BoardRow, 'modelId' | 'name' | 'org' | 'rank' | 'score'>
+
+/**
+ * 「<赛道> · 前 10」: the placed models as bars by score, the first black, the top three's places red.
+ * Scores are whole numbers unless the board's scale needs `digits` (an index out of 100).
+ */
+export function TopTen({ arenaName, rows, digits = 0 }: { arenaName: string; rows: TopTenRow[]; digits?: number }) {
   const t = useTranslations('rankings')
   const scores = rows.map((row) => row.score)
   const low = Math.min(...scores)
@@ -45,7 +51,7 @@ export function TopTen({ arenaName, rows }: { arenaName: string; rows: BoardRow[
                   <span className="truncate">{row.name}</span>
                 </span>
               </span>
-              <span className="text-right text-meta font-medium tabular-nums">{Math.round(row.score)}</span>
+              <span className="text-right text-meta font-medium tabular-nums">{digits ? row.score.toFixed(digits) : Math.round(row.score)}</span>
             </li>
           )
         })}

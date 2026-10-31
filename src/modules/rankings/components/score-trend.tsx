@@ -10,17 +10,27 @@ const box = { width: 600, height: 200 }
 const plot: PlotBox = { left: 0, top: 12, width: 600, height: 176 }
 const percent = (value: number, total: number) => `${(value / total) * 100}%`
 
+type ScoreTrendProps = {
+  points: TrendPoint[]
+  /** One point a month (an outside board's history): titled by months, dated by month. */
+  monthly?: boolean
+}
+
 /**
  * 「分数走势 · 近 12 周」: each week's best closed model (black) and best open-weights model (red),
  * with the gap between them at the start and the end in a sentence. Needs two weeks or more.
+ * An outside board's history comes one point a month (「近 24 个月」).
  */
-export function ScoreTrend({ points }: { points: TrendPoint[] }) {
+export function ScoreTrend({ points, monthly = false }: ScoreTrendProps) {
   const t = useTranslations('rankings')
   const format = useFormatter()
   const chart = trendChart(points)
   const gap = trendGap(points)
   const gapText = gap && (gap.from === gap.to ? t('trendGapSame', gap) : t('trendGap', gap))
-  const date = (week: string) => format.dateTime(dateOfKey(week), { month: 'numeric', day: 'numeric', timeZone: 'UTC' })
+  const date = (week: string) =>
+    format.dateTime(dateOfKey(week), monthly ? { year: 'numeric', month: 'numeric', timeZone: 'UTC' } : { month: 'numeric', day: 'numeric', timeZone: 'UTC' })
+  const title = monthly ? t('trendMonths', { months: points.length }) : t('trend', { weeks: TREND_WEEKS })
+  const label = monthly ? t('trendMonthsChart', { months: points.length }) : t('trendChart', { weeks: points.length })
 
   return (
     <section
@@ -29,7 +39,7 @@ export function ScoreTrend({ points }: { points: TrendPoint[] }) {
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="rankings-trend" className="text-title">
-          {t('trend', { weeks: TREND_WEEKS })}
+          {title}
         </h2>
         <span aria-hidden="true" className="flex gap-3.5 text-small text-ink-2">
           <span className="flex items-center gap-1">
@@ -42,7 +52,7 @@ export function ScoreTrend({ points }: { points: TrendPoint[] }) {
           </span>
         </span>
       </div>
-      <div role="img" aria-label={gapText ?? t('trendChart', { weeks: points.length })} className="flex flex-col gap-1 pl-8">
+      <div role="img" aria-label={gapText ?? label} className="flex flex-col gap-1 pl-8">
         <div className="relative aspect-[3/1] w-full">
           <svg viewBox={`0 0 ${box.width} ${box.height}`} aria-hidden="true" className="absolute inset-0 size-full overflow-visible">
             <g className="stroke-surface-2" strokeWidth={1}>

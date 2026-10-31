@@ -13,6 +13,7 @@ import { BoardTable } from './board-table'
 import { Makers } from './makers'
 import { RankingsHero } from './rankings-hero'
 import { ScoreTrend } from './score-trend'
+import { SourceTabs } from './source-tabs'
 import { TopTen } from './top-ten'
 import { ValueForMoney } from './value-for-money'
 
@@ -25,7 +26,7 @@ type RankingsBoardProps = {
 }
 
 /**
- * The rankings page of one arena (docs/specs/rankings.md「页面与路由」): the heading with the
+ * The rankings page of one arena (docs/specs/rankings.md「页面与路由」):「数据来源」, the heading with the
  * counted votes and「新上榜」, the arena tabs, then from the latest weekly snapshot「前 10」,
  *「性价比」,「完整榜单」with its filters,「分数走势」and「按厂商」. Before the first snapshot
  * the heading stays and the rest is an empty state pointing at the blind vote.
@@ -44,7 +45,10 @@ export async function RankingsBoard({ locale, arena, arenas, filters }: Rankings
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-8 px-4 pt-5 pb-16 md:pt-8 md:pb-24">
-      <RankingsHero votes={votes} voteHref={vote} newcomers={board.newcomers.slice(0, NEWCOMERS_SHOWN)} />
+      <div className="flex flex-col gap-4">
+        <SourceTabs locale={locale} current="ifai" />
+        <RankingsHero votes={votes} voteHref={vote} newcomers={board.newcomers.slice(0, NEWCOMERS_SHOWN)} />
+      </div>
 
       <section aria-label={arena.name} className="flex flex-col gap-4">
         <ArenaTabs arenas={arenas} current={arena.slug} hrefOf={(item) => boardHref(slugOf(item))} />

@@ -4,7 +4,7 @@ import { rejectField } from '@/lib/field-error'
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 
 import { refreshRankingsAfterChange, refreshRankingsAfterDelete } from '../cache'
-import { snapshotEndpoints } from '../endpoints'
+import { externalEndpoints, snapshotEndpoints } from '../endpoints'
 import { arenaKinds, arenaStatuses, reservedArenaSlugs } from '../rules'
 import { adminMessage, isAdmin, rankingsAdminGroup, slugField } from './shared'
 
@@ -58,7 +58,7 @@ export const Arenas: CollectionConfig = {
     group: rankingsAdminGroup,
     defaultColumns: ['name', 'slug', 'status', 'order'],
     components: {
-      beforeListTable: ['/modules/rankings/admin/snapshot-status#SnapshotStatus'],
+      beforeListTable: ['/modules/rankings/admin/snapshot-status#SnapshotStatus', '/modules/rankings/admin/external-status#ExternalStatus'],
     },
     description: {
       en: 'Traditional Chinese is converted from Simplified automatically (OpenCC). Write English, Japanese and Korean separately. The rankings are recomputed every Monday at 06:00 Shanghai time.',
@@ -78,7 +78,7 @@ export const Arenas: CollectionConfig = {
     beforeDelete: [keepUsedArenas],
     afterDelete: [refreshRankingsAfterDelete],
   },
-  endpoints: snapshotEndpoints,
+  endpoints: [...snapshotEndpoints, ...externalEndpoints],
   fields: [
     {
       name: 'name',

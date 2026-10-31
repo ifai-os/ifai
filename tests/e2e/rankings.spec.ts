@@ -38,6 +38,8 @@ test.describe('before the third phase', () => {
   test('the rankings are not on the site yet', async ({ page, request }) => {
     expect((await page.goto('/en/rankings'))?.status()).toBe(404)
     expect((await page.goto('/en/rankings/vote'))?.status()).toBe(404)
+    expect((await page.goto('/en/rankings/arena'))?.status()).toBe(404)
+    expect((await page.goto('/en/rankings/artificial-analysis/text-to-speech'))?.status()).toBe(404)
     expect((await request.post('/api/rankings/battles', { data: { locale: 'en' } })).status()).toBe(404)
     expect((await request.post('/api/rankings/battles/AAAAAAAAAAAAAAAAAAAAAAAA/vote', { data: { outcome: 'a', locale: 'en' } })).status()).toBe(404)
     await page.goto('/en')
@@ -139,6 +141,71 @@ test.describe('with the sample rankings', () => {
     await page.goto('/en/rankings/text?weights=open')
     await expect(page).toHaveURL(/\/en\/rankings\?weights=open$/)
     expect((await page.goto('/en/rankings/no-such-arena'))?.status()).toBe(404)
+  })
+
+  test('「数据来源」switches to Arena’s boards, kept apart from the blind test', async ({ page }) => {
+    await page.goto('/en/rankings')
+    const sources = page.getByRole('navigation', { name: en.rankingsExternal.sourcesLabel })
+    await expect(sources.getByRole('link', { name: en.rankingsExternal.sources.ifai })).toHaveAttribute('aria-current', 'page')
+    await sources.getByRole('link', { name: en.rankingsExternal.sources.arena }).click()
+    await expect(page).toHaveURL(/\/en\/rankings\/arena$/)
+    await expect(page.getByRole('heading', { level: 1, name: en.rankingsExternal.arena.headline })).toBeVisible()
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/en\/rankings\/arena$/)
+
+    // The sample 文本 board of scripts/seed-rankings.ts: 12 models over four months, 5 of them open weights.
+    await expect(page.getByRole('region', { name: en.rankings.topTen.replace('{arena}', en.rankingsExternal.boards.text) }).getByRole('listitem')).toHaveCount(10)
+    const rows = page.getByRole('table').locator('tbody tr')
+    await expect(rows).toHaveCount(12)
+    // On the newest day Atlas Pro 2 has climbed past Lumen 4; maker keys are spelled out.
+    await expect(rows.first()).toContainText('Atlas Pro 2')
+    await expect(rows.first()).toContainText('Atlas AI')
+    await expect(page.getByRole('heading', { name: en.rankings.trendMonths.replace('{months}', '4') })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Arena Leaderboard Dataset' })).toHaveAttribute('href', 'https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset')
+    await expect(page.getByRole('link', { name: 'CC BY 4.0' })).toHaveAttribute('rel', /license/)
+
+    await page.getByRole('navigation', { name: en.rankings.licenseFilter }).getByRole('link', { name: en.rankings.weights.open }).click()
+    await expect(page).toHaveURL(/\/en\/rankings\/arena\?weights=open$/)
+    await expect(rows).toHaveCount(5)
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+
+    // Only the boards with data are offered; each has its own address, the first one the source's.
+    const boards = page.getByRole('navigation', { name: en.rankingsExternal.boardsLabel })
+    await expect(boards.getByRole('link')).toHaveCount(2)
+    await boards.getByRole('link', { name: en.rankingsExternal.boards.webdev }).click()
+    await expect(page).toHaveURL(/\/en\/rankings\/arena\/webdev$/)
+    await expect(rows).toHaveCount(6)
+    await page.goto('/en/rankings/arena/text?weights=closed')
+    await expect(page).toHaveURL(/\/en\/rankings\/arena\?weights=closed$/)
+    expect((await page.goto('/en/rankings/arena/no-such-board'))?.status()).toBe(404)
+  })
+
+  test('Artificial Analysis has its own boards and its own columns, credited to it', async ({ page }) => {
+    await page.goto('/en/rankings/arena')
+    await page.getByRole('navigation', { name: en.rankingsExternal.sourcesLabel }).getByRole('link', { name: en.rankingsExternal.sources.artificialAnalysis }).click()
+    await expect(page).toHaveURL(/\/en\/rankings\/artificial-analysis$/)
+    await expect(page.getByRole('heading', { level: 1, name: en.rankingsExternal.artificialAnalysis.headline })).toBeVisible()
+
+    // The Intelligence Index: one decimal, and no intervals, votes or licenses to show.
+    const table = page.getByRole('table')
+    await expect(table.locator('tbody tr')).toHaveCount(6)
+    await expect(table.locator('tbody tr').first()).toContainText('71.4')
+    await expect(table.getByRole('columnheader')).toHaveCount(3)
+    await expect(page.getByRole('navigation', { name: en.rankings.licenseFilter })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Artificial Analysis (artificialanalysis.ai)' })).toHaveAttribute('href', 'https://artificialanalysis.ai/')
+
+    await page.getByRole('navigation', { name: en.rankingsExternal.boardsLabel }).getByRole('link', { name: en.rankingsExternal.boards.textToSpeech }).click()
+    await expect(page).toHaveURL(/\/en\/rankings\/artificial-analysis\/text-to-speech$/)
+    await expect(table.getByRole('columnheader')).toHaveCount(4)
+    await expect(table.locator('tbody tr').first()).toContainText('±14')
+    expect((await page.goto('/en/rankings/artificial-analysis/webdev'))?.status()).toBe(404)
+  })
+
+  test('the outside boards with data are in the sitemap', async ({ request }) => {
+    const pages = await (await request.get('/sitemaps/pages-1.xml')).text()
+    for (const path of ['/en/rankings/arena', '/en/rankings/arena/webdev', '/en/rankings/artificial-analysis', '/en/rankings/artificial-analysis/text-to-speech']) {
+      expect(pages).toContain(`${path}</loc>`)
+    }
+    expect(pages).not.toContain('/en/rankings/arena/vision</loc>')
   })
 
   test('Traditional Chinese pages convert maker names and Simplified questions', async ({ page }) => {

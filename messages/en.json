@@ -1273,7 +1273,57 @@
     "makerModels": "{count, plural, one {# model} other {# models}}",
     "makersNote": "Models in the top {places}",
     "emptyTitle": "The first rankings are on their way",
-    "emptyBody": "They come out on the Monday after enough votes are in. Every vote helps."
+    "emptyBody": "They come out on the Monday after enough votes are in. Every vote helps.",
+    "trendMonths": "Score trend · last {months} months",
+    "trendMonthsChart": "Monthly scores of the best closed and the best open-weights model over the last {months} months."
+  },
+  "rankingsExternal": {
+    "sourcesLabel": "Source",
+    "sources": {
+      "ifai": "IFAI blind test",
+      "arena": "Arena",
+      "artificialAnalysis": "Artificial Analysis"
+    },
+    "boardsLabel": "Leaderboards",
+    "boards": {
+      "text": "Text",
+      "webdev": "WebDev",
+      "vision": "Vision",
+      "document": "Document",
+      "search": "Search",
+      "textToImage": "Text to image",
+      "imageEdit": "Image edit",
+      "textToVideo": "Text to video",
+      "imageToVideo": "Image to video",
+      "videoEdit": "Video edit",
+      "intelligence": "Intelligence",
+      "textToSpeech": "Text to speech"
+    },
+    "published": "Published <date></date>",
+    "updated": "Updated <date></date>",
+    "models": "{count, plural, one {# model} other {# models}}",
+    "days": "{count, plural, one {published leaderboard} other {published leaderboards}} since {since}",
+    "moreModels": "{count, plural, one {# more model} other {# more models}}",
+    "emptyTitle": "Nothing synced for this leaderboard yet",
+    "emptyBody": "It syncs every day at 07:30 Shanghai time and shows here after the first sync.",
+    "arena": {
+      "metaTitle": "{board} · Arena leaderboard",
+      "description": "Arena (arena.ai) leaderboards for text, coding, vision, images and video, from anonymous head-to-head votes, synced daily.",
+      "eyebrow": "Model rankings · from Arena · synced daily",
+      "headline": "Arena: rankings from anonymous head-to-head votes",
+      "intro": "Arena (arena.ai) gives the same prompt to two anonymous models, people vote for the better answer, and scores are fitted with the Bradley–Terry model.",
+      "visit": "See the leaderboard on Arena",
+      "attribution": "Source: the <dataset>Arena Leaderboard Dataset</dataset> published by <arena>Arena</arena> on Hugging Face, used under <license>CC BY 4.0</license>. Each leaderboard is the overall one; scores and places are unchanged."
+    },
+    "artificialAnalysis": {
+      "metaTitle": "{board} · Artificial Analysis leaderboard",
+      "description": "Artificial Analysis leaderboards: the Intelligence Index of language models, and image, video and speech arenas from blind votes, synced daily.",
+      "eyebrow": "Model rankings · from Artificial Analysis · synced daily",
+      "headline": "Artificial Analysis: independent evaluations and blind-vote arenas",
+      "intro": "Artificial Analysis runs the same evaluations on every language model for its Intelligence Index, and ranks image, video and speech models by people’s blind votes (Elo).",
+      "visit": "See the leaderboard on Artificial Analysis",
+      "attribution": "Source: <aa>Artificial Analysis (artificialanalysis.ai)</aa>. Scores are unchanged; places follow the scores."
+    }
   },
   "rankingsVote": {
     "title": "Blind vote",

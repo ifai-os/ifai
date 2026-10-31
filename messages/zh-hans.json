@@ -1273,7 +1273,57 @@
     "makerModels": "{count, plural, other {# 个}}",
     "makersNote": "进入前 {places} 的模型数",
     "emptyTitle": "第一份排行还在路上",
-    "emptyBody": "投票够了以后的周一就会出来，现在就去投一票吧。"
+    "emptyBody": "投票够了以后的周一就会出来，现在就去投一票吧。",
+    "trendMonths": "分数走势 · 近 {months} 个月",
+    "trendMonthsChart": "近 {months} 个月闭源第一和开放权重第一的分数走势。"
+  },
+  "rankingsExternal": {
+    "sourcesLabel": "数据来源",
+    "sources": {
+      "ifai": "IFAI 盲测",
+      "arena": "Arena",
+      "artificialAnalysis": "Artificial Analysis"
+    },
+    "boardsLabel": "榜单",
+    "boards": {
+      "text": "文本",
+      "webdev": "网页开发",
+      "vision": "视觉",
+      "document": "文档",
+      "search": "搜索",
+      "textToImage": "文生图",
+      "imageEdit": "图像编辑",
+      "textToVideo": "文生视频",
+      "imageToVideo": "图生视频",
+      "videoEdit": "视频编辑",
+      "intelligence": "智能指数",
+      "textToSpeech": "语音合成"
+    },
+    "published": "<date></date> 发布",
+    "updated": "<date></date> 更新",
+    "models": "{count, plural, other {# 个模型}}",
+    "days": "{count, plural, other {期榜单}}，最早一期 {since}",
+    "moreModels": "其余 {count} 个模型",
+    "emptyTitle": "这个榜还没同步到数据",
+    "emptyBody": "每天上海时间 7:30 同步一次，第一次同步完这里就有了。",
+    "arena": {
+      "metaTitle": "{board} · Arena 模型排行",
+      "description": "Arena（arena.ai）的模型排行：文本、编程、视觉、图像和视频等榜单，来自用户的匿名对战投票，每天同步。",
+      "eyebrow": "模型排行 · 来自 Arena · 每天同步",
+      "headline": "Arena 排行：真实用户的匿名对战投票",
+      "intro": "Arena（arena.ai）把同一个问题交给两个匿名模型，用户看完两份回答再投票，按 Bradley–Terry 模型算出分数。",
+      "visit": "去 Arena 看原榜",
+      "attribution": "数据来源：<arena>Arena</arena> 在 Hugging Face 公开的 <dataset>Arena Leaderboard Dataset</dataset>，按 <license>CC BY 4.0</license> 许可使用。每个榜只取总榜（overall），分数和排名未作改动。"
+    },
+    "artificialAnalysis": {
+      "metaTitle": "{board} · Artificial Analysis 模型排行",
+      "description": "Artificial Analysis 的模型排行：语言模型的智能指数，以及图像、视频和语音模型的盲测投票榜，每天同步。",
+      "eyebrow": "模型排行 · 来自 Artificial Analysis · 每天同步",
+      "headline": "Artificial Analysis 排行：独立评测和盲测投票",
+      "intro": "Artificial Analysis 用同一套评测给各家语言模型打分，得出智能指数；图像、视频和语音模型按用户的盲测投票（Elo）排名。",
+      "visit": "去 Artificial Analysis 看原榜",
+      "attribution": "数据来源：<aa>Artificial Analysis（artificialanalysis.ai）</aa>。分数未作改动，名次按分数排出。"
+    }
   },
   "rankingsVote": {
     "title": "盲测投票",
