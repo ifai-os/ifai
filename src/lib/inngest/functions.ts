@@ -5,6 +5,7 @@ import { appsSubmissionFunctions } from '@/modules/apps/submissions/jobs'
 import { dailyCollectFunctions } from '@/modules/daily/collect/jobs'
 import { dailyEmailFunctions } from '@/modules/daily/email/jobs'
 import { dailyHeatFunctions } from '@/modules/daily/heat/jobs'
+import { dailyImportFunctions } from '@/modules/daily/import/media'
 import { dailyJudgeFunctions } from '@/modules/daily/judge/jobs'
 import { dailyWriteFunctions } from '@/modules/daily/write/jobs'
 import { rankingsFunctions } from '@/modules/rankings/jobs'
@@ -20,6 +21,7 @@ export const functions = [
   ...dailyWriteFunctions,
   ...dailyHeatFunctions,
   ...dailyEmailFunctions,
+  ...dailyImportFunctions,
   ...appsProfileFunctions,
   ...appsHeatFunctions,
   ...appsReviewFunctions,

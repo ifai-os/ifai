@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { importAllowed } from '@/modules/daily/import/endpoint'
-import { importApprovedAt, importSources, importTags, parseImport, parseImportStory, slugCandidates } from '@/modules/daily/import/rules'
+import { importApprovedAt, importMedia, importSources, importTags, parseImport, parseImportStory, sameMedia, slugCandidates } from '@/modules/daily/import/rules'
 
 /** A line as `newscrawler export-stories` writes it (trimmed). */
 const exported = {
@@ -19,6 +19,7 @@ const exported = {
     { url: 'https://www.theverge.com/ai/1015843/claude-duet', publisher: 'theverge.com', title: 'Anthropic takes on Muse', publishedAt: '2026-10-21T19:53:20Z' },
   ],
   score: 94.5,
+  media: { kind: 'image', imageUrl: 'https://www-cdn.anthropic.com/images/claude-duet-hero.png', credit: 'claude.com' },
   feishu: { month: '2026-10', record_id: 'reczz28RGOG7WWeG' },
 }
 
@@ -56,6 +57,35 @@ describe('stories imported from the pipeline', () => {
     expect(without('locales', { 'zh-Hans': exported.locales['zh-Hans'] })).toMatchObject({ ok: false, error: expect.stringContaining('locales.en') })
     expect(without('sources', ['not a url'])).toMatchObject({ ok: false, error: expect.stringContaining('sources') })
     expect(parseImportStory('text')).toEqual({ ok: false, error: 'not a JSON object' })
+  })
+
+  it('reads the picture or the video, with its credit', () => {
+    const parsed = parseImportStory(exported)
+    expect(parsed.ok && parsed.story.media).toEqual({ found: { image: 'https://www-cdn.anthropic.com/images/claude-duet-hero.png' }, credit: 'claude.com' })
+    const sources = importSources(exported.sources)
+    expect(importMedia({ kind: 'video', videoUrl: 'https://youtu.be/dQw4w9WgXcQ', credit: 'YouTube' }, sources)).toEqual({
+      found: { video: { provider: 'youtube', id: 'dQw4w9WgXcQ' } },
+      credit: 'YouTube',
+    })
+    expect(importMedia({ kind: 'video', videoUrl: 'https://cdn.example.com/demo.mp4', imageUrl: 'https://cdn.example.com/demo.jpg' }, sources)).toEqual({
+      found: { video: { provider: 'file', url: 'https://cdn.example.com/demo.mp4' }, image: 'https://cdn.example.com/demo.jpg' },
+      credit: 'claude.com',
+    })
+    // What the site would not take is no media, and the line still imports.
+    expect(importMedia({ kind: 'video', videoUrl: 'https://www.tiktok.com/@a/video/1' }, sources)).toBeNull()
+    expect(importMedia({ kind: 'image', imageUrl: 'https://example.com/logo.svg' }, sources)).toBeNull()
+    expect(importMedia({ kind: 'image', imageUrl: 'data:image/png;base64,AAAA' }, sources)).toBeNull()
+    expect(importMedia(null, sources)).toBeNull()
+    const without = parseImportStory({ ...exported, media: { kind: 'gif' } })
+    expect(without.ok && without.story.media).toBeNull()
+  })
+
+  it('tells a changed picture or video from the one stored', () => {
+    const youtube = { provider: 'youtube', id: 'dQw4w9WgXcQ' } as const
+    expect(sameMedia({ image: 'https://a.com/1.png', video: youtube }, { video: { ...youtube }, image: 'https://a.com/1.png' })).toBe(true)
+    expect(sameMedia(null, undefined)).toBe(true)
+    expect(sameMedia({ image: 'https://a.com/1.png' }, { image: 'https://a.com/2.png' })).toBe(false)
+    expect(sameMedia({ image: 'https://a.com/1.png' }, null)).toBe(false)
   })
 
   it('makes a slug from the English title when the line has none', () => {

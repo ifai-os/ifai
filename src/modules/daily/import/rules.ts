@@ -4,6 +4,7 @@
  * functions: ./import.ts stores them.
  */
 import { storyCategories, type StoryCategory } from '../categories'
+import { parseVideo, usableImage, videoUrl, type FoundMedia } from '../media'
 import type { SourceRole } from '../story-fields'
 import { maxStoryTags, storyTags, type StoryTag } from '../tags'
 import { normalizeUrl, siteOf } from '../url'
@@ -17,6 +18,12 @@ export type ImportText = { title: string; summary: string; tryIt: string | null;
 
 export type ImportSource = { name: string; role: SourceRole; url: string; publishedAt: string | null }
 
+/**
+ * The story's picture or video as the pipeline found it, in the shape the site's collector
+ * keeps in `raw_items.media`; `credit` is the publisher shown under it.
+ */
+export type ImportMedia = { found: FoundMedia; credit: string }
+
 export type ImportStory = {
   /** The Feishu record the story came from: the same record updates the same story. */
   recordId: string
@@ -27,6 +34,8 @@ export type ImportStory = {
   publishedAt: string
   score: number | null
   sources: ImportSource[]
+  /** Null when the line has none, or one the site does not take (an unknown video host, an SVG…). */
+  media: ImportMedia | null
   /** English is always there; a missing language falls back to English on the pages. */
   text: { en: ImportText } & Partial<Record<Exclude<ImportLocale, 'en'>, ImportText>>
 }
@@ -90,6 +99,34 @@ export function importTags(value: unknown): StoryTag[] {
   return [...new Set(value.filter((tag): tag is StoryTag => typeof tag === 'string' && known.has(tag)))].slice(0, maxStoryTags)
 }
 
+/**
+ * The line's `media` (docs/specs/daily.md「从本地流水线导入」): `{ kind: 'image', imageUrl, credit }`
+ * or `{ kind: 'video', videoUrl, imageUrl?, credit }`, or null. Read with the collector's own
+ * rules: a video only from YouTube, Vimeo or an .mp4 / .webm file, a picture never an SVG or a
+ * logo. Anything else is no media, never a rejected line. The credit defaults to the original
+ * source's publisher.
+ */
+export function importMedia(value: unknown, sources: readonly ImportSource[]): ImportMedia | null {
+  if (!isRecord(value)) return null
+  const credit = text(value.credit) ?? sources[0]?.name ?? null
+  const imageUrl = text(value.imageUrl)
+  const image = usableImage(imageUrl) ? imageUrl : undefined
+  let found: FoundMedia | null = null
+  if (value.kind === 'video') {
+    const video = parseVideo(text(value.videoUrl))
+    found = video ? { video, ...(image ? { image } : {}) } : null
+  } else if (value.kind === 'image') {
+    found = image ? { image } : null
+  }
+  return found && credit ? { found, credit } : null
+}
+
+/** Whether two found media are the same picture and video (jsonb does not keep key order). */
+export function sameMedia(a: FoundMedia | null | undefined, b: FoundMedia | null | undefined): boolean {
+  const key = (media: FoundMedia | null | undefined) => [media?.image ?? '', media?.video ? videoUrl(media.video) : ''].join(' ')
+  return key(a) === key(b)
+}
+
 /** Check one exported story; the error says what is wrong in words the pipeline's log can show. */
 export function parseImportStory(value: unknown): ParsedLine {
   if (!isRecord(value)) return { ok: false, error: 'not a JSON object' }
@@ -115,6 +152,7 @@ export function parseImportStory(value: unknown): ParsedLine {
     publishedAt,
     score: typeof value.score === 'number' && Number.isFinite(value.score) ? value.score : null,
     sources,
+    media: importMedia(value.media, sources),
     text: { en },
   }
   for (const locale of importLocales) {

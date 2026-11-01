@@ -34,17 +34,17 @@ export const importEndpoint: Endpoint = {
     const invalid = lines.flatMap(({ line, parsed }) => (parsed.ok ? [] : [{ line, recordId: null, error: parsed.error }]))
     // Loaded here: ./import reads the Payload config, which loads this file through the stories collection.
     const { importStories } = await import('./import')
-    let result: Awaited<ReturnType<typeof importStories>> = { imported: [], failed: [] }
+    let result: Awaited<ReturnType<typeof importStories>> = { imported: [], failed: [], mediaQueued: 0 }
     try {
       if (valid.length) result = await importStories(valid)
     } catch (error) {
       console.error('[daily import] failed:', error)
       return Response.json({ error: 'failed', message: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
-    const { imported, failed } = result
+    const { imported, failed, mediaQueued } = result
     const created = imported.filter((outcome) => outcome.action === 'created').length
     return Response.json(
-      { created, updated: imported.length - created, stories: imported, failed: [...invalid, ...failed].sort((a, b) => a.line - b.line) },
+      { created, updated: imported.length - created, mediaQueued, stories: imported, failed: [...invalid, ...failed].sort((a, b) => a.line - b.line) },
       { status: imported.length ? 200 : 400 },
     )
   },
