@@ -49,8 +49,8 @@ export function promptLangFor(locale: Locale): PromptLang {
   return locale === 'zh-Hant' ? 'zh-Hans' : locale
 }
 
-/** Slugs that are pages under /rankings, not arenas. */
-export const reservedArenaSlugs = ['vote'] as const
+/** Slugs that are pages under /rankings, not arenas: the blind vote and the outside sources (./external/sources.ts). */
+export const reservedArenaSlugs = ['vote', 'arena', 'artificial-analysis'] as const
 
 /** A question is at most this long (characters). */
 export const PROMPT_MAX_LENGTH = 2000

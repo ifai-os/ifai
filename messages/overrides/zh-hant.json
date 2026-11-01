@@ -353,7 +353,18 @@
     },
     "boardNote": "分數按兩兩對比結果擬合得出：平均水準是 1000 分，差 100 分大約是 64% 對 36% 的勝率；信賴區間重疊的模型可以視為同一水準。計分的票不足 {votes, number} 的模型標為「暫定」，不排名次、不進前 10。",
     "trend": "分數走勢 · 近 {weeks} 週",
-    "trendChart": "近 {weeks} 週閉源第一和開放權重第一的分數走勢。"
+    "trendChart": "近 {weeks} 週閉源第一和開放權重第一的分數走勢。",
+    "trendMonthsChart": "近 {months} 個月閉源第一和開放權重第一的分數走勢。"
+  },
+  "rankingsExternal": {
+    "boards": {
+      "text": "文字"
+    },
+    "published": "<date></date> 發布",
+    "arena": {
+      "eyebrow": "模型排行 · 來自 Arena · 每天同步",
+      "description": "Arena（arena.ai）的模型排行：文字、程式設計、視覺、影像和影片等榜單，來自使用者的匿名對戰投票，每天同步。"
+    }
   },
   "tags": {
     "agents": "AI代理",

@@ -3,8 +3,10 @@ import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
 import { isLocale } from '@/i18n/config'
+import { redirect } from '@/i18n/navigation'
 import { RankingsBoard } from '@/modules/rankings/components/rankings-board'
 import { getArenas } from '@/modules/rankings/data'
+import { externalHref } from '@/modules/rankings/external/sources'
 import { boardMetadata } from '@/modules/rankings/metadata'
 import { rankingsLaunched, readBoardFilters } from '@/modules/rankings/rules'
 
@@ -21,13 +23,13 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   return boardMetadata({ locale, arena, first: true, filters: readBoardFilters(await searchParams) })
 }
 
-/** 模型排行: the first published arena's rankings. */
+/** 模型排行: the first published arena's rankings; with no arena published, Arena's leaderboard. */
 export default async function RankingsPage({ params, searchParams }: Props) {
   const { locale } = await params
   if (!isLocale(locale) || !rankingsLaunched()) notFound()
   setRequestLocale(locale)
   const arenas = await getArenas(locale)
-  if (!arenas[0]) notFound()
+  if (!arenas[0]) redirect({ href: externalHref('arena'), locale })
 
   return <RankingsBoard locale={locale} arena={arenas[0]} arenas={arenas} filters={readBoardFilters(await searchParams)} />
 }

@@ -1273,7 +1273,57 @@
     "makerModels": "{count, plural, other {#モデル}}",
     "makersNote": "トップ{places}に入ったモデル数",
     "emptyTitle": "最初のランキングを準備中です",
-    "emptyBody": "票が集まった後の月曜日に公開されます。まずは投票してみてください。"
+    "emptyBody": "票が集まった後の月曜日に公開されます。まずは投票してみてください。",
+    "trendMonths": "スコア推移 · 直近{months}か月",
+    "trendMonthsChart": "直近{months}か月のクローズド1位とオープンウェイト1位のスコア推移。"
+  },
+  "rankingsExternal": {
+    "sourcesLabel": "データ元",
+    "sources": {
+      "ifai": "IFAI ブラインドテスト",
+      "arena": "Arena",
+      "artificialAnalysis": "Artificial Analysis"
+    },
+    "boardsLabel": "ランキング",
+    "boards": {
+      "text": "テキスト",
+      "webdev": "Web 開発",
+      "vision": "画像理解",
+      "document": "ドキュメント",
+      "search": "検索",
+      "textToImage": "画像生成",
+      "imageEdit": "画像編集",
+      "textToVideo": "動画生成",
+      "imageToVideo": "画像から動画",
+      "videoEdit": "動画編集",
+      "intelligence": "知能指数",
+      "textToSpeech": "音声合成"
+    },
+    "published": "<date></date> 公開",
+    "updated": "<date></date> 更新",
+    "models": "{count, plural, other {#モデル}}",
+    "days": "{count, plural, other {回分}}（{since}から）",
+    "moreModels": "残り{count}モデル",
+    "emptyTitle": "このランキングはまだ同期されていません",
+    "emptyBody": "毎日上海時間 7:30 に同期します。最初の同期のあとにここに表示されます。",
+    "arena": {
+      "metaTitle": "{board} · Arena ランキング",
+      "description": "Arena（arena.ai）のモデルランキング。テキスト、コーディング、画像理解、画像・動画生成などを、匿名の対戦投票の結果から毎日同期します。",
+      "eyebrow": "モデルランキング · Arena より · 毎日同期",
+      "headline": "Arena：匿名の対戦投票によるランキング",
+      "intro": "Arena（arena.ai）では同じ質問を匿名の 2 つのモデルに出し、ユーザーがよい方の回答に投票します。スコアは Bradley–Terry モデルで算出されます。",
+      "visit": "Arena で元のランキングを見る",
+      "attribution": "データ元：<arena>Arena</arena> が Hugging Face で公開している <dataset>Arena Leaderboard Dataset</dataset>（<license>CC BY 4.0</license>）。各ランキングは総合（overall）のみで、スコアと順位は変更していません。"
+    },
+    "artificialAnalysis": {
+      "metaTitle": "{board} · Artificial Analysis ランキング",
+      "description": "Artificial Analysis のモデルランキング。言語モデルの知能指数と、画像・動画・音声モデルのブラインド投票ランキングを毎日同期します。",
+      "eyebrow": "モデルランキング · Artificial Analysis より · 毎日同期",
+      "headline": "Artificial Analysis：独立評価とブラインド投票",
+      "intro": "Artificial Analysis は同じ評価セットで各社の言語モデルを採点して知能指数を出し、画像・動画・音声モデルはユーザーのブラインド投票（Elo）で順位を付けています。",
+      "visit": "Artificial Analysis で元のランキングを見る",
+      "attribution": "データ元：<aa>Artificial Analysis（artificialanalysis.ai）</aa>。スコアは変更しておらず、順位はスコア順です。"
+    }
   },
   "rankingsVote": {
     "title": "ブラインド投票",

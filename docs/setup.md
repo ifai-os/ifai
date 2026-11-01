@@ -75,7 +75,8 @@ pnpm dev                 # http://localhost:3000
 | `AI_DAILY_BUDGET_USD` | `10` | `1` | 每天（上海时间）的模型费用上限，美元 |
 | `ARENA_DAILY_BUDGET_USD` | 第三期前不用填（默认 `2`） | 不填 | 排行生成参赛回答每天（上海时间）的花费上限，美元，也算在 `AI_DAILY_BUDGET_USD` 里 |
 | `MODEL_CALLS_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不调用模型 |
-| `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源 |
+| `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源，也不同步排行的外部榜单 |
+| `ARTIFICIAL_ANALYSIS_API_KEY` | artificialanalysis.ai 免费注册生成的 key | 同生产 | 排行的外部榜单（第三期）读 Artificial Analysis 免费接口用，每天 100 次，同步一次用 7 次左右；不填只同步 Arena |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |
 | `GITHUB_TOKEN` | 可选 | 可选 | Skill 导入用的只读 GitHub 令牌（Fine-grained，Contents: Read）；不填只能导入公开仓库，且受匿名限额 |
 | `APPS_SHOW_TRANCO_RANK` | 看过 Tranco 条款再决定 | 同生产 | 写成 `true` 才在应用页面显示 Tranco 名次（列表的「网站排名」列、详情页的数字）；不填不显示，名次照常算进热度 |
@@ -167,6 +168,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 10. 应用热度：`apps-heat-daily` 每天上海时间 06:00 下载 Tranco 名单（不用 key）、匹配近 30 天的已发布日报、算所有已发布应用的热度。要立刻算一次，在后台应用列表上方点「现在重算」，或发事件 `apps/heat.run`，数据 `{}`；同一天再算会覆盖这一天的数字。结果在应用编辑页的「热度」标签里；列表上方显示最近一次运行，Tranco 下载失败时写明原因并沿用之前的名次。上线后第一次运行完，确认列表上方的 Tranco 名单编号不是空的。点击由「打开网站」的站内跳转 `/[locale]/apps/[slug]/visit` 记录，访客哈希用 `PAYLOAD_SECRET` 派生，不需要另配变量。算完后前台的榜单、详情页的热度和首页「热门应用」自动刷新；页面上的 Tranco 名次和「新上架」的起始日由 `APPS_SHOW_TRANCO_RANK`、`APPS_NEW_SINCE` 控制（见第 3 步的表）。
 11. 应用评价翻译：读者写好或改了评价正文后，`apps-review-translate` 约一分钟后用用途 `translate` 把它译成英、简、日、韩里原文以外的几种（繁体由简体转换，简繁之间只用 OpenCC），存进 `app_review_translations`；一条评价每天最多花钱翻 5 次（站长点「重新翻译」不算）。也要 `MODEL_CALLS_ENABLED` 为 `true`；关着或当天预算用完时评价只显示原文，`apps-review-translate-sweep` 每 30 分钟把还没译文的补上，也可以发事件 `apps/translate.sweep` 立刻跑。连续失败 3 次的在后台应用的「评价」标签里标红，点「重新翻译」再试；单条也可以发 `apps/review.translate`，数据 `{"reviewId": 345}`，已经译好的会跳过。
 12. 日报邮件：`DAILY_EMAIL_ENABLED` 为 `true` 时，`daily-email-send` 每 15 分钟（UTC 第 0、15、30、45 分）找当地时间到了早上 8 点、今天还没收到的订阅者，每 100 封一批经 Resend 发出；要立刻跑一次，发事件 `daily/email.run`，数据 `{}`（只发给当地 8:00–11:00 之间的人）。每次运行的结果（发了几封、停下的原因）在 Runs 里，汇总在后台订阅者列表上方。`daily-email-cleanup` 每天 UTC 4:30 删退订满 30 天的订阅和过期的记录。两个任务都不调用模型。
+13. 排行的外部榜单：`COLLECT_ENABLED` 为 `true` 时，`rankings-external` 每天上海时间 07:30 读 Arena 在 Hugging Face 公开的数据集（不用 key）和 Artificial Analysis 的免费接口（`ARTIFICIAL_ANALYSIS_API_KEY`，不填就跳过它），存进 `rankings_external_snapshots`。一个榜第一次同步时读全部历史，每周一再读一遍。要立刻跑一次，在后台「赛道」列表上方「外部榜单」点「现在同步」，或发事件 `rankings/external.import`，数据 `{}`（`{"full": true}` 把 Arena 的全部历史再读一遍）。每个榜的结果和错误在 Runs 的输出里；页面要第三期才开放。
 
 ## 10. 第一次上线检查
 

@@ -5,6 +5,7 @@ import { modelCallsEnabled } from '@/lib/switches'
 import { arenaBudgetUsedUp, generateAnswer, nextAnswers, queueMissingAnswers } from './answers/generate'
 import { refreshRankingsCache } from './cache'
 import { answersEvent, snapshotEvent } from './events'
+import { externalFunctions } from './external/jobs'
 import { weekOf } from './rules'
 import { deleteUnvotedBattles, publishedArenaIds, storeSnapshot } from './snapshot'
 
@@ -62,4 +63,4 @@ export const snapshotJob = inngest.createFunction(
   },
 )
 
-export const rankingsFunctions = [answersJob, snapshotJob]
+export const rankingsFunctions = [answersJob, snapshotJob, ...externalFunctions]

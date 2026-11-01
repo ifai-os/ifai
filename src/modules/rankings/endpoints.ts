@@ -3,11 +3,13 @@ import type { Endpoint, PayloadRequest } from 'payload'
 import { inngest } from '@/lib/inngest/client'
 
 import { answerProgress, retryAnswers, snapshotStatus, type AdminLocale, type AnswerProgress, type SnapshotStatusRow } from './admin'
-import { answersEvent, snapshotEvent } from './events'
+import { answersEvent, externalImportEvent, snapshotEvent } from './events'
+import { externalStatus, type ExternalStatus } from './external/admin'
 
 export type SnapshotStatusResponse = { arenas: SnapshotStatusRow[] }
 export type QueuedResponse = { queued: true; retried?: number } | { queued: false; error: string; retried?: number }
 export type AnswerProgressResponse = { arenas: AnswerProgress[] }
+export type ExternalStatusResponse = ExternalStatus
 
 const unauthorized = () => Response.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -49,6 +51,29 @@ export const snapshotEndpoints: Endpoint[] = [
     handler: async (req) => {
       if (!req.user) return unauthorized()
       return Response.json(await queue(snapshotEvent))
+    },
+  },
+]
+
+/** Back-office endpoints on `arenas`, for admins only: the outside leaderboards above the list (「外部榜单」). */
+export const externalEndpoints: Endpoint[] = [
+  {
+    // GET /api/arenas/external-status — each outside board's newest day and how many days are stored.
+    path: '/external-status',
+    method: 'get',
+    handler: async (req) => {
+      if (!req.user) return unauthorized()
+      const response: ExternalStatusResponse = await externalStatus()
+      return Response.json(response)
+    },
+  },
+  {
+    // POST /api/arenas/external-run — sync the outside boards now (the「现在同步」button).
+    path: '/external-run',
+    method: 'post',
+    handler: async (req) => {
+      if (!req.user) return unauthorized()
+      return Response.json(await queue(externalImportEvent))
     },
   },
 ]

@@ -8,13 +8,19 @@
  * machine, or main's preview when asked (./seed-target.ts). Safe to run again: the sample models,
  * questions, answers, pictures and votes and the arenas' snapshots are replaced.
  *
+ * Outside boards (「外部榜单」) get a few made-up days too: Arena's 文本 over four months (for
+ * 「分数走势」) and 网页开发, and Artificial Analysis's 智能指数 and 语音合成. Only on this machine
+ * and into empty tables, so made-up days never sit among real ones: a preview syncs the real
+ * boards (「现在同步」), and a database that has synced them keeps them. To sync the real boards
+ * into a local database that has the sample ones, empty rankings_external_snapshots first.
+ *
  *   pnpm payload run scripts/seed-rankings.ts
  */
 import { randomBytes } from 'node:crypto'
 
 import config from '@payload-config'
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
-import { inArray, or } from '@payloadcms/db-postgres/drizzle'
+import { count, inArray, or } from '@payloadcms/db-postgres/drizzle'
 import { getPayload, type Where } from 'payload'
 import sharp from 'sharp'
 
@@ -22,7 +28,9 @@ import { locales } from '../src/i18n/config'
 import { shanghaiDate } from '../src/lib/shanghai-day'
 import { addDays } from '../src/modules/apps/metrics/days'
 import { weekOf, type Outcome, type PromptLang, type Region, type Weights } from '../src/modules/rankings/rules'
-import { arenaBattles, arenaSnapshots } from '../src/modules/rankings/schema'
+import { rankByScore, weightsOf, type ExternalRow, type ExternalSource } from '../src/modules/rankings/external/sources'
+import { storeSnapshots } from '../src/modules/rankings/external/store'
+import { arenaBattles, arenaSnapshots, externalSnapshots } from '../src/modules/rankings/schema'
 import { storeSnapshot } from '../src/modules/rankings/snapshot'
 import { assertSeedTarget } from './seed-target'
 
@@ -219,7 +227,7 @@ async function samplePicture(seed: number, [width, height]: readonly [number, nu
 /** Monday 06:00 in Shanghai, when the weekly job takes the week's snapshot. */
 const snapshotTime = (week: string) => new Date(`${week}T06:00:00+08:00`)
 
-assertSeedTarget('sample rankings')
+const target = assertSeedTarget('sample rankings')
 const payload = await getPayload({ config })
 const db = (payload.db as unknown as PostgresAdapter).drizzle
 const context = { skipAnswersEvent: true }
@@ -390,5 +398,91 @@ for (const [arena, id] of Object.entries(arenaIds)) {
     console.log(`${arena} ${week}:`, result.status === 'stored' ? `${result.ranked} of ${result.models} models placed, ${result.votes} votes` : result.reason)
   }
 }
+// Outside boards, made up, written the way the daily sync writes them.
+const [stored] = await db.select({ days: count() }).from(externalSnapshots)
+if (target === 'preview') {
+  console.log('Outside boards: none made up on a preview; 「现在同步」 brings the real ones.')
+} else if (Number(stored?.days ?? 0) === 0) {
+  const today = shanghaiDate(now)
+  /** Arena-style lines (maker keys, licenses, intervals, votes), placed by score. */
+  const arenaRows = (names: [string, string, string][], top: number, drift: number): ExternalRow[] =>
+    rankByScore(
+      names.map(([model, org, license], index) => {
+        const score = top - index * 9 + (index % 4 === 1 ? drift : 0)
+        const interval = 4 + (index % 3)
+        return { model, org, license, weights: weightsOf(license), score, lower: score - interval, upper: score + interval, votes: 9000 - index * 600 }
+      }),
+    )
+  const textModels: [string, string, string][] = [
+    ['Lumen 4', 'lumen-labs', 'Proprietary'],
+    ['Atlas Pro 2', 'atlas-ai', 'Proprietary'],
+    ['Kestrel 3', 'kestrel-ai', 'Apache 2.0'],
+    ['Orchid Large', 'orchid', 'Proprietary'],
+    ['Basalt 70B', 'basalt-research', 'Basalt Community License'],
+    ['Lumen 4 Mini', 'lumen-labs', 'Proprietary'],
+    ['Tundra 1.5', 'tundra', 'MIT'],
+    ['Kestrel 3 Coder', 'kestrel-ai', 'Apache 2.0'],
+    ['Atlas Flash', 'atlas-ai', 'Proprietary'],
+    ['Fjord Nano', 'fjord', 'Proprietary'],
+    ['Basalt 8B', 'basalt-research', 'Basalt Community License'],
+    ['Orchid Small', 'orchid', 'Proprietary'],
+  ]
+  /** Artificial Analysis-style lines: names as it writes them, no licenses or votes; intervals only in its arenas. */
+  const aaRows = (entries: [string, string, number, number | null][]): ExternalRow[] =>
+    rankByScore(
+      entries.map(([model, org, score, interval]) => ({
+        model,
+        org,
+        license: null,
+        weights: null,
+        score,
+        lower: interval === null ? null : score - interval,
+        upper: interval === null ? null : score + interval,
+        votes: null,
+      })),
+    )
+  const boards: [ExternalSource, string, { publishedOn: string; rows: ExternalRow[] }[]][] = [
+    ['arena', 'text', [95, 64, 33, 2].map((daysAgo, step) => ({ publishedOn: addDays(today, -daysAgo), rows: arenaRows(textModels, 1440 + step * 12, step * 6) }))],
+    ['arena', 'webdev', [{ publishedOn: addDays(today, -2), rows: arenaRows(textModels.slice(0, 6), 1380, 0) }]],
+    [
+      'artificial-analysis',
+      'intelligence',
+      [
+        {
+          publishedOn: addDays(today, -1),
+          rows: aaRows([
+            ['Lumen 4 (high)', 'Lumen Labs', 71.4, null],
+            ['Atlas Pro 2', 'Atlas AI', 68.9, null],
+            ['Kestrel 3', 'Kestrel AI', 64.2, null],
+            ['Orchid Large', 'Orchid', 58.7, null],
+            ['Basalt 70B', 'Basalt Research', 52.3, null],
+            ['Tundra 1.5', 'Tundra', 47.8, null],
+          ]),
+        },
+      ],
+    ],
+    [
+      'artificial-analysis',
+      'text-to-speech',
+      [
+        {
+          publishedOn: addDays(today, -1),
+          rows: aaRows([
+            ['Lumen Voice', 'Lumen Labs', 1218, 14],
+            ['Kestrel Speak', 'Kestrel AI', 1196, 18],
+            ['Orchid Read', 'Orchid', 1150, 22],
+          ]),
+        },
+      ],
+    ],
+  ]
+  for (const [source, board, days] of boards) {
+    const result = await storeSnapshots(source, board, days)
+    console.log(`${source}/${board}: ${result.added} days added, newest ${result.latest}`)
+  }
+} else {
+  console.log('Outside boards: this database already has some, left as they are.')
+}
+
 console.log(`Sample rankings: ${models.length} models, ${questions.length} questions, ${answerIds.size} answers (${pictures} pictures), ${rows.length} votes.`)
 process.exit(0)

@@ -42,6 +42,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { SnapshotStatus as SnapshotStatus_5ae6b63efaca662215fabf9b06a0db06 } from '../../../modules/rankings/admin/snapshot-status'
+import { ExternalStatus as ExternalStatus_282a70c583c29520b7d76da8b65f96bf } from '../../../modules/rankings/admin/external-status'
 import { AnswersPanel as AnswersPanel_30251a44f6ba0b489a653addc8e3ce37 } from '../../../modules/rankings/admin/answers-panel'
 import { UiLanguageSwitch as UiLanguageSwitch_1ab148fae9b2f4a257e97088aafad126 } from '../../../admin/ui-language/switch'
 import { ReviewNavLink as ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../../../modules/daily/admin/review/links'
@@ -99,6 +100,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#HeadingFeatureClient": HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/modules/rankings/admin/snapshot-status#SnapshotStatus": SnapshotStatus_5ae6b63efaca662215fabf9b06a0db06,
+  "/modules/rankings/admin/external-status#ExternalStatus": ExternalStatus_282a70c583c29520b7d76da8b65f96bf,
   "/modules/rankings/admin/answers-panel#AnswersPanel": AnswersPanel_30251a44f6ba0b489a653addc8e3ce37,
   "/admin/ui-language/switch#UiLanguageSwitch": UiLanguageSwitch_1ab148fae9b2f4a257e97088aafad126,
   "/modules/daily/admin/review/links#ReviewNavLink": ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1,

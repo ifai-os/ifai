@@ -1,10 +1,9 @@
 import { useTranslations } from 'next-intl'
 
-import type { BoardRow } from '../data'
 import { LABS_AMONG, topMakers } from '../rules'
 
 /** 「按厂商」: how many of each maker's models are in the first 30 places. */
-export function Makers({ rows }: { rows: BoardRow[] }) {
+export function Makers({ rows }: { rows: { rank: number | null; org: string }[] }) {
   const t = useTranslations('rankings')
   const makers = topMakers(rows)
   if (makers.length === 0) return null

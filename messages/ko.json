@@ -1273,7 +1273,57 @@
     "makerModels": "{count, plural, other {#개}}",
     "makersNote": "톱 {places}에 든 모델 수",
     "emptyTitle": "첫 순위를 준비하고 있습니다",
-    "emptyBody": "투표가 충분히 모이면 그다음 월요일에 공개됩니다. 지금 투표해 보세요."
+    "emptyBody": "투표가 충분히 모이면 그다음 월요일에 공개됩니다. 지금 투표해 보세요.",
+    "trendMonths": "점수 추이 · 최근 {months}개월",
+    "trendMonthsChart": "최근 {months}개월 동안 비공개 1위와 오픈 웨이트 1위의 점수 추이."
+  },
+  "rankingsExternal": {
+    "sourcesLabel": "데이터 출처",
+    "sources": {
+      "ifai": "IFAI 블라인드 테스트",
+      "arena": "Arena",
+      "artificialAnalysis": "Artificial Analysis"
+    },
+    "boardsLabel": "순위표",
+    "boards": {
+      "text": "텍스트",
+      "webdev": "웹 개발",
+      "vision": "비전",
+      "document": "문서",
+      "search": "검색",
+      "textToImage": "이미지 생성",
+      "imageEdit": "이미지 편집",
+      "textToVideo": "동영상 생성",
+      "imageToVideo": "이미지로 동영상",
+      "videoEdit": "동영상 편집",
+      "intelligence": "지능 지수",
+      "textToSpeech": "음성 합성"
+    },
+    "published": "<date></date> 공개",
+    "updated": "<date></date> 업데이트",
+    "models": "{count, plural, other {모델 #개}}",
+    "days": "{count, plural, other {회분}} · {since}부터",
+    "moreModels": "나머지 모델 {count}개",
+    "emptyTitle": "이 순위표는 아직 동기화되지 않았습니다",
+    "emptyBody": "매일 상하이 시간 7:30에 동기화합니다. 첫 동기화 후 여기에 표시됩니다.",
+    "arena": {
+      "metaTitle": "{board} · Arena 순위",
+      "description": "Arena(arena.ai)의 모델 순위. 텍스트, 코딩, 비전, 이미지·동영상 생성 등 익명 대결 투표 결과를 매일 동기화합니다.",
+      "eyebrow": "모델 순위 · Arena 제공 · 매일 동기화",
+      "headline": "Arena: 익명 대결 투표로 정한 순위",
+      "intro": "Arena(arena.ai)는 같은 질문을 익명의 두 모델에 주고, 사용자가 더 나은 답에 투표하게 한 뒤 Bradley–Terry 모델로 점수를 냅니다.",
+      "visit": "Arena에서 원래 순위 보기",
+      "attribution": "데이터 출처: <arena>Arena</arena>가 Hugging Face에 공개한 <dataset>Arena Leaderboard Dataset</dataset>(<license>CC BY 4.0</license>). 각 순위표는 종합(overall)만 가져오며 점수와 순위는 바꾸지 않았습니다."
+    },
+    "artificialAnalysis": {
+      "metaTitle": "{board} · Artificial Analysis 순위",
+      "description": "Artificial Analysis의 모델 순위. 언어 모델의 지능 지수와 이미지·동영상·음성 모델의 블라인드 투표 순위를 매일 동기화합니다.",
+      "eyebrow": "모델 순위 · Artificial Analysis 제공 · 매일 동기화",
+      "headline": "Artificial Analysis: 독립 평가와 블라인드 투표",
+      "intro": "Artificial Analysis는 같은 평가로 각 회사의 언어 모델에 점수를 매겨 지능 지수를 내고, 이미지·동영상·음성 모델은 사용자의 블라인드 투표(Elo)로 순위를 정합니다.",
+      "visit": "Artificial Analysis에서 원래 순위 보기",
+      "attribution": "데이터 출처: <aa>Artificial Analysis(artificialanalysis.ai)</aa>. 점수는 바꾸지 않았고 순위는 점수 순입니다."
+    }
   },
   "rankingsVote": {
     "title": "블라인드 투표",

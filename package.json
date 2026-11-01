@@ -43,6 +43,7 @@
     "feedsmith": "3.0.1",
     "fflate": "0.8.2",
     "graphql": "16.14.2",
+    "hyparquet": "1.31.4",
     "inngest": "4.22.0",
     "linkedom": "0.18.13",
     "next": "16.4.2",
