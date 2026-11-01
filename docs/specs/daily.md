@@ -67,7 +67,9 @@
 
 没有 RSS 的官方站（如 Anthropic、Meta AI），开工时试抓，确认能读后用网页列表接入，分级同样是 T1。
 
-**以后再接**：X @aisearchio、X @aigclink（要按请求付费，用 SocialData），以及 Gorden Sun 的 Notion 数据库（页面靠 JavaScript 渲染，要用 Jina Reader，按次付费）。
+**以后再接**：X @aisearchio、X @aigclink（要按请求付费，用 SocialData）。
+
+**Gorden Sun 的 Notion 数据库**（[AI资讯日报](https://gorden-sun.notion.site/527689cd2b294e60912f040095e803c5)，2023-03-09 起每天一页、每页几条）：2026-11-01 起由本地流水线采集，不在网站里抓。读 Notion 公开页面自己调用的接口（`queryCollection`、`loadPageChunk`，不用登录，也不用 Jina Reader），每条抓它链到的原文，发布时间用原文的，原文没有日期才用 Notion 那一天；页尾和条目里夹的推广不收；一条的原文已被其他信源收过、或 Notion 自己隔几天重复的，记成同一条的又一次出现。先全部存进本地库，转写这一步以后再接，写好的新闻照「从本地流水线导入」进站。
 
 每个信源都遵循下面的采集规则（沿用 AIHOT）：
 
@@ -398,7 +400,7 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 
 - 周报、月报、公开 API、MCP
 - 站内全文展示（只显示我们写的摘要和原文链接）
-- 公众号信源；X 和 Notion 信源（以后再接）
+- 公众号信源；X 信源（以后再接）。Notion 信源由本地流水线采集（见「信源」）
 - 邮件订阅（第 6 周单独做，规格见 [daily-email.md](./daily-email.md)）
 - 自动发布（所有条目都经你审核）
 
