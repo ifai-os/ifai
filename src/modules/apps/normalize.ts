@@ -1,5 +1,5 @@
-/** Slugs that would collide with fixed routes under /[locale]/apps (see docs/specs/apps.md). */
-export const reservedAppSlugs: readonly string[] = ['submit', 'category']
+/** Slugs that would collide with fixed routes under /[locale]/apps (see docs/specs/apps.md) and /api/v1/apps (docs/specs/agents.md). */
+export const reservedAppSlugs: readonly string[] = ['submit', 'category', 'categories']
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 

@@ -19,6 +19,9 @@ test('robots.txt blocks only what is not a page and points at the sitemap', asyn
   const text = await response.text()
   expect(text).toContain('Disallow: /admin')
   expect(text).toContain('Disallow: /api/')
+  // Agents' fetch tools may read the open API (docs/specs/agents.md); its answers carry noindex.
+  expect(text).toContain('Allow: /api/v1/')
+  expect(text).toContain('Disallow: /mcp')
   expect(text).toMatch(/Sitemap: https?:\/\/[^\s]+\/sitemap\.xml/)
 })
 

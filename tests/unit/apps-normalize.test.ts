@@ -23,8 +23,8 @@ describe('app slugs', () => {
     expect(isValidSlug('')).toBe(false)
   })
 
-  it('reserves the slugs used by fixed pages under /apps', () => {
-    expect(reservedAppSlugs).toEqual(['submit', 'category'])
+  it('reserves the slugs used by fixed pages under /apps and fixed routes under /api/v1/apps', () => {
+    expect(reservedAppSlugs).toEqual(['submit', 'category', 'categories'])
   })
 })
 

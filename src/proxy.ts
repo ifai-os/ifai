@@ -32,7 +32,7 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // The site: skip Payload (/admin, /api), Next.js internals and anything with a file extension.
-  // The admin pages: only to set their default language.
-  matcher: ['/admin', '/admin/:path*', '/((?!api|admin|_next|_vercel|.*\\..*).*)'],
+  // The site: skip Payload (/admin, /api), the MCP endpoint (/mcp), Next.js internals and anything
+  // with a file extension. The admin pages: only to set their default language.
+  matcher: ['/admin', '/admin/:path*', '/((?!api|admin|mcp|_next|_vercel|.*\\..*).*)'],
 }

@@ -574,6 +574,55 @@ export async function latestStories(locale: Locale, limit: number): Promise<Stor
   return (await findLatest(limit)).map((doc) => toItem(doc, locale))
 }
 
+/** Where a page of {@link storyFeed} ended: the last story's publishing time and id. */
+export type StoryCursor = { publishedAt: string; id: number }
+
+/**
+ * Published stories for agents (docs/specs/agents.md): newest first, only those published after
+ * `since` when given, and older than `before` (where the previous page ended), in one category or
+ * with one tag. Not cached: the times are the caller's own, and the query is one indexed range.
+ */
+export async function storyFeed({
+  locale,
+  since,
+  before,
+  category,
+  tag,
+  limit,
+}: {
+  locale: Locale
+  since?: Date | null
+  before?: StoryCursor | null
+  category?: StoryCategory | null
+  tag?: StoryTag | null
+  limit: number
+}): Promise<StoryItem[]> {
+  const where: Where[] = [published, { publishedAt: { exists: true } }]
+  if (since) where.push({ publishedAt: { greater_than: since.toISOString() } })
+  if (before) {
+    where.push({
+      or: [
+        { publishedAt: { less_than: before.publishedAt } },
+        { and: [{ publishedAt: { equals: before.publishedAt } }, { id: { less_than: before.id } }] },
+      ],
+    })
+  }
+  if (category) where.push({ category: { equals: category } })
+  if (tag) where.push({ tags: { contains: tag } })
+  const { docs } = await (await payload()).find({
+    collection: 'stories',
+    where: { and: where },
+    sort: ['-publishedAt', '-id'],
+    limit,
+    locale: 'all',
+    depth: 1,
+    populate,
+    select,
+    overrideAccess: false,
+  })
+  return (docs as unknown as RawStory[]).map((doc) => toItem(doc, locale))
+}
+
 /**
  * A published story with its sources, the other stories of its event, its tags, companies and
  * products, its topic and similar events (docs/specs/daily.md「详情页：…」); null when there is

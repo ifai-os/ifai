@@ -33,6 +33,7 @@ export type SearchHit =
       href: `/${string}`
       title: HitText
       summary: InLanguage<string> | null
+      slug: string
       category: StoryCategory
       publishedAt: string
     }
@@ -74,6 +75,7 @@ async function searchKind(kind: SearchKind, q: string, locale: Locale, { offset,
         href: storyHref(story.slug),
         title: story.title,
         summary: story.summary,
+        slug: story.slug,
         category: story.category,
         publishedAt: story.publishedAt,
       })),
