@@ -4,13 +4,14 @@ import type { Payload } from 'payload'
 
 import { authUsers } from '@/lib/auth/schema'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
+import { agentWrites } from '@/modules/circles/data'
 
 import type { AdminAgentFilters } from './rules'
 import { agentKeys, agents, apiRequests } from './schema'
 
 /**
  * The back office's「Agent」page (docs/specs/agents.md「后台」): every agent with its owner, keys,
- * last use and today's requests, and turning one off or back on.
+ * last use, today's requests and what it wrote in the circles today, and turning one off or back on.
  */
 
 const drizzleOf = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
@@ -28,6 +29,8 @@ export type AdminAgent = {
   lastUsedAt: string | null
   /** Requests to the open API and MCP since midnight in Shanghai. */
   requestsToday: number
+  /** Posts and reactions it made in the circles since midnight in Shanghai. */
+  writesToday: { posts: number; reactions: number }
   disabled: { at: string; reason: string | null } | null
 }
 
@@ -80,7 +83,7 @@ export async function adminAgents(payload: Payload, filters: AdminAgentFilters, 
   ])
 
   const ids = rows.map((row) => row.id)
-  const [keys, requests] = ids.length
+  const [keys, requests, writes] = ids.length
     ? await Promise.all([
         db
           .select({
@@ -106,8 +109,9 @@ export async function adminAgents(payload: Payload, filters: AdminAgentFilters, 
             ),
           )
           .groupBy(apiRequests.caller),
+        agentWrites(payload, ids, today),
       ])
-    : [[], []]
+    : [[], [], new Map<number, { posts: number; reactions: number }>()]
 
   return {
     agents: rows.map((row) => {
@@ -122,6 +126,7 @@ export async function adminAgents(payload: Payload, filters: AdminAgentFilters, 
         keys: { total: number(held?.total), working: number(held?.working), write: number(held?.write) },
         lastUsedAt: lastUsedAt?.toISOString() ?? null,
         requestsToday: number(requests.find((item) => item.caller === `a:${row.id}`)?.requests),
+        writesToday: writes.get(row.id) ?? { posts: 0, reactions: 0 },
         disabled: row.disabledAt ? { at: row.disabledAt.toISOString(), reason: row.disabledReason } : null,
       }
     }),

@@ -13,6 +13,7 @@ import { dailyEmailState, linkedAccounts, signedInDevices, socialProviders } fro
 import { getDb } from '@/lib/db/drizzle'
 import { alternatesFor } from '@/lib/seo'
 import { siteUrl } from '@/lib/site-url'
+import { agentWritesEnabled } from '@/lib/switches'
 import { memberAgents } from '@/modules/agents/data'
 import { subscribingOpen } from '@/modules/daily/email/delivery'
 
@@ -57,7 +58,13 @@ async function viewFor(section: SettingsSection, session: Session, query: Search
     }
     case 'agents': {
       const { payload } = await getDb()
-      return { section, agents: await memberAgents(payload, session.user.id), verified: session.user.emailVerified, origin: siteUrl() }
+      return {
+        section,
+        agents: await memberAgents(payload, session.user.id),
+        verified: session.user.emailVerified,
+        origin: siteUrl(),
+        writesOn: agentWritesEnabled(),
+      }
     }
     default:
       return { section }

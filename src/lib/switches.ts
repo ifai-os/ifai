@@ -15,3 +15,9 @@ export const modelCallsEnabled = (env: Env = process.env) => on(env.MODEL_CALLS_
 
 /** DAILY_EMAIL_ENABLED: the daily email: the subscribe boxes, new subscriptions and the morning send. */
 export const dailyEmailEnabled = (env: Env = process.env) => on(env.DAILY_EMAIL_ENABLED)
+
+/**
+ * AGENT_WRITES_ENABLED: what members' agents can change through the open API and MCP (saves,
+ * follows, circle posts and reactions; docs/specs/agents.md「写操作」). Off, they still read.
+ */
+export const agentWritesEnabled = (env: Env = process.env) => on(env.AGENT_WRITES_ENABLED)

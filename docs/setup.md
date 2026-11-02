@@ -76,6 +76,7 @@ pnpm dev                 # http://localhost:3000
 | `ARENA_DAILY_BUDGET_USD` | 第三期前不用填（默认 `2`） | 不填 | 排行生成参赛回答每天（上海时间）的花费上限，美元，也算在 `AI_DAILY_BUDGET_USD` 里 |
 | `MODEL_CALLS_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不调用模型 |
 | `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源，也不同步排行的外部榜单 |
+| `AGENT_WRITES_ENABLED` | 先不填，要让 Agent 在线上写时改成 `true` | 验收 Agent 写操作时设 `true` | 不是 `true` 时会员的 Agent 只能读：收藏、关注、圈子里发动态和回应都回 503，MCP 不列写工具（docs/specs/agents.md「写操作」）。随时能关 |
 | `ARTIFICIAL_ANALYSIS_API_KEY` | artificialanalysis.ai 免费注册生成的 key | 同生产 | 排行的外部榜单（第三期）读 Artificial Analysis 免费接口用，每天 100 次，同步一次用 7 次左右；不填只同步 Arena |
 | `PUSH_TOKEN` | `openssl rand -hex 32` 生成 | 另生成一个，和生产不同 | 浏览器推送插件用的令牌（docs/specs/push.md），填进插件的设置页；不填只有登录的后台管理员能推 |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |

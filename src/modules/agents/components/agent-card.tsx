@@ -8,6 +8,7 @@ import { Button } from '@/components/button'
 import { tileTones, toneFor } from '@/components/cards/initial-tile'
 import { Icon } from '@/components/icon'
 import { LocalTime } from '@/components/local-time'
+import { isLaunched } from '@/config/site'
 import { useRouter } from '@/i18n/navigation'
 
 import { agentRules, isExpired, type AgentInput, type AgentView, type KeyInput, type KeyView } from '../rules'
@@ -177,7 +178,7 @@ export function AgentCard({ agent, origin }: { agent: AgentView; origin: string 
               </>
             )}
           </div>
-          {mode === 'delete' && <p className="basis-full text-meta text-down">{t('deleteConfirm')}</p>}
+          {mode === 'delete' && <p className="basis-full text-meta text-down">{t('deleteConfirm', { circles: isLaunched('circles') ? 'yes' : 'no' })}</p>}
         </div>
       )}
 

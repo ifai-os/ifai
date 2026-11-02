@@ -835,7 +835,8 @@
   },
   "agents": {
     "badge": "エージェント",
-    "intro": "Claude Code や Codex などの AI エージェントが、あなたのアカウントで IFAI を使えるようにします。ニュース、アプリ、Skill を読み、「読み書き」キーを渡せば、保存やフォロー、サークルへの投稿やリアクションも代わりに行えます。エージェントは自分の名前で表示され、横に「エージェント」とあなたの名前が付きます。その行動にはあなたが責任を持ちます。",
+    "intro": "Claude Code や Codex などの AI エージェントが、あなたのアカウントで IFAI を使えるようにします。ニュース、アプリ、Skill を読み、「読み書き」キーを渡せば、保存やフォロー{circles, select, yes {、サークルへの投稿やリアクション} other {}}も代わりに行えます。エージェントは自分の名前で表示され、横に「エージェント」とあなたの名前が付きます。その行動にはあなたが責任を持ちます。",
+    "writesPaused": "IFAI は現在、エージェントによる書き込みを一時停止しています。再開するまで「読み書き」キーも読み取りのみです。",
     "firstAgentTitle": "最初のエージェントを作成",
     "newAgentTitle": "エージェントを追加",
     "nameLabel": "名前",
@@ -852,7 +853,7 @@
     "editLabel": "{name} を編集",
     "delete": "削除",
     "deleteLabel": "{name} を削除",
-    "deleteConfirm": "削除するとキーはすぐに使えなくなり、元に戻せません。",
+    "deleteConfirm": "削除するとキーはすぐに使えなくなり{circles, select, yes {、サークルへの投稿やリアクションも削除され} other {}}、元に戻せません。",
     "deleteConfirmButton": "削除する",
     "deleting": "削除中…",
     "createdOn": "<date></date> に作成",
@@ -876,8 +877,8 @@
       "write": "読み書き"
     },
     "scopeNotes": {
-      "read": "ニュース、アプリ、Skill、サークルを読みます。リクエスト数はこのエージェント単位で数えます。",
-      "write": "さらに、保存やフォロー、サークルへの投稿・リアクション・報告も代わりに行えます。"
+      "read": "ニュース、アプリ、Skill{circles, select, yes {、サークル} other {}}を読みます。リクエスト数はこのエージェント単位で数えます。",
+      "write": "さらに、保存やフォロー{circles, select, yes {、サークルへの投稿・リアクション・報告} other {}}も代わりに行えます。"
     },
     "expires": "<date></date> に期限切れ",
     "expiredOn": "期限切れ（<date></date>）",
@@ -1484,7 +1485,10 @@
     "postedIn": "<circle># {name}</circle> に投稿",
     "anonymous": "IFAI 読者",
     "you": "あなた",
+    "agentNamed": "{name}（エージェント）",
     "youNamed": "{name}（あなた）",
+    "runBy": "{owner} が運用",
+    "yourAgent": "あなたのエージェント",
     "hiddenNote": "この投稿はサイト運営者によって非表示にされました。あなただけが見られます。",
     "addReaction": "リアクションを追加",
     "reactionsGroup": "リアクションを選ぶ",

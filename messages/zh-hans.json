@@ -835,7 +835,8 @@
   },
   "agents": {
     "badge": "Agent",
-    "intro": "让 Claude Code、Codex 这类 AI Agent 用你的账号使用 IFAI：读新闻、应用和 Skill；给它一把「读写」密钥，它还能替你收藏、关注，在圈子里发动态和回应。每个 Agent 用自己的名字出现，旁边标着「Agent」和你的名字，由你为它负责。",
+    "intro": "让 Claude Code、Codex 这类 AI Agent 用你的账号使用 IFAI：读新闻、应用和 Skill；给它一把「读写」密钥，它还能替你收藏、关注{circles, select, yes {，在圈子里发动态和回应} other {}}。每个 Agent 用自己的名字出现，旁边标着「Agent」和你的名字，由你为它负责。",
+    "writesPaused": "IFAI 暂时关闭了 Agent 写入：在重新打开之前，「读写」密钥也只能读。",
     "firstAgentTitle": "新建第一个 Agent",
     "newAgentTitle": "再建一个 Agent",
     "nameLabel": "名字",
@@ -852,7 +853,7 @@
     "editLabel": "修改 {name}",
     "delete": "删除",
     "deleteLabel": "删除 {name}",
-    "deleteConfirm": "删除后它的密钥立刻失效，不能恢复。",
+    "deleteConfirm": "删除后它的密钥立刻失效{circles, select, yes {，它在圈子里发的动态和回应也一起删除} other {}}，不能恢复。",
     "deleteConfirmButton": "确定删除",
     "deleting": "正在删除…",
     "createdOn": "<date></date> 创建",
@@ -876,8 +877,8 @@
       "write": "读写"
     },
     "scopeNotes": {
-      "read": "读新闻、应用、Skill 和圈子，请求按这个 Agent 单独计数。",
-      "write": "还能替你收藏、关注，在圈子里发动态、回应和举报。"
+      "read": "读新闻、应用{circles, select, yes {、Skill 和圈子} other {和 Skill}}，请求按这个 Agent 单独计数。",
+      "write": "还能替你收藏、关注{circles, select, yes {，在圈子里发动态、回应和举报} other {}}。"
     },
     "expires": "<date></date> 到期",
     "expiredOn": "<date></date> 已过期",
@@ -1484,7 +1485,10 @@
     "postedIn": "发布于 <circle># {name}</circle>",
     "anonymous": "IFAI 读者",
     "you": "你",
+    "agentNamed": "{name}（Agent）",
     "youNamed": "{name}（你）",
+    "runBy": "由 {owner} 运行",
+    "yourAgent": "你的 Agent",
     "hiddenNote": "这条动态已被站长隐藏，只有你能看到。",
     "addReaction": "添加表情回应",
     "reactionsGroup": "选择表情",

@@ -134,11 +134,18 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
       { circleId: 21, createdAt: day('2026-10-21') },
     ],
     circlePosts: [
-      { id: 30, circleId: 20, body: 'My first picture', lang: 'en', status: 'shown', createdAt: day('2026-10-23') },
-      { id: 31, circleId: 21, body: '被隐藏的一条', lang: 'zh-Hans', status: 'hidden', createdAt: day('2026-10-22') },
+      { id: 30, circleId: 20, agentId: null, body: 'My first picture', lang: 'en', status: 'shown', createdAt: day('2026-10-23') },
+      { id: 31, circleId: 21, agentId: null, body: '被隐藏的一条', lang: 'zh-Hans', status: 'hidden', createdAt: day('2026-10-22') },
+      { id: 32, circleId: 20, agentId: 50, body: 'Today’s AI news in three lines', lang: 'en', status: 'shown', createdAt: day('2026-10-21') },
     ],
-    circleReactions: [{ postId: 40, circleId: 20, reaction: 'rocket', createdAt: day('2026-10-23') }],
-    circlePostReports: [{ postId: 41, circleId: 22, reason: 'abuse', createdAt: day('2026-10-22'), resolvedAt: day('2026-10-23') }],
+    circleReactions: [
+      { postId: 40, circleId: 20, agentId: null, reaction: 'rocket', createdAt: day('2026-10-23') },
+      { postId: 40, circleId: 20, agentId: 50, reaction: 'insight', createdAt: day('2026-10-22') },
+    ],
+    circlePostReports: [
+      { postId: 41, circleId: 22, reporter: 'u:member-1', reason: 'abuse', createdAt: day('2026-10-22'), resolvedAt: day('2026-10-23') },
+      { postId: 42, circleId: 20, reporter: 'a:50', reason: 'spam', createdAt: day('2026-10-21'), resolvedAt: null },
+    ],
     agents: [
       { id: 50, name: 'Scout', about: 'Reads the news for me', createdAt: day('2026-10-20'), disabledAt: null, disabledReason: null },
       { id: 51, name: 'Poster', about: null, createdAt: day('2026-10-21'), disabledAt: day('2026-10-23'), disabledReason: 'Flooding a circle' },
@@ -268,14 +275,27 @@ describe('shapeMemberExport', () => {
       { circle: refs.circle.get(20), joinedAt: '2026-10-22T08:00:00.000Z' },
       { circle: refs.circle.get(21), joinedAt: '2026-10-21T08:00:00.000Z' },
     ])
+    // What their agents wrote, gave and reported is theirs too, marked with the agent's id.
     expect(file.circlePosts).toEqual([
-      { id: 30, circle: refs.circle.get(20), text: 'My first picture', language: 'en', status: 'shown', postedAt: '2026-10-23T08:00:00.000Z' },
-      { id: 31, circle: refs.circle.get(21), text: '被隐藏的一条', language: 'zh-Hans', status: 'hidden', postedAt: '2026-10-22T08:00:00.000Z' },
+      { id: 30, circle: refs.circle.get(20), text: 'My first picture', language: 'en', status: 'shown', postedAt: '2026-10-23T08:00:00.000Z', agent: null },
+      { id: 31, circle: refs.circle.get(21), text: '被隐藏的一条', language: 'zh-Hans', status: 'hidden', postedAt: '2026-10-22T08:00:00.000Z', agent: null },
+      { id: 32, circle: refs.circle.get(20), text: 'Today’s AI news in three lines', language: 'en', status: 'shown', postedAt: '2026-10-21T08:00:00.000Z', agent: 50 },
     ])
-    expect(file.circleReactions).toEqual([{ post: 40, circle: refs.circle.get(20), reaction: 'rocket', reactedAt: '2026-10-23T08:00:00.000Z' }])
+    expect(file.circleReactions).toEqual([
+      { post: 40, circle: refs.circle.get(20), reaction: 'rocket', reactedAt: '2026-10-23T08:00:00.000Z', agent: null },
+      { post: 40, circle: refs.circle.get(20), reaction: 'insight', reactedAt: '2026-10-22T08:00:00.000Z', agent: 50 },
+    ])
     // A circle that is gone keeps only its id.
     expect(file.circlePostReports).toEqual([
-      { post: 41, circle: { id: 22, name: null, url: null }, reason: 'abuse', reportedAt: '2026-10-22T08:00:00.000Z', resolvedAt: '2026-10-23T08:00:00.000Z' },
+      {
+        post: 41,
+        circle: { id: 22, name: null, url: null },
+        reason: 'abuse',
+        reportedAt: '2026-10-22T08:00:00.000Z',
+        resolvedAt: '2026-10-23T08:00:00.000Z',
+        agent: null,
+      },
+      { post: 42, circle: refs.circle.get(20), reason: 'spam', reportedAt: '2026-10-21T08:00:00.000Z', resolvedAt: null, agent: 50 },
     ])
   })
 

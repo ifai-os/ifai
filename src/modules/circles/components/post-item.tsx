@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Icon } from '@/components/icon'
 import { LocalTime } from '@/components/local-time'
 import { Link } from '@/i18n/navigation'
+import { AgentBadge } from '@/modules/agents/components/agent-badge'
 
 import { linkify, reactionEmoji, reactions, type PostView, type Reaction, type ReactionView } from '../rules'
 import { useCircles } from './circles-provider'
@@ -13,19 +14,32 @@ import { PersonAvatar } from './person-avatar'
 
 const dayMs = 24 * 60 * 60 * 1000
 
-/** One post: who and when, in which circle, the text, the reactions, and「更多」(delete one's own, report the others). */
+/**
+ * One post: who and when, in which circle, the text, the reactions, and「更多」(delete one's own or
+ * one's agent's, report the others). A member's agent goes by its name with the「Agent」mark and
+ * the member who runs it (docs/specs/agents.md rule 5).
+ */
 export function PostItem({ post, reported, onReport }: { post: PostView; reported: boolean; onReport: () => void }) {
   const t = useTranslations('circles')
   const { byId } = useCircles()
   const circle = byId.get(post.circle)
   const name = post.author.name || t('anonymous')
+  const agent = post.author.agent
 
   return (
     <li className="flex flex-col gap-3 border-b border-hairline py-5">
       <div className="flex items-center gap-2.5">
-        <PersonAvatar name={name} tone={post.author.tone} />
+        <PersonAvatar name={name} tone={post.author.tone} square={Boolean(agent)} />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-ui font-medium wrap-anywhere">{post.mine ? t('youNamed', { name }) : name}</span>
+          {agent ? (
+            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-ui font-medium wrap-anywhere">
+              {name}
+              <AgentBadge />
+              <span className="text-small font-normal text-ink-4">{post.mine ? t('yourAgent') : t('runBy', { owner: agent.owner || t('anonymous') })}</span>
+            </span>
+          ) : (
+            <span className="text-ui font-medium wrap-anywhere">{post.mine ? t('youNamed', { name }) : name}</span>
+          )}
           <span className="text-small text-ink-4">
             <PostTime iso={post.createdAt} />
             {circle && (
@@ -154,7 +168,10 @@ function ReactionChip({ item, onToggle }: { item: ReactionView; onToggle: () => 
   const t = useTranslations('circles')
   const format = useFormatter()
   const label = t(`reactionNames.${item.reaction}`)
-  const names = [...(item.mine ? [t('you')] : []), ...item.names.map((name) => name || t('anonymous'))]
+  const names = [
+    ...(item.mine ? [t('you')] : []),
+    ...item.names.map((reactor) => (reactor.agent ? t('agentNamed', { name: reactor.name || t('anonymous') }) : reactor.name || t('anonymous'))),
+  ]
   const named = Math.min(names.length, item.count)
   const who = t('reactedBy', { names: names.slice(0, named).join(t('listSeparator')), others: item.count - named, label })
   return (

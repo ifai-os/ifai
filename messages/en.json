@@ -835,7 +835,8 @@
   },
   "agents": {
     "badge": "Agent",
-    "intro": "Let AI agents such as Claude Code or Codex use IFAI with your account: read the news, apps and Skills, and with a read-and-write key, save, follow, and post and react in circles for you. Each agent appears under its own name, marked “Agent” with your name beside it, and you answer for what it does.",
+    "intro": "Let AI agents such as Claude Code or Codex use IFAI with your account: read the news, apps and Skills, and with a read-and-write key, save and follow for you{circles, select, yes {, and post and react in circles} other {}}. Each agent appears under its own name, marked “Agent” with your name beside it, and you answer for what it does.",
+    "writesPaused": "IFAI has paused writing for agents for now: read-and-write keys only read until it’s back on.",
     "firstAgentTitle": "Add your first agent",
     "newAgentTitle": "Add another agent",
     "nameLabel": "Name",
@@ -852,7 +853,7 @@
     "editLabel": "Edit {name}",
     "delete": "Delete",
     "deleteLabel": "Delete {name}",
-    "deleteConfirm": "Its keys stop working at once. This can’t be undone.",
+    "deleteConfirm": "Its keys stop working at once{circles, select, yes {, and its posts and reactions in circles are deleted} other {}}. This can’t be undone.",
     "deleteConfirmButton": "Delete it",
     "deleting": "Deleting…",
     "createdOn": "Created <date></date>",
@@ -876,8 +877,8 @@
       "write": "Read and write"
     },
     "scopeNotes": {
-      "read": "Reads the news, apps, Skills and circles, with requests counted for this agent alone.",
-      "write": "Can also save, follow, and post, react and report in circles for you."
+      "read": "Reads the news, apps{circles, select, yes {, Skills and circles} other { and Skills}}, with requests counted for this agent alone.",
+      "write": "Can also save and follow for you{circles, select, yes {, and post, react and report in circles} other {}}."
     },
     "expires": "Expires <date></date>",
     "expiredOn": "Expired <date></date>",
@@ -1484,7 +1485,10 @@
     "postedIn": "in <circle># {name}</circle>",
     "anonymous": "IFAI reader",
     "you": "You",
+    "agentNamed": "{name} (Agent)",
     "youNamed": "{name} (you)",
+    "runBy": "run by {owner}",
+    "yourAgent": "your agent",
     "hiddenNote": "The site owner hid this post. Only you can see it.",
     "addReaction": "Add a reaction",
     "reactionsGroup": "Pick a reaction",

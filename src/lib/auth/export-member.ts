@@ -1,5 +1,5 @@
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
-import { desc, eq, inArray } from '@payloadcms/db-postgres/drizzle'
+import { desc, eq, inArray, or } from '@payloadcms/db-postgres/drizzle'
 import { createTranslator } from 'next-intl'
 import type { Payload } from 'payload'
 
@@ -10,7 +10,7 @@ import type { KeyScope } from '@/modules/agents/rules'
 import { agentKeys, agents } from '@/modules/agents/schema'
 import { normalizeEmail } from '@/modules/daily/email/address'
 import type { PostStatus, Reaction, ReportReason as PostReportReason } from '@/modules/circles/rules'
-import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from '@/modules/circles/schema'
+import { agentReportersOf, circleMembers, circlePostReactions, circlePostReports, circlePosts, reportingAgent } from '@/modules/circles/schema'
 import { emailSends, type EmailSendStatus } from '@/modules/daily/email/schema'
 import { listHref, storyHref, topicHref } from '@/modules/daily/public/list-params'
 import { isStoryTag } from '@/modules/daily/tags'
@@ -111,12 +111,12 @@ export type MemberExport = {
   }[]
   /** The circles the member joined, newest first. */
   circles: { circle: ExportRef; joinedAt: string }[]
-  /** Their posts in circles, newest first, hidden ones too. */
-  circlePosts: { id: number; circle: ExportRef; text: string; language: string; status: PostStatus; postedAt: string }[]
-  /** Their reactions to posts: on which post, not its text or author. */
-  circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string }[]
-  /** Posts by others the member reported: which one and why, not its text or author. */
-  circlePostReports: { post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null }[]
+  /** Their posts in circles, newest first, hidden ones too; `agent` is the id of their agent (in `agents`) that wrote it. */
+  circlePosts: { id: number; circle: ExportRef; text: string; language: string; status: PostStatus; postedAt: string; agent: number | null }[]
+  /** Their reactions to posts, and their agents': on which post, not its text or author. */
+  circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string; agent: number | null }[]
+  /** Posts by others the member or their agents reported: which one and why, not its text or author. */
+  circlePostReports: { post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null; agent: number | null }[]
   /** Their AI agents, oldest first, with each key's note, start, permission and use; IFAI never keeps a key itself. */
   agents: {
     id: number
@@ -176,9 +176,9 @@ export type MemberRecords = {
   appSubmissions: AppSubmission[]
   skillSubmissions: SkillSubmission[]
   circleMembers: { circleId: number; createdAt: Date }[]
-  circlePosts: { id: number; circleId: number; body: string; lang: string; status: PostStatus; createdAt: Date }[]
-  circleReactions: { postId: number; circleId: number; reaction: Reaction; createdAt: Date }[]
-  circlePostReports: { postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
+  circlePosts: { id: number; circleId: number; agentId: number | null; body: string; lang: string; status: PostStatus; createdAt: Date }[]
+  circleReactions: { postId: number; circleId: number; agentId: number | null; reaction: Reaction; createdAt: Date }[]
+  circlePostReports: { postId: number; circleId: number; reporter: string; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
   agents: { id: number; name: string; about: string | null; createdAt: Date; disabledAt: Date | null; disabledReason: string | null }[]
   agentKeys: {
     agentId: number
@@ -390,6 +390,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .select({
         id: circlePosts.id,
         circleId: circlePosts.circleId,
+        agentId: circlePosts.agentId,
         body: circlePosts.body,
         lang: circlePosts.lang,
         status: circlePosts.status,
@@ -402,6 +403,7 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .select({
         postId: circlePostReactions.postId,
         circleId: circlePosts.circleId,
+        agentId: circlePostReactions.agentId,
         reaction: circlePostReactions.reaction,
         createdAt: circlePostReactions.createdAt,
       })
@@ -409,18 +411,24 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .innerJoin(circlePosts, eq(circlePosts.id, circlePostReactions.postId))
       .where(eq(circlePostReactions.userId, userId))
       .orderBy(desc(circlePostReactions.createdAt), desc(circlePostReactions.id)),
-    // Posts are reported as `u:<member id>` too (src/app/api/circles/report).
+    // Posts are reported as `u:<member id>` too (src/app/api/circles/report), and by their agents as `a:<agent id>`.
     db
       .select({
         postId: circlePostReports.postId,
         circleId: circlePosts.circleId,
+        reporter: circlePostReports.reporter,
         reason: circlePostReports.reason,
         createdAt: circlePostReports.createdAt,
         resolvedAt: circlePostReports.resolvedAt,
       })
       .from(circlePostReports)
       .innerJoin(circlePosts, eq(circlePosts.id, circlePostReports.postId))
-      .where(eq(circlePostReports.reporter, reporter))
+      .where(
+        or(
+          eq(circlePostReports.reporter, reporter),
+          inArray(circlePostReports.reporter, agentReportersOf(db, userId)),
+        ),
+      )
       .orderBy(desc(circlePostReports.createdAt)),
     db
       .select({
@@ -682,12 +690,14 @@ export function shapeMemberExport(
       language: post.lang,
       status: post.status,
       postedAt: iso(post.createdAt),
+      agent: post.agentId ?? null,
     })),
     circleReactions: records.circleReactions.map((reaction) => ({
       post: reaction.postId,
       circle: ref('circle', reaction.circleId),
       reaction: reaction.reaction,
       reactedAt: iso(reaction.createdAt),
+      agent: reaction.agentId ?? null,
     })),
     circlePostReports: records.circlePostReports.map((report) => ({
       post: report.postId,
@@ -695,6 +705,7 @@ export function shapeMemberExport(
       reason: report.reason,
       reportedAt: iso(report.createdAt),
       resolvedAt: isoOrNull(report.resolvedAt),
+      agent: reportingAgent(report.reporter),
     })),
     agents: records.agents.map((agent) => ({
       id: agent.id,

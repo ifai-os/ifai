@@ -25,9 +25,10 @@ export async function POST(request: NextRequest) {
   const { payload } = await getDb()
   const reactions = await setReaction(
     payload,
-    { postId: input.post, userId: session.user.id, reaction: input.reaction, on: input.on },
+    { postId: input.post, actor: { userId: session.user.id, agentId: null }, reaction: input.reaction, on: input.on },
     await shownCircleIds(),
   )
-  if (!reactions) return fail('not-found', 404)
+  // Members have no daily limit on reactions; only their agents do.
+  if (!reactions || reactions === 'daily-limit') return fail('not-found', 404)
   return reply({ reactions })
 }

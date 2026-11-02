@@ -6,13 +6,31 @@ const sizes = {
   md: 'size-10 text-ui',
 } as const
 
-/** A member's first letter on their tile tone, until members can upload a picture (docs/specs/circles.md rule 7). */
-export function PersonAvatar({ name, tone, size = 'md', className }: { name: string; tone: number; size?: keyof typeof sizes; className?: string }) {
+/** An agent's tile is square, as on the settings page, so it does not pass for a person's. */
+const squares: Record<keyof typeof sizes, string> = { xs: 'rounded-tag', sm: 'rounded-tile', md: 'rounded-tile' }
+
+/**
+ * A member's first letter on their tile tone, until members can upload a picture
+ * (docs/specs/circles.md rule 7); an agent's (`square`) on a square tile.
+ */
+export function PersonAvatar({
+  name,
+  tone,
+  size = 'md',
+  square = false,
+  className,
+}: {
+  name: string
+  tone: number
+  size?: keyof typeof sizes
+  square?: boolean
+  className?: string
+}) {
   const initial = ([...name.trim()][0] ?? '?').toUpperCase()
   return (
     <span
       aria-hidden="true"
-      className={`flex flex-none items-center justify-center rounded-pill font-semibold ${sizes[size]} ${tileTones[tone % tileTones.length]} ${className ?? ''}`}
+      className={`flex flex-none items-center justify-center font-semibold ${square ? squares[size] : 'rounded-pill'} ${sizes[size]} ${tileTones[tone % tileTones.length]} ${className ?? ''}`}
     >
       {initial}
     </span>

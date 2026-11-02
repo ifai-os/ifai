@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 
 import { GroupTitle, SettingsCard, SettingsRow } from '@/components/account/settings-ui'
+import { isLaunched } from '@/config/site'
 import { useRouter } from '@/i18n/navigation'
 
 import { agentRules, type AgentInput, type AgentView } from '../rules'
@@ -13,9 +14,10 @@ import { send } from './request'
 /**
  * 「设置 · Agent」(docs/specs/agents.md「Agent 身份与密钥」): the member's agents, each with its
  * keys, and a form for a new one while they have fewer than three. Only a member whose sign-in
- * email IFAI has seen work can add one.
+ * email IFAI has seen work can add one. What the text says agents can do follows the launched
+ * modules, and says so when IFAI has paused agents' writing (AGENT_WRITES_ENABLED).
  */
-export function AgentsSection({ agents, verified, origin }: { agents: AgentView[]; verified: boolean; origin: string }) {
+export function AgentsSection({ agents, verified, origin, writesOn }: { agents: AgentView[]; verified: boolean; origin: string; writesOn: boolean }) {
   const t = useTranslations('agents')
   const router = useRouter()
 
@@ -27,7 +29,8 @@ export function AgentsSection({ agents, verified, origin }: { agents: AgentView[
 
   return (
     <>
-      <p className="text-ui text-ink-3">{t('intro')}</p>
+      <p className="text-ui text-ink-3">{t('intro', { circles: isLaunched('circles') ? 'yes' : 'no' })}</p>
+      {!writesOn && <p className="rounded-card bg-surface p-4 text-meta text-ink-3">{t('writesPaused')}</p>}
       {agents.map((agent) => (
         <AgentCard key={agent.id} agent={agent} origin={origin} />
       ))}

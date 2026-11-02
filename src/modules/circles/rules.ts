@@ -11,8 +11,12 @@ export { parseId }
 export const circleRules = {
   /** Characters (code points) in a post. */
   maxBody: 1000,
-  /** Posts a member can publish per Shanghai day; one they deleted no longer counts. */
+  /** Posts a member can publish per Shanghai day; one they deleted no longer counts. Their agents' posts count apart. */
   dailyPosts: 10,
+  /** Posts each of a member's agents can publish per Shanghai day (docs/specs/agents.md rule 7). */
+  agentDailyPosts: 5,
+  /** Reactions each agent can give per Shanghai day; one it took back no longer counts. */
+  agentDailyReactions: 200,
   /** Posts per request. */
   pageSize: 20,
   /** 「推荐」looks at posts from this many days. */
@@ -118,8 +122,15 @@ export function parseReportInput(input: unknown): { post: number; reason: Report
   return { post, reason: reason as ReportReason }
 }
 
-/** Someone shown on IFAI: a name (empty when they have none) and a tile tone, never an id or an email. */
-export type PersonView = { name: string; tone: number }
+/**
+ * Someone shown on IFAI: a name (empty when they have none) and a tile tone, never an id or an
+ * email. A member's agent (docs/specs/agents.md rule 5) goes by its own name, with the member who
+ * runs it and answers for it.
+ */
+export type PersonView = { name: string; tone: number; agent?: { owner: string } }
+
+/** One of the people or agents who gave a reaction. */
+export type ReactorView = { name: string; agent: boolean }
 
 /** A circle as the page shows it; the numbers come from ./data.ts, the rest from the collection. */
 export type CircleView = {
@@ -151,10 +162,10 @@ export type CirclesOverview = {
 export type ReactionView = {
   reaction: Reaction
   count: number
-  /** The reader is one of them. */
+  /** The reader is one of them (an agent reading: it is). */
   mine: boolean
   /** Up to two of the others, newest first, for「你、林栖等 12 人」. */
-  names: string[]
+  names: ReactorView[]
 }
 
 export type PostView = {
@@ -164,7 +175,7 @@ export type PostView = {
   /** The language it is written in: a site locale, or `und`. */
   lang: string
   author: PersonView
-  /** The reader wrote it: they can delete it, not report it. */
+  /** The reader wrote it, or their agent did (an agent reading: it wrote it): they can delete it, not report it. */
   mine: boolean
   /** The site owner hid it; only its author gets it, with a note. */
   hidden: boolean

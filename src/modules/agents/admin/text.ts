@@ -2,20 +2,22 @@
 const zh = {
   title: 'Agent',
   intro:
-    '会员在设置页「Agent」分区给自己的 AI Agent 起名字、发密钥，Agent 带着密钥用开放 API 和 MCP。这里看每个 Agent 的主人、密钥和今天的用量。停用后它的密钥马上失效，主人在设置页看到停用和原因；恢复后原来的密钥接着能用。请求数按上海时间的今天算。',
+    '会员在设置页「Agent」分区给自己的 AI Agent 起名字、发密钥，Agent 带着密钥用开放 API 和 MCP；「读写」密钥还能替主人收藏、关注，在圈子里发动态和回应（带「Agent」标记和主人的名字，在各圈子的「动态」标签里能隐藏）。这里看每个 Agent 的主人、密钥和今天的用量。停用后它的密钥马上失效，主人在设置页看到停用和原因；恢复后原来的密钥接着能用。今天按上海时间算。',
   number: (value: number) => value.toLocaleString('zh-CN'),
   summary: (agents: string, disabled: number, withKey: string, withoutKey: string) =>
     `共 ${agents} 个 Agent${disabled ? `，${disabled} 个已停用` : ''}。今天带密钥的请求 ${withKey} 次，不带密钥的 ${withoutKey} 次。`,
+  writing: (on: boolean): string => (on ? 'Agent 写入：开着。' : 'Agent 写入：关着，Agent 只能读（Vercel 环境变量 AGENT_WRITES_ENABLED 设成 true 打开）。'),
   filters: {
     all: '全部',
     disabled: '已停用',
     one: (name: string) => `只看「${name}」`,
     showAll: '看全部',
   },
-  columns: { agent: 'Agent', owner: '主人', keys: '密钥', lastUsed: '最近使用', today: '今天的请求', status: '状态' },
+  columns: { agent: 'Agent', owner: '主人', keys: '密钥', lastUsed: '最近使用', today: '今天的请求', writes: '今天在圈子里', status: '状态' },
   created: (time: string) => `${time} 创建`,
   keys: (working: number, total: number, write: number) =>
     total === 0 ? '没有' : `${working} 把有效${total > working ? `（共 ${total} 把）` : ''}${write ? `，${write} 把能写` : ''}`,
+  writes: (posts: number, reactions: number): string => (posts || reactions ? `${posts} 条动态，${reactions} 次回应` : '没有'),
   never: '没用过',
   active: '正常',
   disabledAt: (time: string) => `${time} 停用`,
@@ -43,20 +45,22 @@ export type AgentsAdminText = typeof zh
 const en: AgentsAdminText = {
   title: 'Agents',
   intro:
-    'Members name their AI agents and make them keys in the Agents section of their settings; agents use the keys with the open API and MCP. This page shows each agent’s owner, keys and use today. Turning one off stops its keys at once, and its owner sees that and the reason in their settings; turning it back on makes the same keys work again. Requests count from midnight, Shanghai time.',
+    'Members name their AI agents and make them keys in the Agents section of their settings; agents use the keys with the open API and MCP. A read-and-write key also saves and follows for its owner and posts and reacts in the circles (marked “Agent” with the owner’s name; each circle’s Posts tab can hide them). This page shows each agent’s owner, keys and use today. Turning one off stops its keys at once, and its owner sees that and the reason in their settings; turning it back on makes the same keys work again. Today starts at midnight, Shanghai time.',
   number: (value: number) => value.toLocaleString('en-US'),
   summary: (agents: string, disabled: number, withKey: string, withoutKey: string) =>
     `${agents} agents${disabled ? `, ${disabled} turned off` : ''}. Today: ${withKey} requests with a key, ${withoutKey} without.`,
+  writing: (on: boolean) => (on ? 'Agents writing: on.' : 'Agents writing: off, so agents only read (set the Vercel variable AGENT_WRITES_ENABLED to true to turn it on).'),
   filters: {
     all: 'All',
     disabled: 'Turned off',
     one: (name: string) => `Only “${name}”`,
     showAll: 'Show all',
   },
-  columns: { agent: 'Agent', owner: 'Owner', keys: 'Keys', lastUsed: 'Last used', today: 'Requests today', status: 'Status' },
+  columns: { agent: 'Agent', owner: 'Owner', keys: 'Keys', lastUsed: 'Last used', today: 'Requests today', writes: 'In circles today', status: 'Status' },
   created: (time: string) => `Created ${time}`,
   keys: (working: number, total: number, write: number) =>
     total === 0 ? 'None' : `${working} working${total > working ? ` (of ${total})` : ''}${write ? `, ${write} can write` : ''}`,
+  writes: (posts: number, reactions: number) => (posts || reactions ? `${posts} posts, ${reactions} reactions` : 'None'),
   never: 'Never',
   active: 'On',
   disabledAt: (time: string) => `Turned off ${time}`,
