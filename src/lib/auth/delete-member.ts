@@ -12,7 +12,8 @@ import { circlePostReports } from '@/modules/circles/schema'
  * way to reach them), someone's review or someone's post in a circle. Removed whatever their
  * status; listed apps and Skills themselves stay. Saves, their own reviews (with translations and
  * the reports on them), their circles, posts (with the reactions and reports on them) and
- * reactions, and sign-in records go with the account through their foreign keys.
+ * reactions, their agents (with their keys) and sign-in records go with the account through their
+ * foreign keys; an agent's request counts hold no more than numbers and go in the daily clean-up.
  */
 export async function deleteMemberData(payload: Payload, userId: string): Promise<void> {
   for (const collection of ['app-submissions', 'skill-submissions'] as const) {

@@ -8,6 +8,15 @@ export const PAGE_SIZE = 50
 
 export const logKinds: readonly LogKind[] = ['create', 'update', 'delete', 'action', 'login']
 
+/**
+ * What the log records outside Payload's collections (src/lib/admin-log/hooks.ts `logAdminAction`),
+ * by the name its rows carry instead of a collection's slug: the back-office page it lives on, and
+ * the parameter that opens one of them there.
+ */
+export const pageTargets: Record<string, { path: string; param: string }> = {
+  agents: { path: '/agents', param: 'agent' },
+}
+
 export type LogFilters = {
   collection: string | null
   doc: string | null

@@ -2,6 +2,8 @@ import type { z } from 'zod'
 
 import type { ModuleKey } from '@/config/site'
 
+import type { AgentCaller } from '../data'
+
 /**
  * One thing an agent can do on IFAI (docs/specs/agents.md rule 1). It is defined once here and
  * served four ways: an open API route, an MCP tool, an OpenAPI operation and (step 3) a CLI
@@ -12,6 +14,8 @@ import type { ModuleKey } from '@/config/site'
 export type OperationContext = {
   /** The site's origin without a trailing slash, for absolute addresses. */
   origin: string
+  /** The agent whose key came with the request (../gate.ts); null for a visitor without one. */
+  caller: AgentCaller | null
 }
 
 /** What the Markdown for an MCP tool result gets besides the operation's output. */
@@ -20,12 +24,12 @@ export type MarkdownContext = OperationContext & {
   nonce: string
 }
 
-export type ErrorCode = 'invalid_request' | 'not_found' | 'method_not_allowed' | 'internal_error'
+export type ErrorCode = 'invalid_request' | 'unauthorized' | 'forbidden' | 'not_found' | 'method_not_allowed' | 'rate_limited' | 'internal_error'
 
 /** An answer other than the result: the open API sends `status`, MCP sends `message` as a tool error. */
 export class OperationError extends Error {
   constructor(
-    readonly status: 400 | 404,
+    readonly status: 400 | 401 | 403 | 404,
     readonly code: ErrorCode,
     message: string,
   ) {
@@ -47,6 +51,8 @@ export type Operation<Input extends z.ZodObject = z.ZodObject, Output = unknown>
   description: string
   /** Served only once this module has launched; null when it follows the modules it reads (search). */
   module: ModuleKey | null
+  /** `key`: only for an agent with an IFAI key (MCP lists it only then; the open API answers 401 without one). */
+  auth?: 'key'
   /** Under /api/v1; `{name}` segments are path parameters of `input`. */
   path: `/${string}`
   /** Every parameter, path and query alike; the open API reads numbers and booleans from strings. */

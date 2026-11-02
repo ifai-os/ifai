@@ -100,3 +100,11 @@ test('the admin log is for signed-in admins only', async ({ page }) => {
   await expect(page.locator('form')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Admin log|操作记录/ })).toHaveCount(0)
 })
+
+test('the agents page and its buttons are for signed-in admins only', async ({ page, request }) => {
+  test.skip(!process.env.E2E_ADMIN, 'Needs a database; set E2E_ADMIN=1 where one is available.')
+  await page.goto('/admin/agents?disabled=1')
+  await expect(page).toHaveURL(/\/admin\/(login\?redirect=%2Fagents%3Fdisabled%3D1|create-first-user)/)
+  await expect(page.locator('form')).toBeVisible()
+  expect((await request.post('/api/agents/1/disable', { data: { reason: 'x' } })).status()).toBe(401)
+})

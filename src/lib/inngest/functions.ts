@@ -1,3 +1,4 @@
+import { agentsFunctions } from '@/modules/agents/jobs'
 import { appsHeatFunctions } from '@/modules/apps/metrics/jobs'
 import { appsProfileFunctions } from '@/modules/apps/profile/jobs'
 import { appsReviewFunctions } from '@/modules/apps/reviews/jobs'
@@ -28,4 +29,5 @@ export const functions = [
   ...appsSubmissionFunctions,
   ...resourcesFunctions,
   ...rankingsFunctions,
+  ...agentsFunctions,
 ]

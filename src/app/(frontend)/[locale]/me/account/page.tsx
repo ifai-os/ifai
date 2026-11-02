@@ -12,6 +12,8 @@ import { authProviders } from '@/lib/auth/providers'
 import { dailyEmailState, linkedAccounts, signedInDevices, socialProviders } from '@/lib/auth/settings'
 import { getDb } from '@/lib/db/drizzle'
 import { alternatesFor } from '@/lib/seo'
+import { siteUrl } from '@/lib/site-url'
+import { memberAgents } from '@/modules/agents/data'
 import { subscribingOpen } from '@/modules/daily/email/delivery'
 
 type SearchParams = { deleted?: string | string[]; section?: string | string[]; provider?: string | string[]; error?: string | string[] }
@@ -52,6 +54,10 @@ async function viewFor(section: SettingsSection, session: Session, query: Search
     case 'notifications': {
       const { payload } = await getDb()
       return { section, dailyEmail: await dailyEmailState(payload, session.user), subscribing: subscribingOpen() }
+    }
+    case 'agents': {
+      const { payload } = await getDb()
+      return { section, agents: await memberAgents(payload, session.user.id), verified: session.user.emailVerified, origin: siteUrl() }
     }
     default:
       return { section }

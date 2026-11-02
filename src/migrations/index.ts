@@ -36,6 +36,7 @@ import * as migration_20261027_144104_story_heat_peak from './20261027_144104_st
 import * as migration_20261027_154510_heat_checks from './20261027_154510_heat_checks';
 import * as migration_20261027_161504_story_body from './20261027_161504_story_body';
 import * as migration_20261031_161002_rankings_external from './20261031_161002_rankings_external';
+import * as migration_20261102_080516_agents from './20261102_080516_agents';
 
 export const migrations = [
   {
@@ -226,6 +227,11 @@ export const migrations = [
   {
     up: migration_20261031_161002_rankings_external.up,
     down: migration_20261031_161002_rankings_external.down,
-    name: '20261031_161002_rankings_external'
+    name: '20261031_161002_rankings_external',
+  },
+  {
+    up: migration_20261102_080516_agents.up,
+    down: migration_20261102_080516_agents.down,
+    name: '20261102_080516_agents',
   },
 ];

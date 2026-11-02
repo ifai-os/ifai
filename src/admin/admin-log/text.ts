@@ -25,6 +25,8 @@ const zh = {
   page: (page: number, pages: number) => `第 ${page} / ${pages} 页`,
   deleted: '已删除',
   history: '这一条的记录',
+  /** Names of what the log records outside the collections (./rules.ts `pageTargets`). */
+  targets: { agents: 'Agent' } as Record<string, string>,
   colon: '：',
   list: '、',
   detail: {
@@ -74,6 +76,8 @@ const zh = {
     'arenas:external-run': '赛道：现在同步外部榜单',
     'arena-models:generate': '参赛模型：现在生成回答',
     'arena-models:retry-failed': '参赛模型：重新生成失败和不能用的回答',
+    'agents:disable': 'Agent：停用',
+    'agents:restore': 'Agent：恢复',
   } as Record<string, string>,
 }
 
@@ -103,6 +107,7 @@ const en: LogText = {
   page: (page: number, pages: number) => `Page ${page} of ${pages}`,
   deleted: 'deleted',
   history: 'History of this one',
+  targets: { agents: 'Agents' },
   colon: ': ',
   list: ', ',
   detail: {
@@ -152,6 +157,8 @@ const en: LogText = {
     'arenas:external-run': 'Arenas: sync the outside leaderboards now',
     'arena-models:generate': 'Contestant: generate answers now',
     'arena-models:retry-failed': 'Contestant: redo failed and unusable answers',
+    'agents:disable': 'Agent: turn off',
+    'agents:restore': 'Agent: turn back on',
   },
 }
 

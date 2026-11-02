@@ -139,6 +139,23 @@ function records(overrides: Partial<MemberRecords> = {}): MemberRecords {
     ],
     circleReactions: [{ postId: 40, circleId: 20, reaction: 'rocket', createdAt: day('2026-10-23') }],
     circlePostReports: [{ postId: 41, circleId: 22, reason: 'abuse', createdAt: day('2026-10-22'), resolvedAt: day('2026-10-23') }],
+    agents: [
+      { id: 50, name: 'Scout', about: 'Reads the news for me', createdAt: day('2026-10-20'), disabledAt: null, disabledReason: null },
+      { id: 51, name: 'Poster', about: null, createdAt: day('2026-10-21'), disabledAt: day('2026-10-23'), disabledReason: 'Flooding a circle' },
+    ],
+    agentKeys: [
+      {
+        agentId: 50,
+        label: 'Laptop',
+        hint: 'ifai_Ab12Cd',
+        scope: 'write',
+        createdAt: day('2026-10-22'),
+        expiresAt: day('2027-01-20'),
+        lastUsedAt: day('2026-10-23'),
+        lastUsedIp: '203.0.113.9',
+      },
+      { agentId: 50, label: null, hint: 'ifai_Zz99Yy', scope: 'read', createdAt: day('2026-10-20'), expiresAt: day('2026-11-19'), lastUsedAt: null, lastUsedIp: null },
+    ],
     subscriber: {
       id: 5,
       email: 'reader@example.com',
@@ -260,6 +277,41 @@ describe('shapeMemberExport', () => {
     expect(file.circlePostReports).toEqual([
       { post: 41, circle: { id: 22, name: null, url: null }, reason: 'abuse', reportedAt: '2026-10-22T08:00:00.000Z', resolvedAt: '2026-10-23T08:00:00.000Z' },
     ])
+  })
+
+  it('gives the member’s agents and their keys without the keys themselves', () => {
+    const file = shape(records())
+    expect(file.agents).toEqual([
+      {
+        id: 50,
+        name: 'Scout',
+        about: 'Reads the news for me',
+        createdAt: '2026-10-20T08:00:00.000Z',
+        disabled: null,
+        keys: [
+          {
+            label: 'Laptop',
+            startsWith: 'ifai_Ab12Cd',
+            scope: 'write',
+            createdAt: '2026-10-22T08:00:00.000Z',
+            expiresAt: '2027-01-20T08:00:00.000Z',
+            lastUsedAt: '2026-10-23T08:00:00.000Z',
+            lastUsedFrom: '203.0.113.9',
+          },
+          {
+            label: null,
+            startsWith: 'ifai_Zz99Yy',
+            scope: 'read',
+            createdAt: '2026-10-20T08:00:00.000Z',
+            expiresAt: '2026-11-19T08:00:00.000Z',
+            lastUsedAt: null,
+            lastUsedFrom: null,
+          },
+        ],
+      },
+      { id: 51, name: 'Poster', about: null, createdAt: '2026-10-21T08:00:00.000Z', disabled: { at: '2026-10-23T08:00:00.000Z', reason: 'Flooding a circle' }, keys: [] },
+    ])
+    expect(JSON.stringify(file)).not.toContain('hash')
   })
 
   it('includes the daily email subscription and its sends, or null when there is none', () => {

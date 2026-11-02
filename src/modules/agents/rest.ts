@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 import { siteUrl } from '@/lib/site-url'
 
+import type { AgentCaller } from './data'
+import { unauthorized } from './http'
 import { readLang } from './lang'
 import { finish, newNonce } from './markdown'
 import { launchedOperations } from './operations'
@@ -10,8 +12,9 @@ import { openApiDocument } from './openapi'
 
 /**
  * The open API (docs/specs/agents.md「开放 API」): every launched operation as `GET /api/v1/…`,
- * answering JSON, or the MCP tool's Markdown with `?format=md`. Reads need no sign-in, so answers
- * without an Authorization header are the same for everyone and the CDN keeps them for a minute.
+ * answering JSON, or the MCP tool's Markdown with `?format=md`. Reads need no key, so answers
+ * without an Authorization header are the same for everyone and the CDN keeps them for a minute;
+ * the route lets a request in first (./gate.ts `admit`) and passes the agent its key belongs to.
  */
 
 export const apiBase = '/api/v1'
@@ -129,7 +132,7 @@ function fail(status: number, code: ErrorCode, message: string, cache: string): 
 function index(origin: string, operations: readonly AnyOperation[]) {
   return {
     name: 'IFAI open API',
-    about: 'Read IFAI (AI news, apps, Agent Skills and the community) as an agent. No key needed for reading.',
+    about: 'Read IFAI (AI news, apps, Agent Skills and the community) as an agent. No key needed for reading; send an IFAI key as `Authorization: Bearer ifai_…` to act as your agent.',
     openapi: `${origin}${apiBase}/openapi.json`,
     mcp: `${origin}/mcp`,
     llms: `${origin}/llms.txt`,
@@ -139,14 +142,15 @@ function index(origin: string, operations: readonly AnyOperation[]) {
       path: `${apiBase}${operation.path}`,
       tool: operation.tool,
       title: operation.title,
+      ...(operation.auth === 'key' ? { needsKey: true } : {}),
     })),
   }
 }
 
-/** Serves one GET under /api/v1. */
-export async function handleRest(request: Request): Promise<Response> {
+/** Serves one GET under /api/v1, for the agent whose key came with it or for a visitor. */
+export async function handleRest(request: Request, caller: AgentCaller | null = null): Promise<Response> {
   const url = new URL(request.url)
-  const cache = request.headers.has('authorization') ? noStore : publicCache
+  const cache = caller || request.headers.has('authorization') ? noStore : publicCache
   const origin = siteUrl()
   const operations = launchedOperations()
 
@@ -167,6 +171,7 @@ export async function handleRest(request: Request): Promise<Response> {
   const match = matchOperation(operations, segments)
   if (!match) return fail(404, 'not_found', `No endpoint at ${url.pathname}. See ${origin}${apiBase}/openapi.json.`, cache)
   const { operation, params } = match
+  if (operation.auth === 'key' && !caller) return unauthorized('missing', origin)
 
   const format = url.searchParams.get('format')
   if (format !== null && format !== 'json' && format !== 'md' && format !== 'markdown') {
@@ -176,9 +181,9 @@ export async function handleRest(request: Request): Promise<Response> {
   try {
     const parsed = operation.input.safeParse(readInput(operation, params, url.searchParams))
     if (!parsed.success) return fail(400, 'invalid_request', describeIssues(parsed.error), cache)
-    const output = await operation.run(parsed.data, { origin })
+    const output = await operation.run(parsed.data, { origin, caller })
     if (format === 'md' || format === 'markdown') {
-      const text = operation.markdown(output, parsed.data, { origin, nonce: newNonce() })
+      const text = operation.markdown(output, parsed.data, { origin, caller, nonce: newNonce() })
       return respond(finish(text), 200, 'text/markdown; charset=utf-8', cache)
     }
     return json(output, 200, cache)

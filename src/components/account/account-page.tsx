@@ -9,6 +9,8 @@ import type { Locale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
 import type { DailyEmailState, LinkedAccount, SignedInDevice } from '@/lib/auth/settings'
+import { AgentsSection } from '@/modules/agents/components/agents-section'
+import type { AgentView } from '@/modules/agents/rules'
 import { SubscribeBox } from '@/modules/daily/email/components/subscribe-box'
 
 import { DeleteAccount } from './delete-account'
@@ -27,6 +29,7 @@ export type SettingsView =
   | { section: 'sign-in'; accounts: LinkedAccount[]; devices: SignedInDevice[]; result: LinkResult | null }
   | { section: 'notifications'; dailyEmail: DailyEmailState; subscribing: boolean }
   | { section: 'language' }
+  | { section: 'agents'; agents: AgentView[]; verified: boolean; origin: string }
   | { section: 'data' }
 
 type Member = { id: string; email: string; name: string }
@@ -146,6 +149,14 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
         </>
       )
 
+    case 'agents':
+      return (
+        <>
+          {title}
+          <AgentsSection agents={view.agents} verified={view.verified} origin={view.origin} />
+        </>
+      )
+
     case 'data':
       return (
         <>
@@ -156,6 +167,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
             </h3>
             <p className="text-ui text-ink-3">{t('exportBody')}</p>
             {isLaunched('circles') && <p className="text-ui text-ink-3">{t('exportCircles')}</p>}
+            <p className="text-ui text-ink-3">{t('exportAgents')}</p>
             <ExportData />
           </section>
           <section aria-labelledby="delete-account" className="flex flex-col items-start gap-3 rounded-card border border-surface-2 p-4 md:p-7">
@@ -164,6 +176,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
             </h3>
             <p className="text-ui text-ink-3">{t('deleteBody')}</p>
             {isLaunched('circles') && <p className="text-ui text-ink-3">{t('deleteCircles')}</p>}
+            <p className="text-ui text-ink-3">{t('deleteAgents')}</p>
             <p className="text-ui text-ink-3">{t('deleteKeeps')}</p>
             <DeleteAccount />
           </section>
