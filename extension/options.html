@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <title>IFAI 推送 · 设置</title>
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body class="options">
+    <h1>IFAI 推送 · 设置</h1>
+    <form id="form">
+      <label>网站地址
+        <input id="server" type="url" required placeholder="https://你的网站域名" />
+        <span class="muted small">生产或某个预览环境的地址，只写到域名。本机开发填 http://localhost:3000。</span>
+      </label>
+      <label>推送令牌
+        <input id="token" type="password" required autocomplete="off" />
+        <span class="muted small">和这个环境在 Vercel 里的 PUSH_TOKEN 一样。只存在这台电脑的浏览器里。</span>
+      </label>
+      <button class="primary" type="submit">保存并测试连接</button>
+    </form>
+    <p id="status" class="small"></p>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

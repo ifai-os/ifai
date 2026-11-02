@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <title>推到 IFAI</title>
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body class="popup">
+    <p id="page" class="page"><strong id="page-title">读取页面…</strong><span id="page-site" class="muted"></span></p>
+    <div class="kinds">
+      <button id="news" type="button">推为新闻</button>
+      <button id="app" type="button">推为应用 / 工具</button>
+    </div>
+    <p id="guess" class="muted small"></p>
+    <section id="result" hidden>
+      <p id="result-title" class="result-title"></p>
+      <p id="result-detail" class="small"></p>
+      <p id="result-warning" class="small warning" hidden></p>
+      <p><a id="result-link" target="_blank" rel="noreferrer" hidden>在后台打开</a></p>
+    </section>
+    <footer class="small"><a id="options" href="#">设置</a><span class="muted">Alt+Shift+I 打开这里</span></footer>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

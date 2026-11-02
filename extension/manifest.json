@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "IFAI 推送",
+  "description": "把正在看的新闻或 AI 工具一键推进 IFAI 的采集流程（docs/specs/push.md）。",
+  "version": "1.0.0",
+  "minimum_chrome_version": "116",
+  "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
+  "optional_host_permissions": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "推到 IFAI", "default_popup": "popup.html", "default_icon": "icon.png" },
+  "icons": { "128": "icon.png" },
+  "options_page": "options.html",
+  "commands": {
+    "_execute_action": { "suggested_key": { "default": "Alt+Shift+I" }, "description": "打开推送面板" }
+  }
+}
