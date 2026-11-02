@@ -77,7 +77,7 @@ pnpm dev                 # http://localhost:3000
 | `MODEL_CALLS_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不调用模型 |
 | `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源，也不同步排行的外部榜单 |
 | `ARTIFICIAL_ANALYSIS_API_KEY` | artificialanalysis.ai 免费注册生成的 key | 同生产 | 排行的外部榜单（第三期）读 Artificial Analysis 免费接口用，每天 100 次，同步一次用 7 次左右；不填只同步 Arena |
-| `PUSH_TOKEN` | `openssl rand -hex 32` 生成 | 另生成一个，和生产不同 | 浏览器推送插件用的令牌（docs/specs/push.md），填进插件的设置页；不填只有登录的后台管理员能推 |
+| `PUSH_TOKEN` | `openssl rand -hex 32` 生成 | 另生成一个，和生产不同 | 浏览器推送插件用的令牌（docs/specs/push.md），填进插件的设置页；不填只有登录的后台管理员能推。生产部署没开时插件推到 `main` 的预览，填 Preview 的这个，插件里还要填第 5 条的保护绕过密钥 |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |
 | `GITHUB_TOKEN` | 可选 | 可选 | Skill 导入用的只读 GitHub 令牌（Fine-grained，Contents: Read）；不填只能导入公开仓库，且受匿名限额 |
 | `APPS_SHOW_TRANCO_RANK` | 看过 Tranco 条款再决定 | 同生产 | 写成 `true` 才在应用页面显示 Tranco 名次（列表的「网站排名」列、详情页的数字）；不填不显示，名次照常算进热度 |

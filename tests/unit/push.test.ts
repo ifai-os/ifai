@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { appNameFromTitle, parsePush, pushedStatus, sourceOnSite, tokenMatches } from '@/modules/push/rules'
 
-import { bodyFor, describe as describeResult, guessKind } from '../../extension/push.js'
+import { bodyFor, describe as describeResult, failureMessage, guessKind, requestHeaders } from '../../extension/push.js'
 
 const page = (over: Record<string, unknown> = {}) => ({
   url: 'https://www.theverge.com/ai/1015843/claude-duet',
@@ -111,5 +111,24 @@ describe('browser push: the extension', () => {
     const created = describeResult({ kind: 'news', action: 'created', itemId: 4, status: 'fresh', source: { name: 'theverge.com', created: true }, collectEnabled: false, modelCallsEnabled: true }, server)
     expect(created.title).toBe('已推进采集流程')
     expect(created.warning).toContain('COLLECT_ENABLED')
+  })
+
+  it('sends Vercel\'s bypass header only when one is set', () => {
+    expect(requestHeaders({ token: 't', bypass: '' }, false)).toEqual({ Authorization: 'Bearer t' })
+    expect(requestHeaders({ token: 't', bypass: 'b' }, true)).toEqual({
+      Authorization: 'Bearer t',
+      'x-vercel-protection-bypass': 'b',
+      'Content-Type': 'application/json',
+    })
+  })
+
+  it('tells a wrong token apart from Vercel\'s access protection', () => {
+    expect(failureMessage(401, { error: 'unauthorized' }, { bypass: '' })).toContain('令牌不对')
+    // Vercel answers a protected preview with its own page, not our JSON.
+    expect(failureMessage(401, null, { bypass: '' })).toContain('填上保护绕过密钥')
+    expect(failureMessage(401, null, { bypass: 'wrong' })).toContain('保护绕过密钥不对')
+    expect(failureMessage(404, null, { bypass: '' })).toContain('没有推送接口')
+    expect(failureMessage(400, { error: 'invalid', message: 'This is a home page, not an article.' }, { bypass: '' })).toBe('This is a home page, not an article.')
+    expect(failureMessage(502, null, { bypass: '' })).toBe('网站返回 502')
   })
 })
