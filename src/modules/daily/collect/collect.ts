@@ -137,6 +137,8 @@ export async function fetchContent(itemId: number): Promise<ContentResult> {
         links: article.links,
         media: article.media,
         summary: item.summary ?? article.excerpt ?? null,
+        // A link pushed from the browser's right-click menu comes without a title (src/modules/push).
+        ...(item.title === item.url && article.title && { title: article.title }),
         publishedAt,
         language: article.lang?.slice(0, 2).toLowerCase() || item.language,
         contentStatus: 'fetched',
