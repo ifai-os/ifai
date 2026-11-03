@@ -8,7 +8,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import type { LogDetail } from '@/lib/admin-log/rules'
 
 import { loadAdminLog, type LogRow } from './data'
-import { filtersFrom, hrefWith, logKinds, type LogFilters } from './rules'
+import { filtersFrom, hrefWith, logKinds, pageTargets, type LogFilters } from './rules'
 import { logText, type LogText } from './text'
 
 const section: CSSProperties = { marginTop: 'calc(var(--base) * 1.5)' }
@@ -45,11 +45,12 @@ type Names = {
 
 function namesFor(payload: Payload, language: string): Names {
   const lang = language.startsWith('zh') ? 'zh' : 'en'
+  const targets = logText(language).targets
   return {
     collection: (slug) => {
       if (!slug) return '—'
       const config = payload.collections[slug as keyof typeof payload.collections]?.config
-      return config ? labelIn(config.labels?.plural as Label, lang, slug) : slug
+      return config ? labelIn(config.labels?.plural as Label, lang, slug) : (targets[slug] ?? slug)
     },
     field: (slug, name) => {
       const config = slug ? payload.collections[slug as keyof typeof payload.collections]?.config : undefined
@@ -70,7 +71,8 @@ export async function AdminLogView({ initPageResult, params, searchParams }: Adm
   const { req, permissions, locale, visibleEntities } = initPageResult
   const adminRoute = req.payload.config.routes.admin
   const base = `${adminRoute}/admin-log`
-  const slugs = req.payload.config.collections.map((collection) => collection.slug)
+  // Collections, then what is logged outside them (agents).
+  const slugs = [...req.payload.config.collections.map((collection) => collection.slug), ...Object.keys(pageTargets)]
   const filters = filtersFrom(searchParams, slugs)
   if (!req.user || !permissions.canAccessAdmin) {
     const back = hrefWith('/admin-log', filters, { page: filters.page })
@@ -235,6 +237,10 @@ function Target({ row, t, names, adminRoute }: Omit<RowProps, 'time' | 'base' | 
   if (!row.docId) return <>{row.collection ? collection : '—'}</>
   const title = row.docTitle ?? `#${row.docId}`
   const gone = row.kind === 'delete'
+  const page = row.collection ? pageTargets[row.collection] : undefined
+  const href = page
+    ? `${adminRoute}${page.path}?${page.param}=${encodeURIComponent(row.docId)}`
+    : `${adminRoute}/collections/${row.collection}/${row.docId}`
   return (
     <>
       <span style={{ ...muted, display: 'block', fontSize: '0.8rem' }}>{collection}</span>
@@ -243,7 +249,7 @@ function Target({ row, t, names, adminRoute }: Omit<RowProps, 'time' | 'base' | 
           {title} <span style={muted}>({t.deleted})</span>
         </span>
       ) : (
-        <a href={`${adminRoute}/collections/${row.collection}/${row.docId}`}>{title}</a>
+        <a href={href}>{title}</a>
       )}
     </>
   )

@@ -2,9 +2,10 @@ import { localizePath, type Locale } from '@/i18n/config'
 
 /**
  * The「设置」page's sections (docs/specs/account.md), in the order of its menu. Circles adds
- * its own (privacy, notifications on the site) here when it gets to them.
+ * its own (privacy, notifications on the site) here when it gets to them; Agent is the member's
+ * agents and their keys (docs/specs/agents.md).
  */
-export const settingsSections = ['profile', 'sign-in', 'notifications', 'language', 'data'] as const
+export const settingsSections = ['profile', 'sign-in', 'notifications', 'language', 'agents', 'data'] as const
 export type SettingsSection = (typeof settingsSections)[number]
 
 /** `?section=`; anything else is the first section. */

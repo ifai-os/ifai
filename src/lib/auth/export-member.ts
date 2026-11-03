@@ -6,6 +6,8 @@ import type { Payload } from 'payload'
 import { localizePath, messagesFileName, type Locale } from '@/i18n/config'
 import type { ReportReason, ReviewStatus, TranslatedTexts, TranslationStatus } from '@/modules/apps/reviews/rules'
 import { appReviewReports, appReviews, appReviewTranslations } from '@/modules/apps/schema'
+import type { KeyScope } from '@/modules/agents/rules'
+import { agentKeys, agents } from '@/modules/agents/schema'
 import { normalizeEmail } from '@/modules/daily/email/address'
 import type { PostStatus, Reaction, ReportReason as PostReportReason } from '@/modules/circles/rules'
 import { circleMembers, circlePostReactions, circlePostReports, circlePosts } from '@/modules/circles/schema'
@@ -115,6 +117,16 @@ export type MemberExport = {
   circleReactions: { post: number; circle: ExportRef; reaction: Reaction; reactedAt: string }[]
   /** Posts by others the member reported: which one and why, not its text or author. */
   circlePostReports: { post: number; circle: ExportRef; reason: PostReportReason; reportedAt: string; resolvedAt: string | null }[]
+  /** Their AI agents, oldest first, with each key's note, start, permission and use; IFAI never keeps a key itself. */
+  agents: {
+    id: number
+    name: string
+    about: string | null
+    createdAt: string
+    /** When and why IFAI turned it off. */
+    disabled: { at: string; reason: string | null } | null
+    keys: { label: string | null; startsWith: string; scope: KeyScope; createdAt: string; expiresAt: string; lastUsedAt: string | null; lastUsedFrom: string | null }[]
+  }[]
   /** The daily email subscription of the sign-in email, when it is verified and subscribed at some point. */
   dailyEmail: {
     email: string
@@ -167,6 +179,17 @@ export type MemberRecords = {
   circlePosts: { id: number; circleId: number; body: string; lang: string; status: PostStatus; createdAt: Date }[]
   circleReactions: { postId: number; circleId: number; reaction: Reaction; createdAt: Date }[]
   circlePostReports: { postId: number; circleId: number; reason: PostReportReason; createdAt: Date; resolvedAt: Date | null }[]
+  agents: { id: number; name: string; about: string | null; createdAt: Date; disabledAt: Date | null; disabledReason: string | null }[]
+  agentKeys: {
+    agentId: number
+    label: string | null
+    hint: string
+    scope: KeyScope
+    createdAt: Date
+    expiresAt: Date
+    lastUsedAt: Date | null
+    lastUsedIp: string | null
+  }[]
   subscriber: Subscriber | null
   sends: { localDate: string; locale: string; status: EmailSendStatus; storyCount: number | null; sentAt: Date | null }[]
 }
@@ -299,6 +322,8 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     posts,
     postReactions,
     postReports,
+    agentRows,
+    keyRows,
     subscribers,
   ] = await Promise.all([
     db
@@ -397,6 +422,34 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
       .innerJoin(circlePosts, eq(circlePosts.id, circlePostReports.postId))
       .where(eq(circlePostReports.reporter, reporter))
       .orderBy(desc(circlePostReports.createdAt)),
+    db
+      .select({
+        id: agents.id,
+        name: agents.name,
+        about: agents.about,
+        createdAt: agents.createdAt,
+        disabledAt: agents.disabledAt,
+        disabledReason: agents.disabledReason,
+      })
+      .from(agents)
+      .where(eq(agents.userId, userId))
+      .orderBy(agents.createdAt, agents.id),
+    // Never the hash.
+    db
+      .select({
+        agentId: agentKeys.agentId,
+        label: agentKeys.label,
+        hint: agentKeys.hint,
+        scope: agentKeys.scope,
+        createdAt: agentKeys.createdAt,
+        expiresAt: agentKeys.expiresAt,
+        lastUsedAt: agentKeys.lastUsedAt,
+        lastUsedIp: agentKeys.lastUsedIp,
+      })
+      .from(agentKeys)
+      .innerJoin(agents, eq(agents.id, agentKeys.agentId))
+      .where(eq(agents.userId, userId))
+      .orderBy(desc(agentKeys.createdAt), desc(agentKeys.id)),
     // The subscription is by address, not by account: only an address the member has shown is theirs.
     user.emailVerified
       ? payload.find({ collection: 'subscribers', where: { email: { equals: normalizeEmail(user.email) } }, depth: 0, limit: 1, overrideAccess: true })
@@ -448,6 +501,8 @@ export async function readMemberRecords(payload: Payload, userId: string): Promi
     circlePosts: posts,
     circleReactions: postReactions,
     circlePostReports: postReports,
+    agents: agentRows,
+    agentKeys: keyRows,
     subscriber,
     sends,
   }
@@ -640,6 +695,24 @@ export function shapeMemberExport(
       reason: report.reason,
       reportedAt: iso(report.createdAt),
       resolvedAt: isoOrNull(report.resolvedAt),
+    })),
+    agents: records.agents.map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      about: agent.about ?? null,
+      createdAt: iso(agent.createdAt),
+      disabled: agent.disabledAt ? { at: iso(agent.disabledAt), reason: agent.disabledReason ?? null } : null,
+      keys: records.agentKeys
+        .filter((key) => key.agentId === agent.id)
+        .map((key) => ({
+          label: key.label ?? null,
+          startsWith: key.hint,
+          scope: key.scope,
+          createdAt: iso(key.createdAt),
+          expiresAt: iso(key.expiresAt),
+          lastUsedAt: isoOrNull(key.lastUsedAt),
+          lastUsedFrom: key.lastUsedIp ?? null,
+        })),
     })),
     dailyEmail: subscriber
       ? {

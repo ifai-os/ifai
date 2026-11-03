@@ -18,6 +18,8 @@ import { adminLogTables } from './lib/admin-log/schema'
 import { aiTables } from './lib/ai/schema'
 import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
+import { agentEndpoints } from './modules/agents/endpoints'
+import { agentsTables } from './modules/agents/schema'
 import { AppCategories } from './modules/apps/collections/AppCategories'
 import { AppReports } from './modules/apps/collections/AppReports'
 import { AppSubmissions } from './modules/apps/collections/AppSubmissions'
@@ -76,9 +78,10 @@ export default buildConfig({
       providers: ['/admin/theme/provider#AdminTheme'],
       // 界面语言 (中文 / English) in the header, next to the content-language picker.
       actions: ['/admin/ui-language/switch#UiLanguageSwitch'],
-      // The daily review queue, model usage and the admin log, next to the collection links.
+      // The daily review queue, agents, model usage and the admin log, next to the collection links.
       afterNavLinks: [
         '/modules/daily/admin/review/links#ReviewNavLink',
+        '/modules/agents/admin/nav-link#AgentsNavLink',
         '/admin/model-usage/nav-link#ModelUsageNavLink',
         '/admin/admin-log/nav-link#AdminLogNavLink',
       ],
@@ -87,6 +90,8 @@ export default buildConfig({
         modelUsage: { Component: '/admin/model-usage/view#ModelUsageView', path: '/model-usage', exact: true },
         // Who did what in the back office (docs/specs/foundation.md「后台 · 操作记录」).
         adminLog: { Component: '/admin/admin-log/view#AdminLogView', path: '/admin-log', exact: true },
+        // Members' agents: owners, keys, today's requests; turn one off (docs/specs/agents.md「后台」).
+        agents: { Component: '/modules/agents/admin/view#AgentsView', path: '/agents', exact: true },
       },
     },
   },
@@ -126,6 +131,8 @@ export default buildConfig({
     ArenaAnswers,
     ArenaImages,
   ]),
+  // Back-office endpoints for what lives outside the collections: turning an agent off or on.
+  endpoints: agentEndpoints,
   editor: lexicalEditor(),
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;
@@ -156,8 +163,8 @@ export default buildConfig({
     push: false,
     migrationDir: path.resolve(dirname, 'migrations'),
     // Our own Drizzle tables (Better Auth, model receipts, the daily module's raw_items and subscribe attempts,
-    // skill install events, saves and follows, the admin log, the model arena's votes and snapshots) join Payload's
-    // schema so migrations create and track them.
+    // skill install events, saves and follows, the admin log, the model arena's votes and snapshots, agents and
+    // their keys) join Payload's schema so migrations create and track them.
     beforeSchemaInit: [
       ({ schema }) => ({
         ...schema,
@@ -174,6 +181,7 @@ export default buildConfig({
           ...circlesTables,
           ...adminLogTables,
           ...rankingsTables,
+          ...agentsTables,
         },
       }),
     ],

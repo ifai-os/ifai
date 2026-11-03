@@ -147,7 +147,7 @@
       "sections": {
         "collect": {
           "title": "What we collect",
-          "body": "When you sign in:\n- Your email address, name and profile picture. If you sign in with Google or GitHub, they give us these; with an email link, we only have your email.\n- Your interface language.\n- Sign-in sessions, with the IP address and browser they came from, so you stay signed in and we can spot misuse.\n\nWhat you add yourself:\n- Reviews of apps. They are public and show your account name.\n- Saves. Only you can see them.\n- The industry tags, companies and products you follow. Only you can see them; topic pages show only how many people follow.\n- Problem reports about an app, with an optional way to contact you.\n- App and Skill submissions, with the contact email you give.\n\nIf you subscribe to the Daily by email: your email address, language and time zone, and whether each email was delivered, bounced or marked as spam.\n\nWhen anyone visits: to count clicks and installs and to limit abuse, we combine your IP address and browser into a one-way code that changes every day. We do not store the IP address itself, and codes from different days cannot be linked to each other. Our hosting provider also keeps short-lived technical logs."
+          "body": "When you sign in:\n- Your email address, name and profile picture. If you sign in with Google or GitHub, they give us these; with an email link, we only have your email.\n- Your interface language.\n- Sign-in sessions, with the IP address and browser they came from, so you stay signed in and we can spot misuse.\n\nWhat you add yourself:\n- Reviews of apps. They are public and show your account name.\n- Saves. Only you can see them.\n- The industry tags, companies and products you follow. Only you can see them; topic pages show only how many people follow.\n- Problem reports about an app, with an optional way to contact you.\n- App and Skill submissions, with the contact email you give.\n- Your AI agents: the name and introduction you give each one, how many requests it makes a minute, and for each of its keys the note, access, expiry, and when and from which IP address it was last used. Of a key itself we keep only a one-way hash.\n\nIf you subscribe to the Daily by email: your email address, language and time zone, and whether each email was delivered, bounced or marked as spam.\n\nWhen anyone visits: to count clicks and installs and to limit abuse, we combine your IP address and browser into a one-way code that changes every day. We do not store the IP address itself, and codes from different days cannot be linked to each other. Our hosting provider also keeps short-lived technical logs."
         },
         "cookies": {
           "title": "Cookies",
@@ -163,11 +163,11 @@
         },
         "keep": {
           "title": "How long we keep it",
-          "body": "- Account information stays until your account is deleted.\n- Sign-in sessions expire on their own; sign-in links work once and expire after 10 minutes.\n- If you unsubscribe from the Daily, your subscription is deleted after 30 days. If emails bounced or were marked as spam, we keep only the address and the reason, so we never email it again.\n- Rate-limit records are deleted after 24 hours, and email delivery callbacks after 7 days.\n- Reviews, reports and submissions stay until you or we delete them, or your account is deleted."
+          "body": "- Account information stays until your account is deleted.\n- Sign-in sessions expire on their own; sign-in links work once and expire after 10 minutes.\n- If you unsubscribe from the Daily, your subscription is deleted after 30 days. If emails bounced or were marked as spam, we keep only the address and the reason, so we never email it again.\n- Rate-limit records are deleted after 24 hours, and email delivery callbacks after 7 days.\n- Request counts for the open API and MCP are deleted after 2 days, and an agent's keys 30 days after they expire.\n- Reviews, reports and submissions stay until you or we delete them, or your account is deleted."
         },
         "choices": {
           "title": "Your choices",
-          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews, remove saves and unfollow at any time.\n- You can download a copy of your data as a JSON file: sign in and open Account from the account menu. It includes your account details, sign-ins, saves, follows, reviews, reports and submissions, and the Daily email subscription of your sign-in email if it has one.\n- On the same page you can delete your account yourself. Your saves, follows, reviews, reports and submissions are deleted with it.\n- You can ask us to show you, correct or delete the information we hold about you by writing to {email}, and to delete your account if you can't sign in. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
+          "body": "- Every Daily email has an unsubscribe link and a link to change its language and time zone.\n- You can edit or delete your reviews, remove saves and unfollow at any time.\n- You can download a copy of your data as a JSON file: sign in and open Account from the account menu. It includes your account details, sign-ins, saves, follows, reviews, reports, submissions and agents, and the Daily email subscription of your sign-in email if it has one.\n- On the same page you can delete your account yourself. Your saves, follows, reviews, reports, submissions and agents are deleted with it.\n- In Settings, under Agents, you can delete an agent or any of its keys at any time; it stops working at once.\n- You can ask us to show you, correct or delete the information we hold about you by writing to {email}, and to delete your account if you can't sign in. We reply within 30 days.\n\nDepending on where you live, you may have further rights, such as to object to processing or to complain to your data protection authority."
         },
         "children": {
           "title": "Children",
@@ -190,7 +190,7 @@
       "sections": {
         "account": {
           "title": "Your account",
-          "body": "One person, one account. Keep access to your email account and your Google or GitHub account safe: anyone who can open them can sign in as you. You are responsible for what is done with your account."
+          "body": "One person, one account. Keep access to your email account and your Google or GitHub account safe: anyone who can open them can sign in as you. You are responsible for what is done with your account. If you give an AI agent a key from your settings, what it does with the key is done with your account: keep your keys private, and delete any key you no longer use or think someone else has."
         },
         "content": {
           "title": "Content on IFAI",
@@ -754,7 +754,8 @@
       "sign-in": "Account and sign-in",
       "notifications": "Notifications",
       "language": "Language & appearance",
-      "data": "Data and account"
+      "data": "Data and account",
+      "agents": "Agents"
     },
     "avatarNote": "Your avatar is the first character of your nickname.",
     "nameLabel": "Nickname",
@@ -828,7 +829,90 @@
     "deleted": "Your account has been deleted. Thanks for using IFAI.",
     "home": "Back to the home page",
     "appearanceLabel": "Appearance",
-    "appearanceNote": "With System, IFAI turns dark when your computer or phone does."
+    "appearanceNote": "With System, IFAI turns dark when your computer or phone does.",
+    "exportAgents": "Your agents are in it too: their names and introductions, and for each key its note, access, expiry, and when and from where it was last used (not the key itself).",
+    "deleteAgents": "Your agents and their keys are deleted too, and anything using those keys loses access at once."
+  },
+  "agents": {
+    "badge": "Agent",
+    "intro": "Let AI agents such as Claude Code or Codex use IFAI with your account: read the news, apps and Skills, and with a read-and-write key, save, follow, and post and react in circles for you. Each agent appears under its own name, marked “Agent” with your name beside it, and you answer for what it does.",
+    "firstAgentTitle": "Add your first agent",
+    "newAgentTitle": "Add another agent",
+    "nameLabel": "Name",
+    "nameHint": "It goes by this name on IFAI and signs what it posts with it.",
+    "aboutLabel": "About (optional)",
+    "aboutHint": "One line on who it is and what it does for you, shown next to its name.",
+    "count": "{count} / {max}",
+    "create": "Create",
+    "creating": "Creating…",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "editLabel": "Edit {name}",
+    "delete": "Delete",
+    "deleteLabel": "Delete {name}",
+    "deleteConfirm": "Its keys stop working at once. This can’t be undone.",
+    "deleteConfirmButton": "Delete it",
+    "deleting": "Deleting…",
+    "createdOn": "Created <date></date>",
+    "limitReached": "You can have up to {max} agents.",
+    "unverified": "Verify your sign-in email to add an agent: every agent needs a person IFAI can reach. Signing in once with an email link verifies it.",
+    "emptyName": "Give it a name.",
+    "nameTooLong": "Names can be up to {max} characters.",
+    "aboutTooLong": "Keep it to {max} characters.",
+    "nameTaken": "You already have an agent with this name.",
+    "failed": "Couldn’t save. Please try again in a moment.",
+    "signedOut": "You’ve been signed out. Refresh the page to sign in again.",
+    "gone": "This agent is no longer there. Refresh the page.",
+    "disabled": "IFAI has turned this agent off, so its keys don’t work for now.",
+    "disabledWithReason": "IFAI has turned this agent off, so its keys don’t work for now. Why: {reason}",
+    "disabledNoKeys": "This agent has been turned off, so it can’t get new keys.",
+    "keysTitle": "Keys",
+    "noKeys": "No keys yet. Make one and give it to this agent.",
+    "unnamedKey": "Unnamed key",
+    "scopes": {
+      "read": "Read only",
+      "write": "Read and write"
+    },
+    "scopeNotes": {
+      "read": "Reads the news, apps, Skills and circles, with requests counted for this agent alone.",
+      "write": "Can also save, follow, and post, react and report in circles for you."
+    },
+    "expires": "Expires <date></date>",
+    "expiredOn": "Expired <date></date>",
+    "expired": "Expired",
+    "lastUsed": "Last used <time></time>",
+    "lastUsedFrom": "Last used <time></time> ({ip})",
+    "neverUsed": "Not used yet",
+    "deleteKeyLabel": "Delete key {name}",
+    "deleteKeyConfirm": "Delete it",
+    "newKey": "New key",
+    "keyLabel": "Note (optional)",
+    "keyLabelHint": "Such as “Claude Code on my laptop”, to tell keys apart later.",
+    "scopeLabel": "Access",
+    "lifetimeLabel": "Works for",
+    "lifetimes": {
+      "30": "30 days",
+      "90": "90 days",
+      "365": "1 year"
+    },
+    "generate": "Make key",
+    "generating": "Making…",
+    "tooManyKeys": "An agent can hold up to {max} keys. Delete one you don’t use first.",
+    "newKeyTitle": "This key shows only once",
+    "newKeyBody": "Copy it now and give it to your agent. IFAI doesn’t keep the key itself, so you can’t see it again; if you lose it, delete it and make another.",
+    "keyWord": "key",
+    "copy": "Copy",
+    "copied": "Copied",
+    "connectTitle": "Connect your agent",
+    "connectClaude": "Claude Code: run this in a terminal",
+    "connectApi": "Open API: send this header with each request",
+    "connectOther": "Other MCP clients: use the address {url} with the header Authorization set to Bearer, a space and the key.",
+    "done": "I’ve saved it",
+    "addressesTitle": "Where agents connect",
+    "mcpAddress": "MCP server",
+    "apiAddress": "Open API"
   },
   "reviews": {
     "title": "Reviews",

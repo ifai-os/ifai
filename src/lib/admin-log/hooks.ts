@@ -21,6 +21,7 @@ import {
   statusChanges,
   titleOf,
   type Entry,
+  type LogDetail,
 } from './rules'
 import { adminLog } from './schema'
 
@@ -210,6 +211,23 @@ function wrapEndpoint(collection: CollectionConfig, endpoint: Endpoint): Endpoin
       return response
     },
   }
+}
+
+/**
+ * One row for a back-office action on something that is not a collection (agents live in their own
+ * tables): what `withAdminLog` writes for a collection's endpoint, written by the action itself once
+ * it has succeeded. `target` stands where a collection's slug would; the log page links it to its
+ * own back-office page (src/admin/admin-log/rules.ts `pageTargets`).
+ */
+export async function logAdminAction(
+  req: PayloadRequest,
+  entry: { action: string; target: string; docId: string; docTitle: string | null; detail?: LogDetail },
+): Promise<void> {
+  const actor = adminOf(req)
+  if (!actor) return
+  await write(req.payload, null, actor, [
+    { kind: 'action', action: entry.action, collection: entry.target, docId: entry.docId, docTitle: entry.docTitle, detail: entry.detail ?? {} },
+  ])
 }
 
 /** Every collection with the log's hooks, and its POST endpoints wrapped. */

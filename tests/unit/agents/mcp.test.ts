@@ -1,19 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 
+import type { AgentCaller } from '@/modules/agents/data'
 import { untrusted } from '@/modules/agents/markdown'
 import { callTool, handleMcp, serverInstructions } from '@/modules/agents/mcp'
 import { launchedOperations } from '@/modules/agents/operations'
 import { defineOperation, notFound } from '@/modules/agents/operations/types'
 
+/** An agent whose key the gate has already checked (src/modules/agents/gate.ts). */
+const scout: AgentCaller = {
+  keyId: 7,
+  scope: 'read',
+  expiresAt: '2027-01-31T00:00:00.000Z',
+  agent: { id: 3, name: 'Scout', about: 'Reads the news for Mei' },
+  owner: { id: 'member-1', name: 'Mei' },
+}
+
 /** One JSON-RPC exchange with /mcp as a 2025-era client makes it (the stateless fallback). */
-async function rpc(method: string, params: Record<string, unknown>, id = 1) {
+async function rpc(method: string, params: Record<string, unknown>, id = 1, caller: AgentCaller | null = null) {
   const response = await handleMcp(
     new Request('http://localhost:3000/mcp', {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream', 'mcp-protocol-version': '2025-06-18' },
       body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
     }),
+    caller,
   )
   expect(response.status).toBe(200)
   const text = await response.text()
@@ -76,11 +87,38 @@ describe('/mcp', () => {
     const init = await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'test', version: '1' } })
     expect(init.result).toMatchObject({ serverInfo: { name: 'ifai', title: 'IFAI' } })
     expect(init.result?.instructions).toContain('<untrusted')
+    expect(init.result?.instructions).toContain('/me/account?section=agents')
 
     const list = await rpc('tools/list', {}, 2)
     const tools = list.result?.tools as { name: string; annotations: { readOnlyHint: boolean } }[]
-    expect(tools.map((tool) => tool.name)).toEqual(launchedOperations().map((operation) => operation.tool))
+    // Without a key, no tool that needs one.
+    expect(tools.map((tool) => tool.name)).toEqual(launchedOperations().filter((operation) => !operation.auth).map((operation) => operation.tool))
+    expect(tools.map((tool) => tool.name)).not.toContain('whoami')
     for (const tool of tools) expect(tool.annotations.readOnlyHint, tool.name).toBe(true)
+  })
+
+  it('knows the agent behind a key, and tells it who it is', async () => {
+    const init = await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'test', version: '1' } }, 1, scout)
+    expect(init.result?.instructions).toContain('whoami')
+    // Members' own words stay out of the server's instructions.
+    expect(init.result?.instructions).not.toContain('Scout')
+
+    const list = await rpc('tools/list', {}, 2, scout)
+    const names = (list.result?.tools as { name: string }[]).map((tool) => tool.name)
+    expect(names).toEqual(launchedOperations().map((operation) => operation.tool))
+    expect(names).toContain('whoami')
+
+    const call = await rpc('tools/call', { name: 'whoami', arguments: { lang: 'ja' } }, 3, scout)
+    const text = (call.result?.content as { text: string }[])[0].text
+    expect(text).toContain('You are **Scout**, an agent on IFAI run by Mei')
+    expect(text).toContain('read only')
+    expect(text).toContain('/ja/me/account?section=agents')
+  })
+
+  it('does not have a tool that needs a key for a client without one', async () => {
+    const call = await rpc('tools/call', { name: 'whoami', arguments: {} }, 3)
+    expect(call.result).toBeUndefined()
+    expect(call.error?.message).toBe('Tool whoami not found')
   })
 
   it('refuses arguments that do not fit before reading anything', async () => {

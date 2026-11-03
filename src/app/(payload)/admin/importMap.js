@@ -46,11 +46,13 @@ import { ExternalStatus as ExternalStatus_282a70c583c29520b7d76da8b65f96bf } fro
 import { AnswersPanel as AnswersPanel_30251a44f6ba0b489a653addc8e3ce37 } from '../../../modules/rankings/admin/answers-panel'
 import { UiLanguageSwitch as UiLanguageSwitch_1ab148fae9b2f4a257e97088aafad126 } from '../../../admin/ui-language/switch'
 import { ReviewNavLink as ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1 } from '../../../modules/daily/admin/review/links'
+import { AgentsNavLink as AgentsNavLink_64bc98cf848a89c851cdfdbde534a684 } from '../../../modules/agents/admin/nav-link'
 import { ModelUsageNavLink as ModelUsageNavLink_e8dd740ddf39723610754fc9fa3ab578 } from '../../../admin/model-usage/nav-link'
 import { AdminLogNavLink as AdminLogNavLink_f6731c953a0e4e47f3848e4b44367eb8 } from '../../../admin/admin-log/nav-link'
 import { AdminTheme as AdminTheme_21f744e7bd57342bb26c7c1fc049eaf3 } from '../../../admin/theme/provider'
 import { ModelUsageView as ModelUsageView_304a9f7c53a4c3ddf1679b524418e932 } from '../../../admin/model-usage/view'
 import { AdminLogView as AdminLogView_a36c77c37339db68486e971f26eb44af } from '../../../admin/admin-log/view'
+import { AgentsView as AgentsView_8f5de1b01f5c4e9e6a38aded64c55b8d } from '../../../modules/agents/admin/view'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -104,11 +106,13 @@ export const importMap = {
   "/modules/rankings/admin/answers-panel#AnswersPanel": AnswersPanel_30251a44f6ba0b489a653addc8e3ce37,
   "/admin/ui-language/switch#UiLanguageSwitch": UiLanguageSwitch_1ab148fae9b2f4a257e97088aafad126,
   "/modules/daily/admin/review/links#ReviewNavLink": ReviewNavLink_2112a3d97e8d3e9907989fea4d7ef9c1,
+  "/modules/agents/admin/nav-link#AgentsNavLink": AgentsNavLink_64bc98cf848a89c851cdfdbde534a684,
   "/admin/model-usage/nav-link#ModelUsageNavLink": ModelUsageNavLink_e8dd740ddf39723610754fc9fa3ab578,
   "/admin/admin-log/nav-link#AdminLogNavLink": AdminLogNavLink_f6731c953a0e4e47f3848e4b44367eb8,
   "/admin/theme/provider#AdminTheme": AdminTheme_21f744e7bd57342bb26c7c1fc049eaf3,
   "/admin/model-usage/view#ModelUsageView": ModelUsageView_304a9f7c53a4c3ddf1679b524418e932,
   "/admin/admin-log/view#AdminLogView": AdminLogView_a36c77c37339db68486e971f26eb44af,
+  "/modules/agents/admin/view#AgentsView": AgentsView_8f5de1b01f5c4e9e6a38aded64c55b8d,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

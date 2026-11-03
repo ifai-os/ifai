@@ -3,7 +3,7 @@ import config from '@payload-config'
 import type { CollectionConfig } from 'payload'
 import { describe, expect, it } from 'vitest'
 
-import { filtersFrom, hrefWith } from '@/admin/admin-log/rules'
+import { filtersFrom, hrefWith, pageTargets } from '@/admin/admin-log/rules'
 import { logText } from '@/admin/admin-log/text'
 import {
   BULK_ROWS,
@@ -120,6 +120,11 @@ describe('admin log: endpoint bodies and actions', () => {
         }
       }
     }
+    // The site's own endpoints for what is not a collection (agents) say which actions they log.
+    for (const endpoint of (await config).endpoints ?? []) {
+      actions.push(...((endpoint.custom?.adminLogActions as string[] | undefined) ?? []))
+    }
+    expect(actions).toEqual(expect.arrayContaining(['agents:disable', 'agents:restore']))
     expect(actions.length).toBeGreaterThan(20)
     for (const language of ['zh', 'en']) {
       const missing = actions.filter((action) => !logText(language).actions[action])
@@ -161,7 +166,14 @@ describe('admin log: one row per document per save', () => {
 })
 
 describe('admin log page: filters', () => {
-  const slugs = ['apps', 'stories']
+  const slugs = ['apps', 'stories', ...Object.keys(pageTargets)]
+
+  it('names and links what is logged outside the collections', () => {
+    expect(pageTargets.agents).toEqual({ path: '/agents', param: 'agent' })
+    expect(logText('zh').targets.agents).toBe('Agent')
+    expect(logText('en').targets.agents).toBe('Agents')
+    expect(filtersFrom({ collection: 'agents', doc: '3' }, slugs)).toMatchObject({ collection: 'agents', doc: '3' })
+  })
 
   it('keeps known filters and drops the rest', () => {
     expect(filtersFrom({ collection: 'apps', doc: '12', admin: '3', kind: 'delete', page: '2' }, slugs)).toEqual({

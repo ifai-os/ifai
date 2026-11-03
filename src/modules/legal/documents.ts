@@ -13,8 +13,8 @@ export const legalHref: Record<LegalDocument, `/${string}`> = {
 
 /** Change the date whenever the text changes (rule 3). */
 export const legalUpdatedAt: Record<LegalDocument, string> = {
-  privacy: '2026-10-25',
-  terms: '2026-10-23',
+  privacy: '2026-11-02',
+  terms: '2026-11-02',
 }
 
 /** Data requests, account deletion for readers who cannot sign in, and copyright complaints go here (rule 4). */
