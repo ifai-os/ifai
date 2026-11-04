@@ -16,7 +16,7 @@
 | [recommend.md](./recommend.md) — 推荐（长文，第二期） | 草稿，第 1 步（站长文章与阅读）实现中；标「按推荐」的规则待确认 |
 | [push.md](./push.md) — 浏览器推送（插件一键推进采集流程） | 已实现，待预览环境验收 |
 | [rankings.md](./rankings.md) — 排行（模型盲测，第三期） | 草稿，第 1 步已实现，页面在第三期前不开放；标「按推荐」的规则待确认 |
-| [security.md](./security.md) — 上线安全（响应头、Turnstile、Vercel 防火墙、Cloudflare DNS） | 第 1 步（响应头、关 GraphQL、生产关 Inngest 开发模式）已实现；Turnstile 下一步；控制台清单待站长做 |
+| [security.md](./security.md) — 上线安全（响应头、Turnstile、Vercel 防火墙、Cloudflare DNS） | 代码部分已实现（响应头、关 GraphQL、生产关 Inngest 开发模式、Turnstile）；控制台清单和 Turnstile 的 key 待站长做 |
 | [agents.md](./agents.md) — Agent 接入（开放 API、MCP、命令行） | 草稿，第 1 步（只读的开放 API、MCP、llms.txt）已实现，待预览环境验收；标「按推荐」的规则待站长确认 |
 
 ## 模板

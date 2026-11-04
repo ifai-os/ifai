@@ -159,7 +159,7 @@
         },
         "share": {
           "title": "交给谁处理",
-          "body": "IFAI 用下面这些服务运行。它们按各自的安全和隐私条款替我们处理数据：\n- Vercel：网站托管。\n- Neon：数据库。\n- Cloudflare R2：文件存储。\n- Resend：发送邮件。\n- Inngest：后台任务。\n- OpenRouter 及其转接的模型服务商：翻译评价、起草网站内容。只发送要处理的那段文字。\n- Google 和 GitHub：你选择用它们登录时。\n\n这些服务商可能在美国和其他国家处理数据。除非法律要求，我们不把信息交给其他人。"
+          "body": "IFAI 用下面这些服务运行。它们按各自的安全和隐私条款替我们处理数据：\n- Vercel：网站托管。\n- Neon：数据库。\n- Cloudflare R2：文件存储。\n- Cloudflare Turnstile：确认是真人在用登录和日报订阅表单。检查时它会看到你的 IP 地址和浏览器信息。\n- Resend：发送邮件。\n- Inngest：后台任务。\n- OpenRouter 及其转接的模型服务商：翻译评价、起草网站内容。只发送要处理的那段文字。\n- Google 和 GitHub：你选择用它们登录时。\n\n这些服务商可能在美国和其他国家处理数据。除非法律要求，我们不把信息交给其他人。"
         },
         "keep": {
           "title": "保留多久",

@@ -5,11 +5,13 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 
 import { Icon } from '@/components/icon'
+import { useTurnstile } from '@/components/turnstile'
 
 import { localizePath, type Locale } from '@/i18n/config'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth/client'
 import type { AuthProviders } from '@/lib/auth/providers'
+import { TURNSTILE_HEADER, turnstileActions } from '@/lib/turnstile'
 import { legalHref } from '@/modules/legal/documents'
 
 type Status = 'idle' | 'sending' | 'sent' | 'invalid' | 'failed'
@@ -44,6 +46,8 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false, 
   const [resend, setResend] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle')
   // Back from「换个邮箱」: the email field takes the focus as it comes back.
   const refocus = useRef(false)
+  // Cloudflare Turnstile on the email link (docs/specs/security.md): a fresh pass for every link.
+  const turnstile = useTurnstile(turnstileActions.signIn)
 
   useEffect(() => {
     if (status !== 'sent' || wait <= 0) return
@@ -123,6 +127,7 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false, 
             </button>
           )}
         </div>
+        {turnstile.slot}
         {resend === 'sent' && (
           <p role="status" className="text-small text-up">
             {t('resent')}
@@ -143,6 +148,13 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false, 
     if (error) setStatus('failed')
   }
 
+  /** The Turnstile pass as a request header; null when Turnstile is on and no pass came. */
+  async function passHeaders(): Promise<{ headers: Record<string, string> } | null> {
+    if (!turnstile.enabled) return { headers: {} }
+    const token = await turnstile.token()
+    return token ? { headers: { [TURNSTILE_HEADER]: token } } : null
+  }
+
   async function sendLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const address = email.trim()
@@ -151,15 +163,21 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false, 
       return
     }
     setStatus('sending')
-    const { error } = await authClient.signIn.magicLink({ email: address, callbackURL: landing, errorCallbackURL })
+    const fetchOptions = await passHeaders()
+    if (!fetchOptions) return setStatus('failed')
+    const { error } = await authClient.signIn
+      .magicLink({ email: address, callbackURL: landing, errorCallbackURL, fetchOptions })
+      .catch(() => ({ error: { code: 'NETWORK' } }))
     setStatus(error ? 'failed' : 'sent')
     if (!error) setWait(RESEND_AFTER)
   }
 
   async function sendAgain() {
     setResend('sending')
+    const fetchOptions = await passHeaders()
+    if (!fetchOptions) return setResend('failed')
     const { error } = await authClient.signIn
-      .magicLink({ email: email.trim(), callbackURL: landing, errorCallbackURL })
+      .magicLink({ email: email.trim(), callbackURL: landing, errorCallbackURL, fetchOptions })
       .catch(() => ({ error: { code: 'NETWORK' } }))
     setResend(error ? 'failed' : 'sent')
     if (!error) setWait(RESEND_AFTER)
@@ -220,6 +238,7 @@ export function SignInForm({ providers, callbackURL, sentNote, compact = false, 
       >
         {status === 'sending' ? t('sending') : t('sendLink')}
       </button>
+      {turnstile.slot}
       {!compact && <p className="text-center text-small text-ink-4">{t('noPassword')}</p>}
     </form>
   )

@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
 import { nextCookies } from 'better-auth/next-js'
-import { magicLink } from 'better-auth/plugins'
+import { captcha, magicLink } from 'better-auth/plugins'
 import { Pool } from 'pg'
 
 import { sendMagicLinkEmail } from '@/lib/auth/email'
@@ -9,6 +9,7 @@ import { withCleanName } from '@/lib/auth/nickname'
 import { authProviders } from '@/lib/auth/providers'
 import { databaseUrl } from '@/lib/db/url'
 import { siteUrl } from '@/lib/site-url'
+import { turnstileActions, turnstileSecret } from '@/lib/turnstile'
 
 const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
 const githubEnabled = Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET)
@@ -21,6 +22,10 @@ const vercelOrigins = [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
 const globalForAuth = globalThis as typeof globalThis & { __ifaiAuthPool?: Pool }
 const pool = globalForAuth.__ifaiAuthPool ?? new Pool({ connectionString: databaseUrl(), max: 5 })
 if (process.env.NODE_ENV !== 'production') globalForAuth.__ifaiAuthPool = pool
+
+// Cloudflare Turnstile on the email link only (docs/specs/security.md): Google and GitHub sign-in
+// send no email. Off without both keys.
+const turnstile = turnstileSecret()
 
 const timestamps = { createdAt: 'created_at', updatedAt: 'updated_at' }
 
@@ -136,6 +141,16 @@ export const auth = betterAuth({
         await sendMagicLinkEmail({ email, url })
       },
     }),
+    ...(turnstile
+      ? [
+          captcha({
+            provider: 'cloudflare-turnstile',
+            secretKey: turnstile,
+            endpoints: ['/sign-in/magic-link'],
+            expectedAction: turnstileActions.signIn,
+          }),
+        ]
+      : []),
     // Must stay last: lets server actions set auth cookies.
     nextCookies(),
   ],
