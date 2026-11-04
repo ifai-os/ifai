@@ -1,5 +1,6 @@
 import { Link } from '@/i18n/navigation'
 
+import { dateOnlyDay } from '../../date-only'
 import type { StoryItem } from '../story-item'
 import { listHref, storyHref } from '../list-params'
 import { SpreadIndex } from './spread-index'
@@ -24,23 +25,25 @@ type StoryCardProps = {
 
 /**
  * One story on a topic or category page (「IFAI 公司与产品话题页」「IFAI 日报 · 分类页」boards): the
- * reader's local day above the first story of each day, then a white card with the time, the
- * category, the reach index, the title, at most three lines of summary.
+ * reader's local day above the first story of each day, then a white card with the time (none
+ * when the story only knows its date), the category, the reach index, the title, at most three lines of summary.
  */
 export function StoryCard({ story, serverToday, category, previousIso }: StoryCardProps) {
   return (
     <li className="flex flex-col gap-2.5">
       <StoryDay iso={story.publishedAt} previousIso={previousIso} serverToday={serverToday} />
       <article className="flex flex-col gap-3 rounded-card bg-bg px-5 py-5 md:px-7 md:py-6">
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-4">
-          <StoryClock iso={story.publishedAt} className="font-medium text-accent-ink tabular-nums" />
-          {category && (
-            <Link href={listHref({ category: story.category })} className="hover:text-ink">
-              {category}
-            </Link>
-          )}
-          <SpreadIndex value={story.spread} />
-        </p>
+        {(!dateOnlyDay(story.publishedAt) || category || story.spread > 0) && (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-4">
+            <StoryClock iso={story.publishedAt} className="font-medium text-accent-ink tabular-nums" />
+            {category && (
+              <Link href={listHref({ category: story.category })} className="hover:text-ink">
+                {category}
+              </Link>
+            )}
+            <SpreadIndex value={story.spread} />
+          </p>
+        )}
         <h2 lang={story.title.lang} className="text-h3">
           <Link href={storyHref(story.slug)} className="hover:text-accent-ink">
             {story.title.value}

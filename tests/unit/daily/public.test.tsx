@@ -592,13 +592,18 @@ describe('a category page', () => {
       stories: [
         ...page.stories,
         story({ id: 3, publishedAt: '2026-10-21T01:15:00Z', slug: 'orbit' }),
-        story({ id: 4, publishedAt: '2026-10-21T00:00:00Z', slug: 'venom' }),
+        story({ id: 4, publishedAt: '2026-10-21T00:30:00Z', slug: 'venom' }),
       ],
     }
     const html = render(<CategoryPageView page={sameDay} serverToday="2026-10-22" />)
     expect(html.match(/font-medium">Yesterday<\/time>/g)).toHaveLength(1)
     expect(html.match(/font-medium">Today<\/time>/g)).toHaveLength(1)
-    for (const time of ['9:40 AM', '8:15 PM', '1:15 AM', '12:00 AM']) expect(html).toContain(`tabular-nums">${time}</time>`)
+    for (const time of ['9:40 AM', '8:15 PM', '1:15 AM', '12:30 AM']) expect(html).toContain(`tabular-nums">${time}</time>`)
+
+    // A story that only knows its date shows no time in its card.
+    const dated = render(<CategoryPageView page={{ ...page, stories: [story({ id: 5, publishedAt: '2026-10-20T00:00:00Z', slug: 'dated' })] }} serverToday="2026-10-22" />)
+    expect(dated).not.toContain('12:00 AM')
+    expect(dated).toContain('font-medium">October 20</time>')
   })
 
   it('names an older update by its day, links the newer page, and says when there is nothing earlier', () => {
