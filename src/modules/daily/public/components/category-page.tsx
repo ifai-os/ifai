@@ -31,7 +31,7 @@ const looks: Record<StoryCategory, { tile: string; ink: string; title: string; d
 /**
  * A category page (「IFAI 日报 · 分类页」and「日报分类底图」boards; docs/specs/daily.md「分类与分类页」):
  * the banner with #name, what the category covers and its numbers, then every category as pills
- * and the stories as cards under their times, newest first, 20 to a page. Inside
+ * and the stories as cards under their days, newest first, 20 to a page. Inside
  * `ListNavigationProvider` (the route page), other categories and pages load in place.
  */
 export function CategoryPageView({ page, serverToday }: { page: CategoryPage; serverToday: string }) {
@@ -83,8 +83,8 @@ export function CategoryPageView({ page, serverToday }: { page: CategoryPage; se
         <ListResults skeleton={<StoryCardsSkeleton count={Math.min(Math.max(page.stories.length, 3), 6)} />}>
           {page.stories.length > 0 ? (
             <ol className="flex flex-col gap-7">
-              {page.stories.map((story) => (
-                <StoryCard key={story.id} story={story} serverToday={serverToday} />
+              {page.stories.map((story, index) => (
+                <StoryCard key={story.id} story={story} serverToday={serverToday} previousIso={page.stories[index - 1]?.publishedAt} />
               ))}
             </ol>
           ) : (

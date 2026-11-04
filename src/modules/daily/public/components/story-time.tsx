@@ -32,13 +32,17 @@ export function useStoryDay(iso: string, serverToday: string): { day: string; ti
   return { day, time, relative }
 }
 
-/** When a story on a topic or category page went up, above its card. */
-export function StoryTime({ iso, serverToday }: { iso: string; serverToday: string }) {
-  const { day, time } = useStoryDay(iso, serverToday)
+/**
+ * The day above a story on a topic, category or tag page, once a day: nothing when the story before
+ * it (`previousIso`) went up on the same day in the reader's zone. The time is in the card.
+ */
+export function StoryDay({ iso, previousIso, serverToday }: { iso: string; previousIso?: string; serverToday: string }) {
+  const timeZone = useReaderTimeZone()
+  const { day } = useStoryDay(iso, serverToday)
+  if (previousIso && storyDayKey(previousIso, timeZone) === storyDayKey(iso, timeZone)) return null
   return (
-    <time dateTime={iso} className="flex gap-2 text-body font-medium">
-      <span>{day}</span>
-      {time && <span className="tabular-nums">{time}</span>}
+    <time dateTime={iso} className="text-body font-medium">
+      {day}
     </time>
   )
 }

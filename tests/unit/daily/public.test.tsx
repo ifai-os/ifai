@@ -480,9 +480,11 @@ describe('a company’s or product’s topic page', () => {
     expect(html).toContain('23 stories')
     expect(html).toContain('href="/en/apps/kimi"')
     // Today by name, this year without the year, earlier years with it.
-    expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
-    expect(html).toContain('<span>September 11</span>')
-    expect(html).toContain('<span>November 6, 2025</span>')
+    expect(html).toContain('font-medium">Today</time>')
+    expect(html).toContain('font-medium">September 11</time>')
+    expect(html).toContain('font-medium">November 6, 2025</time>')
+    // The time is inside the card, before the category.
+    expect(html).toMatch(/tabular-nums">9:40 AM<\/time><a [^>]*>AI tools<\/a>/)
     expect(html).toContain('text-heat-3">66<')
     expect(html).toContain('href="/en/news/topic/kimi?page=2"')
     expect(html).toContain('Load earlier stories (3)')
@@ -540,13 +542,30 @@ describe('a category page', () => {
     expect(current?.[1]).toBe(en.categories.tools)
     // The name shows in the title and the pill only.
     expect(html.split(`>${en.categories.tools}<`)).toHaveLength(3)
-    expect(html).toContain('<span>Today</span><span class="tabular-nums">9:40 AM</span>')
+    expect(html).toContain('font-medium">Today</time>')
+    expect(html).toContain('font-medium">Yesterday</time>')
+    expect(html).toContain('tabular-nums">9:40 AM</time>')
     expect(html).not.toContain('Invite a teammate.')
     expect(html).toContain('text-heat-2">45<')
     // A story that never had any heat shows no reach index.
     expect(html.match(new RegExp(`${en.card.spread} `, 'g'))).toHaveLength(1)
     expect(html).toContain('href="/en/news/category/tools?page=2"')
     expect(html).toContain(en.daily.loadEarlier)
+  })
+
+  it('heads each day once, and puts every story’s time in its card', () => {
+    const sameDay = {
+      ...page,
+      stories: [
+        ...page.stories,
+        story({ id: 3, publishedAt: '2026-10-21T01:15:00Z', slug: 'orbit' }),
+        story({ id: 4, publishedAt: '2026-10-21T00:00:00Z', slug: 'venom' }),
+      ],
+    }
+    const html = render(<CategoryPageView page={sameDay} serverToday="2026-10-22" />)
+    expect(html.match(/font-medium">Yesterday<\/time>/g)).toHaveLength(1)
+    expect(html.match(/font-medium">Today<\/time>/g)).toHaveLength(1)
+    for (const time of ['9:40 AM', '8:15 PM', '1:15 AM', '12:00 AM']) expect(html).toContain(`tabular-nums">${time}</time>`)
   })
 
   it('names an older update by its day, links the newer page, and says when there is nothing earlier', () => {

@@ -91,7 +91,7 @@ export function StoryDetailSkeleton() {
   )
 }
 
-/** A topic or category page's stories while another page loads: a time, then a card shaped like `StoryCard`. */
+/** A topic or category page's stories while another page loads: a day above every third, then cards shaped like `StoryCard`. */
 export function StoryCardsSkeleton({ count }: { count: number }) {
   const t = useTranslations('states')
   return (
@@ -100,7 +100,7 @@ export function StoryCardsSkeleton({ count }: { count: number }) {
         const width = widths[index % widths.length]
         return (
           <div key={index} className="flex flex-col gap-2.5">
-            <SkeletonLine text="text-body" width="120px" />
+            {index % 3 === 0 && <SkeletonLine text="text-body" width="120px" />}
             <div className="flex flex-col gap-3 rounded-card bg-bg px-5 py-5 md:px-7 md:py-6">
               <SkeletonLine text="text-meta" width="30%" />
               <SkeletonLine text="text-h3" width={width.title} bar="h-4.5" />
