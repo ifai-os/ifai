@@ -1,6 +1,8 @@
 import { inngest } from '@/lib/inngest/client'
 
-import { runChecks } from './external/checks'
+import { runBackfill, runChecks, type CheckRun } from './external/checks'
+import { BACKFILL_STEP, backfillDailyLimit } from './external/rules'
+import type { HeatCheckKind } from '../schema'
 import { activeEventIds, refreshHeat } from './heat'
 import { syncEventSources } from './sources'
 
@@ -48,4 +50,43 @@ export const checkDailyReach = inngest.createFunction(
   },
 )
 
-export const dailyHeatFunctions = [refreshDailyHeat, checkDailyReach]
+/**
+ * Once a day (or on `daily/heat.backfill`): catch up on older stories with both channels
+ * (./external/rules.ts「backfill」), newest first, up to each channel's daily share
+ * (HEAT_SEARCH_BACKFILL_DAILY_LIMIT, HEAT_X_BACKFILL_DAILY_LIMIT) in steps of 10, then work out
+ * those events' heat again so their reach index takes the checks in. Does nothing until the
+ * keys are set; stops on its own once every story from HEAT_BACKFILL_SINCE has been checked.
+ */
+export const backfillDailyReach = inngest.createFunction(
+  {
+    id: 'daily-heat-backfill',
+    triggers: [{ cron: '50 4 * * *' }, { event: 'daily/heat.backfill' }],
+    concurrency: { limit: 1 },
+    retries: 1,
+  },
+  async ({ step }) => {
+    const now = await step.run('now', () => new Date().toISOString())
+    const runs: Partial<Record<HeatCheckKind, { checked: number; failed: number; stopped?: string }>> = {}
+    const eventIds = new Set<number>()
+    for (const kind of ['search', 'x'] as const) {
+      const limit = backfillDailyLimit(kind)
+      const total = { checked: 0, failed: 0, stopped: undefined as string | undefined }
+      for (let index = 0; total.checked < limit; index++) {
+        const run: CheckRun = await step.run(`${kind}-${index}`, () => runBackfill(kind, Math.min(BACKFILL_STEP, limit - total.checked), new Date(now)))
+        total.checked += run.checked
+        total.failed += run.failed
+        for (const id of run.events) eventIds.add(id)
+        // Nothing left to check, the channel is off, or a whole step failed: try again tomorrow.
+        if (run.stopped || run.checked === 0) {
+          total.stopped = run.stopped
+          break
+        }
+      }
+      runs[kind] = total
+    }
+    const heat = eventIds.size ? await step.run('heat', () => refreshHeat([...eventIds])) : null
+    return { ...runs, heat }
+  },
+)
+
+export const dailyHeatFunctions = [refreshDailyHeat, checkDailyReach, backfillDailyReach]
