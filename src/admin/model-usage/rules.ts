@@ -35,6 +35,7 @@ export const purposeModules: Record<Purpose | ContestPurpose, Module> = {
   score: 'daily',
   structure: 'daily',
   group: 'daily',
+  storyline: 'daily',
   write: 'daily',
   assist: 'daily',
   reach: 'daily',

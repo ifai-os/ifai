@@ -30,6 +30,7 @@ import { circlesTables } from './modules/circles/schema'
 import { Posters } from './modules/daily/collections/posters'
 import { Sources } from './modules/daily/collections/sources'
 import { Stories } from './modules/daily/collections/stories'
+import { Storylines } from './modules/daily/collections/storylines'
 import { Subscribers } from './modules/daily/collections/subscribers'
 import { dailyEmailTables } from './modules/daily/email/schema'
 import { dailyTables } from './modules/daily/schema'
@@ -116,6 +117,7 @@ export default buildConfig({
     AppSubmissions,
     Sources,
     Stories,
+    Storylines,
     Posters,
     Subscribers,
     Skills,

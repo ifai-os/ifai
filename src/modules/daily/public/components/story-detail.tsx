@@ -17,7 +17,7 @@ import { StoryFigure } from './story-media'
 import { EntityList, SimilarStories, TagList, TopicTrack } from './story-related'
 import { StoryPublished } from './story-time'
 
-/** What the page's follow buttons are for: its tags, and its companies and products (the topic is one of them). */
+/** What the page's follow buttons are for: its tags, and its companies and products. */
 function followTargets(story: StoryDetail): FollowTarget[] {
   return [
     ...story.tags.map((key): FollowTarget => ({ type: 'tag', key })),
@@ -196,7 +196,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
                   </ol>
                 </section>
               )}
-              {story.entities.length > 0 && <EntityList entities={story.entities} topicKey={story.topic?.key ?? null} />}
+              {story.entities.length > 0 && <EntityList entities={story.entities} />}
             </aside>
           )}
         </div>

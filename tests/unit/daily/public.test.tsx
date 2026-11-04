@@ -379,7 +379,7 @@ describe('a story’s page', () => {
     for (const heading of [en.daily.tags, en.daily.entities, en.daily.topic, en.daily.similar]) expect(html).not.toContain(heading)
   })
 
-  it('shows the industry tags, companies and products, the topic and similar events', () => {
+  it('shows the industry tags, companies and products, the storyline and similar events', () => {
     const topicStories = [
       story({ id: 20, publishedAt: '2026-10-23T09:00:00Z', slug: 'newer' }),
       { ...detail, sources: undefined },
@@ -394,7 +394,7 @@ describe('a story’s page', () => {
             { name: 'MacBook Pro', kind: 'product', key: 'macbookpro', app: null },
             { name: 'Apple', kind: 'company', key: 'apple', app: { slug: 'apple-intelligence', name: 'Apple Intelligence' } },
           ],
-          topic: { name: 'MacBook Pro', key: 'macbookpro', stories: topicStories },
+          topic: { name: { value: 'Apple v. Epic', lang: 'en' }, slug: 'apple-v-epic', stories: topicStories },
           similar: [story({ id: 30, publishedAt: '2025-10-01T09:00:00Z', slug: 'last-year' })],
         }}
         signIn={{ google: false, github: false, email: true }}
@@ -407,6 +407,8 @@ describe('a story’s page', () => {
     expect(html).toContain('href="/en/apps/apple-intelligence"')
     expect(html).toContain('href="/en/news/topic/apple"')
     expect(html).toContain('href="/en/news/topic/macbookpro"')
+    // The storyline's name is not a link: it has no page of its own.
+    expect(html).toContain('<span lang="en" class="text-body font-normal text-ink-4">Apple v. Epic</span>')
     // This story is marked, not linked; five of seven show before「查看更多」.
     expect(html).toContain(`>${en.daily.thisStory}<`)
     expect(html).not.toContain('href="/en/news/story-1"')
@@ -417,23 +419,19 @@ describe('a story’s page', () => {
     expect(html.indexOf(en.daily.topic)).toBeLessThan(html.indexOf(en.daily.similar))
   })
 
-  it('offers to follow each tag, the topic, and the companies and products the topic tracker does not cover', () => {
+  it('offers to follow each tag and every company and product, the storyline shown or not', () => {
     const entities: StoryDetail['entities'] = [
       { name: 'MacBook Pro', kind: 'product', key: 'macbookpro', app: null },
       { name: 'Apple', kind: 'company', key: 'apple', app: null },
     ]
     const signIn = { google: false, github: false, email: true }
-    const topic = { name: 'MacBook Pro', key: 'macbookpro', stories: [story({ id: 20, publishedAt: '2026-10-23T09:00:00Z' })] }
+    const topic = { name: { value: 'Apple v. Epic', lang: 'en' as const }, slug: 'apple-v-epic', stories: [story({ id: 20, publishedAt: '2026-10-23T09:00:00Z' })] }
     const html = render(<StoryDetailView story={{ ...detail, tags: ['hardware'], entities, topic }} signIn={signIn} />)
     expect(html).toMatch(/aria-pressed="false" aria-label="Follow AI hardware"[^>]*><span aria-hidden="true">\+<\/span>Follow<\/button>/)
-    expect(html).toContain(`>${en.follows.followTopic}</button>`)
     expect(html).toContain('aria-label="Follow Apple"')
-    // The topic tracker's button follows MacBook Pro, so its row has none.
-    expect(html).not.toContain('aria-label="Follow MacBook Pro"')
-
-    const alone = render(<StoryDetailView story={{ ...detail, tags: [], entities, topic: null }} signIn={signIn} />)
-    expect(alone).toContain('aria-label="Follow MacBook Pro"')
-    expect(alone).not.toContain(en.follows.followTopic)
+    expect(html).toContain('aria-label="Follow MacBook Pro"')
+    // Following a storyline is not built yet: the tracker has no button.
+    expect(html).not.toContain(en.follows.followTopic)
   })
 
   it('has a save button next to share', () => {

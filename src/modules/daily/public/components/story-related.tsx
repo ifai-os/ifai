@@ -20,7 +20,7 @@ const topicFirst = 5
  * page's FollowProvider around them.
  */
 
-/**「话题追踪」: stories about the same product or company as a timeline, newest first, this one marked. */
+/**「话题追踪」: the stories of the ongoing storyline as a timeline, newest first, this one marked. */
 export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId: number }) {
   const t = useTranslations('daily')
   const rows = topic.stories.map((story) => {
@@ -59,11 +59,10 @@ export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId:
         <h2 id="topic" className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-h2">
           <Icon name="clock" size={20} className="text-accent-ink" />
           {t('topic')}
-          <Link href={topicHref(topic.key)} className="text-body font-normal text-ink-4 hover:text-accent-ink">
-            {topic.name}
-          </Link>
+          <span lang={topic.name.lang} className="text-body font-normal text-ink-4">
+            {topic.name.value}
+          </span>
         </h2>
-        <FollowButton target={{ type: 'topic', key: topic.key }} name={topic.name} look="topic" />
       </div>
       <p className="text-meta text-ink-4">{t('topicNote')}</p>
       <ShowMoreList
@@ -139,10 +138,9 @@ export function initialOf(name: string): string {
 
 /**
  *「涉及的公司与产品」: an initial tile, the name and its kind, leading to its topic page; an app
- * page when the app is on the site, and a follow button, except for the topic (`topicKey`) when
- * the topic tracker above already has one.
+ * page when the app is on the site, and a follow button.
  */
-export function EntityList({ entities, topicKey = null }: { entities: StoryEntityItem[]; topicKey?: string | null }) {
+export function EntityList({ entities }: { entities: StoryEntityItem[] }) {
   const t = useTranslations('daily')
   return (
     <section aria-labelledby="entities" className="flex flex-col gap-2.5">
@@ -174,7 +172,7 @@ export function EntityList({ entities, topicKey = null }: { entities: StoryEntit
                   <span className="sr-only">: {entity.app.name}</span>
                 </Link>
               )}
-              {entity.key !== topicKey && <FollowButton target={{ type: 'topic', key: entity.key }} name={entity.name} look="entity" />}
+              <FollowButton target={{ type: 'topic', key: entity.key }} name={entity.name} look="entity" />
             </span>
           </li>
         ))}

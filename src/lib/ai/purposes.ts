@@ -18,6 +18,8 @@ export const textPurposes = {
   structure: CHEAP,
   /** Relationship between two reports: same happening, follow-up, unrelated, roundup. */
   group: CHEAP,
+  /** Which ongoing storyline a published story belongs to, or a new one it starts with another (docs/specs/daily.md「持续事件」). */
+  storyline: CHEAP,
   /** Titles, summaries and "try it" in zh-Hans, en, ja, ko. */
   write: CHEAP,
   /** Review helpers: shorten a summary, suggest another title. */

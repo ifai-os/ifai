@@ -299,9 +299,10 @@ test.describe('with the sample stories', () => {
     await expect(page.getByRole('button', { name: en.daily.share })).toBeVisible()
   })
 
-  test("a story's page has its industry tags, companies and products, and its topic", async ({ page }) => {
+  test("a story's page has its industry tags, companies and products, and its storyline", async ({ page }) => {
     await page.goto('/en/news/sample-lumen-chat-adds-shared-workspaces')
     const topic = page.getByRole('region', { name: new RegExp(en.daily.topic) })
+    await expect(topic.getByText('Lumen Chat’s shared workspaces')).toBeVisible()
     await expect(topic.getByText(en.daily.thisStory)).toBeVisible()
     await expect(topic.getByRole('link', { name: titles.preview })).toHaveAttribute('href', '/en/news/sample-lumen-chat-announces-workspaces')
     const entities = page.getByRole('region', { name: en.daily.entities })
