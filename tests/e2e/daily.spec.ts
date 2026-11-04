@@ -122,10 +122,10 @@ test.describe('with the sample stories', () => {
     await expect(items.nth(1)).toContainText(`${en.card.spread} 45${en.daily.trend.rising}`)
     await expect(items.nth(2)).toHaveText(new RegExp(`${en.card.spread} 30$`))
 
-    // A tag's list keeps the hot list but not the hottest story; a category's page has neither (its board has no column).
+    // A tag's page and a category's are laid out on their own, with neither the hottest story nor the hot list.
     await page.goto('/en/news/tag/assistants')
     await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
-    await expect(page.getByRole('region', { name: en.daily.hotTitle })).toBeVisible()
+    await expect(page.getByRole('region', { name: en.daily.hotTitle })).toHaveCount(0)
     await page.goto('/en/news/category/open')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.open}`)
     await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
@@ -308,9 +308,10 @@ test.describe('with the sample stories', () => {
     await expect(entities.getByText('Lumen Labs')).toBeVisible()
     await page.getByRole('region', { name: en.daily.tags }).getByRole('link', { name: en.tags.assistants }).click()
     await expect(page).toHaveURL(/\/en\/news\/tag\/assistants$/)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`${en.tags.assistants} · Daily`)
-    // Listed by day and again in the hot list beside it.
-    await expect(page.getByRole('link', { name: titles.workspaces }).first()).toBeVisible()
+    // Laid out as a topic page (站长, 2026-11-04): #name, its kind, the stories as cards.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.tags.assistants}`)
+    await expect(page.getByRole('main').getByText(en.daily.entityKinds.tag, { exact: true })).toBeVisible()
+    await expect(page.getByRole('link', { name: titles.workspaces })).toBeVisible()
     await expect(page.getByRole('link', { name: titles.preview })).toBeVisible()
     // Prism's story has other tags and isn't hot enough for the hot list.
     await expect(page.getByRole('link', { name: titles.prism })).toHaveCount(0)

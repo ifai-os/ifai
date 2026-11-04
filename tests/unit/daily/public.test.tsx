@@ -12,6 +12,7 @@ import { CategoryPageView } from '@/modules/daily/public/components/category-pag
 import { MentionedApps } from '@/modules/daily/public/components/mentioned-apps'
 import { StoryDetailView } from '@/modules/daily/public/components/story-detail'
 import { TodayHeadlines } from '@/modules/daily/public/components/today-headlines'
+import { TagPageView } from '@/modules/daily/public/components/tag-page'
 import { TopicPageView } from '@/modules/daily/public/components/topic-page'
 import { listHref, readPage, readTopicKey, storyHref, topicHref } from '@/modules/daily/public/list-params'
 import { renderFeed } from '@/modules/daily/public/rss'
@@ -505,6 +506,38 @@ describe('a company’s or product’s topic page', () => {
     expect(html).toContain('href="/en/news/topic/kimi"')
     expect(html).not.toContain('Made by')
     expect(html).not.toContain('/en/apps/')
+  })
+})
+
+describe('an industry tag’s page', () => {
+  const signIn = { google: false, github: false, email: true }
+  const tagPage = {
+    tag: 'assistants' as const,
+    total: 23,
+    page: 1,
+    pages: 2,
+    stories: [
+      story({ id: 1, publishedAt: '2026-10-22T09:40:00Z', slug: 'a' }),
+      story({ id: 2, publishedAt: '2026-10-22T08:15:00Z', slug: 'b' }),
+    ],
+    earlier: 21,
+  }
+
+  it('is laid out as a topic page: #name, its kind and count,「+ 关注」, and cards under their days', () => {
+    const html = render(<TagPageView page={tagPage} serverToday="2026-10-22" signIn={signIn} />)
+    expect(html).toContain(`>#</span>${en.tags.assistants}</h1>`)
+    expect(html).toContain(`<span>${en.daily.entityKinds.tag}</span>`)
+    expect(html).toContain('23 stories')
+    expect(html).toContain(`aria-label="Follow ${en.tags.assistants}"`)
+    expect(html.match(/font-medium">Today<\/time>/g)).toHaveLength(1)
+    expect(html).toContain('href="/en/news/tag/assistants?page=2"')
+    expect(html).toContain('Load earlier stories (21)')
+  })
+
+  it('says when the tag has no stories yet', () => {
+    const html = render(<TagPageView page={{ ...tagPage, total: 0, pages: 0, stories: [], earlier: 0 }} serverToday="2026-10-22" signIn={signIn} />)
+    expect(html).toContain(en.daily.emptyTagTitle)
+    expect(html).not.toContain(en.daily.noEarlier)
   })
 })
 
