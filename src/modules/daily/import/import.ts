@@ -111,8 +111,8 @@ async function freeSlug(payload: Payload, story: ImportStory): Promise<string> {
 const localeData = (text: ImportText) => ({ title: text.title, summary: text.summary, tryIt: text.tryIt, body: text.body })
 
 /**
- * Store one story: the same Feishu record updates its story (text, category, tags, sources,
- * score and time; its address and status stay), a new one goes on the site at its publish time.
+ * Store one story: the same Feishu record updates its story (text, category, tags, companies and
+ * products when the line names them, sources, score and time; its address and status stay), a new one goes on the site at its publish time.
  * Its picture or video is copied afterwards (./media.ts) when it is new or changed; a picture the
  * pipeline no longer sends is taken off. An unchanged one leaves the story's media alone, so an
  * editor's change in the admin stays.
@@ -128,6 +128,7 @@ async function importOne(
   const fields = {
     category: story.category,
     tags: story.tags,
+    ...(story.entities ? { entities: story.entities } : {}),
     sources: story.sources,
     score: story.score,
     publishedAt: story.publishedAt,

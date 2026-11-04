@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { importAllowed } from '@/modules/daily/import/endpoint'
-import { importApprovedAt, importMedia, importSources, importTags, parseImport, parseImportStory, sameMedia, slugCandidates } from '@/modules/daily/import/rules'
+import { importApprovedAt, importEntities, importMedia, importSources, importTags, parseImport, parseImportStory, sameMedia, slugCandidates } from '@/modules/daily/import/rules'
 
 /** A line as `newscrawler export-stories` writes it (trimmed). */
 const exported = {
@@ -96,6 +96,21 @@ describe('stories imported from the pipeline', () => {
   it('keeps known tags only, at most three', () => {
     expect(importTags(['agents', 'agents', 'robots', 'voice', 'chips', 'deals'])).toEqual(['agents', 'voice', 'chips'])
     expect(importTags('agents')).toEqual([])
+  })
+
+  it('reads the companies and products by the rule for stories the site writes', () => {
+    expect(importEntities(['Anthropic', 'anthropic'], ['Claude Duet'])).toEqual([
+      { name: 'Claude Duet', kind: 'product', key: 'claudeduet' },
+      { name: 'Anthropic', kind: 'company', key: 'anthropic' },
+    ])
+    expect(importEntities(['A', 'B', 'C', 'D'], undefined)).toHaveLength(3)
+    expect(importEntities([], [])).toEqual([])
+    expect(importEntities(undefined, undefined)).toBeNull()
+
+    const parsed = parseImportStory({ ...exported, companies: ['Anthropic'], products: [] })
+    expect(parsed.ok && parsed.story.entities).toEqual([{ name: 'Anthropic', kind: 'company', key: 'anthropic' }])
+    const without = parseImportStory(exported)
+    expect(without.ok && without.story.entities).toBeNull()
   })
 
   it('lists the original first, marks discussion threads and drops repeated addresses', () => {

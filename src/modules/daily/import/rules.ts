@@ -4,6 +4,7 @@
  * functions: ./import.ts stores them.
  */
 import { storyCategories, type StoryCategory } from '../categories'
+import { storyEntities, type StoryEntity } from '../entities'
 import { parseVideo, usableImage, videoUrl, type FoundMedia } from '../media'
 import type { SourceRole } from '../story-fields'
 import { maxStoryTags, storyTags, type StoryTag } from '../tags'
@@ -31,6 +32,8 @@ export type ImportStory = {
   slug: string
   category: StoryCategory
   tags: StoryTag[]
+  /** Null when the line says nothing about them: what the story has stays, an editor's change included. */
+  entities: StoryEntity[] | null
   publishedAt: string
   score: number | null
   sources: ImportSource[]
@@ -100,6 +103,16 @@ export function importTags(value: unknown): StoryTag[] {
 }
 
 /**
+ * The companies and products the story is about, named in `companies` and `products`, kept by the
+ * same rule as a story the site writes itself. Null when the line has neither list.
+ */
+export function importEntities(companies: unknown, products: unknown): StoryEntity[] | null {
+  if (!Array.isArray(companies) && !Array.isArray(products)) return null
+  const names = (value: unknown) => (Array.isArray(value) ? value.filter((name): name is string => typeof name === 'string') : [])
+  return storyEntities({ companies: names(companies), products: names(products) })
+}
+
+/**
  * The line's `media` (docs/specs/daily.md「从本地流水线导入」): `{ kind: 'image', imageUrl, credit }`
  * or `{ kind: 'video', videoUrl, imageUrl?, credit }`, or null. Read with the collector's own
  * rules: a video only from YouTube, Vimeo or an .mp4 / .webm file, a picture never an SVG or a
@@ -149,6 +162,7 @@ export function parseImportStory(value: unknown): ParsedLine {
     slug: slugify(typeof value.slug === 'string' ? value.slug : '') || slugify(en.title) || `story-${slugify(recordId) || 'imported'}`,
     category,
     tags: importTags(value.tags),
+    entities: importEntities(value.companies, value.products),
     publishedAt,
     score: typeof value.score === 'number' && Number.isFinite(value.score) ? value.score : null,
     sources,
