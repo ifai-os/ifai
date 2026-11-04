@@ -8,6 +8,7 @@ import { useReaderTimeZone, useReaderToday } from '@/components/local-time'
 import { Link } from '@/i18n/navigation'
 import { dateOfKey, groupByDay } from '@/lib/local-time'
 
+import { hasClockTime, storyDayKey } from '../../date-only'
 import type { StoryItem } from '../story-item'
 import { storyHref } from '../list-params'
 
@@ -31,13 +32,15 @@ export function TodayHeadlines({ stories, serverToday }: TodayHeadlinesProps) {
   const format = useFormatter()
   const timeZone = useReaderTimeZone()
   const today = useReaderToday(serverToday)
-  const groups = groupByDay(stories, (story) => story.publishedAt, timeZone)
+  const groups = groupByDay(stories, (story) => story.publishedAt, timeZone, storyDayKey)
   const group = groups.find((item) => item.key === today) ?? groups[0] ?? null
   const shown = group ? group.items.slice(0, headlinesShown) : []
 
   let meta = t('dailyEmpty')
-  if (group && group.key === today) {
-    const time = format.dateTime(new Date(group.items[0].publishedAt), { hour: 'numeric', minute: '2-digit', timeZone })
+  // The newest story with a time of day; one that only knows its date has none to show.
+  const timed = group?.items.find((story) => hasClockTime(story.publishedAt))
+  if (group && group.key === today && timed) {
+    const time = format.dateTime(new Date(timed.publishedAt), { hour: 'numeric', minute: '2-digit', timeZone })
     meta = t('dailyMeta', { count: group.items.length, time })
   } else if (group) {
     const date = format.dateTime(group.date, { month: 'long', day: 'numeric', timeZone: 'UTC' })

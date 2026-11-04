@@ -1103,6 +1103,7 @@
     "categoryTitle": "{category} · 데일리",
     "categoryWeek": "최근 7일 소식 {count}개",
     "categoryUpdated": "최근 업데이트 {when, select, today {{time}} yesterday {어제 {time}} other {{date} {time}}}",
+    "categoryUpdatedOn": "최근 업데이트 {date}",
     "pageTitle": "{title} · {page}페이지",
     "pages": "페이지 이동",
     "filterLabel": "카테고리로 필터",

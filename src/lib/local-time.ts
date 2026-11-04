@@ -31,14 +31,29 @@ export function dateOfKey(key: string): Date {
 
 export type DayGroup<T> = { key: string; date: Date; items: T[] }
 
-/** Splits items (newest first) into runs that share a calendar date in the time zone. */
-export function groupByDay<T>(items: readonly T[], instantOf: (item: T) => string | Date, timeZone: string): DayGroup<T>[] {
+/**
+ * Splits items (newest first) into groups that share a calendar date in the time zone, in the
+ * order the dates first appear. `dayOf` can put an item on another day than its instant's (a
+ * story that only knows its date, modules/daily/date-only.ts); it joins that day's group.
+ */
+export function groupByDay<T>(
+  items: readonly T[],
+  instantOf: (item: T) => string | Date,
+  timeZone: string,
+  dayOf: (instant: string | Date, timeZone: string) => string = (instant, zone) => dayKey(new Date(instant), zone),
+): DayGroup<T>[] {
   const groups: DayGroup<T>[] = []
+  const byKey = new Map<string, DayGroup<T>>()
   for (const item of items) {
-    const key = dayKey(new Date(instantOf(item)), timeZone)
-    const last = groups[groups.length - 1]
-    if (last && last.key === key) last.items.push(item)
-    else groups.push({ key, date: dateOfKey(key), items: [item] })
+    const key = dayOf(instantOf(item), timeZone)
+    const found = byKey.get(key)
+    if (found) {
+      found.items.push(item)
+      continue
+    }
+    const group = { key, date: dateOfKey(key), items: [item] }
+    byKey.set(key, group)
+    groups.push(group)
   }
   return groups
 }
