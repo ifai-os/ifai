@@ -8,14 +8,16 @@ import { storyCategories } from '../categories'
 import { readSnapshot } from '../poster/snapshot'
 import { DAILY_CACHE_TAG } from '../review/cache'
 import { listHref, posterHref, storyHref } from './list-params'
+import { tagAndTopicPages } from './sitemap-pages'
 
 /**
- * The daily pages in the sitemap: the list, its categories, generated posters and every
- * published story, newest first. Same visitor access rules and cache tag as ./data.ts, so a
+ * The daily pages in the sitemap: the list, its categories, the industry tags that have stories,
+ * generated posters, every published story (newest first) and the topic pages of two stories or
+ * more (./sitemap-pages.ts). Same visitor access rules and cache tag as ./data.ts, so a
  * withdrawn story leaves the sitemap when it leaves the pages.
  */
 export const dailySitemap = cached(
-  async (): Promise<{ pages: SitemapPage[]; stories: SitemapPage[] }> => {
+  async (): Promise<{ pages: SitemapPage[]; stories: SitemapPage[]; topics: SitemapPage[] }> => {
     const payload = await getPayload({ config })
     const [stories, posters] = await Promise.all([
       payload.find({
@@ -24,7 +26,7 @@ export const dailySitemap = cached(
         sort: '-publishedAt',
         pagination: false,
         depth: 0,
-        select: { slug: true, publishedAt: true, approvedAt: true, correctedAt: true },
+        select: { slug: true, publishedAt: true, approvedAt: true, correctedAt: true, tags: true, entities: true },
         overrideAccess: false,
       }),
       payload.find({
@@ -40,11 +42,15 @@ export const dailySitemap = cached(
     // A page changes when its story goes up, which for a story added late is long after the news's own time.
     const upAt = (story: (typeof stories.docs)[number]) => story.approvedAt ?? story.publishedAt
     const newestStory = stories.docs.map(upAt).filter(Boolean).sort().at(-1) ?? null
+    const { tags, topics } = tagAndTopicPages(
+      stories.docs.map((story) => ({ upAt: story.correctedAt ?? upAt(story), tags: story.tags, entities: story.entities })),
+    )
 
     return {
       pages: [
         { path: listHref(), lastModified: newestStory },
         ...storyCategories.map((category) => ({ path: listHref({ category }) })),
+        ...tags,
         // A poster whose stories were all withdrawn has no page (data.ts findPoster).
         ...posters.docs.flatMap((poster) => {
           const snapshot = readSnapshot(poster.snapshot)
@@ -52,8 +58,9 @@ export const dailySitemap = cached(
         }),
       ],
       stories: stories.docs.map((story) => ({ path: storyHref(story.slug), lastModified: story.correctedAt ?? upAt(story) })),
+      topics,
     }
   },
-  ['daily-sitemap'],
+  ['daily-sitemap', 'tags-topics'],
   { tags: [DAILY_CACHE_TAG], revalidate: 3600 },
 )

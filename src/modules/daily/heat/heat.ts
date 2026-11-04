@@ -11,12 +11,15 @@ export type HeatRun = { events: number; stories: number; published: number }
 
 /**
  * Events whose heat may be above zero now or 6 hours ago: seen in the last 54 hours, with heat
- * left over from the last run, or with a report a hot source discussed in that time.
+ * left over from the last run, or with a report a hot source discussed in that time. Also the
+ * events of stories that still show heat, so it fades on the story too even when its event has
+ * none or is gone (2026-11-04: stories with frozen heat, the preview's samples among them, sat in
+ *「48 小时热门」for good).
  */
 export async function activeEventIds(now = new Date()): Promise<number[]> {
-  const { db } = await getDb()
+  const { payload, db } = await getDb()
   const since = new Date(now.getTime() - HEAT_LOOKBACK_MS)
-  const [recent, discussed] = await Promise.all([
+  const [recent, discussed, heated] = await Promise.all([
     db
       .select({ id: events.id })
       .from(events)
@@ -26,8 +29,11 @@ export async function activeEventIds(now = new Date()): Promise<number[]> {
       .from(eventItems)
       .innerJoin(hotSignals, eq(hotSignals.itemId, eventItems.itemId))
       .where(and(gte(hotSignals.postedAt, since), ne(eventItems.relation, 'roundup'))),
+    payload
+      .find({ collection: 'stories', where: { heat: { greater_than: 0 } }, pagination: false, depth: 0, select: { eventId: true } })
+      .then(({ docs }) => docs.map((doc) => ({ id: doc.eventId }))),
   ])
-  return [...new Set([...recent, ...discussed].map((row) => row.id))].sort((a, b) => a - b)
+  return [...new Set([...recent, ...discussed, ...heated].map((row) => row.id))].sort((a, b) => a - b)
 }
 
 /**

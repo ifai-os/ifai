@@ -15,6 +15,7 @@ import { listHref, storyHref } from '../list-params'
 import { SpreadIndex } from './spread-index'
 import { StoryFigure } from './story-media'
 import { EntityList, SimilarStories, TagList, TopicTrack } from './story-related'
+import { StoryPublished } from './story-time'
 
 /** What the page's follow buttons are for: its tags, and its companies and products (the topic is one of them). */
 function followTargets(story: StoryDetail): FollowTarget[] {
@@ -78,7 +79,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
               </h1>
               <p className="flex flex-wrap gap-x-3 gap-y-1 text-meta text-ink-4">
                 <span>
-                  {t('publishedAt')} <LocalTime iso={story.publishedAt} zone />
+                  {t('publishedAt')} <StoryPublished iso={story.publishedAt} />
                 </span>
                 {story.correctedAt && (
                   <span>

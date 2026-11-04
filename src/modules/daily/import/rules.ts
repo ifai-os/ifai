@@ -5,6 +5,7 @@
  */
 import { storyCategories, type StoryCategory } from '../categories'
 import { storyEntities, type StoryEntity } from '../entities'
+import { peakHeat, type HeatSignal } from '../heat/rules'
 import { parseVideo, usableImage, videoUrl, type FoundMedia } from '../media'
 import type { SourceRole } from '../story-fields'
 import { maxStoryTags, storyTags, type StoryTag } from '../tags'
@@ -138,6 +139,24 @@ export function importMedia(value: unknown, sources: readonly ImportSource[]): I
 export function sameMedia(a: FoundMedia | null | undefined, b: FoundMedia | null | undefined): boolean {
   const key = (media: FoundMedia | null | undefined) => [media?.image ?? '', media?.video ? videoUrl(media.video) : ''].join(' ')
   return key(a) === key(b)
+}
+
+/**
+ * 传播指数 of an imported story (2026-11-04 站长反馈导入的新闻没有): the highest heat its listed
+ * sources give it by the heat rules (../heat/rules.ts), each site counted once at the time it
+ * published (else the story's), as if the site had collected them. The site holds only the
+ * original as a report, and the hourly heat job looks back 54 hours, so an older story would
+ * otherwise never have one.
+ */
+export function importHeatPeak(sources: readonly ImportSource[], publishedAt: string): number {
+  const sites = new Map<string, number>()
+  const signals: HeatSignal[] = sources.map((source) => {
+    const site = siteOf(source.url) ?? source.url
+    if (!sites.has(site)) sites.set(site, sites.size)
+    const at = new Date(source.publishedAt ?? publishedAt)
+    return { sourceId: sites.get(site)!, at, knownAt: at, weight: 1 }
+  })
+  return peakHeat(signals)
 }
 
 /** Check one exported story; the error says what is wrong in words the pipeline's log can show. */

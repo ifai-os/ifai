@@ -10,7 +10,8 @@ const headlineLength = 110
 
 /**
  * A story's page as a NewsArticle, plus its breadcrumb trail (首页 › 日报 › 分类 › 标题). Dates
- * are the ones the page shows: when the editor published it, and the last correction.
+ * are the ones the page shows: when the editor published it, and the last correction. The image
+ * is the story's own picture (or its video's cover), else the site's share picture.
  */
 export function storyJsonLd(
   story: StoryDetail,
@@ -30,7 +31,7 @@ export function storyJsonLd(
     mainEntityOfPage: url,
     datePublished: story.publishedAt,
     dateModified: story.correctedAt ?? story.publishedAt,
-    image: [absoluteUrl(defaultShareImage(locale).url)],
+    image: [absoluteUrl(story.media?.picture?.url ?? defaultShareImage(locale).url)],
     articleSection: labels.category,
     author: siteOrganization(),
     publisher: siteOrganization(),
