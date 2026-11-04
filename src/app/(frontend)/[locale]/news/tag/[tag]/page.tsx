@@ -2,8 +2,12 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
+import { ListNavigationProvider } from '@/components/states/list-navigation'
 import { isLocale } from '@/i18n/config'
-import { DailyList } from '@/modules/daily/public/components/daily-list'
+import { authProviders } from '@/lib/auth/providers'
+import { dayKey, serverTimeZone } from '@/lib/local-time'
+import { TagPageView } from '@/modules/daily/public/components/tag-page'
+import { getTagPage } from '@/modules/daily/public/data'
 import { readPage, type SearchParams } from '@/modules/daily/public/list-params'
 import { listMetadata } from '@/modules/daily/public/metadata'
 import { isStoryTag } from '@/modules/daily/tags'
@@ -26,6 +30,13 @@ export default async function DailyTagPage({ params, searchParams }: Props) {
   setRequestLocale(locale)
   const page = readPage(await searchParams)
   if (!isStoryTag(tag) || !page) notFound()
+  const tagPage = await getTagPage(tag, page, locale)
+  // Past the last page: answer 404 rather than an empty list under a new address.
+  if (!tagPage) notFound()
 
-  return <DailyList locale={locale} tag={tag} page={page} />
+  return (
+    <ListNavigationProvider>
+      <TagPageView page={tagPage} serverToday={dayKey(new Date(), serverTimeZone)} signIn={authProviders()} />
+    </ListNavigationProvider>
+  )
 }

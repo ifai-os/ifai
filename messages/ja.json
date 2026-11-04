@@ -1119,6 +1119,8 @@
     "emptyBody": "最初のニュースを確認中です。まもなくここに表示されます。",
     "emptyCategoryTitle": "このカテゴリにはまだニュースがありません",
     "emptyCategoryBody": "他のカテゴリを見るか、しばらくしてからご覧ください。",
+    "emptyTagTitle": "このタグのニュースはまだありません",
+    "emptyTagBody": "すべてのニュースを見るか、しばらくしてからまたどうぞ。",
     "allStories": "すべてのニュースを見る",
     "breadcrumb": "パンくずリスト",
     "publishedAt": "公開",
@@ -1150,7 +1152,8 @@
     "entities": "関連する企業と製品",
     "entityKinds": {
       "company": "企業",
-      "product": "製品"
+      "product": "製品",
+      "tag": "業界タグ"
     },
     "appPage": "アプリページ",
     "topicTitle": "#{name} · デイリー",

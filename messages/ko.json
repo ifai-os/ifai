@@ -1119,6 +1119,8 @@
     "emptyBody": "첫 소식을 확인하고 있어요. 곧 여기에 표시돼요.",
     "emptyCategoryTitle": "이 카테고리에는 아직 소식이 없어요",
     "emptyCategoryBody": "다른 카테고리를 보거나 잠시 후 다시 확인해 주세요.",
+    "emptyTagTitle": "이 태그의 소식이 아직 없습니다",
+    "emptyTagBody": "전체 소식을 보거나 잠시 후 다시 확인해 주세요.",
     "allStories": "전체 소식 보기",
     "breadcrumb": "현재 위치",
     "publishedAt": "게시",
@@ -1150,7 +1152,8 @@
     "entities": "관련 기업과 제품",
     "entityKinds": {
       "company": "기업",
-      "product": "제품"
+      "product": "제품",
+      "tag": "업계 태그"
     },
     "appPage": "앱 페이지",
     "topicTitle": "#{name} · 데일리",

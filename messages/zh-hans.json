@@ -1119,6 +1119,8 @@
     "emptyBody": "第一批新闻正在审核，很快会出现在这里。",
     "emptyCategoryTitle": "这个分类还没有新闻",
     "emptyCategoryBody": "看看其他分类，或者过一会儿再来。",
+    "emptyTagTitle": "这个标签还没有新闻",
+    "emptyTagBody": "看看全部新闻，或者过一会儿再来。",
     "allStories": "查看全部新闻",
     "breadcrumb": "当前位置",
     "publishedAt": "首次发布",
@@ -1150,7 +1152,8 @@
     "entities": "涉及的公司与产品",
     "entityKinds": {
       "company": "公司",
-      "product": "产品"
+      "product": "产品",
+      "tag": "行业标签"
     },
     "appPage": "应用页",
     "topicTitle": "#{name} · 日报",

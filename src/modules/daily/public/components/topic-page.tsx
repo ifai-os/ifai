@@ -19,7 +19,7 @@ import { initialOf } from './story-related'
 /**
  * A company's or product's topic page (「IFAI 公司与产品话题页」board; docs/specs/daily.md
  * 「公司与产品的话题页」「关注」): the round tile, #name, what it is, how many stories and followers,
- * and「+ 关注」, then the stories about it as cards under their times, newest first. Inside
+ * and「+ 关注」, then the stories about it as cards under their days, newest first. Inside
  * `ListNavigationProvider` (the route page), earlier pages load in place; the follow state is
  * read in the browser.
  */
@@ -116,8 +116,14 @@ export function TopicPageView({ topic, serverToday, signIn }: { topic: TopicPage
         )}
         <ListResults skeleton={<StoryCardsSkeleton count={Math.min(topic.stories.length, 6)} />}>
           <ol className="flex flex-col gap-7">
-            {topic.stories.map((story) => (
-              <StoryCard key={story.id} story={story} serverToday={serverToday} category={names(story.category)} />
+            {topic.stories.map((story, index) => (
+              <StoryCard
+                key={story.id}
+                story={story}
+                serverToday={serverToday}
+                category={names(story.category)}
+                previousIso={topic.stories[index - 1]?.publishedAt}
+              />
             ))}
           </ol>
         </ListResults>

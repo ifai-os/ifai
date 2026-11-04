@@ -1119,6 +1119,8 @@
     "emptyBody": "第一批新聞正在審核，很快會出現在這裡。",
     "emptyCategoryTitle": "這個分類還沒有新聞",
     "emptyCategoryBody": "看看其他分類，或者過一會兒再來。",
+    "emptyTagTitle": "這個標籤還沒有新聞",
+    "emptyTagBody": "看看全部新聞，或者過一會兒再來。",
     "allStories": "檢視全部新聞",
     "breadcrumb": "目前位置",
     "publishedAt": "首次發布",
@@ -1150,7 +1152,8 @@
     "entities": "涉及的公司與產品",
     "entityKinds": {
       "company": "公司",
-      "product": "產品"
+      "product": "產品",
+      "tag": "行業標籤"
     },
     "appPage": "應用頁",
     "topicTitle": "#{name} · 日報",

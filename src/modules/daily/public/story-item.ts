@@ -79,6 +79,20 @@ export type TopicPage = {
 }
 
 /**
+ * An industry tag's page (docs/specs/daily.md「行业标签」): its published stories, newest first,
+ * 20 to a page, laid out as a topic page.
+ */
+export type TagPage = {
+  tag: StoryTag
+  total: number
+  page: number
+  pages: number
+  stories: StoryItem[]
+  /** Stories older than this page's. */
+  earlier: number
+}
+
+/**
  * A category page (docs/specs/daily.md「分类与分类页」): one page of the category's published
  * stories, newest first, and the banner's numbers.
  */

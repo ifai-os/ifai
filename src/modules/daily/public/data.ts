@@ -32,10 +32,11 @@ import {
   type StoryDetail,
   type StoryEntityItem,
   type StoryItem,
+  type TagPage,
   type TopicPage,
 } from './story-item'
 
-export type { CategoryPage, HotStory, StoryDetail, StoryEntityItem, StoryItem, StorySource, StoryTopic, TopicPage } from './story-item'
+export type { CategoryPage, HotStory, StoryDetail, StoryEntityItem, StoryItem, StorySource, StoryTopic, TagPage, TopicPage } from './story-item'
 export { isStoryCategory } from './story-item'
 
 /**
@@ -57,6 +58,8 @@ export const similarShown = 3
 const similarMin = 0.6
 /** A topic page lists this many stories at a time. */
 export const topicPageSize = 20
+/** An industry tag's page, laid out as a topic page (站长, 2026-11-04). */
+export const tagPageSize = 20
 /** And a category page. */
 export const categoryPageSize = 20
 /** A category page's banner counts the stories of this long. */
@@ -301,6 +304,26 @@ const findTopicPage = cached(
   cacheOptions,
 )
 
+const findTagPage = cached(
+  async (tag: StoryTag, page: number) => {
+    const result = await (await payload()).find({
+      collection: 'stories',
+      where: { and: [published, { tags: { contains: tag } }] },
+      sort: '-publishedAt',
+      page,
+      limit: tagPageSize,
+      locale: 'all',
+      depth: 1,
+      populate,
+      select,
+      overrideAccess: false,
+    })
+    return { docs: result.docs as unknown as RawStory[], total: result.totalDocs, pages: result.totalPages }
+  },
+  [shape, 'daily-tag-page'],
+  cacheOptions,
+)
+
 // Published apps by their compared names (name and aliases), so a topic page can say which app it is.
 const findTopicApps = cached(
   async () => {
@@ -532,6 +555,23 @@ export async function getCategoryPage(category: StoryCategory, page: number, loc
     stories: result.docs.map((doc) => toItem(doc, locale)),
     week: summary.week,
     latest: summary.latest,
+  }
+}
+
+/**
+ * An industry tag's page (docs/specs/daily.md「行业标签」): one page of its published stories,
+ * newest first; null past the last page. A tag without stories yet still has a page (its empty state).
+ */
+export async function getTagPage(tag: StoryTag, page: number, locale: Locale): Promise<TagPage | null> {
+  const result = await findTagPage(tag, page)
+  if (page > 1 && result.docs.length === 0) return null
+  return {
+    tag,
+    total: result.total,
+    page,
+    pages: result.pages,
+    stories: result.docs.map((doc) => toItem(doc, locale)),
+    earlier: Math.max(0, result.total - (page - 1) * tagPageSize - result.docs.length),
   }
 }
 

@@ -1119,6 +1119,8 @@
     "emptyBody": "The first stories are being checked and will appear here soon.",
     "emptyCategoryTitle": "No stories in this category yet",
     "emptyCategoryBody": "Try another category, or check back later.",
+    "emptyTagTitle": "No stories with this tag yet",
+    "emptyTagBody": "See all the news, or come back a little later.",
     "allStories": "See all stories",
     "breadcrumb": "Breadcrumb",
     "publishedAt": "Published",
@@ -1150,7 +1152,8 @@
     "entities": "Companies and products",
     "entityKinds": {
       "company": "Company",
-      "product": "Product"
+      "product": "Product",
+      "tag": "Industry tag"
     },
     "appPage": "App page",
     "topicTitle": "#{name} · Daily",

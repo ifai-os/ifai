@@ -1,9 +1,10 @@
 import { Link } from '@/i18n/navigation'
 
+import { dateOnlyDay } from '../../date-only'
 import type { StoryItem } from '../story-item'
 import { listHref, storyHref } from '../list-params'
 import { SpreadIndex } from './spread-index'
-import { StoryTime } from './story-time'
+import { StoryClock, StoryDay } from './story-time'
 
 const pillShape = 'inline-flex h-10 items-center rounded-pill border border-line bg-bg px-6 text-meta'
 
@@ -18,20 +19,23 @@ type StoryCardProps = {
   serverToday: string
   /** The story's category by name; left out on its own category's page. */
   category?: string
+  /** When the story before it on the page went up: the day shows once, above the first story of each day. */
+  previousIso?: string
 }
 
 /**
  * One story on a topic or category page (「IFAI 公司与产品话题页」「IFAI 日报 · 分类页」boards): the
- * reader's local day and time, then a white card with the reach index, the title, at most
- * three lines of summary.
+ * reader's local day above the first story of each day, then a white card with the time (none
+ * when the story only knows its date), the category, the reach index, the title, at most three lines of summary.
  */
-export function StoryCard({ story, serverToday, category }: StoryCardProps) {
+export function StoryCard({ story, serverToday, category, previousIso }: StoryCardProps) {
   return (
     <li className="flex flex-col gap-2.5">
-      <StoryTime iso={story.publishedAt} serverToday={serverToday} />
+      <StoryDay iso={story.publishedAt} previousIso={previousIso} serverToday={serverToday} />
       <article className="flex flex-col gap-3 rounded-card bg-bg px-5 py-5 md:px-7 md:py-6">
-        {(category || story.spread > 0) && (
+        {(!dateOnlyDay(story.publishedAt) || category || story.spread > 0) && (
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-4">
+            <StoryClock iso={story.publishedAt} className="font-medium text-accent-ink tabular-nums" />
             {category && (
               <Link href={listHref({ category: story.category })} className="hover:text-ink">
                 {category}
