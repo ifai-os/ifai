@@ -23,6 +23,7 @@ import {
   bodyOf,
   onePerEvent,
   pickHeadline,
+  recentPicks,
   toHot,
   toItem,
   type CategoryPage,
@@ -268,6 +269,20 @@ describe('the hottest events', () => {
     expect(html).toContain('href="/en/news/story-3"')
     // The first three ranks stand out.
     expect(html.match(/tabular-nums text-accent/g)).toHaveLength(3)
+  })
+
+  it('fills the column from the newest stories when nothing has heat, by reach index', () => {
+    const at = (day: number) => `2026-10-${day}T08:00:00Z`
+    const stories = [
+      hot({ id: 1, eventId: 1, spread: 0, publishedAt: at(31) }),
+      hot({ id: 2, eventId: 2, spread: 45, publishedAt: at(29) }),
+      hot({ id: 3, eventId: 2, spread: 45, publishedAt: at(30) }),
+      hot({ id: 4, eventId: 3, spread: 0, publishedAt: at(30) }),
+    ]
+    expect(recentPicks(stories, 3).map((item) => item.id)).toEqual([3, 1, 4])
+    const html = render(<HotList stories={stories.slice(0, 1)} recent />)
+    expect(html).toContain(`>${en.daily.recentHotTitle}</h2>`)
+    expect(html).not.toContain(en.daily.hotTitle)
   })
 
   it('picks the top story, never leaving it empty while something is published', () => {

@@ -16,7 +16,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 bg-bg transition-shadow data-lined:shadow-divider">
       <HeaderLine />
-      <div className="mx-auto flex min-h-14 max-w-nav flex-wrap items-center justify-between gap-x-6 px-4">
+      <div className="mx-auto flex min-h-14 max-w-content flex-wrap items-center justify-between gap-x-6 px-4">
         <Link
           href={homeHref()}
           aria-label={t('header.home')}

@@ -24,6 +24,7 @@ import {
   entitiesOf,
   onePerEvent,
   pickHeadline,
+  recentPicks,
   sourcesOf,
   toHot,
   toItem,
@@ -807,6 +808,22 @@ export async function topicNames(keys: readonly string[]): Promise<Map<string, T
 /** The five events of the last 48 hours with the highest reach index (传播指数), one story each (the newest of its event). */
 export async function hotStories(locale: Locale): Promise<HotStory[]> {
   return onePerEvent(await findHot(), hotShown).map((doc) => toHot(doc, locale))
+}
+
+/** How many of the newest stories「近期热门」picks from: a few days' worth. */
+const recentPool = 40
+
+/**
+ * The list beside the stories:「48 小时热门」, or when nothing has heat in the last 48 hours,
+ *「近期热门」from the newest stories (recentPicks), so the column doesn't vanish on a quiet day
+ * (站长, 2026-11-04, after the preview's imported stories lost their frozen heat). Empty only
+ * when nothing is published.
+ */
+export async function sideHotStories(locale: Locale): Promise<{ stories: HotStory[]; recent: boolean }> {
+  const hot = onePerEvent(await findHot(), hotShown)
+  if (hot.length) return { stories: hot.map((doc) => toHot(doc, locale)), recent: false }
+  const latest = (await findLatest(recentPool)).map((doc) => toHot(doc, locale))
+  return { stories: recentPicks(latest, hotShown), recent: true }
 }
 
 /**

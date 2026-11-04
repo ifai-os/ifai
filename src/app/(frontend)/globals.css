@@ -143,7 +143,6 @@
   --shadow-raised: 0 1px 3px rgb(0 0 0 / 0.08); /* the picked option in a segmented control */
 
   /* ── Layout widths ─────────────────────────────────── */
-  --container-nav: 1232px;
   --container-content: 1180px;
   --container-read: 680px;
   --container-side: 300px;

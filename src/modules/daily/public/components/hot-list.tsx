@@ -12,14 +12,18 @@ const badges: Record<HeatTrend, string> = {
   new: 'bg-accent-soft text-tile-7-ink',
 }
 
-/** 「48 小时热门」(「IFAI 日报（新版）」board): one story per event, highest reach index first, marked when rising or new. */
-export function HotList({ stories }: { stories: HotStory[] }) {
+/**
+ * 「48 小时热门」(「IFAI 日报（新版）」board): one story per event, highest reach index first, marked
+ * when rising or new. `recent`: nothing has heat in the last 48 hours, so these are the newest
+ * stories by reach index, under「近期热门」(../data.ts sideHotStories).
+ */
+export function HotList({ stories, recent = false }: { stories: HotStory[]; recent?: boolean }) {
   const t = useTranslations('daily')
 
   return (
     <section aria-labelledby="hot-title" className="flex flex-col">
       <h2 id="hot-title" className="pb-2 text-title">
-        {t('hotTitle')}
+        {t(recent ? 'recentHotTitle' : 'hotTitle')}
       </h2>
       <ol>
         {stories.map((story, index) => (
