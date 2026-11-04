@@ -16,6 +16,7 @@ import { TopicPageView } from '@/modules/daily/public/components/topic-page'
 import { listHref, readPage, readTopicKey, storyHref, topicHref } from '@/modules/daily/public/list-params'
 import { renderFeed } from '@/modules/daily/public/rss'
 import { storyCategoryOf } from '@/modules/daily/categories'
+import { dateOnlyDay, hasClockTime, storyDayKey } from '@/modules/daily/date-only'
 import {
   bodyBlocks,
   bodyOf,
@@ -79,6 +80,31 @@ describe('calendar days in a time zone', () => {
       ['2026-10-23', [1]],
       ['2026-10-22', [2]],
       ['2026-10-21', [3]],
+    ])
+  })
+
+  it('lists a story that only knows its date under that date, in any zone', () => {
+    // Midnight in Los Angeles (the editors' table) and midnight UTC (a feed's date) are dates alone.
+    expect(dateOnlyDay('2026-10-31T07:00:00Z')).toBe('2026-10-31')
+    expect(dateOnlyDay('2025-01-19T08:00:00Z')).toBe('2025-01-19')
+    expect(dateOnlyDay('2026-10-31T00:00:00.000Z')).toBe('2026-10-31')
+    expect(dateOnlyDay('2026-10-30T05:02:52Z')).toBeNull()
+    expect(dateOnlyDay('2026-10-31T07:00:21Z')).toBeNull()
+    expect(dateOnlyDay('2026-10-31T16:00:00Z')).toBeNull()
+    expect(hasClockTime('2026-10-31T07:00:00Z')).toBe(false)
+    expect(storyDayKey('2026-10-31T00:00:00Z', 'America/Los_Angeles')).toBe('2026-10-31')
+    expect(storyDayKey('2026-10-31T00:30:00Z', 'America/Los_Angeles')).toBe('2026-10-30')
+
+    const items = [
+      story({ id: 1, publishedAt: '2026-10-31T03:00:00Z' }),
+      story({ id: 2, publishedAt: '2026-10-31T00:00:00Z' }),
+      story({ id: 3, publishedAt: '2026-10-30T22:00:00Z' }),
+    ]
+    // In Los Angeles 1 and 3 fall on the 30th; 2 stays on the 31st without splitting the 30th in two.
+    const groups = groupByDay(items, (item) => item.publishedAt, 'America/Los_Angeles', storyDayKey)
+    expect(groups.map((group) => [group.key, group.items.map((item) => item.id)])).toEqual([
+      ['2026-10-30', [1, 3]],
+      ['2026-10-31', [2]],
     ])
   })
 
@@ -192,6 +218,13 @@ describe('the daily feed', () => {
     expect(html).toContain('href="/en/news/story-2"')
     // The category leads to its page (站长, 2026-10-27).
     expect(html).toContain('href="/en/news/category/tools"')
+  })
+
+  it('shows no time for a story that only knows its date (站长, 2026-11-04: 「0:00」)', () => {
+    const html = render(<DailyFeed stories={[story({ id: 1, publishedAt: '2026-10-31T07:00:00Z' })]} serverToday="2026-11-04" />)
+    expect(html).not.toContain('dateTime="2026-10-31T07:00:00Z"')
+    expect(html).not.toContain('7:00 AM')
+    expect(html).toContain('href="/en/news/story-1"')
   })
 })
 
