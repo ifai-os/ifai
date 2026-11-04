@@ -18,7 +18,8 @@ export type StoryPicture = { url: string; width: number; height: number }
 
 /** The story's picture or video (docs/specs/daily.md「配图与视频」). A video's cover may be missing. */
 export type StoryMedia =
-  | { kind: 'image'; picture: StoryPicture; credit: string | null }
+  /** `generated`: drawn by a model because the story had none (「AI 配图」); the page says so instead of a credit. */
+  | { kind: 'image'; picture: StoryPicture; credit: string | null; generated: boolean }
   | { kind: 'video'; video: Video; picture: StoryPicture | null; credit: string | null }
 
 export type StoryItem = {
@@ -198,7 +199,10 @@ export function mediaOf(media: Story['media']): StoryMedia | null {
     const video = parseVideo(media.videoUrl)
     return video ? { kind: 'video', video, picture, credit } : null
   }
-  if (media.kind === 'image' && picture) return { kind: 'image', picture, credit }
+  if (media.kind === 'image' && picture) {
+    const generated = media.generated === true
+    return { kind: 'image', picture, credit: generated ? null : credit, generated }
+  }
   return null
 }
 

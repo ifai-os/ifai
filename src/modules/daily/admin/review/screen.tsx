@@ -807,7 +807,8 @@ export function ReviewScreen({ initial, initialStoryId }: Props) {
                       value={edits.media.videoUrl}
                     />
                   )}
-                  {edits.media.kind !== 'none' && (
+                  {edits.media.kind === 'image' && detail.mediaGenerated && <p className="daily-review__small">{t.editor.mediaGenerated}</p>}
+                  {edits.media.kind !== 'none' && !(edits.media.kind === 'image' && detail.mediaGenerated) && (
                     <input
                       aria-label={t.editor.mediaCredit}
                       className="daily-review__input"

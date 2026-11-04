@@ -1166,7 +1166,8 @@
     "feedTitle": "IFAI 데일리",
     "feedDescription": "출처를 확인한 AI 소식을 쉬운 요약과 함께 전해요.",
     "playVideo": "동영상 재생: {title}",
-    "imageCredit": "이미지: {name}"
+    "imageCredit": "이미지: {name}",
+    "imageGenerated": "AI 생성 이미지"
   },
   "poster": {
     "title": "AI 데일리 하이라이트",

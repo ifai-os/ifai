@@ -10,7 +10,7 @@ import { postgresReceiptStore } from './store'
 
 export * from './errors'
 export { DEFAULT_DAILY_BUDGET_USD, type AiResult, type XSearchOutput, type ContestImage, type ContestImageOutput, type ContestOutput, type UsageToday } from './client'
-export { contestPurposes, xSearchPurposes, EMBEDDING_DIMENSIONS, modelFor, purposes, type ContestPurpose, type Purpose, type XSearchPurpose } from './purposes'
+export { contestPurposes, imagePurposes, xSearchPurposes, EMBEDDING_DIMENSIONS, modelFor, purposes, type ContestPurpose, type ImagePurpose, type Purpose, type XSearchPurpose } from './purposes'
 export { untrusted } from './untrusted'
 
 let provider: ReturnType<typeof createOpenRouter> | undefined
@@ -39,7 +39,7 @@ function xaiProvider() {
 
 /**
  * Model calls for background jobs: `ai.object({ purpose, instructions, prompt, schema })`,
- * `ai.text(...)`, `ai.embed(...)`, `ai.xSearch(...)` (X through xAI), `ai.contest(...)` and `ai.contestImage(...)` (the model arena),
+ * `ai.text(...)`, `ai.embed(...)`, `ai.xSearch(...)` (X through xAI), `ai.contest(...)` and `ai.contestImage(...)` (the model arena), `ai.image(...)` (pictures for the site),
  * `ai.usageToday()`.
  * Pages never call models.
  */
@@ -50,6 +50,7 @@ export const ai: Ai = {
   xSearch: (call) => client().xSearch(call),
   contest: (call) => client().contest(call),
   contestImage: (call) => client().contestImage(call),
+  image: (call) => client().image(call),
   usageToday: () => client().usageToday(),
 }
 

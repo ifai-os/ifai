@@ -69,8 +69,10 @@ describe('choosing and showing a story’s media', () => {
 
   it('shows nothing without a picture or a playable video', () => {
     const image = { id: 1, alt: 'x', url: '/api/media/file/a.jpg', width: 1200, height: 630, updatedAt: '', createdAt: '' }
-    expect(mediaOf({ kind: 'image', image, credit: 'Maker' })).toEqual({ kind: 'image', picture: { url: image.url, width: 1200, height: 630 }, credit: 'Maker' })
+    expect(mediaOf({ kind: 'image', image, credit: 'Maker' })).toEqual({ kind: 'image', picture: { url: image.url, width: 1200, height: 630 }, credit: 'Maker', generated: false })
     expect(mediaOf({ kind: 'image', image: 1 })).toBeNull()
+    // An AI-drawn picture says so on the page instead of naming a publisher (「AI 配图」).
+    expect(mediaOf({ kind: 'image', image, credit: 'Maker', generated: true })).toMatchObject({ credit: null, generated: true })
     expect(mediaOf({ kind: 'video', videoUrl: 'https://youtu.be/dQw4w9WgXcQ' })).toEqual({
       kind: 'video',
       video: { provider: 'youtube', id: 'dQw4w9WgXcQ' },

@@ -107,6 +107,8 @@ export type ReviewDetail = {
   media: MediaInput
   /** The story's picture (a video's cover), for the preview; null when there is none. */
   mediaImage: { id: number; url: string } | null
+  /** The picture was drawn by a model (「AI 配图」). */
+  mediaGenerated: boolean
   texts: Partial<Record<RewrittenLocale | 'zh-Hant', LocaleText>>
   localeStatus: LocaleStatus
   hansHash: string

@@ -1166,7 +1166,8 @@
     "feedTitle": "IFAI Daily",
     "feedDescription": "AI news, checked against the sources, with a plain-language summary of each story.",
     "playVideo": "Play video: {title}",
-    "imageCredit": "Image: {name}"
+    "imageCredit": "Image: {name}",
+    "imageGenerated": "AI-generated image"
   },
   "poster": {
     "title": "Daily AI highlights",

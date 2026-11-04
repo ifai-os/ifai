@@ -157,10 +157,16 @@ export function StoryFigure({
           />
         </span>
       )}
-      {media.credit && (
+      {media.kind === "image" && media.generated ? (
         <figcaption className="text-small text-ink-4">
-          {t("imageCredit", { name: media.credit })}
+          {t("imageGenerated")}
         </figcaption>
+      ) : (
+        media.credit && (
+          <figcaption className="text-small text-ink-4">
+            {t("imageCredit", { name: media.credit })}
+          </figcaption>
+        )
       )}
     </figure>
   );

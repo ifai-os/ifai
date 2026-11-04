@@ -236,6 +236,24 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 - [ ] 没有配图的新闻不留空位；手机宽度下缩略图不挤压标题
 - [ ] 取图失败不影响新闻写作和发布
 
+## AI 配图
+
+2026-11-04 站长要求：没有配图的新闻（导入的旧闻、原文没图的新闻）用 Codex 或 Gemini 的出图模型画一张。之前写作用的免费账号被封过，这里只走付费的正式 API。
+
+**规则**
+
+1. **哪些新闻**：待审核和已发布、没有配图也没有视频的（`media.kind` 是「无」），建好 30 分钟以后（给导入的 `daily-import-media` 复制原图留时间），按发布时间新的先画。有视频没封面的不画。
+2. **一条只画一次**：回执的 `subject` 是 `stories:<id>`，已经画过（成功）或者三次都失败的不再画。站长把 AI 图去掉（点「无」）就是最终决定，不会再补；改了标题也不会重画。
+3. **风格**（提示词 `src/modules/daily/prompts/illustrate.ts`）：16:9 的扁平杂志插画，白底、黑灰线条和形状、一处品牌红 `#DA282A`，用符号和物件表达新闻讲的事。不放任何文字、数字、Logo、产品截图，不画能认出来的真人（人只画成没有五官的抽象人形），不画暴力、色情、吓人的内容。新闻的标题、摘要用 `untrusted()` 包起来，是数据不是指令。
+4. **标记**：图存进 `media`（线上在 R2），新闻的配图组 `generated` 为真（迁移 `story_media_generated`）。详情页图下写「AI 生成配图」，不写「图：…」；后台「审核一条」的配图下面写明是 AI 画的。图被换掉、配图改成「无」或视频时，`generated` 自动取消，真图不会被标成 AI 图。
+5. **模型和费用**：用途 `illustrate`（`ai.image`，经 OpenRouter，`OPENROUTER_API_KEY`），默认 `google/gemini-3.1-flash-image`，大约 0.08 美元一张；`AI_MODEL_ILLUSTRATE` 可以换成 `openai/gpt-5.4-image-2`（OpenAI）或别的出图模型。和别的调用一样记回执，受 `MODEL_CALLS_ENABLED` 和 `AI_DAILY_BUDGET_USD` 管，后台「模型用量」里叫「新闻配图（AI 生成）」。
+6. **开关和上限**：`STORY_ILLUSTRATIONS_ENABLED=true` 才画（默认关）；每天（上海时间）最多 `STORY_ILLUSTRATIONS_PER_DAY` 张，默认 30。
+
+**任务**
+
+- `daily-illustrate-sweep`：每 20 分钟（`5,25,45 * * * *`，或事件 `daily/illustrate.sweep`）找最多 5 条，不超过当天剩下的张数，排队 `daily/story.illustrate`。
+- `daily-illustrate-story`：画一条（`src/modules/daily/illustrate/`）。画之前和存之前都再查一次，这条新闻已经有了配图或视频就不动；已发布的刷新页面缓存。开关关着、预算用完时等下一轮。
+
 ## 列表里按分类筛选
 
 2026-10-27 站长定：日报列表左侧的分类点了在当前页筛选（`/news?category=<分类>`），头条、海报、右栏都不动，只换下面的新闻，「加载更多」也按这个分类接着翻。新闻行、卡片和详情页上的分类名仍然打开分类页（`/news/category/<分类>`，有底图和简介）。筛选的地址不进搜索引擎（`noindex, follow`），canonical 指向分类页；分类不存在时 404。分类页顶部那排分类按钮仍然在分类页之间切换。

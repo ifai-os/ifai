@@ -543,6 +543,10 @@ export interface Story {
      * Shown under the picture on the story page: "Image: …".
      */
     credit?: string | null;
+    /**
+     * Drawn by a model because the story had no picture. The story page says "AI-generated image" instead of the credit. Turns off when the picture is replaced.
+     */
+    generated?: boolean | null;
   };
   eventId: number;
   representativeItemId: number;
@@ -1684,6 +1688,7 @@ export interface StoriesSelect<T extends boolean = true> {
         videoUrl?: T;
         image?: T;
         credit?: T;
+        generated?: T;
       };
   eventId?: T;
   representativeItemId?: T;
