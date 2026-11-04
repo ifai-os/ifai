@@ -40,6 +40,15 @@ export const xSearchPurposes = {
   reach: 'grok-4.20-non-reasoning',
 } as const
 
+/**
+ * Purposes that draw a picture (`ai.image`): OpenRouter model IDs that can return images. Swap
+ * with AI_MODEL_<PURPOSE> like the rest, e.g. AI_MODEL_ILLUSTRATE=openai/gpt-5.4-image-2.
+ */
+export const imagePurposes = {
+  /** A story's illustration when it has no picture of its own (docs/specs/daily.md「AI 配图」). */
+  illustrate: 'google/gemini-3.1-flash-image',
+} as const
+
 export const embeddingPurposes = {
   /** Vectors for grouping similar reports (pgvector). */
   embed: 'openai/text-embedding-3-small',
@@ -55,9 +64,10 @@ export const contestPurposes = ['arena'] as const
 
 export type TextPurpose = keyof typeof textPurposes
 export type XSearchPurpose = keyof typeof xSearchPurposes
+export type ImagePurpose = keyof typeof imagePurposes
 export type EmbeddingPurpose = keyof typeof embeddingPurposes
 export type ContestPurpose = (typeof contestPurposes)[number]
-export type Purpose = TextPurpose | XSearchPurpose | EmbeddingPurpose
+export type Purpose = TextPurpose | XSearchPurpose | ImagePurpose | EmbeddingPurpose
 
 /**
  * Vector size of the default embedding model. The vector columns are created with this size,
@@ -65,7 +75,7 @@ export type Purpose = TextPurpose | XSearchPurpose | EmbeddingPurpose
  */
 export const EMBEDDING_DIMENSIONS = 1536
 
-const defaults: Record<Purpose, string> = { ...textPurposes, ...xSearchPurposes, ...embeddingPurposes }
+const defaults: Record<Purpose, string> = { ...textPurposes, ...xSearchPurposes, ...imagePurposes, ...embeddingPurposes }
 
 export const purposes = Object.keys(defaults) as Purpose[]
 

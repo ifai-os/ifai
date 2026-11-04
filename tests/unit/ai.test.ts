@@ -225,6 +225,20 @@ describe('ai client', () => {
     expect(broken.calls).toHaveLength(2)
   })
 
+  it('draws a site picture with the purpose model, the aspect ratio and the outside-data rule', async () => {
+    const png = Buffer.from('fake png').toString('base64')
+    const { ai, calls, options, prompts } = setup({ cost: 0.08, pictures: [{ mediaType: 'image/png', data: png }] })
+    const call = { purpose: 'illustrate' as const, instructions: 'Draw.', prompt: 'A chip.', aspectRatio: '16:9', subject: 'stories:7', keep: async () => 12 }
+    await expect(ai.image(call)).resolves.toMatchObject({ output: { image: 12 }, model: 'google/gemini-3.1-flash-image', reused: false })
+    expect(options[0]).toEqual({ openrouter: { modalities: ['image', 'text'], image_config: { aspect_ratio: '16:9' } } })
+    expect(JSON.stringify(prompts[0])).toContain('external_data')
+    await expect(ai.image(call)).resolves.toMatchObject({ output: { image: 12 }, reused: true })
+    expect(calls).toHaveLength(1)
+
+    const swapped = setup({ env: { AI_MODEL_ILLUSTRATE: 'openai/gpt-5.4-image-2' } })
+    await expect(swapped.ai.image(call)).resolves.toMatchObject({ output: { image: null }, model: 'openai/gpt-5.4-image-2' })
+  })
+
   it('embeds values with the embedding model', async () => {
     const { ai, calls } = setup()
     const result = await ai.embed({ purpose: 'embed', values: ['a', 'bb'] })

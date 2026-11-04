@@ -1,4 +1,4 @@
-import type { CollectionConfig, TextFieldSingleValidation } from "payload";
+import type { CollectionConfig, FieldHook, TextFieldSingleValidation } from "payload";
 
 import { syncHantFromHans } from "@/lib/i18n/hant-sync";
 
@@ -45,6 +45,30 @@ const validateVideoUrl: TextFieldSingleValidation = (
   return req?.i18n?.language === "en"
     ? "Paste a YouTube or Vimeo link, or the address of an .mp4 or .webm file."
     : "请贴 YouTube 或 Vimeo 的链接，或者 .mp4、.webm 视频文件的地址。";
+};
+
+const idOf = (image: unknown): number | null =>
+  image && typeof image === "object"
+    ? Number((image as { id: unknown }).id)
+    : typeof image === "number"
+      ? image
+      : null;
+
+/**
+ * Whether the picture was drawn by a model (docs/specs/daily.md「AI 配图」). Only the illustrate
+ * job sets it; it turns off by itself when the picture is replaced or the media taken off, so a
+ * real photo is never labelled as AI-drawn.
+ */
+const keepGenerated: FieldHook = ({ value, siblingData, originalDoc, context }) => {
+  if (context?.illustrated) return true;
+  const sibling = (siblingData ?? {}) as { kind?: string; image?: unknown };
+  const before = (originalDoc as { media?: { kind?: string; image?: unknown; generated?: boolean | null } } | undefined)?.media;
+  // An update that leaves the media alone carries none of these keys: fall back to what is stored.
+  const kind = "kind" in sibling ? sibling.kind : before?.kind;
+  const image = "image" in sibling ? sibling.image : before?.image;
+  if (kind !== "image" || !image) return false;
+  if (idOf(image) !== idOf(before?.image)) return false;
+  return typeof value === "boolean" ? value : Boolean(before?.generated);
 };
 
 const entityKindLabels: Record<EntityKind, { en: string; zh: string }> = {
@@ -413,6 +437,20 @@ export const Stories: CollectionConfig = {
             description: {
               en: 'Shown under the picture on the story page: "Image: …".',
               zh: "详情页图下显示「图：…」。",
+            },
+          },
+        },
+        {
+          name: "generated",
+          type: "checkbox",
+          defaultValue: false,
+          label: { en: "Drawn by AI", zh: "AI 生成" },
+          hooks: { beforeChange: [keepGenerated] },
+          admin: {
+            condition: (_, sibling) => sibling?.kind === "image",
+            description: {
+              en: 'Drawn by a model because the story had no picture. The story page says "AI-generated image" instead of the credit. Turns off when the picture is replaced.',
+              zh: "新闻没有配图时由模型画的。详情页图下写「AI 生成配图」，不写来源。换了图会自动取消。",
             },
           },
         },

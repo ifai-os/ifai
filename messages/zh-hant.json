@@ -1166,7 +1166,8 @@
     "feedTitle": "IFAI 日報",
     "feedDescription": "每條都核對過來源的 AI 新聞，配白話摘要。",
     "playVideo": "播放影片：{title}",
-    "imageCredit": "圖：{name}"
+    "imageCredit": "圖：{name}",
+    "imageGenerated": "AI 生成配圖"
   },
   "poster": {
     "title": "每日 AI 大事",

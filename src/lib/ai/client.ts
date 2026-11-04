@@ -12,7 +12,7 @@ import {
   ReceiptInFlightError,
 } from './errors'
 import { dailyBudgetUsd, MAX_ATTEMPTS, STALE_AFTER_MS } from './limits'
-import { modelFor, type ContestPurpose, type EmbeddingPurpose, type Purpose, type TextPurpose, type XSearchPurpose } from './purposes'
+import { modelFor, type ContestPurpose, type EmbeddingPurpose, type ImagePurpose, type Purpose, type TextPurpose, type XSearchPurpose } from './purposes'
 import { hashInput, type Receipt, type ReceiptStore, type ReceiptUsage } from './receipts'
 import { EXTERNAL_DATA_RULE } from './untrusted'
 
@@ -86,6 +86,22 @@ export type ContestImageCall = Omit<ContestCall, 'maxOutputTokens'> & { keep: (i
 
 /** The stored picture's ID; null when the model answered without one. */
 export type ContestImageOutput = { image: number | null }
+
+/**
+ * A picture for the site (purposes.ts `imagePurposes`): our instructions plus a prompt that wraps
+ * outside text in `untrusted()`. `keep` stores the first picture and returns its ID before the
+ * receipt is marked done, like `ContestImageCall`.
+ */
+export type ImageCall = {
+  purpose: ImagePurpose
+  instructions: string
+  prompt: string
+  /** Width:height the model is asked for, e.g. "16:9" (OpenRouter `image_config.aspect_ratio`). */
+  aspectRatio?: string
+  variant?: string
+  subject?: string
+  keep: (image: ContestImage) => Promise<number>
+}
 
 export type AiResult<T> = {
   output: T
@@ -348,5 +364,34 @@ export function createAi({ store, languageModel, embeddingModel, xSearchModel, e
     )
   }
 
-  return { text, object, embed, xSearch, contest, contestImage, usageToday }
+  /** A picture drawn for the site, e.g. a story's illustration (`imagePurposes`). */
+  function image(call: ImageCall): Promise<AiResult<ContestImageOutput>> {
+    return withReceipt(
+      call.purpose,
+      { kind: 'image', instructions: call.instructions, prompt: call.prompt, aspectRatio: call.aspectRatio, variant: call.variant },
+      call.subject,
+      async (model) => {
+        const result = await generateText({
+          model: languageModel(model),
+          instructions: `${call.instructions}\n\n${EXTERNAL_DATA_RULE}`,
+          prompt: call.prompt,
+          providerOptions: {
+            openrouter: { modalities: ['image', 'text'], ...(call.aspectRatio ? { image_config: { aspect_ratio: call.aspectRatio } } : {}) },
+          },
+        })
+        const picture = result.files.find((file) => file.mediaType.startsWith('image/'))
+        return {
+          output: { image: picture ? await call.keep({ data: picture.uint8Array, mediaType: picture.mediaType }) : null },
+          usage: {
+            inputTokens: result.usage.inputTokens ?? 0,
+            outputTokens: result.usage.outputTokens ?? 0,
+            costUsd: costOf(result.providerMetadata),
+          },
+        }
+      },
+      (stored) => z.object({ image: z.number().int().nullable() }).parse(stored),
+    )
+  }
+
+  return { text, object, embed, xSearch, contest, contestImage, image, usageToday }
 }

@@ -45,6 +45,7 @@ export async function loadReviewDetail(id: number, now = new Date()): Promise<Re
     sources,
     media: { kind: story.media?.kind ?? 'none', videoUrl: story.media?.videoUrl ?? '', credit: story.media?.credit ?? '' },
     mediaImage: image?.url ? { id: image.id, url: image.url } : null,
+    mediaGenerated: story.media?.generated === true,
     texts,
     localeStatus: localeStatusOf(story),
     hansHash: hansHash(hans),

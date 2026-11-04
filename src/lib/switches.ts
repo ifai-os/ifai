@@ -15,3 +15,6 @@ export const modelCallsEnabled = (env: Env = process.env) => on(env.MODEL_CALLS_
 
 /** DAILY_EMAIL_ENABLED: the daily email: the subscribe boxes, new subscriptions and the morning send. */
 export const dailyEmailEnabled = (env: Env = process.env) => on(env.DAILY_EMAIL_ENABLED)
+
+/** STORY_ILLUSTRATIONS_ENABLED: AI pictures for daily stories that have none (docs/specs/daily.md「AI 配图」). */
+export const storyIllustrationsEnabled = (env: Env = process.env) => on(env.STORY_ILLUSTRATIONS_ENABLED)
