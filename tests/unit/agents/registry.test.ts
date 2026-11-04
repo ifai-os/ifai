@@ -3,12 +3,29 @@ import { z } from 'zod'
 
 import { launchedOperations, operations } from '@/modules/agents/operations'
 import { readCursor, writeCursor } from '@/modules/agents/operations/news'
+import { isWrite, methodOf } from '@/modules/agents/operations/types'
 
 describe('the operations', () => {
-  it('have their own names, tools and paths', () => {
-    for (const key of ['name', 'tool', 'path'] as const) {
-      const values = operations.map((operation) => operation[key])
-      expect(new Set(values).size, key).toBe(values.length)
+  it('have their own names, tools, and methods and paths', () => {
+    for (const values of [
+      operations.map((operation) => operation.name),
+      operations.map((operation) => operation.tool),
+      operations.map((operation) => `${methodOf(operation)} ${operation.path}`),
+    ]) {
+      expect(new Set(values).size, values.join()).toBe(values.length)
+    }
+  })
+
+  it('write only with a read-and-write key, and read with GET (docs/specs/agents.md「写操作」)', () => {
+    for (const operation of operations) {
+      expect(isWrite(operation), operation.tool).toBe(operation.auth === 'write')
+      if (operation.creates) expect(methodOf(operation), operation.tool).toBe('POST')
+      if (operation.hints?.destructive) expect(methodOf(operation), operation.tool).toBe('DELETE')
+      // A write's body carries its fields; a DELETE has only its path, and a language.
+      if (methodOf(operation) === 'DELETE') {
+        const fields = Object.keys(operation.input.shape).filter((name) => !operation.path.includes(`{${name}}`))
+        expect(fields, operation.tool).toEqual(['lang'])
+      }
     }
   })
 
@@ -34,6 +51,10 @@ describe('the operations', () => {
     expect(tools(2)).toEqual(expect.arrayContaining(['list_articles', 'read_article', 'list_circles', 'circle_posts']))
     expect(tools(2)).not.toContain('model_rankings')
     expect(tools(3)).toContain('model_rankings')
+    // Saving and following are there from the start; posting comes with the circles.
+    expect(tools(1)).toEqual(expect.arrayContaining(['whoami', 'save', 'follow']))
+    for (const later of ['create_post', 'delete_post', 'react', 'report_post']) expect(tools(1)).not.toContain(later)
+    expect(tools(2)).toEqual(expect.arrayContaining(['create_post', 'delete_post', 'react', 'report_post']))
   })
 })
 

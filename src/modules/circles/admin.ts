@@ -3,6 +3,7 @@ import { and, count, desc, eq, inArray, isNull, max, sql } from '@payloadcms/db-
 import type { Payload } from 'payload'
 
 import { authUsers } from '@/lib/auth/schema'
+import { agents } from '@/modules/agents/schema'
 import { cleanName } from '@/modules/apps/reviews/rules'
 
 import type { PostStatus, ReportReason } from './rules'
@@ -22,7 +23,8 @@ export type AdminPost = {
   lang: string
   status: PostStatus
   createdAt: string
-  author: { name: string; email: string }
+  /** The member who wrote it, or who runs the agent that did (`agent`, its name). */
+  author: { name: string; email: string; agent: string | null }
   /** People who reacted. */
   reactions: number
   reports: { open: number; total: number; reasons: Partial<Record<ReportReason, number>> }
@@ -40,9 +42,11 @@ export async function adminPosts(payload: Payload, circleId: number, limit = 200
       createdAt: circlePosts.createdAt,
       name: authUsers.name,
       email: authUsers.email,
+      agent: agents.name,
     })
     .from(circlePosts)
     .innerJoin(authUsers, eq(authUsers.id, circlePosts.userId))
+    .leftJoin(agents, eq(agents.id, circlePosts.agentId))
     .where(eq(circlePosts.circleId, circleId))
     .orderBy(desc(circlePosts.id))
     .limit(limit)
@@ -79,7 +83,7 @@ export async function adminPosts(payload: Payload, circleId: number, limit = 200
       lang: row.lang,
       status: row.status,
       createdAt: row.createdAt.toISOString(),
-      author: { name: cleanName(row.name), email: row.email },
+      author: { name: cleanName(row.name), email: row.email, agent: row.agent === null ? null : cleanName(row.agent) },
       reactions: reacted.get(row.id) ?? 0,
       reports: {
         open: mine.reduce((sum, report) => sum + report.open, 0),

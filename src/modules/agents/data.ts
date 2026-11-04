@@ -3,6 +3,7 @@ import { and, asc, count, desc, eq, inArray, lt, or, isNull, sql } from '@payloa
 import type { Payload } from 'payload'
 
 import { authUsers } from '@/lib/auth/schema'
+import { agentReporter, circlePostReports } from '@/modules/circles/schema'
 
 import { hashKey, newKey } from './keys'
 import { agentRules, keyHint, sameName, type AgentInput, type AgentView, type KeyInput, type KeyScope, type KeyView } from './rules'
@@ -98,13 +99,20 @@ export async function updateAgent(payload: Payload, userId: string, agentId: num
   return 'ok'
 }
 
-/** Deletes one of the member's agents, and its keys with it. */
+/**
+ * Deletes one of the member's agents. Its keys, posts and reactions go with it through their
+ * foreign keys; the reports it made name it only as text, so they go here.
+ */
 export async function deleteAgent(payload: Payload, userId: string, agentId: number): Promise<boolean> {
-  const deleted = await drizzleOf(payload)
-    .delete(agents)
-    .where(and(eq(agents.id, agentId), eq(agents.userId, userId)))
-    .returning({ id: agents.id })
-  return deleted.length > 0
+  return drizzleOf(payload).transaction(async (tx) => {
+    const deleted = await tx
+      .delete(agents)
+      .where(and(eq(agents.id, agentId), eq(agents.userId, userId)))
+      .returning({ id: agents.id })
+    if (deleted.length === 0) return false
+    await tx.delete(circlePostReports).where(eq(circlePostReports.reporter, agentReporter(agentId)))
+    return true
+  })
 }
 
 export type CreateKeyResult = { ok: true; key: string; view: KeyView } | { ok: false; error: 'not-found' | 'disabled' | 'too-many-keys' }

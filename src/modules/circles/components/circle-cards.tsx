@@ -70,9 +70,24 @@ function CircleCard({ circle, stats, selected }: { circle: CircleView; stats: Ci
       </div>
       <div className="mt-auto flex items-center justify-between gap-2">
         {recent.length > 0 ? (
-          <span className="flex" role="img" aria-label={t('recentPosters', { names: recent.map((person) => person.name || t('anonymous')).join(t('listSeparator')) })}>
+          <span
+            className="flex"
+            role="img"
+            aria-label={t('recentPosters', {
+              names: recent
+                .map((person) => (person.agent ? t('agentNamed', { name: person.name || t('anonymous') }) : person.name || t('anonymous')))
+                .join(t('listSeparator')),
+            })}
+          >
             {recent.map((person, index) => (
-              <PersonAvatar key={index} name={person.name || t('anonymous')} tone={person.tone} size="xs" className="-mr-1.5 ring-2 ring-white/80" />
+              <PersonAvatar
+                key={index}
+                name={person.name || t('anonymous')}
+                tone={person.tone}
+                size="xs"
+                square={Boolean(person.agent)}
+                className="-mr-1.5 ring-2 ring-white/80"
+              />
             ))}
           </span>
         ) : (

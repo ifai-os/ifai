@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { AgentCaller } from '@/modules/agents/data'
 import { bearerKey, settingsUrl, tooManyRequests, unauthorized } from '@/modules/agents/http'
@@ -15,6 +15,15 @@ import {
   parseReason,
   sameName,
 } from '@/modules/agents/rules'
+
+// /me counts today's posts once the circles are open: no database here.
+vi.mock('@/lib/db/drizzle', () => ({ getDb: async () => ({ payload: {}, db: {} }) }))
+vi.mock('@/modules/circles/data', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/circles/data')>()),
+  agentDay: async () => ({ posts: 2, reactions: 5 }),
+}))
+
+afterEach(() => vi.unstubAllEnvs())
 
 const scout: AgentCaller = {
   keyId: 7,
@@ -152,6 +161,7 @@ describe('GET /api/v1/me', () => {
   })
 
   it('tells the agent who it is and who answers for it, never to a shared cache', async () => {
+    vi.stubEnv('AGENT_WRITES_ENABLED', 'true')
     const response = await get(scout, '?lang=ko')
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toBe('private, no-store')
@@ -159,12 +169,24 @@ describe('GET /api/v1/me', () => {
       agent: { id: 3, name: 'Scout' },
       owner: { name: 'Mei' },
       key: { scope: 'write', expiresAt: '2027-01-31T00:00:00.000Z' },
+      canWrite: true,
       limits: { requestsPerMinute: agentRules.perMinute },
       settings: 'http://localhost:3000/ko/me/account?section=agents',
     })
     const markdown = await (await get(scout, '?format=md')).text()
     expect(markdown).toContain('You are **Scout**')
     expect(markdown).toContain('read and write')
+    expect(markdown).toContain('- Writing: on: you can save and follow for Mei')
+  })
+
+  it('says when writing is paused, or the key only reads', async () => {
+    vi.stubEnv('AGENT_WRITES_ENABLED', 'false')
+    expect(await (await get(scout)).json()).toMatchObject({ canWrite: false })
+    expect(await (await get(scout, '?format=md')).text()).toContain('- Writing: paused on IFAI for now')
+    vi.stubEnv('AGENT_WRITES_ENABLED', 'true')
+    const reader = { ...scout, scope: 'read' as const }
+    expect(await (await get(reader)).json()).toMatchObject({ canWrite: false })
+    expect(await (await get(reader, '?format=md')).text()).toContain('- Writing: this key only reads; Mei can make a read-and-write key at')
   })
 
   it('is in the index and the OpenAPI document as needing a key', async () => {

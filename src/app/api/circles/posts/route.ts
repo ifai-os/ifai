@@ -27,15 +27,19 @@ export async function POST(request: NextRequest) {
   const circleIds = await shownCircleIds()
   if (!circleIds.includes(circle)) return fail('not-found', 404)
   const userId = session.user.id
+  const author = { userId, agentId: null }
   const { payload } = await getDb()
-  const result = await createPost(payload, { circleId: circle, userId, body, lang: detectLanguage(body, locale) })
+  const result = await createPost(payload, { circleId: circle, author, body, lang: detectLanguage(body, locale) })
   if (result.status === 'daily-limit') return fail('daily-limit', 429)
-  const [change, post] = await Promise.all([changed(payload, circleIds, userId), postView(payload, result.postId, circleIds, userId)])
+  const [change, post] = await Promise.all([changed(payload, circleIds, userId), postView(payload, result.postId, circleIds, author)])
   const response: CirclesChange = { ...change, ...(post && { post }) }
   return reply(response)
 }
 
-/** DELETE /api/circles/posts?id=45 → CirclesChange: the member's own post is gone, with its reactions and reports. */
+/**
+ * DELETE /api/circles/posts?id=45 → CirclesChange: the member's own post, or one their agent wrote
+ * (they answer for it), is gone with its reactions and reports.
+ */
 export async function DELETE(request: NextRequest) {
   if (!circlesLaunched()) return notLaunched()
   if (isCrossSite(request)) return fail('cross-site', 403)
@@ -44,6 +48,6 @@ export async function DELETE(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) return fail('sign-in', 401)
   const { payload } = await getDb()
-  if (!(await deletePost(payload, postId, session.user.id))) return fail('not-found', 404)
+  if (!(await deletePost(payload, postId, { userId: session.user.id, agentId: null }))) return fail('not-found', 404)
   return reply(await changed(payload, await shownCircleIds(), session.user.id))
 }

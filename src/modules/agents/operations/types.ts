@@ -6,7 +6,7 @@ import type { AgentCaller } from '../data'
 
 /**
  * One thing an agent can do on IFAI (docs/specs/agents.md rule 1). It is defined once here and
- * served four ways: an open API route, an MCP tool, an OpenAPI operation and (step 3) a CLI
+ * served four ways: an open API route, an MCP tool, an OpenAPI operation and (step 4) a CLI
  * command.
  */
 
@@ -24,12 +24,24 @@ export type MarkdownContext = OperationContext & {
   nonce: string
 }
 
-export type ErrorCode = 'invalid_request' | 'unauthorized' | 'forbidden' | 'not_found' | 'method_not_allowed' | 'rate_limited' | 'internal_error'
+export const errorCodes = [
+  'invalid_request',
+  'unauthorized',
+  'forbidden',
+  'not_found',
+  'method_not_allowed',
+  'conflict',
+  'rate_limited',
+  'daily_limit',
+  'internal_error',
+  'unavailable',
+] as const
+export type ErrorCode = (typeof errorCodes)[number]
 
 /** An answer other than the result: the open API sends `status`, MCP sends `message` as a tool error. */
 export class OperationError extends Error {
   constructor(
-    readonly status: 400 | 401 | 403 | 404,
+    readonly status: 400 | 401 | 403 | 404 | 409 | 429 | 503,
     readonly code: ErrorCode,
     message: string,
   ) {
@@ -51,11 +63,20 @@ export type Operation<Input extends z.ZodObject = z.ZodObject, Output = unknown>
   description: string
   /** Served only once this module has launched; null when it follows the modules it reads (search). */
   module: ModuleKey | null
-  /** `key`: only for an agent with an IFAI key (MCP lists it only then; the open API answers 401 without one). */
-  auth?: 'key'
+  /**
+   * `key`: only for an agent with an IFAI key (MCP lists it only then; the open API answers 401
+   * without one). `write`: only with a read-and-write key, while IFAI lets agents write.
+   */
+  auth?: 'key' | 'write'
+  /** GET (the default) reads; POST and DELETE change something, and need `auth: 'write'`. */
+  method?: 'GET' | 'POST' | 'DELETE'
+  /** For MCP clients, about a write: it removes something (destructive), or doing it again changes nothing (idempotent). */
+  hints?: { destructive?: boolean; idempotent?: boolean }
+  /** A write that makes something new: the open API answers 201. */
+  creates?: boolean
   /** Under /api/v1; `{name}` segments are path parameters of `input`. */
   path: `/${string}`
-  /** Every parameter, path and query alike; the open API reads numbers and booleans from strings. */
+  /** Every parameter: path, query (GET, DELETE) or JSON body (POST); the open API reads numbers and booleans from query strings. */
   input: Input
   // Methods (not function-valued properties), so any operation fits the registry's wider type.
   run(input: z.output<Input>, context: OperationContext): Promise<Output>
@@ -70,3 +91,9 @@ export type AnyOperation = Operation<z.ZodObject, any>
 export function defineOperation<Input extends z.ZodObject, Output>(operation: Operation<Input, Output>): Operation<Input, Output> {
   return operation
 }
+
+/** The method an operation is served with. */
+export const methodOf = (operation: AnyOperation): 'GET' | 'POST' | 'DELETE' => operation.method ?? 'GET'
+
+/** A write: changes something on IFAI for the agent's owner, or under the agent's name. */
+export const isWrite = (operation: AnyOperation): boolean => methodOf(operation) !== 'GET'

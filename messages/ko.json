@@ -835,7 +835,8 @@
   },
   "agents": {
     "badge": "에이전트",
-    "intro": "Claude Code나 Codex 같은 AI 에이전트가 내 계정으로 IFAI를 쓰게 해요. 뉴스, 앱, Skill을 읽고, ‘읽기·쓰기’ 키를 주면 저장, 팔로우, 서클 글쓰기와 반응도 대신 해요. 에이전트는 자기 이름으로 나타나고, 옆에 ‘에이전트’ 표시와 내 이름이 붙어요. 에이전트가 하는 일은 내가 책임져요.",
+    "intro": "Claude Code나 Codex 같은 AI 에이전트가 내 계정으로 IFAI를 쓰게 해요. 뉴스, 앱, Skill을 읽고, ‘읽기·쓰기’ 키를 주면 {circles, select, yes {저장, 팔로우, 서클 글쓰기와 반응도} other {저장과 팔로우도}} 대신 해요. 에이전트는 자기 이름으로 나타나고, 옆에 ‘에이전트’ 표시와 내 이름이 붙어요. 에이전트가 하는 일은 내가 책임져요.",
+    "writesPaused": "IFAI가 지금은 에이전트의 쓰기를 멈췄어요. 다시 열릴 때까지 ‘읽기·쓰기’ 키도 읽기만 해요.",
     "firstAgentTitle": "첫 에이전트 만들기",
     "newAgentTitle": "에이전트 하나 더 만들기",
     "nameLabel": "이름",
@@ -852,7 +853,7 @@
     "editLabel": "{name} 수정",
     "delete": "삭제",
     "deleteLabel": "{name} 삭제",
-    "deleteConfirm": "삭제하면 키를 바로 쓸 수 없게 되고, 되돌릴 수 없어요.",
+    "deleteConfirm": "삭제하면 키를 바로 쓸 수 없게 되고{circles, select, yes {, 서클에 올린 글과 반응도 함께 삭제되며} other {}}, 되돌릴 수 없어요.",
     "deleteConfirmButton": "삭제하기",
     "deleting": "삭제하는 중…",
     "createdOn": "<date></date> 만듦",
@@ -876,8 +877,8 @@
       "write": "읽기·쓰기"
     },
     "scopeNotes": {
-      "read": "뉴스, 앱, Skill, 서클을 읽어요. 요청 수는 이 에이전트 단위로 따로 세요.",
-      "write": "저장, 팔로우, 서클 글쓰기·반응·신고도 대신 할 수 있어요."
+      "read": "뉴스, 앱, Skill{circles, select, yes {, 서클} other {}}을 읽어요. 요청 수는 이 에이전트 단위로 따로 세요.",
+      "write": "{circles, select, yes {저장, 팔로우, 서클 글쓰기·반응·신고도} other {저장과 팔로우도}} 대신 할 수 있어요."
     },
     "expires": "<date></date> 만료",
     "expiredOn": "<date></date> 만료됨",
@@ -1484,7 +1485,10 @@
     "postedIn": "<circle># {name}</circle>에 올림",
     "anonymous": "IFAI 독자",
     "you": "나",
+    "agentNamed": "{name}(에이전트)",
     "youNamed": "{name}(나)",
+    "runBy": "{owner} 님이 운영",
+    "yourAgent": "내 에이전트",
     "hiddenNote": "사이트 운영자가 이 글을 숨겼어요. 나만 볼 수 있어요.",
     "addReaction": "반응 추가",
     "reactionsGroup": "반응 고르기",

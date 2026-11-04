@@ -55,7 +55,7 @@ src/
     ai/                    模型调用：按用途选模型、回执（model_receipts）、每日预算（limits.ts）、总开关
     inngest/               Inngest 客户端和任务列表
     admin-log/             后台操作记录：表（schema.ts）、记什么（rules.ts）、所有集合的钩子和接口包装（hooks.ts 的 withAdminLog）
-    switches.ts            总开关 COLLECT_ENABLED、MODEL_CALLS_ENABLED、DAILY_EMAIL_ENABLED
+    switches.ts            总开关 COLLECT_ENABLED、MODEL_CALLS_ENABLED、DAILY_EMAIL_ENABLED、AGENT_WRITES_ENABLED
     data-cache.ts          cached()（代替 unstable_cache）和 dataTag()：数据缓存的键和标签按数据库区分，预览环境之间不串数据
     shanghai-day.ts        上海时间的自然日（预算和海报按它算）
     email/layout.ts        邮件版式（登录邮件、投稿邮件共用；纯文本版一起生成）
@@ -81,6 +81,7 @@ src/
     resources/             Skill 集合与校验钩子（collections/）、包解析（package/：tar.gz、Zip、SKILL.md 头部、检测入口）、静态检测规则（scan/）、GitHub 导入任务（import/）、说明起草（describe/：取材、核对、任务、接口）、前台（public/：数据、筛选排序、install.md、安装计数、页面组件）、统计汇总（stats/）、投稿（submit/：校验、投稿与通知、邮件、发信任务、后台「处理」与转为 Skill（admin.ts、convert.ts）、页面组件；接口在 src/app/api/resources/submissions）、提示词（prompts/）、后台组件（admin/）、Drizzle 表（db/schema.ts）
     recommend/             推荐（第二期，isLaunched('recommend') 管上不上线）：文章集合（collections/Articles.ts，正文是 Payload 富文本）、频道与地址、正文的目录和阅读时长（rules.ts）、列表的筛选和热门标签（list.ts）、读取和缓存（data.ts、cache.ts）、metadata.ts、structured-data.ts、sitemap.ts、页面组件（components/，正文排印在 article-body.tsx）
     circles/               圈子（第二期，src/config/site.ts 的 isLaunched('circles') 管上不上线）：集合（collections/）、规则与类型（rules.ts）、Drizzle 表（schema.ts）、读写（data.ts）、页面取数和缓存（public.ts、cache.ts）、接口共用的回复（api.ts）、后台读写与接口（admin.ts、endpoints.ts、admin/）、页面组件（components/）；接口在 src/app/api/circles
+    agents/                Agent 接入（docs/specs/agents.md）：操作清单（operations/，每个操作定义一次，开放 API、MCP、OpenAPI、llms.txt 都从它来；写操作要读写密钥）、开放 API（rest.ts，路由 src/app/api/v1/[[...path]]）、MCP 服务器（mcp.ts，路由 src/app/mcp）、openapi.ts、llms.ts、Markdown 和 untrusted 块（markdown.ts）、Agent 与密钥（rules.ts、keys.ts、data.ts、Drizzle 表 schema.ts）、认密钥和限流（gate.ts、http.ts）、设置页「Agent」分区和「Agent」标记（components/，接口在 src/app/api/account/agents）、后台「Agent」页（admin/、admin.ts、endpoints.ts）、清理任务（jobs.ts）
   payload.config.ts
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko

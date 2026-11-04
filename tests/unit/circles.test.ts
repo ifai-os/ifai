@@ -83,10 +83,13 @@ describe('circles: 推荐 and 热议', () => {
 })
 
 describe('circles: reactions', () => {
+  const lin = { name: 'Lin', agent: false }
+  const kai = { name: 'Kai', agent: false }
+  const scout = { name: 'Scout', agent: true }
   const list: ReactionView[] = [
-    { reaction: 'like', count: 3, mine: false, names: ['Lin', 'Kai'] },
-    { reaction: 'rocket', count: 3, mine: true, names: ['Ana'] },
-    { reaction: 'eyes', count: 1, mine: false, names: ['Kai'] },
+    { reaction: 'like', count: 3, mine: false, names: [lin, kai] },
+    { reaction: 'rocket', count: 3, mine: true, names: [scout] },
+    { reaction: 'eyes', count: 1, mine: false, names: [kai] },
   ]
 
   it('puts the most people first, the picker’s order breaking ties, and drops empty ones', () => {
@@ -96,9 +99,9 @@ describe('circles: reactions', () => {
 
   it('turns the reader’s reaction on and off before the server answers', () => {
     expect(toggleReaction(list, 'eyes', true)).toEqual([
-      { reaction: 'like', count: 3, mine: false, names: ['Lin', 'Kai'] },
-      { reaction: 'rocket', count: 3, mine: true, names: ['Ana'] },
-      { reaction: 'eyes', count: 2, mine: true, names: ['Kai'] },
+      { reaction: 'like', count: 3, mine: false, names: [lin, kai] },
+      { reaction: 'rocket', count: 3, mine: true, names: [scout] },
+      { reaction: 'eyes', count: 2, mine: true, names: [kai] },
     ])
     expect(toggleReaction(list, 'rocket', false).map((item) => [item.reaction, item.count, item.mine])).toEqual([
       ['like', 3, false],

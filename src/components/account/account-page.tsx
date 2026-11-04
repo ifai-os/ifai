@@ -29,7 +29,7 @@ export type SettingsView =
   | { section: 'sign-in'; accounts: LinkedAccount[]; devices: SignedInDevice[]; result: LinkResult | null }
   | { section: 'notifications'; dailyEmail: DailyEmailState; subscribing: boolean }
   | { section: 'language' }
-  | { section: 'agents'; agents: AgentView[]; verified: boolean; origin: string }
+  | { section: 'agents'; agents: AgentView[]; verified: boolean; origin: string; writesOn: boolean }
   | { section: 'data' }
 
 type Member = { id: string; email: string; name: string }
@@ -153,7 +153,7 @@ function Section({ view, member, signIn }: { view: SettingsView; member: Member;
       return (
         <>
           {title}
-          <AgentsSection agents={view.agents} verified={view.verified} origin={view.origin} />
+          <AgentsSection agents={view.agents} verified={view.verified} origin={view.origin} writesOn={view.writesOn} />
         </>
       )
 

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { useId, useState, type FormEvent } from 'react'
 
 import { Button } from '@/components/button'
+import { isLaunched } from '@/config/site'
 
 import { agentRules, defaultLifetime, keyLifetimes, keyScopes, parseKeyInput, type KeyInput, type KeyLifetime, type KeyScope } from '../rules'
 import { ProblemText } from './problem'
@@ -59,7 +60,7 @@ export function KeyForm({ onMake, onCancel }: { onMake: (input: KeyInput) => Pro
             <input type="radio" name="scope" value={value} checked={scope === value} onChange={() => setScope(value)} className="mt-1 size-4 flex-none accent-ink" />
             <span className="flex flex-col gap-0.5">
               <span className="font-medium">{t(`scopes.${value}`)}</span>
-              <span className="text-meta text-ink-4">{t(`scopeNotes.${value}`)}</span>
+              <span className="text-meta text-ink-4">{t(`scopeNotes.${value}`, { circles: isLaunched('circles') ? 'yes' : 'no' })}</span>
             </span>
           </label>
         ))}

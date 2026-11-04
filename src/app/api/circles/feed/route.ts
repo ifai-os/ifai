@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
   const userId = session?.user.id ?? null
   const { payload } = await getDb()
   const [page, overview, joined] = await Promise.all([
-    feedPage(payload, { tab, circleIds, circle, cursor, userId }),
+    feedPage(payload, { tab, circleIds, circle, cursor, reader: userId ? { userId, agentId: null } : null }),
     cursor ? undefined : circlesOverview(payload, circleIds),
     cursor ? undefined : userId ? joinedCircles(payload, userId, circleIds) : Promise.resolve([]),
   ])

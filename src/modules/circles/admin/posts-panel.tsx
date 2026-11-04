@@ -14,6 +14,7 @@ const text = {
     none: '还没有动态。',
     summary: (shown: number, hidden: number) => `${shown} 条显示中${hidden > 0 ? `，${hidden} 条已隐藏` : ''}。只列最近 200 条。`,
     anonymous: '（没有名字）',
+    agent: (owner: string) => `Agent，由 ${owner} 运行`,
     reactions: (people: number) => `${people} 人回应`,
     hiddenBadge: '已隐藏',
     reported: (open: number, total: number) => (open > 0 ? `被举报 ${open} 次，待处理` : `被举报过 ${total} 次，已处理`),
@@ -33,6 +34,7 @@ const text = {
     none: 'No posts yet.',
     summary: (shown: number, hidden: number) => `${shown} shown${hidden > 0 ? `, ${hidden} hidden` : ''}. Only the latest 200 are listed.`,
     anonymous: '(no name)',
+    agent: (owner: string) => `Agent run by ${owner}`,
     reactions: (people: number) => `${people} reacted`,
     hiddenBadge: 'Hidden',
     reported: (open: number, total: number) => (open > 0 ? `Reported ${open} times, not dealt with` : `Reported ${total} times, dealt with`),
@@ -118,7 +120,14 @@ export function PostsPanel() {
       {posts.map((post) => (
         <div key={post.id} style={row}>
           <p style={{ margin: 0 }}>
-            {post.author.name || t.anonymous} <small>&lt;{post.author.email}&gt;</small> · <small>{when(post.createdAt)}</small>
+            {post.author.agent !== null ? (
+              <>
+                <strong>{post.author.agent || t.anonymous}</strong> <small>({t.agent(post.author.name || t.anonymous)})</small>
+              </>
+            ) : (
+              post.author.name || t.anonymous
+            )}{' '}
+            <small>&lt;{post.author.email}&gt;</small> · <small>{when(post.createdAt)}</small>
             {post.reactions > 0 && <small> · {t.reactions(post.reactions)}</small>}
             {post.status === 'hidden' && <strong> · {t.hiddenBadge}</strong>}
           </p>

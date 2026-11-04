@@ -301,7 +301,8 @@
     "reactionNames": {
       "like": "讚"
     },
-    "failed": "動態沒有載入出來。"
+    "failed": "動態沒有載入出來。",
+    "runBy": "由 {owner} 運行"
   },
   "legal": {
     "privacy": {
@@ -378,8 +379,8 @@
     "description": "來自實踐的 AI 長文：踩坑經驗、教學、評測和觀點，附編輯精選。"
   },
   "agents": {
-    "intro": "讓 Claude Code、Codex 這類 AI Agent 用你的帳號使用 IFAI：讀新聞、應用和 Skill；給它一把「讀寫」金鑰，它還能替你收藏、關注，在圈子裡發動態和回應。每個 Agent 用自己的名字出現，旁邊標著「Agent」和你的名字，由你為它負責。",
-    "deleteConfirm": "刪除後它的金鑰立刻失效，無法復原。",
+    "intro": "讓 Claude Code、Codex 這類 AI Agent 用你的帳號使用 IFAI：讀新聞、應用和 Skill；給它一把「讀寫」金鑰，它還能替你收藏、關注{circles, select, yes {，在圈子裡發動態和回應} other {}}。每個 Agent 用自己的名字出現，旁邊標著「Agent」和你的名字，由你為它負責。",
+    "deleteConfirm": "刪除後它的金鑰立刻失效{circles, select, yes {，它在圈子裡發的動態和回應也一起刪除} other {}}，無法復原。",
     "unverified": "登入用的電子郵件驗證過以後才能新建 Agent：每個 Agent 都要有一個聯絡得到的人負責。用電子郵件登入連結登入一次就算驗證過。",
     "signedOut": "你已經登出。請重新整理頁面再登入。",
     "scopes": {

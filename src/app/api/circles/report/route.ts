@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   const { payload } = await getDb()
   const result = await reportPost(
     payload,
-    { postId: input.post, reason: input.reason, reporter, userId: session?.user.id ?? null },
+    { postId: input.post, reason: input.reason, reporter, actor: session ? { userId: session.user.id, agentId: null } : null },
     await shownCircleIds(),
   )
   if (result === 'not-found') return fail('not-found', 404)

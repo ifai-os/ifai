@@ -5,6 +5,9 @@ import { redirect } from 'next/navigation'
 import type { AdminViewServerProps } from 'payload'
 import type { CSSProperties } from 'react'
 
+import { isLaunched } from '@/config/site'
+import { agentWritesEnabled } from '@/lib/switches'
+
 import { adminAgents, type AdminAgent } from '../admin'
 import { adminFiltersFrom, type AdminAgentFilters } from '../rules'
 import { AgentActions } from './agent-actions'
@@ -59,6 +62,7 @@ export async function AgentsView({ initPageResult, params, searchParams }: Admin
       minute: '2-digit',
     })
   const one = filters.agent ? data.agents[0] : undefined
+  const circles = isLaunched('circles')
 
   return (
     <DefaultTemplate
@@ -79,6 +83,7 @@ export async function AgentsView({ initPageResult, params, searchParams }: Admin
         <p style={{ ...section, marginBottom: 0 }}>
           {t.summary(t.number(data.summary.agents), data.summary.disabled, t.number(data.summary.agentRequests), t.number(data.summary.visitorRequests))}
         </p>
+        <p style={{ ...muted, margin: '0.25em 0 0' }}>{t.writing(agentWritesEnabled())}</p>
 
         <nav style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', margin: 'var(--base) 0 0' }}>
           {filters.agent ? (
@@ -107,12 +112,13 @@ export async function AgentsView({ initPageResult, params, searchParams }: Admin
                     <th style={head}>{t.columns.keys}</th>
                     <th style={head}>{t.columns.lastUsed}</th>
                     <th style={head}>{t.columns.today}</th>
+                    {circles && <th style={head}>{t.columns.writes}</th>}
                     <th style={head}>{t.columns.status}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.agents.map((agent) => (
-                    <Row key={agent.id} agent={agent} t={t} time={time} logHref={`${adminRoute}/admin-log?collection=agents&doc=${agent.id}`} />
+                    <Row key={agent.id} agent={agent} t={t} time={time} circles={circles} logHref={`${adminRoute}/admin-log?collection=agents&doc=${agent.id}`} />
                   ))}
                 </tbody>
               </table>
@@ -131,7 +137,19 @@ export async function AgentsView({ initPageResult, params, searchParams }: Admin
   )
 }
 
-function Row({ agent, t, time, logHref }: { agent: AdminAgent; t: AgentsAdminText; time: (at: string) => string; logHref: string }) {
+function Row({
+  agent,
+  t,
+  time,
+  circles,
+  logHref,
+}: {
+  agent: AdminAgent
+  t: AgentsAdminText
+  time: (at: string) => string
+  circles: boolean
+  logHref: string
+}) {
   return (
     <tr>
       <td style={{ ...cell, minWidth: '12rem' }}>
@@ -146,6 +164,7 @@ function Row({ agent, t, time, logHref }: { agent: AdminAgent; t: AgentsAdminTex
       <td style={cell}>{t.keys(agent.keys.working, agent.keys.total, agent.keys.write)}</td>
       <td style={{ ...cell, whiteSpace: 'nowrap' }}>{agent.lastUsedAt ? time(agent.lastUsedAt) : <span style={muted}>{t.never}</span>}</td>
       <td style={cell}>{t.number(agent.requestsToday)}</td>
+      {circles && <td style={cell}>{t.writes(agent.writesToday.posts, agent.writesToday.reactions)}</td>}
       <td style={{ ...cell, minWidth: '12rem' }}>
         {agent.disabled ? (
           <>

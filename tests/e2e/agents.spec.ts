@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 
-import { expect, test, type APIRequestContext } from '@playwright/test'
+import { expect, test, type APIRequestContext, type APIResponse } from '@playwright/test'
 
 import type enMessages from '../../messages/en.json'
 
@@ -40,7 +40,7 @@ test('llms.txt tells agents where to start', async ({ request }) => {
 })
 
 test('the open API offers what has launched, and nothing else', async ({ request }) => {
-  const index = (await (await request.get('/api/v1')).json()) as { endpoints: { tool: string }[] }
+  const index = (await (await request.get('/api/v1')).json()) as { endpoints: { tool: string; method: string; path: string }[] }
   const tools = index.endpoints.map((endpoint) => endpoint.tool)
   expect(tools).toEqual(expect.arrayContaining(['search', 'list_news', 'list_apps', 'list_skills']))
   expect(tools.includes('list_articles')).toBe(phase >= 2)
@@ -49,9 +49,15 @@ test('the open API offers what has launched, and nothing else', async ({ request
   expect((await request.get('/api/v1/articles')).status()).toBe(phase >= 2 ? 200 : 404)
   expect((await request.get('/api/v1/rankings')).status()).toBe(phase >= 3 ? 200 : 404)
 
-  const openapi = (await (await request.get('/api/v1/openapi.json')).json()) as { openapi: string; paths: Record<string, unknown> }
+  // Writes come with what they write to: saving and following from the start, posting with the circles.
+  expect(tools).toEqual(expect.arrayContaining(['save', 'follow']))
+  expect(tools.includes('create_post')).toBe(phase >= 2)
+
+  // The OpenAPI document has the same endpoints, a path's methods together.
+  const openapi = (await (await request.get('/api/v1/openapi.json')).json()) as { openapi: string; paths: Record<string, Record<string, unknown>> }
   expect(openapi.openapi).toBe('3.1.0')
-  expect(Object.keys(openapi.paths)).toHaveLength(tools.length)
+  const documented = Object.entries(openapi.paths).flatMap(([path, methods]) => Object.keys(methods).map((method) => `${method.toUpperCase()} /api/v1${path}`))
+  expect(documented.sort()).toEqual(index.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`).sort())
 })
 
 test('the news reads as JSON and as Markdown, kept out of search engines', async ({ request }) => {
@@ -212,6 +218,133 @@ test.describe('a member’s agent', () => {
       expect(rows[0].left).toBe(0)
     } finally {
       await member.remove()
+    }
+  })
+
+  test('writes with a read-and-write key: saves and follows for its owner, posts, reacts and reports in circles under its own name', async ({
+    request,
+    page,
+    context,
+    baseURL,
+  }) => {
+    const origin = baseURL ?? 'http://localhost:3000'
+    const owner = await createMember(origin, 'Writer Owner')
+    const other = await createMember(origin, 'Grace Writes')
+    try {
+      const cookie = { cookie: `${owner.cookie.name}=${owner.cookie.value}` }
+      const made = await request.post('/api/account/agents', { data: { name: 'Smoke Writer' }, headers: cookie })
+      expect(made.status()).toBe(201)
+      const { agent } = (await made.json()) as { agent: { id: number } }
+      const keyFor = async (scope: 'read' | 'write') => {
+        const response = await request.post(`/api/account/agents/${agent.id}/keys`, { data: { scope }, headers: cookie })
+        expect(response.status()).toBe(201)
+        return { authorization: `Bearer ${((await response.json()) as { key: string }).key}` }
+      }
+      const writer = await keyFor('write')
+      const reader = await keyFor('read')
+      const errorOf = async (response: APIResponse) => ((await response.json()) as { error: { code: string; message: string } }).error
+      const toolsOf = async (headers: Record<string, string>) => ((await rpc(request, 1, 'tools/list', {}, headers)).result.tools as { name: string }[]).map((tool) => tool.name)
+
+      // A read-only key reads, and is told where its owner gets one that writes.
+      const readOnly = await request.post('/api/v1/follows', { headers: reader, data: { type: 'tag', key: 'agents' } })
+      expect(readOnly.status()).toBe(403)
+      expect(await errorOf(readOnly)).toMatchObject({ code: 'forbidden', message: expect.stringContaining('/me/account?section=agents') })
+      expect(await toolsOf(reader)).not.toContain('follow')
+
+      const me = (await (await request.get('/api/v1/me', { headers: writer })).json()) as { canWrite: boolean }
+      test.skip(!me.canWrite, 'IFAI has paused writing for agents here: set AGENT_WRITES_ENABLED=true, as CI does.')
+      const tools = await toolsOf(writer)
+      expect(tools).toEqual(expect.arrayContaining(['save', 'follow']))
+
+      // Following and saving go to the owner's own lists, by the open API or MCP.
+      const followed = await request.post('/api/v1/follows', { headers: writer, data: { type: 'tag', key: 'agents' } })
+      expect(followed.status()).toBe(200)
+      expect(await followed.json()).toMatchObject({ type: 'tag', key: 'agents', following: true, url: expect.stringContaining('/en/news') })
+      expect((await owner.query('select target_type, target_key from follows where user_id = $1', [owner.id])).rows).toEqual([{ target_type: 'tag', target_key: 'agents' }])
+      const unfollowed = await rpc(request, 2, 'tools/call', { name: 'follow', arguments: { type: 'tag', key: 'agents', following: false } }, writer)
+      expect((unfollowed.result.content as { text: string }[])[0].text).toContain('Writer Owner no longer follows the tag `agents`')
+      expect((await owner.query('select count(*)::int as n from follows where user_id = $1', [owner.id])).rows[0].n).toBe(0)
+      expect((await request.post('/api/v1/follows', { headers: writer, data: { type: 'tag', key: 'not-a-tag' } })).status()).toBe(400)
+      expect((await request.post('/api/v1/saves', { headers: writer, data: { type: 'app', slug: 'no-such-app-anywhere' } })).status()).toBe(404)
+      if (process.env.E2E_SAMPLE_APPS) {
+        const saved = await request.post('/api/v1/saves', { headers: writer, data: { type: 'app', slug: 'kitecode' } })
+        expect(await saved.json()).toMatchObject({ type: 'app', slug: 'kitecode', saved: true })
+        expect((await owner.query('select target_type from saves where user_id = $1', [owner.id])).rows).toEqual([{ target_type: 'app' }])
+      }
+
+      if (phase < 2) {
+        expect(tools).not.toContain('create_post')
+        expect((await request.post('/api/v1/circles/posts', { headers: writer, data: { circle: 'prompts', body: 'Too early' } })).status()).toBe(404)
+        return
+      }
+
+      // A post, under the agent's name with its owner's beside it; the owner does not join the circle for it.
+      const body = 'Smoke Writer was here, with a prompt: https://example.com/prompt'
+      const created = await request.post('/api/v1/circles/posts', { headers: writer, data: { circle: 'prompts', body } })
+      expect(created.status()).toBe(201)
+      const { post, postsLeftToday } = (await created.json()) as { post: { id: number }; postsLeftToday: number }
+      expect(post).toMatchObject({ author: 'Smoke Writer', agent: { owner: 'Writer Owner' }, yours: true, body, untrusted: true })
+      expect(postsLeftToday).toBe(4)
+      expect((await owner.query('select user_id, agent_id from circle_posts where id = $1', [post.id])).rows).toEqual([{ user_id: owner.id, agent_id: agent.id }])
+      expect((await owner.query('select count(*)::int as n from circle_members where user_id = $1', [owner.id])).rows[0].n).toBe(0)
+      expect((await request.post('/api/v1/circles/posts', { headers: writer, data: { circle: 'no-such-circle', body } })).status()).toBe(404)
+      expect((await request.post('/api/v1/circles/posts', { headers: writer, data: { circle: 'prompts', body: 'x'.repeat(1001) } })).status()).toBe(400)
+
+      // A reaction and a report on someone else's post; its own post cannot be reported.
+      const theirs = (
+        await other.query<{ id: number }>(`insert into circle_posts (circle_id, user_id, body, lang) select id, $1, 'A post by a person', 'en' from circles where slug = 'prompts' returning id`, [
+          other.id,
+        ])
+      ).rows[0].id
+      const reacted = await request.post('/api/v1/circles/reactions', { headers: writer, data: { post: theirs, reaction: 'insight' } })
+      expect(reacted.status()).toBe(200)
+      expect(await reacted.json()).toMatchObject({ post: theirs, reactions: [{ reaction: 'insight', count: 1, yours: true }], reactionsLeftToday: 199 })
+      const ownReport = await request.post('/api/v1/circles/reports', { headers: writer, data: { post: post.id, reason: 'spam' } })
+      expect(ownReport.status()).toBe(400)
+      expect((await request.post('/api/v1/circles/reports', { headers: writer, data: { post: theirs, reason: 'offTopic' } })).status()).toBe(200)
+      expect((await owner.query('select reporter, reason from circle_post_reports where post_id = $1', [theirs])).rows).toEqual([{ reporter: `a:${agent.id}`, reason: 'offTopic' }])
+
+      // Readers see the agent's name, marked「Agent」, and who runs it; the reaction names it too.
+      await context.addCookies([other.cookie])
+      await page.goto('/en/circles?tab=latest&circle=prompts')
+      const feed = page.getByRole('tabpanel')
+      const byAgent = feed.getByRole('listitem').filter({ hasText: 'Smoke Writer was here' })
+      await expect(byAgent).toContainText('Smoke Writer')
+      await expect(byAgent.getByText(en.agents.badge, { exact: true })).toBeVisible()
+      await expect(byAgent.getByText(en.circles.runBy.replace('{owner}', 'Writer Owner'))).toBeVisible()
+      const insight = feed.getByRole('listitem').filter({ hasText: 'A post by a person' }).getByRole('button', { name: new RegExp(`^${en.circles.reactionNames.insight}:`) })
+      await expect(insight).toHaveAttribute('title', new RegExp(en.circles.agentNamed.replace('{name}', 'Smoke Writer').replace(/[()]/g, '\\$&')))
+
+      // The agent deletes its own post; the owner can delete what their agent posted from the site.
+      const second = (await (await request.post('/api/v1/circles/posts', { headers: writer, data: { circle: 'prompts', body: 'Another one' } })).json()) as { post: { id: number } }
+      const deleted = await request.delete(`/api/v1/circles/posts/${second.post.id}`, { headers: writer })
+      expect(await deleted.json()).toEqual({ deleted: true, id: second.post.id })
+      expect((await request.delete(`/api/v1/circles/posts/${second.post.id}`, { headers: writer })).status()).toBe(404)
+      expect((await request.delete(`/api/v1/circles/posts/${theirs}`, { headers: writer })).status()).toBe(404)
+      expect((await request.delete(`/api/circles/posts?id=${post.id}`, { headers: cookie })).status()).toBe(200)
+      expect((await owner.query('select count(*)::int as n from circle_posts where id = $1', [post.id])).rows[0].n).toBe(0)
+
+      // Five posts a day for each agent: the sixth is turned down until the next Shanghai day.
+      await owner.query(
+        `insert into circle_posts (circle_id, user_id, agent_id, body, lang) select c.id, $1, $2, 'Post ' || n, 'en' from circles c, generate_series(1, 5) n where c.slug = 'prompts'`,
+        [owner.id, agent.id],
+      )
+      const sixth = await request.post('/api/v1/circles/posts', { headers: writer, data: { circle: 'prompts', body: 'One too many' } })
+      expect(sixth.status()).toBe(429)
+      expect(await errorOf(sixth)).toMatchObject({ code: 'daily_limit' })
+
+      // Deleting the agent takes its posts, reactions and reports with it.
+      expect((await request.delete(`/api/account/agents/${agent.id}`, { headers: cookie })).status()).toBe(200)
+      const { rows } = await owner.query(
+        `select (select count(*) from circle_posts where agent_id = $1)::int as posts,
+                (select count(*) from circle_post_reactions where agent_id = $1)::int as reactions,
+                (select count(*) from circle_post_reports where reporter = $2)::int as reports`,
+        [agent.id, `a:${agent.id}`],
+      )
+      expect(rows[0]).toEqual({ posts: 0, reactions: 0, reports: 0 })
+    } finally {
+      await owner.remove()
+      await other.remove()
     }
   })
 
