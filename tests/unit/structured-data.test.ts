@@ -78,6 +78,14 @@ describe('storyJsonLd', () => {
     expect(article).not.toHaveProperty('description')
   })
 
+  it("uses the story's own picture, or its video's cover, when it has one", () => {
+    const picture = { url: '/api/media/file/story.jpg', width: 1200, height: 675 }
+    const withImage = { ...story, media: { kind: 'image', picture, credit: null } } as StoryDetail
+    expect(roundTrip(storyJsonLd(withImage, 'en', labels))[0].image).toEqual(['https://ifai.io/api/media/file/story.jpg'])
+    const coverless = { ...story, media: { kind: 'video', video: {}, picture: null, credit: null } } as unknown as StoryDetail
+    expect(roundTrip(storyJsonLd(coverless, 'en', labels))[0].image).toEqual(['https://ifai.io/og-image.png'])
+  })
+
   it('walks home › daily › category › story', () => {
     const [, trail] = roundTrip(storyJsonLd(story, 'en', labels))
     expect(trail['@type']).toBe('BreadcrumbList')

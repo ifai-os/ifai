@@ -189,6 +189,7 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 - 海报按发布时间落在哪个上海日期选，补进来的历史文章不会上当天的海报。
 - 晨报：过去 24 小时内审核通过、发布时间在 48 小时内的新闻，补上线的旧闻不发（[daily-email.md](./daily-email.md) 第 6 条）。
 - 导入：把新闻源的时间写进 `publishedAt`，`approvedAt` 不用写。
+- 只有日期的发布时间（2026-11-04 站长反馈列表里有些新闻显示「0:00」）：信息源只给日期时，RSS 的日期读成 UTC 零点，编辑飞书表（洛杉矶时间）里的日期读回来是洛杉矶零点；照读者时区显示就成了编出来的时刻（洛杉矶 0:00、上海 15:00）。所以 `publishedAt` 恰好是 UTC 或洛杉矶的 00:00:00 时当作「只有日期」（`src/modules/daily/date-only.ts`）：列表不显示时刻，分类页和话题页的卡片只写日期，详情页只写日期、不写时区，分类页「最近更新」只写日期；按天分组用给定的那天，不随读者时区挪到前一天。首页「今天的 AI」的「最近更新」取当天最新一条有时刻的新闻，没有就写日期和条数。真在 00:00:00 整发的新闻也会被当成只有日期，只是少显示一个时刻。2026-11-04 预览站导入的 6990 条里约 2450 条是这样。
 - 迁移 `daily_approved_at`：加 `approved_at`，把原来的发布时间（就是审核通过的时刻）抄进去，再把发布时间按上面的规则改成新闻源的（只往前改）；应用模块的 `app_mentions` 记的时间跟着改。
 
 ## 配图与视频
@@ -254,6 +255,7 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 - 接口 `POST /api/stories/import`，请求体是 `newscrawler export-stories` 的 JSON Lines（一行一条，也收一个 JSON 数组），一次最多 200 条。登录的后台管理员可以调；流水线用 `Authorization: Bearer $STORY_IMPORT_TOKEN`（Vercel 环境变量）。代码在 `src/modules/daily/import/`。
 - 每行：`slug`、`category`（七个分类之一）、`tags`（`tags.ts` 里的，最多 3 个，不认识的丢掉）、`publishedAt`（UTC）、`locales` 的 `zh-Hans`/`en`/`ja`/`ko` 各有 `title`、`summary`、`tryIt`、`body`、`sources`（原文在前，每个 `{url, publisher, title, publishedAt}`）、`score`（0–100）、`feishu {month, record_id}`。英文的标题和摘要、`record_id`、至少一个 http(s) 来源是必需的；缺了这一行不导入，回复里写明第几行、为什么。繁体照常由简体经 OpenCC 转换。
 - 按飞书 `record_id` 认同一条：再导一次就更新文字、分类、标签、来源、评分和发布时间，网址和状态不动（撤回的不会被重新发布）。新的一条直接发布，审核通过的时间记成它的发布时间（不晚于导入时刻），晨报邮件不会因为补导旧新闻而一下子塞满。slug 被别的新闻占了就在后面加日期（`-2026-10-21`），还冲突再加 `-2`。
+- 传播指数（2026-11-04 站长反馈导入的新闻不显示）：站里只把原文记成一条报道，每小时的热度任务又只看最近 54 小时，补进来的旧闻原来一直是 0、页面上不显示。导入时按这一行列出的来源算 `heatPeak`：每个网站算一个来源，时间用来源自己的发布时间（没有就用新闻的），照热度规则（`heat/rules.ts` 的 `peakHeat`）取到过的最高值，再导只升不降。一个来源约 22，两个约 39，三个约 53。「当前热度」`heat` 和「48 小时热门」仍由热度任务算。
 - 每条新闻在 `raw_items` 里记一条已归档的报道（`external_id` = `feishu:<record_id>`，属于停用的信源「本地流水线（飞书导入）」，正文不抓），再建一个自己的事件，这样热度和传播指数（Brave、X）照常算。来源里第一个之后的 Hacker News、Reddit、X 等标成「讨论」，其他是「报道」。
 - 公司和产品（2026-11-04 站长反馈详情页没有显示）：每行可以带 `companies` 和 `products`（名称数组），各取前 3 个存进 `stories.entities`，规则和站内写作一样。两个都没带的行，再导时不动已有的。
 - 配图（2026-11-01 站长定，沿用「配图与视频」的规则）：每行可以带 `media`：`{"kind":"image","imageUrl":原图地址,"credit":发布方}`、`{"kind":"video","videoUrl":YouTube / Vimeo / .mp4 / .webm,"imageUrl"?:封面,"credit":…}`，或 `null`。按采集的规则读：不认的视频平台、SVG、像 Logo 的图都当没有，这一行照样导入；没写 `credit` 用原文的发布方。地址记在那条报道的 `raw_items.media` 里。新的一条、或者再导时图片和视频地址变了，才复制：后台任务 `daily-import-media`（`src/modules/daily/import/media.ts`）照写作那一步下载不超过 5 MB 的 JPEG、PNG、WebP、GIF 进 `media`，视频封面取 YouTube 的 `maxresdefault`／`hqdefault`、Vimeo 的 oEmbed、视频文件用这行的 `imageUrl`；下载失败就当没有图。地址没变就不动这条新闻的配图（站长在后台改过的不会被覆盖）；再导时去掉了 `media`，新闻的配图也去掉。
