@@ -5,6 +5,7 @@ import { cache } from 'react'
 
 import { isLaunched } from '@/config/site'
 import type { Locale } from '@/i18n/config'
+import { inAnyLanguage, type Localized } from '@/lib/i18n/localized'
 import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
 import { appsCacheTag } from '@/modules/apps/cache'
@@ -12,7 +13,7 @@ import { appMentions } from '@/modules/apps/schema'
 import type { Media } from '@/payload-types'
 
 import type { StoryCategory } from '../categories'
-import { entityKey, topicOf } from '../entities'
+import { entityKey } from '../entities'
 import { posterVersion, readSnapshot, type PosterSnapshot } from '../poster/snapshot'
 import { DAILY_CACHE_TAG } from '../review/cache'
 import { tagsOf, type StoryTag } from '../tags'
@@ -50,7 +51,7 @@ export const storiesPerPage = 30
 export const feedLength = 50
 export const developmentsShown = 10
 export const hotShown = 5
-/** 「话题追踪」keeps this many stories of the topic, this one included. */
+/** 「话题追踪」keeps this many stories of the storyline, this one included. */
 export const topicShown = 12
 /** 「同类事件」: at most this many, at least this similar (the same event starts at 0.75). */
 export const similarShown = 3
@@ -86,14 +87,15 @@ const select = {
   representativeItemId: true,
   heat: true,
   heatPeak: true,
+  storyline: true,
 } as const
 
 /** The story's picture comes along (depth 1), with only what the pages need; Payload builds `url` from `filename`. */
-const populate = { media: { url: true, filename: true, width: true, height: true } } as const
+const populate = { media: { url: true, filename: true, width: true, height: true }, storylines: { slug: true } } as const
 
 // Part of every cache key: change it when what the queries return changes (fields added to
 // `select`), so a deployment never reads entries an earlier one stored without them.
-const shape = 'story-body'
+const shape = 'story-storyline'
 
 // Publishing refreshes the cache right away; the hour only bounds changes made outside the review screen.
 const cacheOptions = { tags: [DAILY_CACHE_TAG], revalidate: 3600 }
@@ -260,23 +262,36 @@ const findDevelopments = cached(
   cacheOptions,
 )
 
-// Published stories about the same product or company (`stories.entities.key`), newest first.
-const findTopic = cached(
-  async (key: string) => {
-    const { docs } = await (await payload()).find({
-      collection: 'stories',
-      where: { and: [published, { 'entities.key': { equals: key } }] },
-      sort: '-publishedAt',
-      limit: topicShown,
-      locale: 'all',
-      depth: 1,
-      populate,
-      select,
-      overrideAccess: false,
-    })
-    return docs as unknown as RawStory[]
+// The storyline's name, and its published stories, newest first (「话题追踪」, docs/specs/daily.md「持续事件」).
+const findStoryline = cached(
+  async (storylineId: number) => {
+    const client = await payload()
+    const [storyline, stories] = await Promise.all([
+      client.find({
+        collection: 'storylines',
+        where: { and: [{ id: { equals: storylineId } }, { status: { not_equals: 'merged' } }] },
+        limit: 1,
+        locale: 'all',
+        depth: 0,
+        select: { name: true, slug: true },
+        overrideAccess: false,
+      }),
+      client.find({
+        collection: 'stories',
+        where: { and: [published, { storyline: { equals: storylineId } }] },
+        sort: '-publishedAt',
+        limit: topicShown,
+        locale: 'all',
+        depth: 1,
+        populate,
+        select,
+        overrideAccess: false,
+      }),
+    ])
+    const found = storyline.docs[0] as unknown as { slug: string; name: Localized<string> } | undefined
+    return found ? { slug: found.slug, name: found.name, stories: stories.docs as unknown as RawStory[] } : null
   },
-  [shape, 'daily-topic'],
+  [shape, 'daily-storyline'],
   cacheOptions,
 )
 
@@ -629,13 +644,15 @@ export const getStory = cache(async (slug: string, locale: Locale): Promise<Stor
   const doc = await findStory(slug)
   if (!doc) return null
   const entities = entitiesOf(doc, entityKey)
-  const topic = topicOf(entities)
-  const [developments, topicStories, apps] = await Promise.all([
+  const storylineId = typeof doc.storyline === 'object' ? (doc.storyline?.id ?? null) : (doc.storyline ?? null)
+  const [developments, storyline, apps] = await Promise.all([
     findDevelopments(doc.eventId, doc.id),
-    topic ? findTopic(topic.key) : [],
+    storylineId ? findStoryline(storylineId) : null,
     entities.length ? findStoryApps(doc.id) : [],
   ])
-  // 「同类事件」are other events, each listed once, and not the ones the topic already lists.
+  const topicStories = storyline?.stories ?? []
+  const topicName = storyline ? inAnyLanguage(storyline.name, locale) : null
+  // 「同类事件」are other events, each listed once, and not the ones the storyline already lists.
   const similar = await findSimilar(doc.representativeItemId, [...new Set([doc.eventId, ...topicStories.map((other) => other.eventId)])])
   return {
     ...toItem(doc, locale),
@@ -648,8 +665,8 @@ export const getStory = cache(async (slug: string, locale: Locale): Promise<Stor
       return { name, kind, key, app: app ? { slug: app.slug, name: app.name } : null }
     }),
     topic:
-      topic && topicStories.some((other) => other.id !== doc.id)
-        ? { name: topic.name, key: topic.key, stories: topicStories.map((other) => toItem(other, locale)) }
+      storyline && topicName && topicStories.some((other) => other.id !== doc.id)
+        ? { name: topicName, slug: storyline.slug, stories: topicStories.map((other) => toItem(other, locale)) }
         : null,
     similar: similar.map((other) => toItem(other, locale)),
   }

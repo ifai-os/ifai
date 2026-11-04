@@ -382,6 +382,28 @@ for (const story of sampleStories) {
   }
 }
 
+// 「话题追踪」follows an ongoing storyline (daily.md「持续事件」): the two Lumen Chat workspace stories are one.
+const storylineSlug = 'sample-lumen-chat-workspaces'
+const storylineText = {
+  en: { name: 'Lumen Chat’s shared workspaces', summary: 'From the preview to the launch of team workspaces.' },
+  'zh-Hans': { name: 'Lumen Chat 共享工作区', summary: '团队工作区从预览到正式上线。' },
+  ja: { name: 'Lumen Chat の共有ワークスペース', summary: 'プレビューから正式公開まで。' },
+  ko: { name: 'Lumen Chat 공유 워크스페이스', summary: '미리보기부터 정식 출시까지.' },
+} as const
+const foundStoryline = await payload.find({ collection: 'storylines', where: { slug: { equals: storylineSlug } }, limit: 1, depth: 0 })
+const storylineId =
+  foundStoryline.docs[0]?.id ??
+  (await payload.create({ collection: 'storylines', locale: 'en', data: { slug: storylineSlug, status: 'active', ...storylineText.en }, depth: 0 })).id
+for (const locale of ['en', 'zh-Hans', 'ja', 'ko'] as const) {
+  await payload.update({ collection: 'storylines', id: storylineId, locale, data: storylineText[locale], depth: 0 })
+}
+await payload.update({
+  collection: 'stories',
+  where: { slug: { in: ['sample-lumen-chat-adds-shared-workspaces', 'sample-lumen-chat-announces-workspaces'] } },
+  data: { storyline: storylineId, storylineByEditor: true },
+  depth: 0,
+})
+
 // 「同类事件」compares the stories' reports (`raw_items`, embedded by the judging step). Made up here as a few
 // weighted themes each, plus `own` for what only that report is about, so the similarities come out as
 // planned (the page lists 0.6 and up): Quill and the workspaces 0.68, Quill and the workspaces preview

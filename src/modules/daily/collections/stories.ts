@@ -1,4 +1,4 @@
-import type { CollectionConfig, FieldHook, TextFieldSingleValidation } from "payload";
+import type { CollectionBeforeChangeHook, CollectionConfig, FieldHook, TextFieldSingleValidation } from "payload";
 
 import { syncHantFromHans } from "@/lib/i18n/hant-sync";
 
@@ -76,6 +76,15 @@ const entityKindLabels: Record<EntityKind, { en: string; zh: string }> = {
   product: { en: "Product", zh: "产品" },
 };
 
+/** An editor who moves a story to another storyline (or off one) keeps it there: the job no longer touches it. */
+const markStorylineByEditor: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
+  if (!req.user || !data || !("storyline" in data)) return data;
+  const id = (value: unknown) =>
+    value && typeof value === "object" ? (value as { id: number }).id : (value ?? null);
+  if (id(data.storyline) !== id(originalDoc?.storyline)) data.storylineByEditor = true;
+  return data;
+};
+
 const signedIn = ({ req: { user } }: { req: { user: unknown } }) =>
   Boolean(user);
 
@@ -131,7 +140,7 @@ export const Stories: CollectionConfig = {
     plural: { en: "Stories", zh: "新闻" },
   },
   hooks: {
-    beforeChange: [stampPublishing],
+    beforeChange: [stampPublishing, markStorylineByEditor],
     afterChange: [syncHantFromHans(hantFields), followPublishing],
     afterDelete: [leaveOnDelete],
   },
@@ -331,8 +340,8 @@ export const Stories: CollectionConfig = {
       },
       admin: {
         description: {
-          en: "What the story is about. The first product (else the first company) is its topic: stories sharing it are tracked together.",
-          zh: "这条新闻讲的公司和产品。第一个产品（没有就第一个公司）是话题，同一话题的新闻串在一起。",
+          en: "What the story is about. Each links to its company or product page, which lists every story about it.",
+          zh: "这条新闻讲的公司和产品。每个都链到它的话题页，列出提到它的所有新闻。",
         },
       },
       hooks: {
@@ -376,6 +385,36 @@ export const Stories: CollectionConfig = {
           index: true,
           label: { en: "Key", zh: "比较用的名字" },
           admin: { hidden: true },
+        },
+      ],
+    },
+    {
+      type: "row",
+      fields: [
+        {
+          name: "storyline",
+          type: "relationship",
+          relationTo: "storylines",
+          index: true,
+          label: { en: "Storyline", zh: "持续事件" },
+          filterOptions: { status: { not_equals: "merged" } },
+          admin: {
+            description: {
+              en: "The ongoing storyline it is a step of; its stories are listed together on the story page. Set automatically after publishing; once changed here, it stays as you set it.",
+              zh: "它是哪个持续事件里的一步，同一个持续事件的新闻在详情页串在一起。发布后自动挂上；在这里改过之后就按你改的。",
+            },
+          },
+        },
+        {
+          name: "storylineByEditor",
+          type: "checkbox",
+          label: { en: "Storyline set by an editor", zh: "持续事件由站长定" },
+          admin: {
+            description: {
+              en: "The assignment job leaves this story alone.",
+              zh: "自动挂的任务不再改这条。",
+            },
+          },
         },
       ],
     },

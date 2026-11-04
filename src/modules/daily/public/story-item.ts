@@ -52,8 +52,8 @@ export type HotStory = StoryItem & {
 /** A company or product the story is about; `key` names its topic page; `app` when the apps module matched it to a published app. */
 export type StoryEntityItem = { name: string; kind: EntityKind; key: string; app: { slug: string; name: string } | null }
 
-/** 「话题追踪」: published stories about the same product or company, newest first, this one included. */
-export type StoryTopic = { name: string; key: string; stories: StoryItem[] }
+/** 「话题追踪」: the ongoing storyline the story is a step of, and its published stories, newest first, this one included. */
+export type StoryTopic = { name: InLanguage<string>; slug: string; stories: StoryItem[] }
 
 /** An app's logo as the pages draw it. */
 export type TopicLogo = { url: string; width: number | null; height: number | null }
@@ -128,7 +128,7 @@ export type StoryDetail = StoryItem & {
   developments: StoryItem[]
   tags: StoryTag[]
   entities: StoryEntityItem[]
-  /** Null unless another story shares the topic. */
+  /** Null unless the story is on a storyline with another published story. */
   topic: StoryTopic | null
   /** 「同类事件」: the most similar published stories of other events, most similar first. */
   similar: StoryItem[]

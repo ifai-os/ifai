@@ -75,6 +75,7 @@ export interface Config {
     'app-submissions': AppSubmission;
     sources: Source;
     stories: Story;
+    storylines: Storyline;
     posters: Poster;
     subscribers: Subscriber;
     skills: Skill;
@@ -108,6 +109,7 @@ export interface Config {
     'app-submissions': AppSubmissionsSelect<false> | AppSubmissionsSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     stories: StoriesSelect<false> | StoriesSelect<true>;
+    storylines: StorylinesSelect<false> | StorylinesSelect<true>;
     posters: PostersSelect<false> | PostersSelect<true>;
     subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
     skills: SkillsSelect<false> | SkillsSelect<true>;
@@ -516,7 +518,7 @@ export interface Story {
       )[]
     | null;
   /**
-   * What the story is about. The first product (else the first company) is its topic: stories sharing it are tracked together.
+   * What the story is about. Each links to its company or product page, which lists every story about it.
    */
   entities?:
     | {
@@ -526,6 +528,14 @@ export interface Story {
         id?: string | null;
       }[]
     | null;
+  /**
+   * The ongoing storyline it is a step of; its stories are listed together on the story page. Set automatically after publishing; once changed here, it stays as you set it.
+   */
+  storyline?: (number | null) | Storyline;
+  /**
+   * The assignment job leaves this story alone.
+   */
+  storylineByEditor?: boolean | null;
   /**
    * Taken from the original article when the story is written. A video shows its cover with a play button and plays in a dialog.
    */
@@ -627,6 +637,31 @@ export interface Story {
    * The editor said it is not the same happening as this published story.
    */
   keptApartFrom?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Stories that belong to one ongoing storyline are listed together on the story page (「话题追踪」). Assigned automatically after publishing; correct them here or on a story's edit page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "storylines".
+ */
+export interface Storyline {
+  id: number;
+  /**
+   * Short, names the storyline: "Musk v. OpenAI".
+   */
+  name: string;
+  summary?: string | null;
+  slug: string;
+  /**
+   * Only ongoing storylines take new stories.
+   */
+  status: 'active' | 'ended' | 'merged';
+  /**
+   * Saving moves every story of this storyline there.
+   */
+  mergedInto?: (number | null) | Storyline;
   updatedAt: string;
   createdAt: string;
 }
@@ -1368,6 +1403,10 @@ export interface PayloadLockedDocument {
         value: number | Story;
       } | null)
     | ({
+        relationTo: 'storylines';
+        value: number | Storyline;
+      } | null)
+    | ({
         relationTo: 'posters';
         value: number | Poster;
       } | null)
@@ -1681,6 +1720,8 @@ export interface StoriesSelect<T extends boolean = true> {
         key?: T;
         id?: T;
       };
+  storyline?: T;
+  storylineByEditor?: T;
   media?:
     | T
     | {
@@ -1707,6 +1748,19 @@ export interface StoriesSelect<T extends boolean = true> {
   laterAt?: T;
   mergedInto?: T;
   keptApartFrom?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "storylines_select".
+ */
+export interface StorylinesSelect<T extends boolean = true> {
+  name?: T;
+  summary?: T;
+  slug?: T;
+  status?: T;
+  mergedInto?: T;
   updatedAt?: T;
   createdAt?: T;
 }

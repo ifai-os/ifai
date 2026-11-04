@@ -76,10 +76,8 @@ test.describe('with the sample stories', () => {
       const returned = answered()
       await page.goto('/en/news/sample-lumen-chat-adds-shared-workspaces?follow=topic-lumenchat')
       await returned
-      await expect(main.getByRole('button', { name: en.follows.followingTopic, exact: true })).toHaveAttribute('aria-pressed', 'true')
+      await expect(main.getByRole('button', { name: 'Following Lumen Chat', exact: true })).toHaveAttribute('aria-pressed', 'true')
       await expect(page).toHaveURL(/\/en\/news\/sample-lumen-chat-adds-shared-workspaces$/)
-      // The topic's own row has no second button.
-      await expect(main.getByRole('button', { name: /Lumen Chat$/ })).toHaveCount(0)
 
       await Promise.all([answered(), main.getByRole('button', { name: 'Follow Lumen Labs', exact: true }).click()])
       await expect(main.getByRole('button', { name: 'Following Lumen Labs', exact: true })).toHaveAttribute('aria-pressed', 'true')

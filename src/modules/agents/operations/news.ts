@@ -188,8 +188,8 @@ export type NewsDetail = NewsItem & {
   entities: { name: string; kind: EntityKind; topic: string; app: { slug: string; name: string; url: string } | null }[]
   /** Other stories about the same event, newest first. */
   developments: NewsItem[]
-  /** Other stories about the same company or product. */
-  topic: { name: string; key: string; stories: NewsItem[] } | null
+  /** The ongoing storyline the story is a step of, with its stories (docs/specs/daily.md「持续事件」). */
+  storyline: { name: string; slug: string; stories: NewsItem[] } | null
   similar: NewsItem[]
 }
 
@@ -224,7 +224,7 @@ export const readNews = defineOperation({
         app: entity.app && isLaunched('apps') ? { ...entity.app, url: pageUrl(origin, lang, `/apps/${entity.app.slug}`) } : null,
       })),
       developments: story.developments.map(item),
-      topic: story.topic ? { name: story.topic.name, key: story.topic.key, stories: story.topic.stories.map(item) } : null,
+      storyline: story.topic ? { name: story.topic.name.value, slug: story.topic.slug, stories: story.topic.stories.map(item) } : null,
       similar: story.similar.map(item),
     }
   },
@@ -257,7 +257,7 @@ export const readNews = defineOperation({
           ].join('\n')
         : null,
       others('Same event', story.developments),
-      story.topic ? others(`More about ${story.topic.name} (topic \`${story.topic.key}\`)`, story.topic.stories.filter((item) => item.id !== story.id)) : null,
+      story.storyline ? others(`Storyline: ${oneLine(story.storyline.name)}`, story.storyline.stories.filter((item) => item.id !== story.id)) : null,
       others('Similar events', story.similar),
     )
   },
