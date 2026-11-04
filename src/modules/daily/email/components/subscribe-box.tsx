@@ -4,8 +4,10 @@ import { useLocale, useTranslations } from 'next-intl'
 import { type FormEvent, useId, useRef, useState } from 'react'
 
 import { Icon } from '@/components/icon'
+import { useTurnstile } from '@/components/turnstile'
 import { authClient } from '@/lib/auth/client'
 import { readerTimeZone } from '@/lib/local-time'
+import { TURNSTILE_HEADER, turnstileActions } from '@/lib/turnstile'
 
 import { isEmailAddress, normalizeEmail, suggestEmail, type EmailSuggestion } from '../address'
 
@@ -72,6 +74,8 @@ export function SubscribeBox({ variant }: { variant: SubscribeBoxVariant }) {
   const passedOver = useRef<string | null>(null)
   const trap = useRef<HTMLInputElement>(null)
   const status = useRef<HTMLParagraphElement>(null)
+  // Cloudflare Turnstile (docs/specs/security.md): every subscription can send a welcome email.
+  const turnstile = useTurnstile(turnstileActions.subscribe)
 
   // Until the reader types, the box shows the signed-in member's address.
   const email = typed ?? session?.user.email ?? ''
@@ -89,9 +93,11 @@ export function SubscribeBox({ variant }: { variant: SubscribeBoxVariant }) {
     setSending(true)
     setProblem(null)
     try {
+      const pass = turnstile.enabled ? await turnstile.token() : null
+      if (turnstile.enabled && !pass) return setProblem({ kind: 'failed' })
       const response = await fetch('/api/subscriptions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(pass && { [TURNSTILE_HEADER]: pass }) },
         body: JSON.stringify({
           email: address,
           locale,
@@ -184,6 +190,7 @@ export function SubscribeBox({ variant }: { variant: SubscribeBoxVariant }) {
             </button>
           </div>
           {variant === 'band' && message}
+          {turnstile.slot}
           {/* For robots that fill in every field; people never see it (rule 9). */}
           <div aria-hidden="true" className="sr-only">
             <input ref={trap} type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />

@@ -159,7 +159,7 @@
         },
         "share": {
           "title": "Who processes it",
-          "body": "We use these services to run IFAI. They process data for us under their own security and privacy terms:\n- Vercel: hosting.\n- Neon: the database.\n- Cloudflare R2: file storage.\n- Resend: sending email.\n- Inngest: background jobs.\n- OpenRouter and the model providers it routes to: translating reviews and drafting site content. Only the text being processed is sent.\n- Google and GitHub, if you choose to sign in with them.\n\nThese providers may process data in the United States and other countries. We share information with others only when the law requires it."
+          "body": "We use these services to run IFAI. They process data for us under their own security and privacy terms:\n- Vercel: hosting.\n- Neon: the database.\n- Cloudflare R2: file storage.\n- Cloudflare Turnstile: checking that the sign-in and Daily subscribe forms are used by a person. It sees your IP address and browser signals while the check runs.\n- Resend: sending email.\n- Inngest: background jobs.\n- OpenRouter and the model providers it routes to: translating reviews and drafting site content. Only the text being processed is sent.\n- Google and GitHub, if you choose to sign in with them.\n\nThese providers may process data in the United States and other countries. We share information with others only when the law requires it."
         },
         "keep": {
           "title": "How long we keep it",

@@ -63,6 +63,7 @@ src/
     structured-data.tsx    JSON-LD（<JsonLd>、面包屑、站点信息）；各模块的 structured-data.ts 用它（见 foundation.md）
     seo.ts                 canonical 与 hreflang（alternatesFor）、分享卡片（shareCard）；sitemap.ts、robots.ts：站点地图和 robots.txt（见 foundation.md）
     security-headers.ts    全站响应头（HSTS、防 iframe 嵌套等，next.config.ts 的 headers() 用它；见 docs/specs/security.md）
+    turnstile.ts           Cloudflare Turnstile：是否打开、服务端校验（登录链接和订阅框用；浏览器那半在 src/components/turnstile.tsx）
     same-origin.ts         isCrossSite()：写接口只接受本站页面发来的请求（收藏、评价、投稿）
     field-error.ts         rejectField()：集合钩子拒绝保存时用它（说明写进字段和 message）；isFieldError() 按形状判断字段错误
     auth/                  Better Auth 服务端配置、客户端、表结构、邮件、删除账号时清理投稿（delete-member.ts）、导出会员数据（export-member.ts，接口在 src/app/api/account/export）、设置页读的数据（settings.ts：登录方式、登录的设备、日报邮件）、设备名（devices.ts）、昵称清理（nickname.ts）；退出一台设备的接口在 src/app/api/account/sessions

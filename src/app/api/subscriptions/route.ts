@@ -2,6 +2,7 @@ import { after, NextResponse, type NextRequest } from 'next/server'
 
 import { dayKey, serverTimeZone } from '@/lib/local-time'
 import { isCrossSite } from '@/lib/same-origin'
+import { TURNSTILE_HEADER, turnstileActions, turnstileSecret, verifyTurnstile } from '@/lib/turnstile'
 import { clientIp, visitorHash } from '@/lib/visitor'
 import { domainOf, isEmailAddress } from '@/modules/daily/email/address'
 import { subscribingOpen } from '@/modules/daily/email/delivery'
@@ -29,6 +30,19 @@ export async function POST(request: NextRequest) {
   const input = readSubscribeRequest(await request.json().catch(() => null))
   if (!input) return reply({ error: 'invalid-request' }, 400)
   if (input.robot) return reply({ ok: true })
+
+  // Cloudflare Turnstile (docs/specs/security.md): a welcome email goes out on every new address,
+  // so a script must not be able to fill the box.
+  const secret = turnstileSecret()
+  if (secret) {
+    const passed = await verifyTurnstile({
+      secret,
+      token: request.headers.get(TURNSTILE_HEADER),
+      action: turnstileActions.subscribe,
+      ip: clientIp(request.headers),
+    })
+    if (!passed) return reply({ error: 'captcha' }, 403)
+  }
 
   const now = new Date()
   const visitor = visitorHash({

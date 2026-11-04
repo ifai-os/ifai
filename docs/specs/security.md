@@ -42,7 +42,7 @@ Vercel 官方不建议在它前面再套 Cloudflare 代理（橙色云）：代�
 - [x] 安全响应头（`src/lib/security-headers.ts`，`next.config.ts` 的 `headers()`）：HSTS（不带 `includeSubDomains`，`ifai.io` 下还有飞书邮箱等别的服务）、`nosniff`、`Referrer-Policy`、`frame-ancestors 'self'` 和 `X-Frame-Options`、关掉用不到的摄像头 / 麦克风 / 定位。暂不限制脚本和样式来源：Next.js 和 Payload 后台有内联脚本，要做基于 nonce 的 CSP，先用 report-only 观察一段时间再说。
 - [x] 关掉 Payload 的 GraphQL（`payload.config.ts` 的 `graphQL.disable`）。
 - [x] 生产环境强制关闭 Inngest 开发模式（`src/lib/inngest/client.ts`）。
-- [ ] **Turnstile**（下一个 PR）：登录链接和订阅框加 Cloudflare Turnstile。登录用 Better Auth 自带的 `captcha` 插件（只管 `/sign-in/magic-link`，Google、GitHub 登录不受影响）；订阅接口在服务端校验同一个令牌。没配 `TURNSTILE_SECRET_KEY` 时不显示、不校验，本地和冒烟测试照常。Turnstile 默认「不打扰」模式，大多数读者看不到验证框。
+- [x] **Turnstile**：登录链接（`/api/auth/sign-in/magic-link`）和日报订阅（`POST /api/subscriptions`）发信前先过 Cloudflare Turnstile。登录用 Better Auth 自带的 `captcha` 插件，只管邮件链接，Google、GitHub 登录不受影响；订阅接口在服务端自己校验（`src/lib/turnstile.ts`），没过返回 403 `captcha`。两个表单的 action 不同（`sign-in`、`subscribe`），令牌不能拿到另一个表单用。浏览器这边是 `src/components/turnstile.tsx` 的 `useTurnstile`：点「发送」或「订阅」时才要令牌，Cloudflare 觉得可疑才出现勾选框（Managed + `interaction-only`），语言跟着页面；每次发送用一个新令牌。Cloudflare 没回应、没拿到令牌，都按失败处理，表单显示「发送失败，请重试」，不放行。`NEXT_PUBLIC_TURNSTILE_SITE_KEY` 和 `TURNSTILE_SECRET_KEY` 两个都填才打开，本地、冒烟测试和预览不填。隐私政策「我们用到的服务」加了 Cloudflare Turnstile，生效日期改为 2026-11-04。
 - [ ] 以后再做：基于 nonce 的完整 CSP（report-only 起步）；Better Auth 限流改存数据库（要迁移）。
 
 ### 站长要动手的
@@ -53,7 +53,7 @@ Vercel 官方不建议在它前面再套 Cloudflare 代理（橙色云）：代�
 2. DNS → Settings → 打开 **DNSSEC**，按提示在域名注册商那边填 DS 记录（如果域名就在 Cloudflare 注册，自动完成）。
 3. 加 **CAA** 记录，只允许 Vercel 和 Cloudflare 用到的证书机构签发：`0 issue "letsencrypt.org"`、`0 issue "pki.goog"`、`0 issue "sectigo.com"`（Vercel 用 Let's Encrypt；R2 自定义域名由 Cloudflare 签，用 Google Trust Services 或 Sectigo）。
 4. R2 图片：存储桶绑定 `media.ifai.io`（setup.md 第 4 步第 4 条），这个子域名保持橙色云；Security → Settings 打开 **Bot Fight Mode**，再加一条免费的速率限制规则（每 IP 每 10 秒 100 次以上就拦），防止有人刷流量。R2 的出口流量免费，主要防的是请求次数。
-5. **Turnstile**：Cloudflare 控制台 → Turnstile → Add widget，域名填 `ifai.io`（和预览用的 `ifai-preview-ifai1.vercel.app`），模式选 Managed。把 Site Key 和 Secret Key 填到 Vercel（变量名等下一个 PR 合并时写在 setup.md 里），Secret Key 标 Sensitive。
+5. **Turnstile**：Cloudflare 控制台 → Turnstile → Add widget，域名填 `ifai.io`（和预览用的 `ifai-preview-ifai1.vercel.app`），模式选 Managed。主机名填 `ifai.io`。把 Site Key 填到 Vercel 生产的 `NEXT_PUBLIC_TURNSTILE_SITE_KEY`、Secret Key 填到 `TURNSTILE_SECRET_KEY`（标 Sensitive），重新部署；预览不填（见 setup.md 环境变量表）。
 
 **Vercel（Hobby 免费，项目 → Firewall）**
 
@@ -85,6 +85,6 @@ Vercel 官方不建议在它前面再套 Cloudflare 代理（橙色云）：代�
 
 - `curl -I https://ifai.io/en` 能看到上面的响应头；别的网站用 iframe 嵌 `ifai.io` 显示不出来。
 - `POST /api/graphql` 返回 404。
-- 连续 20 次请求登录链接，后面的被 Vercel 拦下（或 Turnstile 合并后，没有令牌的请求直接被拒）。
+- 连续 20 次请求登录链接，后面的被 Vercel 拦下（或 填了 Turnstile 的 key 后，没有令牌的请求直接被拒（返回 400 或 403））。
 - 打开 `/admin` 先出现 Vercel 的验证页；`/wp-login.php` 返回 403。
 - Cloudflare DNSSEC 显示 Active；`dig CAA ifai.io` 能看到三条记录。

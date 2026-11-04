@@ -71,6 +71,7 @@ pnpm dev                 # http://localhost:3000
 | `DAILY_EMAIL_FROM` | `news@ifai.io`（见第 7 步） | 同生产 | 日报邮件的发件地址。和 `RESEND_API_KEY` 都配好，订阅框才会出现 |
 | `DAILY_EMAIL_ENABLED` | 先不填，预览环境验过发送后改成 `true` | 要测订阅和发送时设 `true` | 不是 `true` 就不显示订阅框、不接受新订阅、不发日报邮件；已有的订阅保留。预览环境只给管理员的邮箱发 |
 | `RESEND_WEBHOOK_SECRET` | 见第 7 步 | 不填 | Resend 回调的签名密钥。不填时退信和投诉不会自动停发 |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare → Turnstile → Add widget（Managed，主机名 `ifai.io`），Secret Key 标 Sensitive | 不填 | 登录链接和日报订阅框的人机验证（docs/specs/security.md）。两个都填才打开；站点 key 在构建时写进页面，填了要重新部署。预览地址每个 PR 都不同，冒烟测试也过不了验证，所以预览不开 |
 | `R2_*` | 见第 4 步 | 建议用单独的存储桶 | |
 | `OPENROUTER_API_KEY` | 见第 8 步 | 另一个 key | 预览用单独的 key，额度设小一点 |
 | `AI_DAILY_BUDGET_USD` | `10` | `1` | 每天（上海时间）的模型费用上限，美元 |
