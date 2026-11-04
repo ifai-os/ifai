@@ -7,7 +7,6 @@ import { isLaunched } from '@/config/site'
 import type { Locale } from '@/i18n/config'
 import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
-import { shanghaiDate } from '@/lib/shanghai-day'
 import { appsCacheTag } from '@/modules/apps/cache'
 import { appMentions } from '@/modules/apps/schema'
 import type { Media } from '@/payload-types'
@@ -66,9 +65,6 @@ const categoryWeekMs = 7 * 24 * 3_600_000
 const hottestWithinMs = 24 * 3_600_000
 /** Apps mentioned in stories of the last 48 hours: today in any time zone. */
 const mentionsWithinMs = 48 * 3_600_000
-/** The list page shows the newest poster generated for one of the last few Shanghai days. */
-const posterShownDays = 7
-
 export type StoryPage = { stories: StoryItem[]; total: number; page: number; pages: number }
 
 const published: Where = { status: { equals: 'published' } }
@@ -784,10 +780,14 @@ export async function posterNeighbours(date: string): Promise<{ earlier: string 
 
 export type PosterSummary = { date: string; count: number; version: string }
 
-/**「每日 AI 大事」on the list page: the newest generated poster of the last week; null when there is none. */
-export async function latestPoster(now = new Date()): Promise<PosterSummary | null> {
+/**
+ *「每日 AI 大事」on the list page: the newest generated poster, however old, so the card never
+ * disappears just because no one generated one this week (站长, 2026-11-04, after the preview lost
+ * it ten days after its sample poster); null only when none has ever been generated.
+ */
+export async function latestPoster(): Promise<PosterSummary | null> {
   const [date] = await findPosterDates()
-  if (!date || date < shanghaiDate(new Date(now.getTime() - posterShownDays * 24 * 3_600_000))) return null
+  if (!date) return null
   const snapshot = await findPoster(date)
   return snapshot ? { date, count: snapshot.entries.length, version: posterVersion(snapshot) } : null
 }
