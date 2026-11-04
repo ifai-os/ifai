@@ -64,7 +64,7 @@ export async function DailyList({ locale, tag = null, category = null, page }: D
 
   return (
     <ListNavigationProvider>
-      <main id="main" className="mx-auto flex w-full max-w-248 flex-col gap-5 px-4 pt-5 pb-16 md:gap-10 md:pt-8 md:pb-24">
+      <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 pt-5 pb-16 md:gap-10 md:pt-8 md:pb-24">
         {tag ? (
           // No board has the tag page; its「+ 关注」is the topic page's (docs/specs/daily.md「关注」).
           <FollowProvider targets={[{ type: 'tag', key: tag }]} signIn={authProviders()}>
@@ -101,8 +101,9 @@ export async function DailyList({ locale, tag = null, category = null, page }: D
         )}
 
         {/* The board's second part, under a line: the categories, the stories and the column beside them.
-            Widths as sspai.com's home (站长, 2026-10-27): 960 in all, 164 · 520 · 164, 56 apart; what
-            doesn't fit wraps under. Phones stack them, the
+            The page is as wide as the other pages (max-w-content, 1148 inside; 站长, 2026-11-04): the
+            side columns stay 164 as on sspai.com's home (站长, 2026-10-27), 56 apart, and the stories
+            take the rest (708 at full width); what doesn't fit wraps under. Phones stack them, the
             categories as chips. Where all three share a row (lg), the two side columns stay put while
             the stories scroll (站长, 2026-10-27, after sspai.com). */}
         <div
