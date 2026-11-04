@@ -5,4 +5,10 @@ import { Inngest } from 'inngest'
  * ./functions.ts and served at /api/inngest. Locally, run the Inngest dev server and set
  * INNGEST_DEV=1; on Vercel the Inngest integration sets INNGEST_EVENT_KEY and INNGEST_SIGNING_KEY.
  */
-export const inngest = new Inngest({ id: 'ifai' })
+export const inngest = new Inngest({
+  id: 'ifai',
+  // Dev mode skips Inngest's request signatures, so in production it stays off even if
+  // INNGEST_DEV was copied over from a local .env: anyone could otherwise run our jobs through
+  // /api/inngest (docs/specs/security.md).
+  ...(process.env.VERCEL_ENV === 'production' && { isDev: false }),
+})

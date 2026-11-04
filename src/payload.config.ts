@@ -134,6 +134,9 @@ export default buildConfig({
   // Back-office endpoints for what lives outside the collections: turning an agent off or on.
   endpoints: agentEndpoints,
   editor: lexicalEditor(),
+  // Nothing reads GraphQL (pages use the local API, readers and agents use REST or /api/v1), so it
+  // stays off: one less public endpoint to guard (docs/specs/security.md).
+  graphQL: { disable: true },
 
   // Content locales = the five interface languages. Fields opt in with `localized: true`;
   // missing translations fall back to English.
