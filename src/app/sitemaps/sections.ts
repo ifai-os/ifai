@@ -34,7 +34,8 @@ export async function sitemapPages(): Promise<Record<SitemapSection, SitemapPage
       ...recommend.articles,
       ...legalDocuments.map((document) => ({ path: legalHref[document] })),
     ],
-    daily: daily.stories,
+    // Stories first, then the topic pages that gather them.
+    daily: [...daily.stories, ...daily.topics],
     apps: apps.apps,
     skills: resources.skills,
   }

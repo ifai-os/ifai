@@ -67,7 +67,7 @@ describe('renderIndex', () => {
 describe('robotsFor', () => {
   it('lets crawlers read noindex pages and blocks only what is not a page', () => {
     expect(robotsFor(origin, { VERCEL_ENV: 'production' })).toEqual({
-      rules: { userAgent: '*', allow: ['/', '/api/v1/'], disallow: ['/admin', '/api/', '/mcp', '/*/apps/*/visit'] },
+      rules: { userAgent: '*', allow: ['/', '/api/v1/', '/api/media/file/'], disallow: ['/admin', '/api/', '/mcp', '/*/apps/*/visit'] },
       sitemap: `${origin}/sitemap.xml`,
     })
     expect(robotsFor(origin, {})).toHaveProperty('sitemap')
