@@ -104,6 +104,7 @@
   - **新闻搜索（Brave）**：用英文标题查近一天的新闻，只数标题或摘要里提到话题名（没有话题时要对上标题一半的词）的结果，按不同网站计数；权重 1.5 × n / (n + 8)，8 家约 0.75，最多 1.5。要 `BRAVE_SEARCH_API_KEY` 且 `COLLECT_ENABLED=true`。
   - **X（xAI）**：经 `src/lib/ai` 的 `ai.xSearch`（用途 `reach`），让 xAI 的模型用它的 X 搜索找近一天讨论这条新闻的帖子，报回最多 10 条互动最多的帖子；只认 xAI 引用里真的出现过的帖子，互动 = 赞 + 2 × 转发；权重 2 × e / (e + 5000)，最多 2。要 `XAI_API_KEY` 且 `MODEL_CALLS_ENABLED=true`，记回执、算进每日预算。和 AGENTS.md 第 8 条的出入：OpenRouter 没有 xAI 的 X 搜索，所以这个用途的模型 ID 是 xAI 的，调用直连 xAI，其余（回执、开关、预算、按用途选模型）照旧。
   - 两个渠道都开满也只加 3.5 个来源的量，单靠外部信号到不了 60 分以上；每天（上海时间）最多查 60 次搜索、40 次 X（`HEAT_SEARCH_DAILY_LIMIT`、`HEAT_X_DAILY_LIMIT`）。key 没填时任务什么都不做。
+  - **补查旧闻**（2026-11-04 站长：key 加上之后，2026 年导入的旧闻也要按 Brave 和 X 算）：Inngest 任务 `daily-heat-backfill` 每天 UTC 4:50（或事件 `daily/heat.backfill`）挑 `HEAT_BACKFILL_SINCE`（默认 2026-01-01）之后、48 小时以前发布、这个渠道还没查过的新闻，从新到旧，每天搜索最多 100 条、X 最多 50 条（`HEAT_SEARCH_BACKFILL_DAILY_LIMIT`、`HEAT_X_BACKFILL_DAILY_LIMIT`，填 0 就停），每步 10 条。查的是新闻发布当天和之后两天（Brave 的 `freshness` 写成日期范围，xAI 的 `fromDate`/`toDate`），结果照样存进 `heat_checks`，但记在新闻的发布时刻，所以只抬传播指数（和新闻自己的来源一起按 `peakHeat` 算），不加到今天的热度、不进「48 小时热门」。每条每个渠道只查一次（查到 0 也算查过）；查完立即重算这些事件的热度。全部查完任务就什么都不做。这部分不算进上面每天 60 / 40 次的上限。
 - 后来判成「同一次发生」的报道记下它像的是哪一条（`event_items.matched_item_id`），加进那一条所在新闻的来源列表，找不到就进事件的主新闻；每条新闻记下已经同步过哪些地址（`sourcesSeen`），站长删掉的来源不会再被加回来。
 - 发布、更正、撤回、并入时发事件 `daily/story.changed`（`{ storyId, change }`），其他模块（应用的「日报里提到它」）可以据此立即重新匹配。
 

@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import { heatScore, peakHeat, rawHeat } from '@/modules/daily/heat/rules'
 import {
+  backfillDailyLimit,
+  backfillDue,
+  backfillSince,
+  backfillWindow,
   CHECK_SOURCE_IDS,
   CHECK_WEIGHT_CAP,
   CHECKS_PER_RUN,
@@ -95,5 +99,47 @@ describe('outside reach checks', () => {
     )
     expect(posts.map((post) => post.url)).toEqual(['https://x.com/a/status/1', 'https://x.com/c/status/3'])
     expect(engagement).toBe(100 + 20 + 20)
+  })
+})
+
+describe('catching up on older stories', () => {
+  const now = new Date('2026-11-04T16:00:00Z')
+  const since = new Date('2026-01-01T00:00:00Z')
+  const story = (eventId: number, at: string) => ({ eventId, publishedAt: new Date(at) })
+
+  it('takes stories from the start day until 48 hours ago, unchecked, newest first, each event once', () => {
+    const stories = [
+      story(1, '2026-03-01T10:00:00Z'),
+      story(2, '2026-11-01T10:00:00Z'),
+      story(3, '2026-11-03T10:00:00Z'), // within 48 hours: the regular checks take it
+      story(4, '2025-12-31T23:00:00Z'), // before the start
+      story(5, '2026-10-20T10:00:00Z'), // already checked
+      story(2, '2026-10-31T10:00:00Z'), // the same event again
+      story(6, '2026-06-01T10:00:00Z'),
+    ]
+    expect(backfillDue(stories, new Set([5]), since, now, 10).map((s) => s.eventId)).toEqual([2, 6, 1])
+    expect(backfillDue(stories, new Set([5]), since, now, 2).map((s) => s.eventId)).toEqual([2, 6])
+    expect(backfillDue(stories, new Set(), since, now, 0)).toEqual([])
+  })
+
+  it('searches the story day and the two after it', () => {
+    expect(backfillWindow(new Date('2026-10-31T07:00:00Z'))).toEqual({ from: '2026-10-31', to: '2026-11-02' })
+  })
+
+  it('reads its start day and daily shares from the environment', () => {
+    expect(backfillSince({}).toISOString()).toBe('2026-01-01T00:00:00.000Z')
+    expect(backfillSince({ HEAT_BACKFILL_SINCE: '2025-06-01' }).toISOString()).toBe('2025-06-01T00:00:00.000Z')
+    expect(backfillSince({ HEAT_BACKFILL_SINCE: 'soon' }).toISOString()).toBe('2026-01-01T00:00:00.000Z')
+    expect(backfillDailyLimit('search', {})).toBe(100)
+    expect(backfillDailyLimit('x', {})).toBe(50)
+    expect(backfillDailyLimit('x', { HEAT_X_BACKFILL_DAILY_LIMIT: '0' })).toBe(0)
+    expect(backfillDailyLimit('search', { HEAT_SEARCH_BACKFILL_DAILY_LIMIT: 'lots' })).toBe(100)
+  })
+
+  it('adds to the reach index from when the story came out, not to the heat of today', () => {
+    const published = new Date('2026-10-01T08:00:00Z')
+    const signals = [{ sourceId: 1, at: published, knownAt: published, weight: 1 }, ...(checkSignals([{ eventId: 7, kind: 'search', weight: 1.5, checkedAt: published }]).get(7) ?? [])]
+    expect(peakHeat(signals)).toBe(heatScore(2.5))
+    expect(rawHeat(signals, now)).toBe(0)
   })
 })
