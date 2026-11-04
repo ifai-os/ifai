@@ -84,6 +84,8 @@
 
 导航按 `NEXT_PUBLIC_SITE_PHASE` 显示，见 `src/config/site.ts`。没上线的模块不提前建页面或数据表。
 
+**第一期先只开放日报（2026-11-04 站长定）**：应用和资源还要再优化，先对读者关闭，`NEXT_PUBLIC_CLOSED_MODULES` 管（逗号分隔的模块，默认 `apps,resources`；填 `none` 全部打开，只开一个就填另一个）。关闭时：导航没有入口；`/[locale]/apps…`、`/[locale]/resources…` 和首页 `/[locale]` 都临时跳转（307）到 `/[locale]/news`，Logo 也直接指向日报；日报里「今天提到的应用」和「应用页」按钮不显示；搜索只查日报；站点地图不列应用、Skill 和首页；头像菜单没有「我的提交」；智能体接口（`/api/v1`、MCP）不带应用和 Skill 的操作和链接。后台照常，数据照常采集和整理。单元测试、CI 和每个 PR 的预览按全部打开跑，冒烟测试照旧覆盖应用和资源（`vitest.config.mts`、`ci.yml`、`deploy.yml` 里设成 `none`）；`main` 的固定预览和生产按关闭的样子，上线前在 `main` 的预览上看。重新开放：Vercel 的 Production（和 Preview）环境变量填 `none` 后重新部署，或者把 `src/config/site.ts` 的 `defaultClosedModules` 改成空。
+
 | 期 | 周 | 模块 | 状态 |
 |---|---|---|---|
 | 第一期 | 1–2 | 地基 | 完成 |

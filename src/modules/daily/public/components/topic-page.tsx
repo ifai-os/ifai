@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 
 import { buttonClass } from '@/components/button'
 import { ListLink, ListResults } from '@/components/states/list-navigation'
+import { isLaunched } from '@/config/site'
 import { Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
 import { FollowButton, FollowCount, FollowedNote } from '@/modules/follows/components/follow-button'
@@ -93,7 +94,7 @@ export function TopicPageView({ topic, serverToday, signIn }: { topic: TopicPage
                 </div>
               </div>
               <div className="flex flex-none flex-wrap items-center gap-2">
-                {topic.app && (
+                {topic.app && isLaunched('apps') && (
                   <Link href={`/apps/${topic.app.slug}`} className={buttonClass('secondary')}>
                     {t('appPage')}
                     <span className="sr-only">: {topic.app.name}</span>

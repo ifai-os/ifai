@@ -117,7 +117,7 @@ GDPR 的查阅权和可携带权：技术方案「安全、合规与内容风控
 - 数据库表：Payload 集合 `admins`、`media`；Better Auth 的 `auth_*` 四张表通过 `beforeSchemaInit` 加入 Payload 的 schema，由同一套迁移创建。
 - 后台管理员（Payload）与站点用户（Better Auth）分开：后台只给站长。
 - 语言：代码 `en / zh-Hans / zh-Hant / ja / ko`，URL `/en /zh-hans /zh-hant /ja /ko`，默认英语。
-- 分期：`NEXT_PUBLIC_SITE_PHASE` 控制导航；第一期只显示日报、应用、资源。
+- 分期：`NEXT_PUBLIC_SITE_PHASE` 控制导航；第一期只显示日报、应用、资源。`NEXT_PUBLIC_CLOSED_MODULES` 可以让已到期的模块先不开放（2026-11-04 起默认关闭应用、资源，首页跳到日报；见 status.md「分期」）。
 
 ## 不做
 

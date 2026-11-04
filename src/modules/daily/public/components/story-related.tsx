@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl'
 
 import { Icon } from '@/components/icon'
 import { LocalTime } from '@/components/local-time'
+import { isLaunched } from '@/config/site'
 import { Link } from '@/i18n/navigation'
 import { FollowButton } from '@/modules/follows/components/follow-button'
 
@@ -164,7 +165,7 @@ export function EntityList({ entities, topicKey = null }: { entities: StoryEntit
               </span>
             </Link>
             <span className="flex flex-none items-center gap-2">
-              {entity.app && (
+              {entity.app && isLaunched('apps') && (
                 <Link
                   href={`/apps/${entity.app.slug}`}
                   className="inline-flex h-8 flex-none items-center rounded-pill border border-line px-3 text-small text-ink-2 hover:border-ink-4"

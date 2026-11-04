@@ -14,7 +14,7 @@ IFAI 是面向海外用户的 AI 门户，界面有五种语言：英语、简�
 | 第二期 | 13–20 | 推荐（长文）、圈子（短动态） |
 | 第三期 | 21–26 | 排行（模型盲测）、Wiki |
 
-导航按环境变量 `NEXT_PUBLIC_SITE_PHASE` 显示对应模块，见 `src/config/site.ts`。没上线的模块不要提前建页面或数据表。
+导航按环境变量 `NEXT_PUBLIC_SITE_PHASE` 显示对应模块，见 `src/config/site.ts`；`NEXT_PUBLIC_CLOSED_MODULES` 让已到期的模块先不对读者开放（默认关闭应用、资源，首页跳到日报），判断一律用 `isLaunched()`。没上线的模块不要提前建页面或数据表。
 
 设计稿在画布里（私有）：https://claude.ai/artifact/A5Kyi4ghxTUcsFMouH677D 。做页面前先找到对应画板；画板之间有冲突时以较新的为准，并在 PR 里说明。
 

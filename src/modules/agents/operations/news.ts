@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { isLaunched } from '@/config/site'
 import type { Locale } from '@/i18n/config'
 import { storyCategories, type StoryCategory } from '@/modules/daily/categories'
 import type { EntityKind } from '@/modules/daily/entities'
@@ -220,7 +221,7 @@ export const readNews = defineOperation({
         name: entity.name,
         kind: entity.kind,
         topic: entity.key,
-        app: entity.app ? { ...entity.app, url: pageUrl(origin, lang, `/apps/${entity.app.slug}`) } : null,
+        app: entity.app && isLaunched('apps') ? { ...entity.app, url: pageUrl(origin, lang, `/apps/${entity.app.slug}`) } : null,
       })),
       developments: story.developments.map(item),
       topic: story.topic ? { name: story.topic.name, key: story.topic.key, stories: story.topic.stories.map(item) } : null,
@@ -303,7 +304,7 @@ export const newsTopic = defineOperation({
       page: topic.page,
       pages: topic.pages,
       stories: topic.stories.map((story) => newsItem(story, lang, origin)),
-      app: topic.app ? { slug: topic.app.slug, name: topic.app.name, url: pageUrl(origin, lang, `/apps/${topic.app.slug}`) } : null,
+      app: topic.app && isLaunched('apps') ? { slug: topic.app.slug, name: topic.app.name, url: pageUrl(origin, lang, `/apps/${topic.app.slug}`) } : null,
       developer: topic.developer ? { name: topic.developer.name, topic: topic.developer.key } : null,
     }
   },

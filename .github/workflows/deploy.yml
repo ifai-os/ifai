@@ -206,11 +206,14 @@ jobs:
       # Production reads its connection string from the PRODUCTION_DATABASE_URI secret when it is set:
       # Vercel may mark DATABASE_URI Sensitive, and `vercel pull` then only writes "[SENSITIVE]".
       # main's preview also learns its fixed address, for links and sign-in (src/lib/site-url.ts).
+      # A pull request's preview opens the modules closed to readers for now (src/config/site.ts), so
+      # the smoke tests still cover them; main's preview and production keep them closed.
       - name: Build
         env:
           NEON_DATABASE_URI: ${{ steps.fresh.outputs.db_url_pooled || steps.neon.outputs.db_url_pooled }}
           PRODUCTION_DATABASE_URI: ${{ matrix.target == 'production' && secrets.PRODUCTION_DATABASE_URI || '' }}
         run: |
+          if [ "$TARGET" = preview ] && [ -z "$DOMAIN" ]; then export NEXT_PUBLIC_CLOSED_MODULES=none; fi
           if [ -n "$NEON_DATABASE_URI" ]; then export DATABASE_URI="$NEON_DATABASE_URI"; fi
           if [ -n "$PRODUCTION_DATABASE_URI" ]; then export DATABASE_URI="$PRODUCTION_DATABASE_URI"; fi
           if [ -n "$DOMAIN" ]; then export PREVIEW_SITE_URL="https://$DOMAIN"; fi
