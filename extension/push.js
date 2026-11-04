@@ -1,9 +1,36 @@
 // Shared by the popup, the right-click menu and the settings page.
 
-/** Settings saved on the settings page: the site's address (no trailing slash) and the push token. */
+/**
+ * Settings saved on the settings page: the site's address (no trailing slash), the push token, and
+ * Vercel's protection bypass secret for a deployment behind Vercel's access protection (previews).
+ */
 export async function settings() {
-  const { server = '', token = '' } = await chrome.storage.local.get(['server', 'token'])
-  return { server, token }
+  const { server = '', token = '', bypass = '' } = await chrome.storage.local.get(['server', 'token', 'bypass'])
+  return { server, token, bypass }
+}
+
+/** The request headers: our token, and Vercel's bypass header when the site is protected (docs/setup.md step 3). */
+export function requestHeaders({ token, bypass }, hasBody) {
+  return {
+    Authorization: `Bearer ${token}`,
+    ...(bypass ? { 'x-vercel-protection-bypass': bypass } : {}),
+    ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+  }
+}
+
+/**
+ * Why a request failed, in words. Our endpoint answers JSON; a 401 or 403 without it comes from
+ * Vercel's access protection in front of the site, not from a wrong token.
+ */
+export function failureMessage(status, data, { bypass }) {
+  if (status === 401 && data?.error === 'unauthorized') return '令牌不对：和网站的 PUSH_TOKEN 不一致。'
+  if (status === 401 || status === 403) {
+    return bypass
+      ? '被 Vercel 的访问保护挡住了：保护绕过密钥不对，在 Vercel 项目的 Deployment Protection 里复制一遍。'
+      : '被 Vercel 的访问保护挡住了：这个网站是开着保护的预览，在设置页填上保护绕过密钥。'
+  }
+  if (status === 404 && !data?.error) return '这个网站没有推送接口：地址对吗？网站要部署了浏览器推送之后的版本。'
+  return data?.message || `网站返回 ${status}`
 }
 
 export function originPattern(server) {
@@ -74,21 +101,24 @@ export function bodyFor(kind, page) {
 }
 
 export async function call(method, body) {
-  const { server, token } = await settings()
+  const current = await settings()
+  const { server, token } = current
   if (!server || !token) throw new Error('先在设置页填好网站地址和推送令牌。')
   let response
   try {
     response = await fetch(`${server}/api/push`, {
       method,
-      headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      headers: requestHeaders(current, Boolean(body)),
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
     throw new Error(`连不上 ${server}。地址对吗？设置页保存时要允许访问这个网站。`)
   }
-  const data = await response.json().catch(() => ({}))
-  if (response.status === 401) throw new Error('令牌不对：和网站的 PUSH_TOKEN 不一致。')
-  if (!response.ok) throw new Error(data.message || `网站返回 ${response.status}`)
+  const data = await response.json().catch(() => null)
+  // Vercel's protection can also answer by sending the browser off to its login page.
+  if (response.redirected && new URL(response.url).origin !== new URL(server).origin) throw new Error(failureMessage(401, null, current))
+  if (!response.ok) throw new Error(failureMessage(response.status, data, current))
+  if (!data || !(data.ok || data.kind)) throw new Error('网站的回答看不懂：地址对吗？')
   return data
 }
 

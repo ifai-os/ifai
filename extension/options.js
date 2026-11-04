@@ -2,9 +2,10 @@ import { call, originPattern, settings } from './push.js'
 
 const $ = (id) => document.getElementById(id)
 
-settings().then(({ server, token }) => {
+settings().then(({ server, token, bypass }) => {
   $('server').value = server
   $('token').value = token
+  $('bypass').value = bypass
 })
 
 function status(text, ok) {
@@ -23,7 +24,7 @@ $('form').addEventListener('submit', async (event) => {
   // Asked here, on a click: the extension may only talk to the one site it is set up for.
   const granted = await chrome.permissions.request({ origins: [originPattern(server)] })
   if (!granted) return status('没有允许访问这个网站，推送会连不上。', false)
-  await chrome.storage.local.set({ server, token: $('token').value.trim() })
+  await chrome.storage.local.set({ server, token: $('token').value.trim(), bypass: $('bypass').value.trim() })
   $('server').value = server
   status('已保存，测试连接中…', true)
   try {

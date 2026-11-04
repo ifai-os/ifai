@@ -15,7 +15,8 @@
 - Chrome 插件，代码在仓库的 `extension/`（Manifest V3，纯 JavaScript，不用构建）。装法见 `extension/README.md`。
 - 工具栏图标（或 Alt+Shift+I）弹出面板：页面标题和网站，两个按钮「推为新闻」「推为应用 / 工具」，猜得到的那个是红色。猜法：页面写了 `og:type=article`、发布时间或 JSON-LD 的 Article 类就是新闻；JSON-LD 是 SoftwareApplication / WebApplication，或者是网站首页、只有一层路径（`/pricing`）就是工具。猜错了点另一个。
 - 右键菜单：在页面上或某个链接上「推到 IFAI：新闻」「推到 IFAI：应用 / 工具」。推右键的链接时只有网址（没有页面标题，取正文时用原文的标题补上）。结果显示在工具栏图标上（✓ 或 !，悬停看说明）。
-- 设置页：网站地址、推送令牌；保存时浏览器会问是否允许访问这个网站（插件只访问设好的这一个）；保存后测试连接，并提示这个环境的 `COLLECT_ENABLED`、`MODEL_CALLS_ENABLED` 有没有打开。
+- 设置页：网站地址、推送令牌，和可选的「Vercel 保护绕过密钥」；保存时浏览器会问是否允许访问这个网站（插件只访问设好的这一个）；保存后测试连接，并提示这个环境的 `COLLECT_ENABLED`、`MODEL_CALLS_ENABLED` 有没有打开。
+- 生产部署没开时，`main` 部署在 `https://ifai-preview-ifai1.vercel.app`（Preview 的变量），预览开着 Vercel 的访问保护：插件带上 `x-vercel-protection-bypass`（和冒烟测试同一个密钥）才进得去。被保护挡住（401/403 但不是我们接口的 JSON，或被转去 Vercel 登录页）和令牌不对分开提示。
 
 ## 接口
 
@@ -46,7 +47,7 @@
 
 ## 验收
 
-- [ ] 在预览环境填好 `PUSH_TOKEN`，插件设置页保存后显示「连上了」
+- [ ] 在 Vercel 的 Preview 填好 `PUSH_TOKEN`、重跑 `main` 的 Deploy，插件设置页填 `https://ifai-preview-ifai1.vercel.app`、令牌和保护绕过密钥，保存后显示「连上了」；不填绕过密钥时提示「被 Vercel 的访问保护挡住了」，令牌填错时提示「令牌不对」
 - [ ] 打开一篇当天的新闻，点「推为新闻」：后台「日报 → 信源」里出现（或复用）这个网站的信源；开着两个开关时，过一会儿后台待审核里有这条新闻
 - [ ] 再推一次同一篇（网址带 `?utm_source=`）：提示「已经有了」，没有多一条
 - [ ] 推一个已有应用网站的任意页面：提示「已有这个应用」；推一个新工具：后台应用里多一个草稿，资料草稿在生成

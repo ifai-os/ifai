@@ -10,11 +10,15 @@
     <form id="form">
       <label>网站地址
         <input id="server" type="url" required placeholder="https://你的网站域名" />
-        <span class="muted small">生产或某个预览环境的地址，只写到域名。本机开发填 http://localhost:3000。</span>
+        <span class="muted small">只写到域名。生产部署没开时用 main 的预览 https://ifai-preview-ifai1.vercel.app；本机开发填 http://localhost:3000。</span>
       </label>
       <label>推送令牌
         <input id="token" type="password" required autocomplete="off" />
-        <span class="muted small">和这个环境在 Vercel 里的 PUSH_TOKEN 一样。只存在这台电脑的浏览器里。</span>
+        <span class="muted small">和这个环境在 Vercel 里的 PUSH_TOKEN 一样（预览地址用 Preview 环境的）。只存在这台电脑的浏览器里。</span>
+      </label>
+      <label>Vercel 保护绕过密钥（可选）
+        <input id="bypass" type="password" autocomplete="off" />
+        <span class="muted small">网站是开着访问保护的 Vercel 预览时才填（比如 main 的预览 https://ifai-preview-ifai1.vercel.app）：Vercel 项目 → Settings → Deployment Protection → Protection Bypass for Automation 里的密钥，和 GitHub 的 VERCEL_AUTOMATION_BYPASS_SECRET 是同一个。正式域名不用填。</span>
       </label>
       <button class="primary" type="submit">保存并测试连接</button>
     </form>
