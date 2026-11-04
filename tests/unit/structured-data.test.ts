@@ -96,6 +96,15 @@ describe('storyJsonLd', () => {
       [4, 'https://ifai.io/en/news/openai-ships-a-thing'],
     ])
   })
+
+  it('starts at the daily while the home page goes there', () => {
+    const [, trail] = roundTrip(storyJsonLd(story, 'en', labels, '/news'))
+    expect(trail.itemListElement.map((item: { position: number; item: string }) => [item.position, item.item])).toEqual([
+      [1, 'https://ifai.io/en/news'],
+      [2, 'https://ifai.io/en/news/category/tools'],
+      [3, 'https://ifai.io/en/news/openai-ships-a-thing'],
+    ])
+  })
 })
 
 describe('appJsonLd', () => {
