@@ -3,6 +3,7 @@ import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 
 import { localePrefixes } from './src/i18n/config'
+import { securityHeaders } from './src/lib/security-headers'
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
@@ -14,6 +15,9 @@ const prefixes = Object.values(localePrefixes)
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }]
+  },
   async redirects() {
     return [
       { source: `/:locale(${prefixes})/daily`, destination: '/:locale/news', permanent: true },
