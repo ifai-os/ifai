@@ -245,6 +245,19 @@ export function pickHeadline<T extends { publishedAt?: string | null }>(
   return recent ?? hot[0] ?? latest[0] ?? null
 }
 
+/**
+ * The column's list when no event has heat in the last 48 hours (a quiet spell, or stories that
+ * never had any): the newest stories ranked by their reach index (传播指数, which never drops),
+ * newest first among equals, one per event. The list is titled「近期热门」then, not「48 小时热门」.
+ */
+export function recentPicks<T extends { eventId: number; spread: number; publishedAt?: string | null }>(latest: readonly T[], limit: number): T[] {
+  const time = (story: T) => (story.publishedAt ? new Date(story.publishedAt).getTime() : 0)
+  return onePerEvent(
+    [...latest].sort((a, b) => b.spread - a.spread || time(b) - time(a)),
+    limit,
+  )
+}
+
 /** The hottest story of each event, hottest first: stories come sorted by heat, then newest first. */
 export function onePerEvent<T extends { eventId: number }>(stories: readonly T[], limit: number): T[] {
   const seen = new Set<number>()

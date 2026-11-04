@@ -15,7 +15,7 @@ import type { StoryCategory } from '../../categories'
 import type { StoryTag } from '../../tags'
 import { SubscribeBox } from '../../email/components/subscribe-box'
 import { subscribingOpen } from '../../email/delivery'
-import { hotStories, hottestStory, latestPoster, listStories, mentionedApps } from '../data'
+import { hottestStory, latestPoster, listStories, mentionedApps, sideHotStories } from '../data'
 import { CategoryNav } from './category-nav'
 import { DailyPages } from './daily-pages'
 import { DailyFeedSkeleton } from './daily-skeletons'
@@ -38,7 +38,7 @@ type DailyListProps = {
  * poster (first page of every story only), then under a line the categories (a click filters the
  * list in place, `/news?category=`; each also has its own page,
  * ./category-page.tsx), stories by day, two weeks at a time with「加载更多」(./daily-pages.tsx), and the apps in today's news and the
- * hottest events of the last 48 hours. The email subscribe box sits under the poster on wide
+ * hottest events of the last 48 hours (the newest by reach index when none has heat). The email subscribe box sits under the poster on wide
  * screens (in the poster's place when there is none) and after the stories on phones and tablets.
  * A tag's page is the same list without the first row and the categories.
  */
@@ -52,7 +52,7 @@ export async function DailyList({ locale, tag = null, category = null, page }: D
     listStories({ locale, tag, category, page }),
     front ? hottestStory(locale) : null,
     front ? latestPoster() : null,
-    hotStories(locale),
+    sideHotStories(locale),
     mentionedApps(),
   ])
   // Past the last page: answer 404 rather than an empty list under a new address.
@@ -149,11 +149,11 @@ export async function DailyList({ locale, tag = null, category = null, page }: D
             )}
           </div>
 
-          {(hot.length > 0 || apps.length > 0) && (
+          {(hot.stories.length > 0 || apps.length > 0) && (
             <StickyColumn className="max-md:mt-7 min-w-0 md:grow md:basis-41 lg:sticky lg:grow-0">
               <aside className="flex flex-col gap-8">
                 <MentionedApps apps={apps} serverToday={serverToday} />
-                {hot.length > 0 && <HotList stories={hot} />}
+                {hot.stories.length > 0 && <HotList stories={hot.stories} recent={hot.recent} />}
               </aside>
             </StickyColumn>
           )}
