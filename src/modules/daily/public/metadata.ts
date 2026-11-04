@@ -57,7 +57,11 @@ export async function storyMetadata(slug: string, locale: Locale): Promise<Metad
     title: story.title.value,
     description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
     alternates: alternatesFor(storyHref(story.slug), locale),
-    ...shareCard(locale, { article: { publishedTime: story.publishedAt, modifiedTime: story.correctedAt } }),
+    // The story's own picture (or its video's cover) when it has one, else the site's.
+    ...shareCard(locale, {
+      image: story.media?.picture ? { ...story.media.picture, alt: story.title.value } : null,
+      article: { publishedTime: story.publishedAt, modifiedTime: story.correctedAt },
+    }),
   }
 }
 
