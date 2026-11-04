@@ -9,6 +9,9 @@ import { topicOf, type StoryEntity } from '../../entities'
 import { reachPrompt } from '../../prompts'
 import { events, heatChecks, type HeatCheckKind } from '../../schema'
 import {
+  backfillDue,
+  backfillSince,
+  backfillWindow,
   CHECK_STORY_HOURS,
   checkWeight,
   dailyCheckLimit,
@@ -81,11 +84,14 @@ async function usedToday(kind: HeatCheckKind, now: Date): Promise<number> {
   return row?.count ?? 0
 }
 
-/** Brave's news search for the last day; the fields we read, whatever else comes back. */
-async function braveNews(query: string, apiKey: string): Promise<SearchResult[]> {
+/**
+ * Brave's news search over the window (the last day, or a range of days as
+ * "YYYY-MM-DDtoYYYY-MM-DD"); the fields we read, whatever else comes back.
+ */
+async function braveNews(query: string, apiKey: string, freshness: string): Promise<SearchResult[]> {
   const url = new URL(BRAVE_NEWS)
   url.searchParams.set('q', query.slice(0, MAX_QUERY_CHARS))
-  url.searchParams.set('freshness', 'pd')
+  url.searchParams.set('freshness', freshness)
   url.searchParams.set('count', '50')
   url.searchParams.set('country', 'ALL')
   const response = await fetch(url, {
@@ -114,9 +120,19 @@ const day = (at: Date) => at.toISOString().slice(0, 10)
 
 type Found = { hits: number; engagement: number; details: unknown[] }
 
-async function check(kind: HeatCheckKind, subject: Subject, now: Date): Promise<Found> {
+/**
+ * Where a check looks: the last day (`range` null, Brave's "past day"), or the given days. The
+ * variant names the call, so a retry of the same check reuses its receipt.
+ */
+type Window = { from: string; to: string; range: boolean; variant: string }
+
+/** The regular check: the day before `now`. One per event and kind every 12 hours, so the hour names it. */
+const lastDay = (now: Date): Window => ({ from: day(new Date(now.getTime() - 24 * HOUR_MS)), to: day(now), range: false, variant: now.toISOString().slice(0, 13) })
+
+async function check(kind: HeatCheckKind, subject: Subject, window: Window): Promise<Found> {
   if (kind === 'search') {
-    const outlets = searchOutlets(subject, await braveNews(subject.title, process.env.BRAVE_SEARCH_API_KEY?.trim() ?? ''))
+    const freshness = window.range ? `${window.from}to${window.to}` : 'pd'
+    const outlets = searchOutlets(subject, await braveNews(subject.title, process.env.BRAVE_SEARCH_API_KEY?.trim() ?? '', freshness))
     return { hits: outlets.length, engagement: 0, details: outlets }
   }
   const { output } = await ai.xSearch({
@@ -124,10 +140,9 @@ async function check(kind: HeatCheckKind, subject: Subject, now: Date): Promise<
     instructions: reachPrompt.instructions,
     prompt: reachPrompt.build(subject),
     schema: reachPrompt.schema,
-    fromDate: day(new Date(now.getTime() - 24 * HOUR_MS)),
-    toDate: day(now),
-    // One check per event and kind every 12 hours: a retry in the same hour reuses the receipt.
-    variant: now.toISOString().slice(0, 13),
+    fromDate: window.from,
+    toDate: window.to,
+    variant: window.variant,
     subject: `events:${subject.eventId}`,
     temperature: 0,
   })
@@ -153,7 +168,7 @@ export async function runChecks(kind: HeatCheckKind, now = new Date()): Promise<
     const subject = subjects.get(eventId)
     if (!subject) continue
     try {
-      const found = await check(kind, subject, now)
+      const found = await check(kind, subject, lastDay(now))
       const value = kind === 'search' ? found.hits : found.engagement
       await db.insert(heatChecks).values({ eventId, kind, hits: found.hits, engagement: found.engagement, weight: checkWeight(kind, value), details: found.details, checkedAt: now })
       run.checked++
@@ -167,3 +182,77 @@ export async function runChecks(kind: HeatCheckKind, now = new Date()): Promise<
   return run
 }
 
+
+/**
+ * Catch up on older stories with one channel (./rules.ts「backfill」): up to `limit` events
+ * published from HEAT_BACKFILL_SINCE until 48 hours ago that the channel has not checked yet,
+ * newest first, each searched over its first two days. The check is stored at the story's
+ * publish time, so it counts towards the reach index with the story's own sources and adds
+ * nothing to today's heat. Stops like `runChecks` when a model call cannot run.
+ */
+export async function runBackfill(kind: HeatCheckKind, limit: number, now = new Date()): Promise<CheckRun> {
+  const run: CheckRun = { kind, checked: 0, failed: 0, events: [] }
+  if (!checksEnabled()[kind]) return { ...run, stopped: 'disabled' }
+  if (limit <= 0) return { ...run, stopped: 'daily limit' }
+  const { payload, db } = await getDb()
+  const since = backfillSince()
+  const { docs } = await payload.find({
+    collection: 'stories',
+    where: {
+      and: [
+        { status: { equals: 'published' } },
+        { publishedAt: { greater_than_equal: since.toISOString() } },
+        { publishedAt: { less_than: new Date(now.getTime() - CHECK_STORY_HOURS * HOUR_MS).toISOString() } },
+      ],
+    },
+    pagination: false,
+    depth: 0,
+    select: { eventId: true, publishedAt: true },
+  })
+  const ids = [...new Set(docs.map((doc) => doc.eventId))]
+  if (!ids.length) return run
+  const [existing, checked] = await Promise.all([
+    db.select({ id: events.id }).from(events).where(inArray(events.id, ids)),
+    db.selectDistinct({ eventId: heatChecks.eventId }).from(heatChecks).where(and(inArray(heatChecks.eventId, ids), eq(heatChecks.kind, kind))),
+  ])
+  // A story whose event is gone (sample data) has nothing to attach a check to.
+  const known = new Set(existing.map((row) => row.id))
+  const stories = docs.flatMap((doc) => (doc.publishedAt && known.has(doc.eventId) ? [{ eventId: doc.eventId, publishedAt: new Date(doc.publishedAt) }] : []))
+  const due = backfillDue(stories, new Set(checked.map((row) => row.eventId)), since, now, limit)
+  if (!due.length) return run
+
+  const { docs: texts } = await payload.find({
+    collection: 'stories',
+    where: { and: [{ status: { equals: 'published' } }, { eventId: { in: due.map((story) => story.eventId) } }] },
+    pagination: false,
+    depth: 0,
+    locale: 'en',
+    fallbackLocale: false,
+    sort: '-publishedAt',
+    select: { eventId: true, title: true, summary: true, entities: true },
+  })
+  const subjects = new Map<number, Subject>()
+  for (const doc of texts) {
+    if (!doc.title || subjects.has(doc.eventId)) continue
+    const entities = (doc.entities ?? []) as StoryEntity[]
+    subjects.set(doc.eventId, { eventId: doc.eventId, title: doc.title, topic: topicOf(entities)?.name ?? null, summary: doc.summary ?? '' })
+  }
+
+  for (const { eventId, publishedAt } of due) {
+    const subject = subjects.get(eventId)
+    if (!subject) continue
+    const { from, to } = backfillWindow(publishedAt)
+    try {
+      const found = await check(kind, subject, { from, to, range: true, variant: `backfill-${from}` })
+      const value = kind === 'search' ? found.hits : found.engagement
+      await db.insert(heatChecks).values({ eventId, kind, hits: found.hits, engagement: found.engagement, weight: checkWeight(kind, value), details: found.details, checkedAt: publishedAt })
+      run.checked++
+      run.events.push(eventId)
+    } catch (error) {
+      run.failed++
+      console.error(`[daily heat] ${kind} catch-up check of event ${eventId} failed:`, error instanceof Error ? error.message : error)
+      if (error instanceof ModelCallError && !error.retryable) return { ...run, stopped: error.message }
+    }
+  }
+  return run
+}

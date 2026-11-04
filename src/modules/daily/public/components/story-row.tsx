@@ -1,12 +1,12 @@
 "use client";
 
-import { LocalTime } from "@/components/local-time";
 import { Link } from "@/i18n/navigation";
 
 import type { StoryItem } from "../story-item";
 import { listHref, storyHref } from "../list-params";
 import { SpreadIndex } from "./spread-index";
 import { StoryThumb } from "./story-media";
+import { StoryClock } from "./story-time";
 
 /**
  * One story in the list (「IFAI 日报（新版）」board): local time, category (a link to its page), reach index; title;
@@ -29,9 +29,8 @@ export function StoryRow({
       >
         <div className="flex min-w-0 flex-col gap-3">
           <p className="flex flex-wrap items-center gap-x-3 text-meta text-ink-4">
-            <LocalTime
+            <StoryClock
               iso={story.publishedAt}
-              style="time"
               className="font-medium text-accent-ink tabular-nums"
             />
             <Link href={listHref({ category: story.category })} className="hover:text-ink">

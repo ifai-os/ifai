@@ -1103,6 +1103,7 @@
     "categoryTitle": "{category} · Daily",
     "categoryWeek": "{count, plural, one {# story} other {# stories}} in the last 7 days",
     "categoryUpdated": "updated {when, select, today {{time}} yesterday {yesterday at {time}} other {{date}, {time}}}",
+    "categoryUpdatedOn": "updated {date}",
     "pageTitle": "{title} · Page {page}",
     "pages": "Pages",
     "filterLabel": "Filter by category",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { importAllowed } from '@/modules/daily/import/endpoint'
-import { importApprovedAt, importMedia, importSources, importTags, parseImport, parseImportStory, sameMedia, slugCandidates } from '@/modules/daily/import/rules'
+import { importApprovedAt, importEntities, importHeatPeak, importMedia, importSources, importTags, parseImport, parseImportStory, sameMedia, slugCandidates } from '@/modules/daily/import/rules'
 
 /** A line as `newscrawler export-stories` writes it (trimmed). */
 const exported = {
@@ -98,6 +98,21 @@ describe('stories imported from the pipeline', () => {
     expect(importTags('agents')).toEqual([])
   })
 
+  it('reads the companies and products by the rule for stories the site writes', () => {
+    expect(importEntities(['Anthropic', 'anthropic'], ['Claude Duet'])).toEqual([
+      { name: 'Claude Duet', kind: 'product', key: 'claudeduet' },
+      { name: 'Anthropic', kind: 'company', key: 'anthropic' },
+    ])
+    expect(importEntities(['A', 'B', 'C', 'D'], undefined)).toHaveLength(3)
+    expect(importEntities([], [])).toEqual([])
+    expect(importEntities(undefined, undefined)).toBeNull()
+
+    const parsed = parseImportStory({ ...exported, companies: ['Anthropic'], products: [] })
+    expect(parsed.ok && parsed.story.entities).toEqual([{ name: 'Anthropic', kind: 'company', key: 'anthropic' }])
+    const without = parseImportStory(exported)
+    expect(without.ok && without.story.entities).toBeNull()
+  })
+
   it('lists the original first, marks discussion threads and drops repeated addresses', () => {
     expect(
       importSources([
@@ -143,5 +158,20 @@ describe('stories imported from the pipeline', () => {
     expect(importAllowed(request(), env)).toBe(false)
     expect(importAllowed(request('Bearer secret-token'), {})).toBe(false)
     expect(importAllowed(request(undefined, { id: 1 }), {})).toBe(true)
+  })
+
+  it('gives a story the reach index its listed sources reach, each site once', () => {
+    const source = (url: string, publishedAt: string | null) => ({ name: 'x', role: 'report' as const, url, publishedAt })
+    const one = importHeatPeak([source('https://lab.example/a', '2026-10-21T00:00:00Z')], '2026-10-21T07:00:00Z')
+    expect(one).toBeGreaterThan(20)
+    expect(one).toBeLessThan(40)
+    const three = importHeatPeak(
+      [source('https://lab.example/a', null), source('https://news.example/b', null), source('https://outlet.example/c', null)],
+      '2026-10-21T07:00:00Z',
+    )
+    expect(three).toBeGreaterThan(50)
+    // The same site twice counts once; a report a week later adds nothing to the peak.
+    expect(importHeatPeak([source('https://lab.example/a', null), source('https://lab.example/b', null)], '2026-10-21T07:00:00Z')).toBe(one)
+    expect(importHeatPeak([source('https://lab.example/a', null), source('https://news.example/b', '2026-10-28T07:00:00Z')], '2026-10-21T07:00:00Z')).toBe(one)
   })
 })

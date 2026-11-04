@@ -18,9 +18,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const page = readPage(query)
   const category = readCategory(query)
   if (!isLocale(locale) || !page || category === undefined) return {}
-  // The list filtered to a category points search engines at the category's own page.
-  if (category) return { ...(await listMetadata({ locale, category, page })), robots: { index: false, follow: true } }
-  return listMetadata({ locale, category: null, page })
+  // The list filtered to a category shows the category's stories, so its canonical address is the
+  // category's own page. No noindex as well: search engines take the two together as mixed signals.
+  return listMetadata({ locale, category, page })
 }
 
 export default async function DailyPage({ params, searchParams }: Props) {

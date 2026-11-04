@@ -3,10 +3,11 @@ import { and, eq, inArray } from '@payloadcms/db-postgres/drizzle'
 import { getDb } from '@/lib/db/drizzle'
 import { inngest } from '@/lib/inngest/client'
 
+import { peakOf } from '../heat/rules'
 import { refreshDailyCache } from '../review/cache'
 import { eventItems, events, rawItems } from '../schema'
 import { IMPORT_MEDIA_EVENT, type ImportMediaEvent } from './media'
-import { importApprovedAt, importLocales, sameMedia, slugCandidates, type ImportStory, type ImportText } from './rules'
+import { importApprovedAt, importHeatPeak, importLocales, sameMedia, slugCandidates, type ImportStory, type ImportText } from './rules'
 
 type Payload = Awaited<ReturnType<typeof getDb>>['payload']
 type Db = Awaited<ReturnType<typeof getDb>>['db']
@@ -111,8 +112,8 @@ async function freeSlug(payload: Payload, story: ImportStory): Promise<string> {
 const localeData = (text: ImportText) => ({ title: text.title, summary: text.summary, tryIt: text.tryIt, body: text.body })
 
 /**
- * Store one story: the same Feishu record updates its story (text, category, tags, sources,
- * score and time; its address and status stay), a new one goes on the site at its publish time.
+ * Store one story: the same Feishu record updates its story (text, category, tags, companies and
+ * products when the line names them, sources, score, time and reach index; its address and status stay), a new one goes on the site at its publish time.
  * Its picture or video is copied afterwards (./media.ts) when it is new or changed; a picture the
  * pipeline no longer sends is taken off. An unchanged one leaves the story's media alone, so an
  * editor's change in the admin stays.
@@ -128,6 +129,7 @@ async function importOne(
   const fields = {
     category: story.category,
     tags: story.tags,
+    ...(story.entities ? { entities: story.entities } : {}),
     sources: story.sources,
     score: story.score,
     publishedAt: story.publishedAt,
@@ -137,16 +139,18 @@ async function importOne(
     where: { representativeItemId: { equals: itemId } },
     limit: 1,
     depth: 0,
-    select: { slug: true, status: true },
+    select: { slug: true, status: true, heatPeak: true },
   })
   const found = existing.docs[0]
+  // Never lower: the heat job may have seen the story go further than its listed sources.
+  const heatPeak = peakOf(found?.heatPeak, importHeatPeak(story.sources, story.publishedAt))
   const dropMedia = found && mediaChanged && !story.media
   const doc = found
     ? await payload.update({
         collection: 'stories',
         id: found.id,
         locale: 'en',
-        data: { ...fields, ...localeData(story.text.en), ...(dropMedia ? { media: { kind: 'none' as const, image: null, videoUrl: null, credit: null } } : {}) },
+        data: { ...fields, heatPeak, ...localeData(story.text.en), ...(dropMedia ? { media: { kind: 'none' as const, image: null, videoUrl: null, credit: null } } : {}) },
         depth: 0,
       })
     : await payload.create({
@@ -154,6 +158,7 @@ async function importOne(
         locale: 'en',
         data: {
           ...fields,
+          heatPeak,
           ...localeData(story.text.en),
           slug: await freeSlug(payload, story),
           status: 'published',

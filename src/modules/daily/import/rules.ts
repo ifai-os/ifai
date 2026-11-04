@@ -4,6 +4,8 @@
  * functions: ./import.ts stores them.
  */
 import { storyCategories, type StoryCategory } from '../categories'
+import { storyEntities, type StoryEntity } from '../entities'
+import { peakHeat, type HeatSignal } from '../heat/rules'
 import { parseVideo, usableImage, videoUrl, type FoundMedia } from '../media'
 import type { SourceRole } from '../story-fields'
 import { maxStoryTags, storyTags, type StoryTag } from '../tags'
@@ -31,6 +33,8 @@ export type ImportStory = {
   slug: string
   category: StoryCategory
   tags: StoryTag[]
+  /** Null when the line says nothing about them: what the story has stays, an editor's change included. */
+  entities: StoryEntity[] | null
   publishedAt: string
   score: number | null
   sources: ImportSource[]
@@ -100,6 +104,16 @@ export function importTags(value: unknown): StoryTag[] {
 }
 
 /**
+ * The companies and products the story is about, named in `companies` and `products`, kept by the
+ * same rule as a story the site writes itself. Null when the line has neither list.
+ */
+export function importEntities(companies: unknown, products: unknown): StoryEntity[] | null {
+  if (!Array.isArray(companies) && !Array.isArray(products)) return null
+  const names = (value: unknown) => (Array.isArray(value) ? value.filter((name): name is string => typeof name === 'string') : [])
+  return storyEntities({ companies: names(companies), products: names(products) })
+}
+
+/**
  * The line's `media` (docs/specs/daily.md「从本地流水线导入」): `{ kind: 'image', imageUrl, credit }`
  * or `{ kind: 'video', videoUrl, imageUrl?, credit }`, or null. Read with the collector's own
  * rules: a video only from YouTube, Vimeo or an .mp4 / .webm file, a picture never an SVG or a
@@ -127,6 +141,24 @@ export function sameMedia(a: FoundMedia | null | undefined, b: FoundMedia | null
   return key(a) === key(b)
 }
 
+/**
+ * 传播指数 of an imported story (2026-11-04 站长反馈导入的新闻没有): the highest heat its listed
+ * sources give it by the heat rules (../heat/rules.ts), each site counted once at the time it
+ * published (else the story's), as if the site had collected them. The site holds only the
+ * original as a report, and the hourly heat job looks back 54 hours, so an older story would
+ * otherwise never have one.
+ */
+export function importHeatPeak(sources: readonly ImportSource[], publishedAt: string): number {
+  const sites = new Map<string, number>()
+  const signals: HeatSignal[] = sources.map((source) => {
+    const site = siteOf(source.url) ?? source.url
+    if (!sites.has(site)) sites.set(site, sites.size)
+    const at = new Date(source.publishedAt ?? publishedAt)
+    return { sourceId: sites.get(site)!, at, knownAt: at, weight: 1 }
+  })
+  return peakHeat(signals)
+}
+
 /** Check one exported story; the error says what is wrong in words the pipeline's log can show. */
 export function parseImportStory(value: unknown): ParsedLine {
   if (!isRecord(value)) return { ok: false, error: 'not a JSON object' }
@@ -149,6 +181,7 @@ export function parseImportStory(value: unknown): ParsedLine {
     slug: slugify(typeof value.slug === 'string' ? value.slug : '') || slugify(en.title) || `story-${slugify(recordId) || 'imported'}`,
     category,
     tags: importTags(value.tags),
+    entities: importEntities(value.companies, value.products),
     publishedAt,
     score: typeof value.score === 'number' && Number.isFinite(value.score) ? value.score : null,
     sources,

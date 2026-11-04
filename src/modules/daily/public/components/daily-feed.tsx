@@ -6,6 +6,7 @@ import { DateBadge } from '@/components/cards/date-badge'
 import { useReaderTimeZone, useReaderToday } from '@/components/local-time'
 import { groupByDay, relativeDay } from '@/lib/local-time'
 
+import { storyDayKey } from '../../date-only'
 import type { StoryItem } from '../story-item'
 import { StoryRow } from './story-row'
 
@@ -24,7 +25,7 @@ export function DailyFeed({ stories, serverToday }: DailyFeedProps) {
   const locale = useLocale()
   const timeZone = useReaderTimeZone()
   const today = useReaderToday(serverToday)
-  const groups = groupByDay(stories, (story) => story.publishedAt, timeZone)
+  const groups = groupByDay(stories, (story) => story.publishedAt, timeZone, storyDayKey)
 
   return (
     <div className="flex flex-col gap-6">

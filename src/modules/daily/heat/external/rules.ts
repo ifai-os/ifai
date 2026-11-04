@@ -48,11 +48,69 @@ export function checkSignals(checks: readonly StoredCheck[]): Map<number, HeatSi
   return result
 }
 
+/** A whole number from 0 written in an environment variable, else the fallback. */
+const wholeNumber = (raw: string | undefined, fallback: number) => {
+  const value = raw?.trim() ? Number(raw) : NaN
+  return Number.isInteger(value) && value >= 0 ? value : fallback
+}
+
 /** The daily cap for a kind: its environment variable when it is a whole number, else the default. */
 export function dailyCheckLimit(kind: HeatCheckKind, env: Record<string, string | undefined> = process.env): number {
-  const raw = env[kind === 'search' ? 'HEAT_SEARCH_DAILY_LIMIT' : 'HEAT_X_DAILY_LIMIT']?.trim()
-  const value = raw ? Number(raw) : NaN
-  return Number.isInteger(value) && value >= 0 ? value : DEFAULT_DAILY_CHECKS[kind]
+  return wholeNumber(env[kind === 'search' ? 'HEAT_SEARCH_DAILY_LIMIT' : 'HEAT_X_DAILY_LIMIT'], DEFAULT_DAILY_CHECKS[kind])
+}
+
+/**
+ * Catching up on older stories (2026-11-04 站长): the stories published before the last 48 hours,
+ * from `HEAT_BACKFILL_SINCE` on, each checked once per channel over the two days after it came
+ * out, newest first, a daily share at a time. The check counts from when the story came out, so
+ * it adds to the story's reach index like its other sources and never to today's heat.
+ */
+export const DEFAULT_BACKFILL_SINCE = '2026-01-01'
+/** Default daily share of the catching up, overridden by HEAT_SEARCH_BACKFILL_DAILY_LIMIT and HEAT_X_BACKFILL_DAILY_LIMIT. */
+export const DEFAULT_BACKFILL_DAILY: Record<HeatCheckKind, number> = { search: 100, x: 50 }
+/** Checks per step of the catch-up job, so each step stays well within a function's time. */
+export const BACKFILL_STEP = 10
+/** The window a catch-up check searches: the story's day and the two after it. */
+export const BACKFILL_WINDOW_DAYS = 2
+
+/** The day the catching up starts from: `HEAT_BACKFILL_SINCE` when it is a date, else 2026-01-01. */
+export function backfillSince(env: Record<string, string | undefined> = process.env): Date {
+  const raw = env.HEAT_BACKFILL_SINCE?.trim()
+  const parsed = raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? Date.parse(`${raw}T00:00:00Z`) : NaN
+  return new Date(Number.isNaN(parsed) ? `${DEFAULT_BACKFILL_SINCE}T00:00:00Z` : parsed)
+}
+
+/** How many older stories a channel catches up on each day. */
+export function backfillDailyLimit(kind: HeatCheckKind, env: Record<string, string | undefined> = process.env): number {
+  return wholeNumber(env[kind === 'search' ? 'HEAT_SEARCH_BACKFILL_DAILY_LIMIT' : 'HEAT_X_BACKFILL_DAILY_LIMIT'], DEFAULT_BACKFILL_DAILY[kind])
+}
+
+/** The days a catch-up check searches, as YYYY-MM-DD (UTC): the story's day and the two after it. */
+export function backfillWindow(publishedAt: Date): { from: string; to: string } {
+  const to = new Date(publishedAt.getTime() + BACKFILL_WINDOW_DAYS * 24 * HOUR_MS)
+  return { from: publishedAt.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) }
+}
+
+export type BackfillCandidate = { eventId: number; publishedAt: Date }
+
+/**
+ * The events to catch up on: published from `since` until 48 hours ago (newer ones get the
+ * regular checks), not yet checked by this channel, newest first, one entry per event.
+ */
+export function backfillDue(
+  stories: readonly BackfillCandidate[],
+  checked: ReadonlySet<number>,
+  since: Date,
+  now: Date,
+  limit: number,
+): BackfillCandidate[] {
+  const until = now.getTime() - CHECK_STORY_HOURS * HOUR_MS
+  const seen = new Set<number>()
+  return [...stories]
+    .filter((story) => story.publishedAt.getTime() >= since.getTime() && story.publishedAt.getTime() < until && !checked.has(story.eventId))
+    .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime() || a.eventId - b.eventId)
+    .filter((story) => !seen.has(story.eventId) && Boolean(seen.add(story.eventId)))
+    .slice(0, Math.max(0, limit))
 }
 
 export type CheckCandidate = { eventId: number; heat: number; lastChecked: Date | null }
