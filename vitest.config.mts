@@ -12,6 +12,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/unit/**/*.test.{ts,tsx}'],
+    // Tests see every module of their phase open; the closed-for-now ones (src/config/site.ts) are
+    // tested with the list passed in, or with this stubbed (tests/unit/proxy.test.ts).
+    env: { NEXT_PUBLIC_CLOSED_MODULES: 'none' },
     server: {
       deps: {
         // next-intl's ESM imports "next/server" without an extension; let Vite resolve it.

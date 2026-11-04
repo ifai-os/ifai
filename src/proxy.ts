@@ -1,6 +1,8 @@
 import createMiddleware from 'next-intl/middleware'
 import { type NextRequest, NextResponse } from 'next/server'
 
+import { closedPathRedirect } from './config/site'
+import { localeFromPathSegment, localizePath } from './i18n/config'
 import { routing } from './i18n/routing'
 
 const intl = createMiddleware(routing)
@@ -22,13 +24,31 @@ function adminLanguage(request: NextRequest): NextResponse {
   return response
 }
 
+/**
+ * Pages of a module closed for now (src/config/site.ts `closedModules`), and the home page while
+ * it is mostly closed modules, go to the daily in the same language. Temporary (307), so search
+ * engines and browsers don't keep it once the modules open. Addresses without a language get
+ * theirs first from next-intl, then come back here.
+ */
+function closedRedirect(request: NextRequest): NextResponse | null {
+  const [, segment, ...rest] = request.nextUrl.pathname.split('/')
+  const locale = localeFromPathSegment(segment)
+  if (!locale) return null
+  const target = closedPathRedirect(`/${rest.join('/')}`)
+  if (!target) return null
+  const url = request.nextUrl.clone()
+  url.pathname = localizePath(locale, target)
+  url.search = ''
+  return NextResponse.redirect(url, 307)
+}
+
 // Next.js 16 "proxy" (formerly middleware): locale detection, redirects and rewrites for the site;
 // the admin's default language for /admin.
 export default function proxy(request: NextRequest) {
   if (request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/')) {
     return adminLanguage(request)
   }
-  return intl(request)
+  return closedRedirect(request) ?? intl(request)
 }
 
 export const config = {

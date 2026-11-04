@@ -6,7 +6,7 @@ import { Logo } from '@/components/brand/logo'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NavLink } from '@/components/nav-link'
 import { SearchLink } from '@/components/search-link'
-import { visibleNavItems } from '@/config/site'
+import { homeHref, visibleNavItems } from '@/config/site'
 import { Link } from '@/i18n/navigation'
 
 export function SiteHeader() {
@@ -18,7 +18,7 @@ export function SiteHeader() {
       <HeaderLine />
       <div className="mx-auto flex min-h-14 max-w-nav flex-wrap items-center justify-between gap-x-6 px-4">
         <Link
-          href="/"
+          href={homeHref()}
           aria-label={t('header.home')}
           className="flex min-w-30 flex-1 items-center gap-2 text-ink"
         >

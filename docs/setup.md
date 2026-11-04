@@ -61,6 +61,7 @@ pnpm dev                 # http://localhost:3000
 |---|---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://<域名>` | 不填 | 预览环境自动使用 Vercel 分配的地址；`main` 的预览用固定地址（workflow 传入 `PREVIEW_SITE_URL`） |
 | `NEXT_PUBLIC_SITE_PHASE` | `1` | `1` | 想在预览里看后面的模块时改成 2 或 3 |
+| `NEXT_PUBLIC_CLOSED_MODULES` | 不填（= `apps,resources`） | 不填，或 `none` 在预览里看应用和资源 | 先对读者关闭的模块；`none` 全部打开（见 status.md「分期」） |
 | `DATABASE_URI` | Neon `main` 分支 | **不填** | 预览的连接串由 GitHub Actions 传入：PR 用自己的 Neon 分支，`main` 的预览用 `preview/main` |
 | `PAYLOAD_SECRET` | 随机字符串 | 另一个随机字符串 | |
 | `BETTER_AUTH_SECRET` | 随机字符串 | 另一个随机字符串 | |

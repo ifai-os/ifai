@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import proxy from '@/proxy'
 
@@ -39,9 +39,52 @@ describe('locale proxy', () => {
   })
 
   it('serves lowercase prefixes from the canonical locale segment', async () => {
-    const response = await proxy(request('/zh-hans/apps'))
+    const response = await proxy(request('/zh-hans/news'))
     const rewrite = response.headers.get('x-middleware-rewrite')
-    expect(rewrite && new URL(rewrite).pathname).toBe('/zh-Hans/apps')
+    expect(rewrite && new URL(rewrite).pathname).toBe('/zh-Hans/news')
+  })
+})
+
+// Apps and resources are closed by default in phase one (src/config/site.ts); the unit tests open
+// them (vitest.config.mts), so these load the proxy again without that.
+describe('closed modules', () => {
+  let closedProxy: typeof proxy
+  beforeAll(async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLOSED_MODULES', '')
+    vi.resetModules()
+    closedProxy = (await import('@/proxy')).default
+  })
+  afterAll(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  it.each([
+    ['/zh-hans', '/zh-hans/news'],
+    ['/ja/apps', '/ja/news'],
+    ['/ko/apps/notion?tab=reviews', '/ko/news'],
+    ['/zh-hant/resources/skills/release-notes', '/zh-hant/news'],
+    ['/en/apps/submit', '/en/news'],
+  ])('sends %s to the daily for now', async (path, expected) => {
+    const response = await closedProxy(request(path))
+    expect(response.status).toBe(307)
+    expect(redirectPath(response)).toBe(expected)
+    expect(new URL(response.headers.get('location')!).search).toBe('')
+  })
+
+  it('first gives an address without a language its language', async () => {
+    const response = await closedProxy(request('/apps', { 'accept-language': 'ja' }))
+    expect(redirectPath(response)).toBe('/ja/apps')
+  })
+
+  it('leaves the daily and the back office alone', async () => {
+    expect((await closedProxy(request('/en/news/topic/kimi'))).headers.get('location')).toBeNull()
+    expect((await closedProxy(request('/admin/collections/apps'))).headers.get('location')).toBeNull()
+  })
+
+  it('is off when NEXT_PUBLIC_CLOSED_MODULES is none', async () => {
+    expect((await proxy(request('/en/apps/notion'))).headers.get('location')).toBeNull()
+    expect((await proxy(request('/en'))).headers.get('location')).toBeNull()
   })
 })
 

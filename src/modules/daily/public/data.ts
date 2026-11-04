@@ -3,6 +3,7 @@ import { and, desc, eq, gte, isNull, sql } from '@payloadcms/db-postgres/drizzle
 import { getPayload, type Where } from 'payload'
 import { cache } from 'react'
 
+import { isLaunched } from '@/config/site'
 import type { Locale } from '@/i18n/config'
 import { cached } from '@/lib/data-cache'
 import { getDb } from '@/lib/db/drizzle'
@@ -767,7 +768,8 @@ export async function hottestStory(locale: Locale, now = new Date()): Promise<Ho
 
 /** Published apps that published stories of the last 48 hours are about, newest mention first. */
 export async function mentionedApps(): Promise<MentionedApp[]> {
-  return findMentionedApps()
+  // While the apps are closed (src/config/site.ts), the daily doesn't point to them.
+  return isLaunched('apps') ? findMentionedApps() : []
 }
 
 /** A Shanghai day's poster as generated (what its images show); null when that day has none. */

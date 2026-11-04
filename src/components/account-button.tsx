@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { MemberAvatar, memberName } from '@/components/account/member-avatar'
 import { Icon, type IconName } from '@/components/icon'
 import { ThemePicker } from '@/components/theme-picker'
+import { isLaunched } from '@/config/site'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth/client'
 
@@ -101,7 +102,7 @@ export function AccountButton() {
           <nav aria-label={t('mine')} className="flex flex-col px-2 py-1.5">
             <MenuLink href="/me/saves" icon="bookmark" label={t('saves')} onClick={close} />
             <MenuLink href="/me/following" icon="hash" label={t('following')} onClick={close} />
-            <MenuLink href="/apps/submit#mine" icon="upload" label={t('submissions')} onClick={close} />
+            {isLaunched('apps') && <MenuLink href="/apps/submit#mine" icon="upload" label={t('submissions')} onClick={close} />}
           </nav>
           <div className="h-px bg-surface-2" />
           {appearance && <ThemePicker className="mx-4 mt-3" />}

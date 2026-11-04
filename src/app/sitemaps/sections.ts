@@ -1,4 +1,4 @@
-import { isLaunched } from '@/config/site'
+import { homeHref, isLaunched } from '@/config/site'
 import type { SitemapPage, SitemapSection } from '@/lib/sitemap'
 import { appsSitemap } from '@/modules/apps/sitemap'
 import { legalDocuments, legalHref } from '@/modules/legal/documents'
@@ -12,8 +12,9 @@ import { resourcesSitemap } from '@/modules/resources/public/sitemap'
 export async function sitemapPages(): Promise<Record<SitemapSection, SitemapPage[]>> {
   const [daily, apps, resources, rankings, external, recommend] = await Promise.all([
     dailySitemap(),
-    appsSitemap(),
-    resourcesSitemap(),
+    // Closed for now (src/config/site.ts): their pages redirect to the daily, so none are listed.
+    isLaunched('apps') ? appsSitemap() : { pages: [], apps: [] },
+    isLaunched('resources') ? resourcesSitemap() : { pages: [], skills: [] },
     rankingsSitemap(),
     externalSitemap(),
     recommendSitemap(),
@@ -22,7 +23,8 @@ export async function sitemapPages(): Promise<Record<SitemapSection, SitemapPage
   const circles: SitemapPage[] = isLaunched('circles') ? [{ path: '/circles' }] : []
   return {
     pages: [
-      { path: '/', lastModified: daily.stories[0]?.lastModified },
+      // The home page only while it is not redirected to the daily.
+      ...(homeHref() === '/' ? [{ path: '/' as const, lastModified: daily.stories[0]?.lastModified }] : []),
       ...daily.pages,
       ...apps.pages,
       ...rankings,

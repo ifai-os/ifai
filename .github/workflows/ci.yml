@@ -44,6 +44,8 @@ jobs:
       # Builds with the phase-two modules (圈子), so the smoke tests cover them before launch. Phase one's
       # navigation is covered by the unit tests (tests/unit/site-config.test.ts).
       NEXT_PUBLIC_SITE_PHASE: '2'
+      # Apps and resources are closed to readers for now (src/config/site.ts); the smoke tests still cover them.
+      NEXT_PUBLIC_CLOSED_MODULES: none
       # The subscribe boxes and endpoints, for the smoke tests. Without Resend the emails only go to the server log.
       DAILY_EMAIL_ENABLED: 'true'
       # Signs the smoke tests' fake Resend webhooks (base64 of a made-up string).
@@ -134,6 +136,7 @@ jobs:
       BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-used-anywhere-else
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_PUBLIC_SITE_PHASE: '3'
+      NEXT_PUBLIC_CLOSED_MODULES: none
       NEXT_TELEMETRY_DISABLED: '1'
 
     steps:

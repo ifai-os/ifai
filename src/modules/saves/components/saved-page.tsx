@@ -5,6 +5,7 @@ import { SignInForm } from '@/components/auth/sign-in-form'
 import { ButtonLink } from '@/components/button'
 import { LocalTime } from '@/components/local-time'
 import { EmptyState } from '@/components/states/empty-state'
+import { isLaunched } from '@/config/site'
 import { localizePath, type Locale } from '@/i18n/config'
 import { Link } from '@/i18n/navigation'
 import type { AuthProviders } from '@/lib/auth/providers'
@@ -43,10 +44,12 @@ export function SavedPage({ saved, signIn }: SavedPageProps) {
         </div>
       ) : saved.stories.length + saved.apps.length + saved.skills.length === 0 ? (
         <EmptyState icon="bookmark" title={t('emptyTitle')} body={t('emptyBody')}>
-          <ButtonLink href="/apps">{t('browseApps')}</ButtonLink>
-          <ButtonLink href="/resources" variant="secondary">
-            {t('browseSkills')}
-          </ButtonLink>
+          {isLaunched('apps') && <ButtonLink href="/apps">{t('browseApps')}</ButtonLink>}
+          {isLaunched('resources') && (
+            <ButtonLink href="/resources" variant={isLaunched('apps') ? 'secondary' : undefined}>
+              {t('browseSkills')}
+            </ButtonLink>
+          )}
         </EmptyState>
       ) : (
         <div className="flex w-full max-w-190 flex-col gap-8">
