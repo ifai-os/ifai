@@ -66,7 +66,7 @@ export function StoryDetailSkeleton() {
             <SkeletonLine text="text-h1 md:text-h1-article" width="55%" bar="h-7 md:h-8" />
             <SkeletonLine text="text-meta" width="40%" />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col border-l-3 border-surface-2 pl-4 md:pl-5">
             {['96%', '92%', '60%'].map((width) => (
               <SkeletonLine key={width} text="text-body-article" width={width} bar="h-3.5" />
             ))}

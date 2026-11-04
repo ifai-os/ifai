@@ -91,7 +91,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
             </header>
 
             {story.summary && (
-              <p lang={story.summary.lang} className="text-body-article whitespace-pre-line text-ink-2">
+              <p lang={story.summary.lang} className="border-l-3 border-accent pl-4 text-body-article whitespace-pre-line text-ink-2 md:pl-5">
                 {story.summary.value}
               </p>
             )}
