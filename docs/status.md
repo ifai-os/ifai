@@ -6,6 +6,7 @@
 
 ## 现在到哪了
 
+- **日报断更告警（2026-11-05）**：任务 `daily-stale-check` 每 3 小时看一次，超过 12 小时没有新发布就给所有后台管理员发邮件，之后每天一封直到恢复（daily.md「断更告警」）。默认只在生产发。
 - **上线前四角色复查的代码项（2026-11-05）**：Payload 自带的 REST（`/api/stories`、`/api/apps` 等）不再对访客整库开放（PR #126，`src/lib/reader-access.ts`）；日报详情页去掉 `loading.tsx`，首次访问生成并缓存的 HTML 直接是正文，不再是「空骨架 + 藏起来的正文」（见 daily.md「加载状态」）。
 - **撤下预览上的示例新闻（2026-11-05）**：Seed preview 加了「Withdraw the sample stories」选项，跑 `scripts/withdraw-sample-stories.ts` 把 `sample-` 开头的示例新闻改成已撤回（不删），预览上只剩真实新闻；不勾这个选项再跑一次 Seed preview 就恢复。生产从来没有示例新闻。
 - **预览站显示订阅框（2026-11-05）**：Preview 的 `DAILY_EMAIL_ENABLED` 为了不发晨报改成了 `false`，订阅框跟着不见。现在订阅框和发信分开：`subscribingOpen()` 在预览上只要配了 Resend 就打开，晨报和管理订阅页的「下一封」看 `dailySending()`（还是 `DAILY_EMAIL_ENABLED` 管）。生产照旧。
