@@ -1,3 +1,4 @@
+import { homeHref } from '@/config/site'
 import type { Locale } from '@/i18n/config'
 import { defaultShareImage } from '@/lib/seo'
 import { absoluteUrl, breadcrumbs, clip, pageUrl, siteOrganization, type JsonLdObject } from '@/lib/structured-data'
@@ -36,7 +37,8 @@ export function articleJsonLd(
       publisher: siteOrganization(),
     },
     breadcrumbs(locale, [
-      { name: labels.home, path: '/' },
+      // The site's home: the daily while the home page goes there (src/config/site.ts).
+      { name: labels.home, path: homeHref() },
       { name: labels.recommend, path: listHref() },
       { name: labels.channel, path: listHref({ tab: 'latest', channel: article.channel }) },
       { name: article.title, path: articleHref(article.id) },
