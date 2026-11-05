@@ -6,6 +6,7 @@
 
 ## 现在到哪了
 
+- **上线前四角色复查的代码项（2026-11-05）**：Payload 自带的 REST（`/api/stories`、`/api/apps` 等）不再对访客整库开放（PR #126，`src/lib/reader-access.ts`）；日报详情页去掉 `loading.tsx`，首次访问生成并缓存的 HTML 直接是正文，不再是「空骨架 + 藏起来的正文」（见 daily.md「加载状态」）。
 - **撤下预览上的示例新闻（2026-11-05）**：Seed preview 加了「Withdraw the sample stories」选项，跑 `scripts/withdraw-sample-stories.ts` 把 `sample-` 开头的示例新闻改成已撤回（不删），预览上只剩真实新闻；不勾这个选项再跑一次 Seed preview 就恢复。生产从来没有示例新闻。
 - **预览站显示订阅框（2026-11-05）**：Preview 的 `DAILY_EMAIL_ENABLED` 为了不发晨报改成了 `false`，订阅框跟着不见。现在订阅框和发信分开：`subscribingOpen()` 在预览上只要配了 Resend 就打开，晨报和管理订阅页的「下一封」看 `dailySending()`（还是 `DAILY_EMAIL_ENABLED` 管）。生产照旧。
 - **Vercel 升到 Pro（2026-11-05）**：站长升级了团队 `ifai1`。security.md 的 Vercel 一节改成 Pro 的说法（自定义规则最多 40 条、支持限流、超额按量计费，要设 Spend Management 上限）；部署照旧走 GitHub Actions（setup.md 第 3 步）。新闻链接悬停预取的 PR（#123）因此没合：Pro 的请求额度够，保留进屏幕就预取、点开马上显示。

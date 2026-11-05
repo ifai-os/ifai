@@ -358,19 +358,16 @@ test.describe('with the sample stories', () => {
     )
   })
 
-  test("a story's page shows its skeleton while it comes in over a slow connection", async ({ page, context }) => {
-    // As when the reader clicks before the list has prefetched the story.
-    await page.route(/\/en\/news\/sample-[^/?]+\?_rsc=/, (route) => (route.request().headers()['next-router-prefetch'] ? route.abort() : route.fallback()))
-    await page.goto('/en/news', { waitUntil: 'networkidle' })
-    const cdp = await context.newCDPSession(page)
-    await cdp.send('Network.enable')
-    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 400, downloadThroughput: 12 * 1024, uploadThroughput: 12 * 1024 })
-
-    await page.getByRole('main').getByRole('link', { name: titles.preview }).first().click()
-    const skeleton = page.getByRole('status', { name: en.states.loadingPage })
-    await expect(skeleton).toBeVisible()
-    await expect(page.getByRole('heading', { level: 1, name: titles.preview })).toBeVisible({ timeout: 20_000 })
-    await expect(skeleton).toHaveCount(0)
+  test("a story's page answers with the story itself, not a skeleton with the story hidden", async ({ request }) => {
+    // Rendered on its first visit (only the newest story is built ahead): the cached HTML has to be the story,
+    // with one main, so crawlers that run no scripts and「跳到正文」both find it (docs/specs/daily.md「加载状态」).
+    for (let visit = 0; visit < 2; visit++) {
+      const html = await (await request.get('/en/news/sample-orbit-notes-benchmark')).text()
+      expect(html.match(/<main\b/g)).toHaveLength(1)
+      expect(html).not.toMatch(/<div hidden[^>]*id="S:/)
+      expect(html).not.toContain('aria-busy="true"')
+      expect(html).toMatch(/<h1[^>]*>[^<]*Orbit Notes/)
+    }
   })
 
   test('the stories the list shows are prefetched, so they open without waiting on the server', async ({ page }) => {
