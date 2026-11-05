@@ -55,17 +55,17 @@ Vercel 官方不建议在它前面再套 Cloudflare 代理（橙色云）：代�
 4. R2 图片：存储桶绑定 `media.ifai.io`（setup.md 第 4 步第 4 条），这个子域名保持橙色云；Security → Settings 打开 **Bot Fight Mode**，再加一条免费的速率限制规则（每 IP 每 10 秒 100 次以上就拦），防止有人刷流量。R2 的出口流量免费，主要防的是请求次数。再加一条自定义规则：路径不以 `/media/` 开头 → Block（页面只用 `media/` 下的图，见 setup.md 第 4 步第 4 条）。
 5. **Turnstile**：Cloudflare 控制台 → Turnstile → Add widget，域名填 `ifai.io`（和预览用的 `ifai-preview-ifai1.vercel.app`），模式选 Managed。主机名填 `ifai.io`。把 Site Key 填到 Vercel 生产的 `NEXT_PUBLIC_TURNSTILE_SITE_KEY`、Secret Key 填到 `TURNSTILE_SECRET_KEY`（标 Sensitive），重新部署；预览不填（见 setup.md 环境变量表）。
 
-**Vercel（Hobby 免费，项目 → Firewall）**
+**Vercel（Pro，2026-11-05 从 Hobby 升级；项目 → Firewall）**
 
 1. **Bot Protection** 规则集打开（先 Log 观察一周，再改成 Challenge）。**AI Bots** 规则集先保持关闭：日报和应用希望被 AI 搜索引用。
-2. 三条自定义规则（Hobby 最多 3 条）：
+2. 自定义规则（Pro 最多 40 条，现在用三条）：
    - **后台**：路径以 `/admin` 开头或等于 `/api/admins/login` → Challenge（真人点一下就过，脚本撞密码过不去）。
    - **扫描器**：路径包含 `/wp-admin`、`/wp-login`、`/.env`、`/.git`、`/phpmyadmin`、`xmlrpc.php` → Deny。
-   - **登录和订阅限流**：路径是 `/api/auth/sign-in/magic-link` 或 `/api/subscriptions`，按 IP 每分钟 10 次 → Deny（Hobby 是否允许限流规则以控制台为准；不行就等 Turnstile 兜底）。
+   - **登录和订阅限流**：路径是 `/api/auth/sign-in/magic-link` 或 `/api/subscriptions`，按 IP 每分钟 10 次 → Deny（Pro 支持限流规则；Turnstile 照样兜底）。
 3. 被攻击时：Firewall → **Attack Challenge Mode** 一键打开，所有访客先过验证，攻击过去再关。
 4. 生产的 `INNGEST_DEV` 不要填；`INNGEST_SIGNING_KEY` 由 Inngest 集成自动填好，确认它在。
 5. 所有密钥类变量标 **Sensitive**（status.md 已记录过 Sensitive 的影响）。
-6. 留意：Vercel Hobby 的条款只允许非商业使用。站点开始挂广告、收费或以公司名义运营时要升 Pro（每月 20 美元），Pro 的自定义规则 40 条、限流规则更多。
+6. 已升 Pro（每月 20 美元，可以商业使用）。超出额度按量计费、不再停站，所以在团队 Settings → Billing → **Spend Management** 设每月上限（例如 50 美元）和用量提醒，被刷流量时不会失控。
 
 **后台账号**
 
