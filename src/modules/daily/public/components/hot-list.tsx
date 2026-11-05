@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { IntentLink } from '@/components/intent-link'
 
 import type { HeatTrend } from '../../story-fields'
 import type { HotStory } from '../story-item'
@@ -32,13 +32,13 @@ export function HotList({ stories, recent = false }: { stories: HotStory[]; rece
               {index + 1}
             </span>
             <span className="flex min-w-0 flex-col gap-1">
-              <Link
+              <IntentLink
                 href={storyHref(story.slug)}
                 lang={story.title.lang}
                 className="line-clamp-2 text-meta text-ink after:absolute after:inset-0 hover:text-accent-ink"
               >
                 {story.title.value}
-              </Link>
+              </IntentLink>
               <span className="flex flex-wrap items-center gap-1.5 text-small text-ink-4">
                 <SpreadIndex value={story.spread} compact />
                 {story.trend && <span className={`rounded-tag px-1.5 font-medium ${badges[story.trend]}`}>{t(`trend.${story.trend}`)}</span>}

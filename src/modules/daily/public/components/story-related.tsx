@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl'
 
 import { Icon } from '@/components/icon'
+import { IntentLink } from '@/components/intent-link'
 import { LocalTime } from '@/components/local-time'
 import { isLaunched } from '@/config/site'
 import { Link } from '@/i18n/navigation'
@@ -42,9 +43,9 @@ export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId:
               {story.title.value}
             </span>
           ) : (
-            <Link href={storyHref(story.slug)} lang={story.title.lang} className="text-ink-2 hover:text-accent-ink">
+            <IntentLink href={storyHref(story.slug)} lang={story.title.lang} className="text-ink-2 hover:text-accent-ink">
               {story.title.value}
-            </Link>
+            </IntentLink>
           )}
           {current && <span className="rounded-tag bg-ink px-1.5 text-small font-medium text-bg">{t('thisStory')}</span>}
         </span>
@@ -88,7 +89,7 @@ export function SimilarStories({ stories }: { stories: StoryItem[] }) {
       <ul className="flex flex-col">
         {stories.map((story) => (
           <li key={story.id} className="border-t border-surface-2">
-            <Link href={storyHref(story.slug)} className="group grid grid-cols-[112px_minmax(0,1fr)] gap-3 py-3">
+            <IntentLink href={storyHref(story.slug)} className="group grid grid-cols-[112px_minmax(0,1fr)] gap-3 py-3">
               <LocalTime iso={story.publishedAt} style="date" className="text-meta text-ink-4 tabular-nums" />
               <span className="flex flex-col gap-1">
                 <span lang={story.title.lang} className="text-body font-medium group-hover:text-accent-ink">
@@ -96,7 +97,7 @@ export function SimilarStories({ stories }: { stories: StoryItem[] }) {
                 </span>
                 <span className="text-small text-ink-4">{names(story.category)}</span>
               </span>
-            </Link>
+            </IntentLink>
           </li>
         ))}
       </ul>

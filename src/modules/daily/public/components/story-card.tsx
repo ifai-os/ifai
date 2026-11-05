@@ -1,3 +1,4 @@
+import { IntentLink } from '@/components/intent-link'
 import { Link } from '@/i18n/navigation'
 
 import { dateOnlyDay } from '../../date-only'
@@ -45,9 +46,9 @@ export function StoryCard({ story, serverToday, category, previousIso }: StoryCa
           </p>
         )}
         <h2 lang={story.title.lang} className="text-h3">
-          <Link href={storyHref(story.slug)} className="hover:text-accent-ink">
+          <IntentLink href={storyHref(story.slug)} className="hover:text-accent-ink">
             {story.title.value}
-          </Link>
+          </IntentLink>
         </h2>
         {story.summary && (
           <p lang={story.summary.lang} className="line-clamp-3 text-body text-ink-3">

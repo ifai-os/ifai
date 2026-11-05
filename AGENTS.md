@@ -48,7 +48,7 @@ src/
     api/auth/[...all]/     Better Auth 接口
   admin/                   跨模块的后台页面：model-usage/（模型用量：花费与预算、开关、按用途、要处理的调用）、admin-log/（操作记录：谁在后台保存、删除、按了什么按钮）、theme/（后台样式：按钮沿用前台的样子）、ui-language/（顶栏的界面语言切换）
   collections/             Payload 集合（Admins、Media；模块的集合放到各自模块里）
-  components/              共用组件：site-header、search-link、language-switcher、cards/、states/（空状态、骨架、加载失败、列表在页面里切换 list-navigation）、auth/（登录表单和登录对话框）、account-button（头像和账号菜单）、account/（设置页：分区 sections.ts 和各分区的组件、头像 member-avatar、下载我的数据和删除账号）…
+  components/              共用组件：site-header、search-link、intent-link（悬停才预取的 Link，长列表用）、language-switcher、cards/、states/（空状态、骨架、加载失败、列表在页面里切换 list-navigation）、auth/（登录表单和登录对话框）、account-button（头像和账号菜单）、account/（设置页：分区 sections.ts 和各分区的组件、头像 member-avatar、下载我的数据和删除账号）…
   config/site.ts           导航与分期
   i18n/                    语言配置、路由、导航、next-intl 请求配置
   lib/

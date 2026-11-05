@@ -1,5 +1,6 @@
 "use client";
 
+import { IntentLink } from "@/components/intent-link";
 import { Link } from "@/i18n/navigation";
 
 import type { StoryItem } from "../story-item";
@@ -39,12 +40,12 @@ export function StoryRow({
             <SpreadIndex value={story.spread} />
           </p>
           <h3 lang={story.title.lang} className="text-title md:text-h3">
-            <Link
+            <IntentLink
               href={storyHref(story.slug)}
               className="text-ink hover:text-accent-ink"
             >
               {story.title.value}
-            </Link>
+            </IntentLink>
           </h3>
           {story.summary && (
             <p lang={story.summary.lang} className="text-body text-ink-3">

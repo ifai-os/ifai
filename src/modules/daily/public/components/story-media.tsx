@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Link } from "@/i18n/navigation";
+import { IntentLink } from "@/components/intent-link";
 
 import { storyHref } from "../list-params";
 import type { StoryItem, StoryMedia, StoryPicture } from "../story-item";
@@ -113,14 +113,14 @@ export function StoryThumb({
       />
     );
   return (
-    <Link
+    <IntentLink
       href={storyHref(story.slug)}
       tabIndex={-1}
       aria-hidden="true"
       className={`${thumbBox} ${className}`}
     >
       <Cover picture={media.picture} sizes={sizes} />
-    </Link>
+    </IntentLink>
   );
 }
 
