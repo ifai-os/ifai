@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { readerAccess } from '@/lib/reader-access'
+
 import { posterEndpoints } from '../poster/endpoints'
 import { isPosterDate, POSTER_MAX } from '../poster/rules'
 import { refreshDailyCache } from '../review/cache'
@@ -33,7 +35,7 @@ export const Posters: CollectionConfig = {
   },
   access: {
     // Readers see generated posters; drafts are for the back office.
-    read: ({ req: { user } }) => (user ? true : { status: { equals: 'generated' } }),
+    read: readerAccess({ status: { equals: 'generated' } }),
     create: signedIn,
     update: signedIn,
     delete: signedIn,

@@ -8,6 +8,7 @@ import type {
 import { relationship, text } from 'payload/shared'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
+import { readerAccess } from '@/lib/reader-access'
 
 import { refreshAppsAfterChange, refreshAppsAfterDelete } from '../cache'
 import { heatEndpoints } from '../metrics/endpoints'
@@ -83,7 +84,7 @@ export const Apps: CollectionConfig = {
     },
   },
   access: {
-    read: ({ req: { user } }) => (user ? true : { status: { equals: 'published' } }),
+    read: readerAccess({ status: { equals: 'published' } }),
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,

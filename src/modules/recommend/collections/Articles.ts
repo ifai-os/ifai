@@ -21,6 +21,7 @@ import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { rejectField } from '@/lib/field-error'
 import { adminMessage, isAdmin, localeOptions } from '@/modules/apps/collections/shared'
+import { readerAccess } from '@/lib/reader-access'
 
 import { refreshArticlesAfterChange, refreshArticlesAfterDelete } from '../cache'
 import {
@@ -143,7 +144,7 @@ export const Articles: CollectionConfig = {
   },
   defaultSort: '-updatedAt',
   access: {
-    read: ({ req: { user } }) => (user ? true : { status: { equals: 'published' } }),
+    read: readerAccess({ status: { equals: 'published' } }),
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
