@@ -7,6 +7,8 @@ name: Seed preview
 #   PR number    → that pull request's preview: the samples of its latest commit into its Neon
 #                  branch preview/pr-<number>; only for open pull requests from this repository
 # Safe to run again: the scripts overwrite their own samples and leave everything else alone.
+# "Withdraw the sample stories" instead sets the sample stories to withdrawn (not deleted), so the
+# preview shows only real news; running it again without that brings them back.
 # It writes only to that one Neon branch. It never creates a branch (deploy.yml does, when it
 # deploys main or the pull request) and never connects to production.
 on:
@@ -16,8 +18,13 @@ on:
         description: Pull request number (empty for main's preview)
         required: false
         type: string
+      withdraw:
+        description: Withdraw the sample stories instead of adding samples
+        required: false
+        type: boolean
+        default: false
 
-run-name: "Seed ${{ inputs.pr && format('PR #{0}', inputs.pr) || 'main' }} preview"
+run-name: "${{ inputs.withdraw && 'Withdraw samples from' || 'Seed' }} ${{ inputs.pr && format('PR #{0}', inputs.pr) || 'main' }} preview"
 
 concurrency:
   group: seed-preview-${{ inputs.pr || 'main' }}
@@ -125,7 +132,15 @@ jobs:
       # Zips go where the preview can serve them. Without the secrets the stories go without pictures.
       # The sample articles only show once the preview is built for phase two; branches from before
       # the recommend module have no script for them.
+      - name: Withdraw the sample stories
+        if: inputs.withdraw
+        env:
+          DATABASE_URI: ${{ steps.neon.outputs.database_url }}
+          SEED_PREVIEW_MAIN: '1'
+        run: pnpm payload run scripts/withdraw-sample-stories.ts
+
       - name: Sample stories, apps, Skills and articles
+        if: ${{ !inputs.withdraw }}
         env:
           DATABASE_URI: ${{ steps.neon.outputs.database_url }}
           SEED_PREVIEW_MAIN: '1'
