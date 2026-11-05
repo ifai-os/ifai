@@ -9,7 +9,7 @@ import type { StoryTag } from '../tags'
 import { posterVersion } from '../poster/snapshot'
 import { POSTER_SIZE } from '../poster/layout'
 import { getPoster, getStory, getTopicPage } from './data'
-import { feedPath, listHref, posterDay, posterHref, posterImagePath, storyHref, topicHref } from './list-params'
+import { feedPath, listHref, posterDay, posterHref, posterImagePath, SHARE_IMAGE_SIZE, storyHref, storyShareImagePath, topicHref } from './list-params'
 
 const descriptionLength = 160
 
@@ -57,9 +57,11 @@ export async function storyMetadata(slug: string, locale: Locale): Promise<Metad
     title: story.title.value,
     description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
     alternates: alternatesFor(storyHref(story.slug), locale),
-    // The story's own picture (or its video's cover) when it has one, else the site's.
+    // The story's own picture (or its video's cover) when it has one, else a card drawn from its title.
     ...shareCard(locale, {
-      image: story.media?.picture ? { ...story.media.picture, alt: story.title.value } : null,
+      image: story.media?.picture
+        ? { ...story.media.picture, alt: story.title.value }
+        : { url: storyShareImagePath(locale, story.slug), ...SHARE_IMAGE_SIZE, alt: story.title.value },
       article: { publishedTime: story.publishedAt, modifiedTime: story.correctedAt },
     }),
   }

@@ -50,6 +50,13 @@ export function storyHref(slug: string): `/${string}` {
   return `/news/${slug}`
 }
 
+export const SHARE_IMAGE_SIZE = { width: 1200, height: 630 } as const
+
+/** A story's drawn share picture, for stories without a picture of its own (docs/specs/daily.md「分享卡片」). */
+export function storyShareImagePath(locale: Locale, slug: string): string {
+  return localizePath(locale, `${storyHref(slug)}/share.png`)
+}
+
 /**
  * The topic page's key from its address: null unless it is already a compared name (so every
  * topic has one address) of a sensible length. The segment may arrive still percent-encoded.
