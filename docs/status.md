@@ -6,6 +6,7 @@
 
 ## 现在到哪了
 
+- **预览站显示订阅框（2026-11-05）**：Preview 的 `DAILY_EMAIL_ENABLED` 为了不发晨报改成了 `false`，订阅框跟着不见。现在订阅框和发信分开：`subscribingOpen()` 在预览上只要配了 Resend 就打开，晨报和管理订阅页的「下一封」看 `dailySending()`（还是 `DAILY_EMAIL_ENABLED` 管）。生产照旧。
 - **Vercel 升到 Pro（2026-11-05）**：站长升级了团队 `ifai1`。security.md 的 Vercel 一节改成 Pro 的说法（自定义规则最多 40 条、支持限流、超额按量计费，要设 Spend Management 上限）；部署照旧走 GitHub Actions（setup.md 第 3 步）。新闻链接悬停预取的 PR（#123）因此没合：Pro 的请求额度够，保留进屏幕就预取、点开马上显示。
 - **图片直接从 Cloudflare 出（2026-11-05）**：估算承载量时发现，所有图片都经过 Vercel 的图片优化和 Payload 函数（`/_next/image` → `/api/media/file/…` → R2），Hobby 每月 30 万次图片缓存读取、5,000 次转换，是最先到顶的一项（约每天 1,000 次浏览）。现在 `R2_PUBLIC_URL` 填了时，媒体库的图片地址指向公开的存储桶（`src/lib/media-url.ts`，Payload 存储插件的 `generateFileURL`），日报的配图（列表、头条、详情）用 Payload 存好的 320、768 宽和原图组成 `srcset`，由 `src/components/media-picture.tsx` 画成普通 `<img>`；不填时照旧走 next/image。还差站长：R2 存储桶绑定 `media.ifai.io`、填 Vercel 生产的 `R2_PUBLIC_URL`、在 Cloudflare 加一条只放行 `/media/` 的规则（setup.md 第 4 步第 4 条）。
 - **日报列表右栏和两侧对齐（2026-11-04）**：预览上右栏整块不见，是因为「今天提到的应用」随应用模块关闭（#111），预览上的新闻又都没有 48 小时内的热度（#113 让冻住的示例热度会衰减），「48 小时热门」也空了。现在没有热度时右栏改显示「近期热门」（最新新闻按传播指数排）。顶栏宽度从 1232 改成和正文、页脚一样的 `max-w-content`，Logo 和头像跟正文两边对齐（照少数派），令牌 `--container-nav` 删了。海报卡下面的订阅框只受环境变量管（`DAILY_EMAIL_ENABLED`、`RESEND_API_KEY`、`DAILY_EMAIL_FROM`），代码没变。

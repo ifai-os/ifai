@@ -18,7 +18,7 @@ export type SubscriptionView = {
   next: { time: string; zone: string } | null
 }
 
-/** `sending`: whether the daily email goes out here at all (subscribingOpen), so a next one is coming. */
+/** `sending`: whether the daily email goes out here at all (dailySending), so a next one is coming. */
 export function subscriptionView(subscriber: Subscriber, pageLocale: Locale, now: Date, sending: boolean): SubscriptionView {
   const { status, timeZone } = subscriber
   return {

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { domainOf, editDistance, isEmailAddress, maskEmail, normalizeEmail, suggestEmail } from '@/modules/daily/email/address'
-import { dailyEmailFrom, deliveryConfigured, sendEmail, subscribingOpen, type OutgoingEmail } from '@/modules/daily/email/delivery'
+import { dailyEmailFrom, dailySending, deliveryConfigured, sendEmail, subscribingOpen, type OutgoingEmail } from '@/modules/daily/email/delivery'
 import { zoneName } from '@/modules/daily/email/format'
 import { checkMailDomain, forgetResolverCheck, type MailLookup } from '@/modules/daily/email/mail-domain'
 import { planManage, planSubscribe, readManageRequest, readSubscribeRequest, welcomeAllowed } from '@/modules/daily/email/rules'
@@ -326,6 +326,10 @@ describe('sending through Resend', () => {
     expect(subscribingOpen({ DAILY_EMAIL_ENABLED: 'true', VERCEL_ENV: 'preview' })).toBe(false)
     expect(subscribingOpen({ DAILY_EMAIL_ENABLED: 'true', VERCEL_ENV: 'production', ...resend })).toBe(true)
     expect(subscribingOpen({ DAILY_EMAIL_ENABLED: 'false', VERCEL_ENV: 'production', ...resend })).toBe(false)
+    // Previews show the boxes with Resend set up even when the morning send is off.
+    expect(subscribingOpen({ DAILY_EMAIL_ENABLED: 'false', VERCEL_ENV: 'preview', ...resend })).toBe(true)
+    expect(dailySending({ DAILY_EMAIL_ENABLED: 'false', VERCEL_ENV: 'preview', ...resend })).toBe(false)
+    expect(dailySending({ DAILY_EMAIL_ENABLED: 'true', VERCEL_ENV: 'preview', ...resend })).toBe(true)
   })
 
   it('prints the email locally and refuses on Vercel when Resend is not set up', async () => {

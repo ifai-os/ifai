@@ -34,9 +34,22 @@ export function deploymentEnv(env: Env = process.env): 'production' | 'preview' 
   return env.VERCEL_ENV === 'production' || env.VERCEL_ENV === 'preview' ? env.VERCEL_ENV : 'development'
 }
 
-/** Whether the subscribe boxes show and the subscribe API takes new subscriptions. */
-export function subscribingOpen(env: Env = process.env): boolean {
+/**
+ * Whether the morning email goes out here: DAILY_EMAIL_ENABLED, and on Vercel Resend set up. The
+ * manage page says when the next one comes only then.
+ */
+export function dailySending(env: Env = process.env): boolean {
   return dailyEmailEnabled(env) && (deliveryConfigured(env) || !isDeployed(env))
+}
+
+/**
+ * Whether the subscribe boxes show and the subscribe API takes new subscriptions: wherever the
+ * email goes out, and on Vercel previews whenever Resend is set up, even with DAILY_EMAIL_ENABLED
+ * off, so the pages can be checked there without a morning send leaving the preview (站长,
+ * 2026-11-05). Subscribing there still sends its welcome email.
+ */
+export function subscribingOpen(env: Env = process.env): boolean {
+  return dailySending(env) || (env.VERCEL_ENV === 'preview' && deliveryConfigured(env))
 }
 
 export type OutgoingEmail = {

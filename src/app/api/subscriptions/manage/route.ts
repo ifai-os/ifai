@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { isCrossSite } from '@/lib/same-origin'
-import { subscribingOpen } from '@/modules/daily/email/delivery'
+import { dailySending } from '@/modules/daily/email/delivery'
 import { manage, subscriberForToken } from '@/modules/daily/email/manage'
 import { readManageRequest } from '@/modules/daily/email/rules'
 import { subscriptionView } from '@/modules/daily/email/view'
@@ -28,5 +28,5 @@ export async function POST(request: NextRequest) {
   const now = new Date()
   const result = await manage(subscriber, input.action, now)
   if (result === 'forbidden') return reply({ error: 'stopped' }, 403)
-  return reply(subscriptionView(result, input.pageLocale, now, subscribingOpen()))
+  return reply(subscriptionView(result, input.pageLocale, now, dailySending()))
 }

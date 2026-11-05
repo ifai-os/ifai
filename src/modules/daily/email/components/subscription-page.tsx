@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/config'
 
-import { subscribingOpen } from '../delivery'
+import { dailySending, subscribingOpen } from '../delivery'
 import { subscriberForToken } from '../manage'
 import { languageOptions, subscriptionView, zoneOptions } from '../view'
 import { SubscribeBox } from './subscribe-box'
@@ -28,7 +28,7 @@ export async function SubscriptionPage({ locale, token, unsubscribe }: Subscript
           <h1 className="text-h2">{t('title')}</h1>
           <SubscriptionManager
             token={token}
-            initial={subscriptionView(subscriber, locale, now, subscribingOpen())}
+            initial={subscriptionView(subscriber, locale, now, dailySending())}
             unsubscribeOnOpen={unsubscribe}
             zones={zoneOptions(subscriber.timeZone, now)}
             languages={languageOptions}
