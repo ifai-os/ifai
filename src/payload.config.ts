@@ -18,6 +18,7 @@ import { adminLogTables } from './lib/admin-log/schema'
 import { aiTables } from './lib/ai/schema'
 import { authTables } from './lib/auth/schema'
 import { databaseUrl } from './lib/db/url'
+import { mediaPublicBase, publicFileUrl } from './lib/media-url'
 import { agentEndpoints } from './modules/agents/endpoints'
 import { agentsTables } from './modules/agents/schema'
 import { AppCategories } from './modules/apps/collections/AppCategories'
@@ -68,6 +69,7 @@ const r2Enabled = Boolean(
     process.env.R2_SECRET_ACCESS_KEY &&
     process.env.R2_BUCKET,
 )
+const mediaBase = r2Enabled ? mediaPublicBase() : null
 
 export default buildConfig({
   admin: {
@@ -201,7 +203,16 @@ export default buildConfig({
       // on a machine without R2 still match production.
       alwaysInsertFields: true,
       collections: {
-        media: { prefix: 'media' },
+        // With R2_PUBLIC_URL, pictures are named by the bucket's public address (src/lib/media-url.ts).
+        // Reads that select only some fields may leave out `prefix`; media always sits under `media/`.
+        // Payload still answers /api/media/file/… for addresses saved before.
+        media: {
+          prefix: 'media',
+          ...(mediaBase && {
+            generateFileURL: ({ filename, prefix }: { filename: string; prefix?: string }) =>
+              publicFileUrl(mediaBase, prefix || 'media', filename),
+          }),
+        },
         'arena-images': { prefix: 'arena' },
         // Downloads go to a short-lived R2 address; the site's own reads (the file viewer) stream through.
         'skill-versions': {

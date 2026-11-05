@@ -100,7 +100,9 @@ pnpm dev                 # http://localhost:3000
    - Secret Access Key → `R2_SECRET_ACCESS_KEY`（只显示一次）
    - R2 概览页上的 Account ID → `R2_ACCOUNT_ID`
    - 存储桶名 → `R2_BUCKET`
-4. 可选：存储桶 Settings → Public access，绑定自定义域名（例如 `media.<域名>`），填到 `R2_PUBLIC_URL`，图片就直接从 Cloudflare 的 CDN 输出。
+4. 生产必做：存储桶 Settings → Public access → Custom Domains，绑定 `media.<域名>`（例如 `media.ifai.io`），把 `https://media.<域名>` 填到 Vercel 生产的 `R2_PUBLIC_URL`，重新部署。之后媒体库的图片地址就是这个域名（`src/lib/media-url.ts`），页面用 Payload 存好的 320、768 宽和原图组成 `srcset` 直接从 Cloudflare 出图，不经过 Vercel 的函数和图片优化，也不占它的额度；不填时照旧走 `/api/media/file/…`。以前存下的 `/api/media/file/…` 地址照样能打开。
+   - 绑定后整个桶都能按路径访问，而页面只用 `media/` 下的图。到 Cloudflare 这个域名的 Security → WAF → Custom rules 加一条：主机名是 `media.<域名>` 且路径不以 `/media/` 开头 → Block，这样 Skill 包（`skills/`，下载要走带时效的签名链接，才记得到安装次数）和排行的图（`arena/`）不会被绕过。
+   - 预览想看同样的效果，可以给 `ifai-media-preview` 打开 r2.dev 地址或另绑一个子域名，填到 Vercel Preview 的 `R2_PUBLIC_URL`；不填也行，预览照旧经过 Vercel。
 
 四个 `R2_*` 变量都填了才会启用 R2；否则上传的文件存在本地 `media/` 目录（Vercel 上不能写文件，所以生产环境必须配 R2）。
 

@@ -52,7 +52,7 @@ Vercel 官方不建议在它前面再套 Cloudflare 代理（橙色云）：代�
 1. `ifai.io` 接 Vercel 时（setup.md 第 3 步第 7 条），`@` 和 `www` 记录用 **灰色云（仅 DNS）**。
 2. DNS → Settings → 打开 **DNSSEC**，按提示在域名注册商那边填 DS 记录（如果域名就在 Cloudflare 注册，自动完成）。
 3. 加 **CAA** 记录，只允许 Vercel 和 Cloudflare 用到的证书机构签发：`0 issue "letsencrypt.org"`、`0 issue "pki.goog"`、`0 issue "sectigo.com"`（Vercel 用 Let's Encrypt；R2 自定义域名由 Cloudflare 签，用 Google Trust Services 或 Sectigo）。
-4. R2 图片：存储桶绑定 `media.ifai.io`（setup.md 第 4 步第 4 条），这个子域名保持橙色云；Security → Settings 打开 **Bot Fight Mode**，再加一条免费的速率限制规则（每 IP 每 10 秒 100 次以上就拦），防止有人刷流量。R2 的出口流量免费，主要防的是请求次数。
+4. R2 图片：存储桶绑定 `media.ifai.io`（setup.md 第 4 步第 4 条），这个子域名保持橙色云；Security → Settings 打开 **Bot Fight Mode**，再加一条免费的速率限制规则（每 IP 每 10 秒 100 次以上就拦），防止有人刷流量。R2 的出口流量免费，主要防的是请求次数。再加一条自定义规则：路径不以 `/media/` 开头 → Block（页面只用 `media/` 下的图，见 setup.md 第 4 步第 4 条）。
 5. **Turnstile**：Cloudflare 控制台 → Turnstile → Add widget，域名填 `ifai.io`（和预览用的 `ifai-preview-ifai1.vercel.app`），模式选 Managed。主机名填 `ifai.io`。把 Site Key 填到 Vercel 生产的 `NEXT_PUBLIC_TURNSTILE_SITE_KEY`、Secret Key 填到 `TURNSTILE_SECRET_KEY`（标 Sensitive），重新部署；预览不填（见 setup.md 环境变量表）。
 
 **Vercel（Hobby 免费，项目 → Firewall）**

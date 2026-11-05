@@ -1,6 +1,6 @@
-import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 
+import { MediaPicture } from '@/components/media-picture'
 import { Link } from '@/i18n/navigation'
 
 import type { HotStory } from '../story-item'
@@ -22,10 +22,9 @@ export function HottestCard({ story, category }: { story: HotStory; category: st
       aria-labelledby="hottest-title"
       className="group relative isolate flex min-w-0 flex-col justify-end gap-2 overflow-hidden rounded-hero bg-night p-6 text-white min-h-60 md:min-h-80 md:grow-2 md:basis-100 md:p-8"
     >
-      <Image
-        src={story.media?.picture?.url ?? `/news/hottest/${story.category}.webp`}
+      <MediaPicture
+        picture={story.media?.picture ?? { url: `/news/hottest/${story.category}.webp` }}
         alt=""
-        fill
         sizes="(min-width: 768px) 66vw, 100vw"
         className="-z-10 object-cover transition-transform duration-500 group-hover:scale-103 motion-reduce:transition-none"
       />
