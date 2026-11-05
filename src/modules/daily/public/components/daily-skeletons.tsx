@@ -47,50 +47,6 @@ export function DailyFeedSkeleton({ count }: { count: number }) {
   )
 }
 
-/**
- * A story's page while it loads: breadcrumb, then the article (category, title, times, summary,
- * picture, sources) and the column beside it, in the page's own layout so nothing moves when it
- * arrives. A client component: `loading.tsx` gets no locale, and translating there on the server
- * would stop the story pages being static.
- */
-export function StoryDetailSkeleton() {
-  const t = useTranslations('states')
-  return (
-    <div role="status" aria-label={t('loadingPage')} className="flex flex-col gap-6 md:gap-8">
-      <SkeletonLine text="text-meta" width="240px" />
-      <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
-        <div className="flex w-full max-w-read min-w-0 flex-col gap-6">
-          <div className="flex flex-col gap-3">
-            <SkeletonLine text="text-meta" width="64px" />
-            <SkeletonLine text="text-h1 md:text-h1-article" width="90%" bar="h-7 md:h-8" />
-            <SkeletonLine text="text-h1 md:text-h1-article" width="55%" bar="h-7 md:h-8" />
-            <SkeletonLine text="text-meta" width="40%" />
-          </div>
-          <div className="flex flex-col border-l-3 border-surface-2 pl-4 md:pl-5">
-            {['96%', '92%', '60%'].map((width) => (
-              <SkeletonLine key={width} text="text-body-article" width={width} bar="h-3.5" />
-            ))}
-          </div>
-          <Skeleton className="aspect-video w-full rounded-card" />
-          <div className="flex flex-col gap-3">
-            <SkeletonLine text="text-h3" width="96px" bar="h-5" />
-            {['50%', '42%', '46%'].map((width) => (
-              <div key={width} className="flex flex-col gap-1 border-t border-surface-2 py-3">
-                <SkeletonLine text="text-body" width={width} bar="h-3.5" />
-                <SkeletonLine text="text-small" width="36%" />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="flex w-full flex-col gap-6 md:w-80 md:flex-none">
-          <Skeleton className="h-28 rounded-tile" />
-          <Skeleton className="h-36 rounded-card" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /** A topic or category page's stories while another page loads: a day above every third, then cards shaped like `StoryCard`. */
 export function StoryCardsSkeleton({ count }: { count: number }) {
   const t = useTranslations('states')
