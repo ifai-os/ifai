@@ -1,5 +1,6 @@
 import type { Locale } from '@/i18n/config'
 import { inAnyLanguage, inReaderLanguage, type InLanguage, type Localized } from '@/lib/i18n/localized'
+import { mediaSrcSet } from '@/lib/media-url'
 import type { Media, Story } from '@/payload-types'
 
 import { storyCategories, storyCategoryOf, type StoryCategory } from '../categories'
@@ -13,8 +14,11 @@ import type { StoryTag } from '../tags'
 
 export type StorySource = { name: string; role: SourceRole; url: string; publishedAt: string | null }
 
-/** A picture as the pages draw it: our own file and its size. */
-export type StoryPicture = { url: string; width: number; height: number }
+/**
+ * A picture as the pages draw it: our own file and its size. `srcSet` lists the stored sizes when
+ * the file is on the public bucket (src/lib/media-url.ts), else it is absent and next/image resizes it.
+ */
+export type StoryPicture = { url: string; width: number; height: number; srcSet?: string }
 
 /** The story's picture or video (docs/specs/daily.md「配图与视频」). A video's cover may be missing. */
 export type StoryMedia =
@@ -201,7 +205,8 @@ export function toItem(doc: RawStory, locale: Locale): StoryItem {
 
 function pictureOf(image: number | Media | null | undefined): StoryPicture | null {
   if (!image || typeof image !== 'object' || !image.url || !image.width || !image.height) return null
-  return { url: image.url, width: image.width, height: image.height }
+  const srcSet = mediaSrcSet({ url: image.url, width: image.width }, image.sizes)
+  return { url: image.url, width: image.width, height: image.height, ...(srcSet && { srcSet }) }
 }
 
 /** Null unless there is something to show: a picture, or a video address we can play. */

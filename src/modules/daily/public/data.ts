@@ -95,11 +95,14 @@ const select = {
 } as const
 
 /** The story's picture comes along (depth 1), with only what the pages need; Payload builds `url` from `filename`. */
-const populate = { media: { url: true, filename: true, width: true, height: true }, storylines: { slug: true } } as const
+const populate = {
+  media: { url: true, filename: true, prefix: true, width: true, height: true, sizes: true },
+  storylines: { slug: true },
+} as const
 
 // Part of every cache key: change it when what the queries return changes (fields added to
 // `select`), so a deployment never reads entries an earlier one stored without them.
-const shape = 'story-storyline'
+const shape = 'story-picture-sizes'
 
 // Publishing refreshes the cache right away; the hour only bounds changes made outside the review screen.
 const cacheOptions = { tags: [DAILY_CACHE_TAG], revalidate: 3600 }

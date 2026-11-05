@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { MediaPicture } from "@/components/media-picture";
 import { Link } from "@/i18n/navigation";
 
 import { storyHref } from "../list-params";
@@ -40,13 +40,7 @@ function Cover({
 }) {
   if (!picture) return <span className="absolute inset-0 bg-night" />;
   return (
-    <Image
-      src={picture.url}
-      alt=""
-      fill
-      sizes={sizes}
-      className="object-cover"
-    />
+    <MediaPicture picture={picture} alt="" sizes={sizes} className="object-cover" />
   );
 }
 
@@ -147,10 +141,9 @@ export function StoryFigure({
         />
       ) : (
         <span className={`overflow-hidden ${box}`}>
-          <Image
-            src={media.picture.url}
+          <MediaPicture
+            picture={media.picture}
             alt={story.title.value}
-            fill
             sizes={sizes}
             className="object-cover"
             priority
