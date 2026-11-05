@@ -4,6 +4,7 @@ import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
+import { SiteAnalytics } from '@/components/site-analytics'
 import { SiteFooter } from '@/components/site-footer'
 import { SiteHeader } from '@/components/site-header'
 import { NetworkNotice } from '@/components/states/network-notice'
@@ -69,6 +70,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <SiteFooter />
           <NetworkNotice />
         </NextIntlClientProvider>
+        <SiteAnalytics />
       </body>
     </html>
   )

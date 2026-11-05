@@ -181,6 +181,7 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 2. 打开 `https://<域名>/admin` 创建管理员。只给自己建账号，用强密码。
 3. 依次打开 `/en`、`/zh-hans`、`/zh-hant`、`/ja`、`/ko`，确认导航和语言切换正常。
 4. 用 Google、GitHub、邮箱各登录一次。
+5. Vercel 项目 → Analytics → Enable（Web Analytics）。站点已经带了统计脚本，打开后才开始收数据；隐私政策已写明（foundation.md「访问统计」）。
 
 ## 11. 以后要做的
 
