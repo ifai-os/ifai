@@ -10,6 +10,7 @@ import { dailyIllustrateFunctions } from '@/modules/daily/illustrate/jobs'
 import { dailyImportFunctions } from '@/modules/daily/import/media'
 import { dailyJudgeFunctions } from '@/modules/daily/judge/jobs'
 import { dailyStorylineFunctions } from '@/modules/daily/storylines/jobs'
+import { dailyWatchFunctions } from '@/modules/daily/watch/jobs'
 import { dailyWriteFunctions } from '@/modules/daily/write/jobs'
 import { rankingsFunctions } from '@/modules/rankings/jobs'
 import { resourcesFunctions } from '@/modules/resources/import/jobs'
@@ -22,6 +23,7 @@ export const functions = [
   ...dailyCollectFunctions,
   ...dailyJudgeFunctions,
   ...dailyWriteFunctions,
+  ...dailyWatchFunctions,
   ...dailyHeatFunctions,
   ...dailyEmailFunctions,
   ...dailyImportFunctions,

@@ -280,6 +280,14 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 - 配图（2026-11-01 站长定，沿用「配图与视频」的规则）：每行可以带 `media`：`{"kind":"image","imageUrl":原图地址,"credit":发布方}`、`{"kind":"video","videoUrl":YouTube / Vimeo / .mp4 / .webm,"imageUrl"?:封面,"credit":…}`，或 `null`。按采集的规则读：不认的视频平台、SVG、像 Logo 的图都当没有，这一行照样导入；没写 `credit` 用原文的发布方。地址记在那条报道的 `raw_items.media` 里。新的一条、或者再导时图片和视频地址变了，才复制：后台任务 `daily-import-media`（`src/modules/daily/import/media.ts`）照写作那一步下载不超过 5 MB 的 JPEG、PNG、WebP、GIF 进 `media`，视频封面取 YouTube 的 `maxresdefault`／`hqdefault`、Vimeo 的 oEmbed、视频文件用这行的 `imageUrl`；下载失败就当没有图。地址没变就不动这条新闻的配图（站长在后台改过的不会被覆盖）；再导时去掉了 `media`，新闻的配图也去掉。
 - 导入后刷新页面缓存，并像审核发布一样发 `daily/story.changed`（应用页据此匹配提到的应用）。回复：`{ created, updated, mediaQueued, stories: [{recordId, id, slug, action}], failed: [{line, recordId, error}] }`，`mediaQueued` 是排队复制配图的条数。
 
+## 断更告警
+
+新闻断了没人知道是第一期最大的风险（2026-11-05 复查时，预览从 10 月 31 日起没有新发布）。任务 `daily-stale-check`（`src/modules/daily/watch/`）每 3 小时看一次最新一条已发布新闻的 `approvedAt`（第一次上线的时刻）：超过 `DAILY_STALE_ALERT_HOURS`（默认 12）小时没有新的，就给所有后台管理员发一封「日报已经 N 小时没有新发布」，写明最近一条的时间、站内采集开没开（没开时提醒看本机流水线和 `STORY_IMPORT_TOKEN`），附审核队列的链接。
+
+- 不记状态：第一封发在越过门槛后的第一个 3 小时里，之后每 24 小时一封，直到有新闻发布。一条新闻都没有的库不算断更。
+- 默认只在生产（`VERCEL_ENV=production`）发；`DAILY_STALE_ALERT=on` 在预览也发（试用），`off` 哪里都不发。
+- 不调模型，不受 `COLLECT_ENABLED`、`MODEL_CALLS_ENABLED` 管。在 Inngest 控制台发 `daily/stale.check` 可以立即跑一次。
+
 ## 详情页：行业标签、公司与产品、话题追踪、同类事件
 
 2026-10-24 站长在画布「IFAI 资讯详情页 · v1」上补了四块，要求实现。
