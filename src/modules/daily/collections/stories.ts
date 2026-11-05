@@ -1,6 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig, FieldHook, TextFieldSingleValidation } from "payload";
 
 import { syncHantFromHans } from "@/lib/i18n/hant-sync";
+import { readerAccess } from "@/lib/reader-access"
 
 import { storyCategories } from "../categories";
 import { entityKey, entityKinds, type EntityKind } from "../entities";
@@ -170,8 +171,7 @@ export const Stories: CollectionConfig = {
   },
   access: {
     // Readers see published stories; everything else is for the back office.
-    read: ({ req: { user } }) =>
-      user ? true : { status: { equals: "published" } },
+    read: readerAccess({ status: { equals: "published" } }),
     create: signedIn,
     update: signedIn,
     delete: signedIn,

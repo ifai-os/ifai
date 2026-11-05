@@ -1,6 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig, SelectFieldSingleValidation } from 'payload'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
+import { readerAccess } from '@/lib/reader-access'
 
 import { skillCategories, skillCategoryLabels } from '../categories'
 import { isValidRef, parseRepositoryUrl } from '../import/github'
@@ -73,7 +74,7 @@ export const Skills: CollectionConfig = {
     },
   },
   access: {
-    read: ({ req: { user } }) => (user ? true : { status: { equals: 'published' } }),
+    read: readerAccess({ status: { equals: 'published' } }),
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,

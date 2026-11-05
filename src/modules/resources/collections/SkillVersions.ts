@@ -11,6 +11,7 @@ import { text } from 'payload/shared'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 import type { Skill, SkillVersion } from '@/payload-types'
+import { isPublicEndpoint } from '@/lib/reader-access'
 
 import { describeEndpoints } from '../describe/endpoints'
 import { compareVersions, isSha256, isValidVersion, normalizeSha256, normalizeVersion } from '../normalize'
@@ -252,9 +253,11 @@ export const SkillVersions: CollectionConfig = {
   access: {
     // A withdrawn version's page stays readable (it says why), but its Zip is no longer served;
     // nor is any Zip of a delisted Skill, even through the file's own address.
-    read: ({ req: { user }, isReadingStaticFile }): Where | true => {
-      if (user) return true
+    read: ({ req, isReadingStaticFile }): Where | boolean => {
+      if (req.user) return true
       if (isReadingStaticFile) return { and: [{ status: { in: ['published', 'deprecated'] } }, { 'skill.status': { equals: 'published' } }] }
+      // The site reads versions through the Local API; Payload's REST list is for the back office.
+      if (isPublicEndpoint(req)) return false
       return { status: { in: ['published', 'deprecated', 'withdrawn'] } }
     },
     create: isAdmin,

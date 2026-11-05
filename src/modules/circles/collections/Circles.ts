@@ -2,6 +2,7 @@ import type { CollectionAfterDeleteHook, CollectionConfig } from 'payload'
 
 import { syncHantFromHans } from '@/lib/i18n/hant-sync'
 import { isAdmin, slugField } from '@/modules/apps/collections/shared'
+import { readerAccess } from '@/lib/reader-access'
 
 import { deleteCircleData } from '../admin'
 import { refreshCirclesAfterChange, refreshCirclesAfterDelete } from '../cache'
@@ -47,7 +48,7 @@ export const Circles: CollectionConfig = {
   },
   defaultSort: 'order',
   access: {
-    read: ({ req: { user } }) => (user ? true : { shown: { equals: true } }),
+    read: readerAccess({ shown: { equals: true } }),
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,

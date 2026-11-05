@@ -1,6 +1,7 @@
 import type { CollectionAfterChangeHook, CollectionConfig, Where } from "payload";
 
 import { syncHantFromHans } from "@/lib/i18n/hant-sync";
+import { readerAccess } from "@/lib/reader-access";
 
 import { refreshDailyCache } from "../review/cache";
 
@@ -94,7 +95,7 @@ export const Storylines: CollectionConfig = {
     },
   },
   access: {
-    read: () => true,
+    read: readerAccess(true),
     create: signedIn,
     update: signedIn,
     delete: signedIn,

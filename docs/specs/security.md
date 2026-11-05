@@ -43,6 +43,7 @@ Vercel 官方不建议在它前面再套 Cloudflare 代理（橙色云）：代�
 - [x] 关掉 Payload 的 GraphQL（`payload.config.ts` 的 `graphQL.disable`）。
 - [x] 生产环境强制关闭 Inngest 开发模式（`src/lib/inngest/client.ts`）。
 - [x] **Turnstile**：登录链接（`/api/auth/sign-in/magic-link`）和日报订阅（`POST /api/subscriptions`）发信前先过 Cloudflare Turnstile。登录用 Better Auth 自带的 `captcha` 插件，只管邮件链接，Google、GitHub 登录不受影响；订阅接口在服务端自己校验（`src/lib/turnstile.ts`），没过返回 403 `captcha`。两个表单的 action 不同（`sign-in`、`subscribe`），令牌不能拿到另一个表单用。浏览器这边是 `src/components/turnstile.tsx` 的 `useTurnstile`：点「发送」或「订阅」时才要令牌，Cloudflare 觉得可疑才出现勾选框（Managed + `interaction-only`），语言跟着页面；每次发送用一个新令牌。Cloudflare 没回应、没拿到令牌，都按失败处理，表单显示「发送失败，请重试」，不放行。`NEXT_PUBLIC_TURNSTILE_SITE_KEY` 和 `TURNSTILE_SECRET_KEY` 两个都填才打开，本地、冒烟测试和预览不填。隐私政策「我们用到的服务」加了 Cloudflare Turnstile，生效日期改为 2026-11-04。
+- [x] **Payload 自带的 REST 不再对访客开放**（`src/lib/reader-access.ts`）：新闻、话题、海报、应用、Skill 和版本、文章、圈子这些集合，访客经 `/api/<集合>` 读一律 403。原来不登录就能整库读取（7,000 多条新闻，带打分、`flags`、`promptVersion` 这类后台字段，条数不设上限）。站内页面经 Local API 按访客规则读（`overrideAccess: false`），不受影响；后台登录后照常读写；对外的读取走已经限次的 `/api/v1` 和 MCP。Skill 的 Zip 文件地址（`isReadingStaticFile`）照旧按版本状态放行。媒体、分类、标签、宿主这类不敏感的照旧公开。
 - [ ] 以后再做：基于 nonce 的完整 CSP（report-only 起步）；Better Auth 限流改存数据库（要迁移）。
 
 ### 站长要动手的
