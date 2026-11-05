@@ -32,7 +32,7 @@ pnpm dev                 # http://localhost:3000
 
 ## 3. Vercel（部署与预览环境）
 
-部署不走 Vercel 的 Git 集成：Vercel Hobby 不能导入私有组织下的仓库，所以由 GitHub Actions（`.github/workflows/deploy.yml`）用 Vercel CLI 构建并部署。
+部署不走 Vercel 的 Git 集成：当初 Vercel Hobby 不能导入私有组织下的仓库，所以由 GitHub Actions（`.github/workflows/deploy.yml`）用 Vercel CLI 构建并部署。2026-11-05 已升 Pro，Git 集成可以用了，但预览要先建 Neon 分支、跑迁移再部署，这套流程照旧放在 Actions 里，不要再导入仓库。
 
 - 推送到 `main`（合并 PR）→ 部署 `main` 的预览：连长期的 Neon 分支 `preview/main`（构建前先跑迁移），部署完把固定地址 `https://ifai-preview-ifai1.vercel.app` 指向这次部署，所以这个地址总是 `main` 最新的样子。打开 `PRODUCTION_DEPLOY` 之后（见第 3 条）同时部署生产环境。
 - 开 PR 或往 PR 推提交 → 先在 Neon 建（或复用）分支 `preview/pr-<编号>`，再部署预览环境，部署完对预览地址跑冒烟测试。复用的分支上如果跑过这次提交里已经没有的迁移（PR 合并 `main` 后重新生成了迁移，旧名字的那个已经在库里跑过），就先删掉这个分支、再从 Neon 的默认分支重新复制一份（和第一次建分支一样），再迁移。不用 Neon 的「从父分支重置」，因为它也占一个分支名额，名额满了会报 `branches limit exceeded`；这个 PR 预览里点出来的数据会清掉，`preview/main` 和生产不受影响。PR 页面的「Deployments」里能点开预览地址，Actions 运行页的摘要里也有。
