@@ -10,6 +10,8 @@ import type { FollowTarget } from '@/modules/follows/target'
 import { SaveButton } from '@/modules/saves/components/save-button'
 import { SaveProvider } from '@/modules/saves/components/save-provider'
 
+import { SubscribeBox } from '../../email/components/subscribe-box'
+import { subscribingOpen } from '../../email/delivery'
 import type { StoryDetail } from '../story-item'
 import { listHref, storyHref } from '../list-params'
 import { SpreadIndex } from './spread-index'
@@ -170,6 +172,12 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
             {story.similar.length > 0 && (
               <div className="mt-6">
                 <SimilarStories stories={story.similar} />
+              </div>
+            )}
+            {/* Readers from search and shared links land here, not on the list (docs/specs/daily-email.md「页面与路由」). */}
+            {subscribingOpen() && (
+              <div className="mt-6">
+                <SubscribeBox variant="band" />
               </div>
             )}
           </article>
