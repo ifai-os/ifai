@@ -363,6 +363,8 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 
 **Logo**（2026-11-07 站长：最常见最主流的 AI 公司和产品直接放 Logo）：右栏「公司与产品」的小方块和话题页的头像，名字在 `src/modules/daily/brand-logos.ts` 名单里的（OpenAI、ChatGPT、Anthropic、Claude、Gemini、DeepSeek、NVIDIA 等五十来个，按比较用的名字认，中文名也认）画它的 Logo，其余照旧写首字。图形取自 simple-icons（CC0），品牌色太深的跟着文字颜色走，深色模式也看得清。simple-icons 没有的（Microsoft、Amazon、xAI、Midjourney 等）暂时还是首字。
 
+**详情页版式**（2026-11-07 站长）：页面上不显示面包屑（分类在标题上方已经有链接），结构化数据里的面包屑照旧给搜索引擎；有右栏时正文栏占满剩下的宽度，和右栏之间留 48px，右栏右边和顶栏对齐；没有右栏时正文是阅读宽度。
+
 **页面位置**：主栏「来源」和收藏分享按钮下面依次是「话题追踪」「同类事件」；右栏依次是「行业标签」「同一事件的其他进展」「公司与产品」。手机上右栏排在主栏后面。
 
 **验收**

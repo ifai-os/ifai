@@ -48,26 +48,6 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-6 px-4 pt-5 pb-16 md:gap-8 md:pt-8 md:pb-24">
-      <nav aria-label={t('breadcrumb')} className="text-meta text-ink-4">
-        <ol className="flex flex-wrap items-center gap-2">
-          <li className="flex items-center gap-2">
-            <Link href="/news" className="hover:text-ink">
-              {t('title')}
-            </Link>
-            <span aria-hidden="true">/</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <Link href={listHref({ category: story.category })} className="hover:text-ink">
-              {names(story.category)}
-            </Link>
-            <span aria-hidden="true">/</span>
-          </li>
-          <li aria-current="page" lang={story.title.lang} className="min-w-0 truncate text-ink">
-            {story.title.value}
-          </li>
-        </ol>
-      </nav>
-
       <FollowProvider targets={followTargets(story)} signIn={signIn}>
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
           {/* With the side column the story takes the rest of the row, so the side column ends where the header does; without it, the reading width. */}
