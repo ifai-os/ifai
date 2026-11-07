@@ -58,22 +58,31 @@ export function ListNavigationProvider({ children }: { children: ReactNode }) {
   return <ListNavigationContext value={{ go, phase, retry: () => trip && go(trip.href) }}>{children}</ListNavigationContext>
 }
 
-type ListLinkProps = Omit<ComponentProps<typeof Link>, 'href' | 'onNavigate'> & { href: `/${string}` }
+type ListLinkProps = Omit<ComponentProps<typeof Link>, 'href' | 'onNavigate'> & {
+  href: `/${string}`
+  /**
+   * With `scroll={false}`: the id of the element holding the list. The page stays where it is,
+   * unless the reader has scrolled past that element's top; then it comes back to that top (not
+   * the page's), so the new list starts in view.
+   */
+  keepInView?: string
+}
 
 /** A link to another view of the list. A plain link outside `ListNavigationProvider`, and before the page has loaded. */
-export function ListLink({ href, scroll, ...props }: ListLinkProps) {
+export function ListLink({ href, scroll, keepInView, ...props }: ListLinkProps) {
   const navigation = use(ListNavigationContext)
   return (
     <Link
       href={href}
-      onNavigate={
-        navigation
-          ? (event) => {
-              event.preventDefault()
-              navigation.go(href, { scroll })
-            }
-          : undefined
-      }
+      onNavigate={(event) => {
+        if (keepInView) {
+          const list = document.getElementById(keepInView)
+          if (list && list.getBoundingClientRect().top < 0) list.scrollIntoView({ block: 'start' })
+        }
+        if (!navigation) return
+        event.preventDefault()
+        navigation.go(href, { scroll })
+      }}
       scroll={scroll}
       {...props}
     />

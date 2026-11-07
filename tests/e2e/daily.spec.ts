@@ -359,6 +359,31 @@ test.describe('with the sample stories', () => {
     )
   })
 
+  test('a category keeps the page where it is, or brings it back to the top of the stories, never the top of the page', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 400 })
+    await page.goto('/en/news', { waitUntil: 'networkidle' })
+    const categories = page.getByRole('main').getByRole('navigation', { name: en.daily.filterLabel })
+    const storiesTop = await page.evaluate(() => document.getElementById('stories')!.getBoundingClientRect().top + window.scrollY)
+
+    // Above the stories' top: the page stays put (站长, 2026-11-07).
+    await page.evaluate((y) => window.scrollTo(0, y), Math.round(storiesTop) - 100)
+    const before = await page.evaluate(() => window.scrollY)
+    await categories.getByRole('link', { name: en.categories.tools }).click()
+    await expect(page).toHaveURL(/\?category=tools$/)
+    await expect(categories.getByRole('link', { name: en.categories.tools })).toHaveAttribute('aria-current', 'page')
+    expect(await page.evaluate(() => window.scrollY)).toBe(before)
+
+    // Past it: back to the stories' top, so the new list starts in view.
+    await categories.getByRole('link', { name: en.daily.allCategories }).click()
+    await expect(categories.getByRole('link', { name: en.daily.allCategories })).toHaveAttribute('aria-current', 'page')
+    await page.evaluate((y) => window.scrollTo(0, y), Math.round(storiesTop) + 500)
+    await categories.getByRole('link', { name: en.categories.llm }).click()
+    await expect(categories.getByRole('link', { name: en.categories.llm })).toHaveAttribute('aria-current', 'page')
+    const after = await page.evaluate(() => window.scrollY)
+    expect(after).toBeGreaterThan(0)
+    expect(after).toBeLessThanOrEqual(Math.round(storiesTop))
+  })
+
   test("a story's page answers with the story itself, not a skeleton with the story hidden", async ({ request }) => {
     // Rendered on its first visit (only the newest story is built ahead): the cached HTML has to be the story,
     // with one main, so crawlers that run no scripts and「跳到正文」both find it (docs/specs/daily.md「加载状态」).
