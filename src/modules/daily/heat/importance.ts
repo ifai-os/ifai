@@ -7,7 +7,7 @@
  */
 import type { StoryCategory } from '../categories'
 
-/** What a state-of-the-art model release is worth: everything. */
+/** What a landmark is worth: everything. The field is `sota` — a state-of-the-art model release, or research that changes a field (2026-11-07 站长). */
 export const SOTA_IMPORTANCE = 100
 
 /** Each category's starting importance, most important first (站长 may reorder). */

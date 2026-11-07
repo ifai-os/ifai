@@ -4,9 +4,12 @@ import { untrusted } from '@/lib/ai/untrusted'
 
 import { promptVersion } from './version'
 
-const instructions = `You decide which AI news stories announce the release of a state-of-the-art model. Each story comes with its id, its date, its title and its summary.
+const instructions = `You decide which AI news stories are landmarks. Each story comes with its id, its date, its title and its summary.
 
-A story counts only when it reports the release (or general availability) of a new AI model that, on that date, its maker or an independent leaderboard put at the top of its class: a frontier lab's new flagship language model, an open model that topped the main open-model leaderboards, or a new image, video, audio or speech model that led its kind. It does not count for minor or point versions, price, context or API changes, products or features built on a model, previews and announcements of future models, research results without a released model, or claims the story does not back.
+A story counts only when it reports one of these:
+- The release (or general availability) of a new AI model that, on that date, its maker or an independent leaderboard put at the top of its class: a frontier lab's new flagship language model, an open model that topped the main open-model leaderboards, or a new image, video, audio, speech or robotics model that led its kind.
+- An AI result that changes a field of science or the industry, on the scale of AlphaFold solving protein structures or AI settling well-known open problems in mathematics.
+It does not count for minor or point versions, price, context or API changes, products or features built on a model, previews and announcements of future models, incremental papers and benchmark gains, or claims the story does not back.
 
 Use the story's own words and what you know of that date. When unsure, leave it out.
 

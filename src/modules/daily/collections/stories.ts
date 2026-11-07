@@ -565,12 +565,12 @@ export const Stories: CollectionConfig = {
       name: "sota",
       type: "checkbox",
       defaultValue: false,
-      label: { en: "State-of-the-art model release", zh: "SOTA 模型发布" },
+      label: { en: "Landmark (SOTA model or breakthrough)", zh: "里程碑（SOTA 模型或重大突破）" },
       admin: {
         position: "sidebar",
         description: {
-          en: "A new model at the top of its class. Its importance is the full 100.",
-          zh: "发布了同类里排第一的新模型，重要性按满分 100 算。",
+          en: "A new model at the top of its class, or research that changes a field (AlphaFold, AI settling open problems in mathematics). Its importance is the full 100.",
+          zh: "发布了同类里排第一的新模型，或者改变一个领域的科研突破（AlphaFold、AI 解决公认的数学难题）。重要性按满分 100 算。",
         },
       },
     },
@@ -588,8 +588,8 @@ export const Stories: CollectionConfig = {
       admin: {
         ...readOnly,
         description: {
-          en: "0–100: 100 for a SOTA release, else by category and AI score.",
-          zh: "0–100：SOTA 模型发布 100，其他按分类和 AI 评分。",
+          en: "0–100: 100 for a landmark, else by category and AI score.",
+          zh: "0–100：里程碑 100，其他按分类和 AI 评分。",
         },
       },
     },

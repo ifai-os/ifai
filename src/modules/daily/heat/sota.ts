@@ -1,6 +1,7 @@
 /**
- * Marking earlier stories that announced a state-of-the-art model (2026-11-07 站长: Claude ticks
- * them, not the editors). Stories written since then are judged by the structuring step, and an
+ * Marking earlier landmark stories (2026-11-07 站长: Claude ticks them, not the editors): a
+ * state-of-the-art model release, or research that changes a field (AlphaFold, AI settling open
+ * problems in mathematics). Stories written since then are judged by the structuring step, and an
  * editor's tick counts as judged too; the rest — published model, open-source and generated-media
  * stories — go to the model in batches, once each. Saving a story recomputes its importance and
  * reach index (../collections/stories.ts).
@@ -11,8 +12,8 @@ import { getDb } from '@/lib/db/drizzle'
 import type { StoryCategory } from '../categories'
 import { sotaPrompt } from '../prompts'
 
-/** Where SOTA releases are filed: models, open models, and image, video and audio models. */
-export const SOTA_CATEGORIES: readonly StoryCategory[] = ['llm', 'open', 'aigc']
+/** Where landmarks are filed: models, open models, image / video / audio models, research and robotics. */
+export const SOTA_CATEGORIES: readonly StoryCategory[] = ['llm', 'open', 'aigc', 'research', 'robotics']
 /** Stories per model call. */
 export const SOTA_BATCH = 20
 

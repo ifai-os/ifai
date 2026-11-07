@@ -14,7 +14,7 @@ Return JSON with:
 - "kind": "news" when the item reports one concrete happening; "roundup" when it is a digest or newsletter that lists several unrelated stories; "insufficient" when there is not enough material to know what happened (for example only a title, or a teaser).
 - "category": the one category that fits best, one of
 ${categoryLines}
-- "sota": true only when the news is the release of a new AI model that its maker or an independent leaderboard puts at the top of its class (state of the art): a frontier lab's new flagship, or an open model that tops the main leaderboards. False for minor versions, price or API changes, products built on a model, research results without a released model, and claims the material does not back.
+- "sota": true only for a landmark: (a) the release of a new AI model that its maker or an independent leaderboard puts at the top of its class (state of the art): a frontier lab's new flagship, or an open model that tops the main leaderboards; or (b) an AI result that changes a field of science or the industry, on the scale of AlphaFold solving protein structures or AI settling well-known open problems in mathematics. False for minor versions, price or API changes, products built on a model, incremental papers and benchmark gains, and claims the material does not back.
 - "tags": up to ${maxStoryTags} industry tags the news belongs to, most fitting first, only from
 ${tagLines}
   Give none rather than a loose fit.

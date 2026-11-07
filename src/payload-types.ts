@@ -570,12 +570,12 @@ export interface Story {
    */
   heatPeak?: number | null;
   /**
-   * A new model at the top of its class. Its importance is the full 100.
+   * A new model at the top of its class, or research that changes a field (AlphaFold, AI settling open problems in mathematics). Its importance is the full 100.
    */
   sota?: boolean | null;
   sotaJudged?: boolean | null;
   /**
-   * 0–100: 100 for a SOTA release, else by category and AI score.
+   * 0–100: 100 for a landmark, else by category and AI score.
    */
   importance?: number | null;
   /**
