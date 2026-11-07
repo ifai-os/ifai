@@ -293,6 +293,7 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 - 每条新闻在 `raw_items` 里记一条已归档的报道（`external_id` = `feishu:<record_id>`，属于停用的信源「本地流水线（飞书导入）」，正文不抓），再建一个自己的事件，这样热度和传播指数（Brave、X）照常算。来源里第一个之后的 Hacker News、Reddit、X 等标成「讨论」，其他是「报道」。
 - 公司和产品（2026-11-04 站长反馈详情页没有显示）：每行可以带 `companies` 和 `products`（名称数组），各取前 3 个存进 `stories.entities`，规则和站内写作一样。两个都没带的行，再导时不动已有的。
 - 配图（2026-11-01 站长定，沿用「配图与视频」的规则）：每行可以带 `media`：`{"kind":"image","imageUrl":原图地址,"credit":发布方}`、`{"kind":"video","videoUrl":YouTube / Vimeo / .mp4 / .webm,"imageUrl"?:封面,"credit":…}`，或 `null`。按采集的规则读：不认的视频平台、SVG、像 Logo 的图都当没有，这一行照样导入；没写 `credit` 用原文的发布方。地址记在那条报道的 `raw_items.media` 里。新的一条、或者再导时图片和视频地址变了，才复制：后台任务 `daily-import-media`（`src/modules/daily/import/media.ts`）照写作那一步下载不超过 5 MB 的 JPEG、PNG、WebP、GIF 进 `media`，视频封面取 YouTube 的 `maxresdefault`／`hqdefault`、Vimeo 的 oEmbed、视频文件用这行的 `imageUrl`；下载失败就当没有图。地址没变就不动这条新闻的配图（站长在后台改过的不会被覆盖）；再导时去掉了 `media`，新闻的配图也去掉。
+- 开头的日期（2026-11-07 站长反馈列表里每条摘要都以「11 月 6 日，」开头，上面已经显示过日期）：导入时摘要和正文每段开头的日期，和发布日期相差不超过一天的删掉（`src/modules/daily/lead-date.ts`；「当地时间」之类的前缀一起删），其他日期和文字不动。已经导入的由流水线在飞书里改好后重新导入；站里自己写的新闻由迁移 `story_lead_dates` 清一次，写稿和改写的提示词也要求摘要不以日期开头。
 - 导入后刷新页面缓存，并像审核发布一样发 `daily/story.changed`（应用页据此匹配提到的应用）。回复：`{ created, updated, mediaQueued, stories: [{recordId, id, slug, action}], failed: [{line, recordId, error}] }`，`mediaQueued` 是排队复制配图的条数。
 
 ## 断更告警

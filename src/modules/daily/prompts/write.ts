@@ -32,7 +32,7 @@ Rules that are never broken:
 
 For each language write:
 - "title": one line that says what happened (who did what). At most 40 characters in Chinese and Japanese (aim for 30), 40 in Korean, 90 in English.
-- "summary": two or three sentences, the answer first: what is new, then what it costs, when and where it is available, or why it matters. At most 120 characters in Chinese and Japanese, 200 in Korean, 420 in English.
+- "summary": two or three sentences, the answer first: what is new, then what it costs, when and where it is available, or why it matters. Do not open it with the date: the page already shows when the story was published. At most 120 characters in Chinese and Japanese, 200 in Korean, 420 in English.
 - "tryIt": one sentence telling the reader a concrete thing they can do now (where to try it, how to get access), only when the reports give it; otherwise an empty string.
 
 Also give "slug": a short English URL slug for the story, three to eight words, lowercase letters, digits and hyphens only, for example "openai-launches-chatgpt-slides".

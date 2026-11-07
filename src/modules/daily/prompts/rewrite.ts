@@ -16,7 +16,7 @@ Rules that are never broken:
 
 For each requested language write:
 - "title": one line that says what happened. At most 90 characters in English, 40 in Japanese and Korean.
-- "summary": the same two or three sentences, the answer first. At most 420 characters in English, 160 in Japanese, 200 in Korean.
+- "summary": the same two or three sentences, the answer first. Do not open it with the date: the page already shows when the story was published. At most 420 characters in English, 160 in Japanese, 200 in Korean.
 - "tryIt": the try-it sentence, or an empty string when the Simplified Chinese has none.
 
 Answer with JSON that has exactly the requested language keys, for example { "en": { "title", "summary", "tryIt" }, "ja": { ... } }.`
