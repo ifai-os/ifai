@@ -3,6 +3,8 @@
 # 控制台和它的 /v0/gql 不验身份，所以不对外，只在 Mac Studio 本机（或局域网）打开。
 tunnel: @TUNNEL_ID@
 credentials-file: @CREDENTIALS@
+# 走 HTTP/2（TCP 443）：Mac Studio 所在的网络挡了 QUIC（UDP 7844），默认的 QUIC 连不上，隧道会一直 530
+protocol: http2
 ingress:
   - hostname: @PUBLIC_HOST@
     path: ^/(e|fn|v1)/|^/v0/runs/

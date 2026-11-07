@@ -52,7 +52,7 @@ if [[ ! -f "$HOME/.cloudflared/cert.pem" ]]; then
 fi
 tunnel_id() {
   cloudflared tunnel list --output json --name "$TUNNEL" |
-    node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const t=JSON.parse(s||"[]");console.log(t[0]?.id??"")})'
+    node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const t=JSON.parse(s||"[]")||[];console.log(t[0]?.id??"")})'
 }
 TUNNEL_ID=$(tunnel_id)
 if [[ -z "$TUNNEL_ID" ]]; then
