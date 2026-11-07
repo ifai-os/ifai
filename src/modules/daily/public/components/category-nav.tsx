@@ -9,8 +9,12 @@ type CategoryNavProps = {
   current: StoryCategory | null
   /** The category pages' larger pills (「IFAI 日报 · 分类页」board), which wrap on wide screens. */
   large?: boolean
-  /** The daily list's column: filter the list in place instead of opening the category's page. */
-  filter?: boolean
+  /**
+   * The daily list's column: filter the list in place instead of opening the category's page. The
+   * page keeps its place rather than jumping to the top (站长, 2026-11-07); scrolled past the
+   * stories' top (the element with this id), it comes back to there.
+   */
+  filter?: string
 }
 
 /**
@@ -18,7 +22,7 @@ type CategoryNavProps = {
  * stories, a red dot by the current one; on phones a row of chips that scrolls sideways
  * (「手机 · 日报」). The category pages have pills instead.
  */
-export function CategoryNav({ current, large = false, filter = false }: CategoryNavProps) {
+export function CategoryNav({ current, large = false, filter }: CategoryNavProps) {
   const t = useTranslations('daily')
   const names = useTranslations('categories')
   const items: { key: StoryCategory | null; name: string }[] = [
@@ -35,6 +39,8 @@ export function CategoryNav({ current, large = false, filter = false }: Category
             <li key={item.key ?? 'all'} className="flex-none">
               <ListLink
                 href={filter ? filterHref({ category: item.key }) : listHref({ category: item.key })}
+                scroll={filter ? false : undefined}
+                keepInView={filter}
                 aria-current={active ? 'page' : undefined}
                 className={
                   large

@@ -1,7 +1,6 @@
 import { useTranslations } from 'next-intl'
 
 import { Icon } from '@/components/icon'
-import { LocalTime } from '@/components/local-time'
 import { isLaunched } from '@/config/site'
 import { Link } from '@/i18n/navigation'
 import { FollowButton } from '@/modules/follows/components/follow-button'
@@ -10,6 +9,7 @@ import type { StoryTag } from '../../tags'
 import type { StoryEntityItem, StoryItem, StoryTopic } from '../story-item'
 import { listHref, storyHref, topicHref } from '../list-params'
 import { ShowMoreList } from './show-more'
+import { StoryDate } from './story-time'
 
 /** 「话题追踪」shows this many before「查看更多」. */
 const topicFirst = 5
@@ -28,7 +28,7 @@ export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId:
     return (
       // Phones put the date over the title, so the title keeps the width.
       <li key={story.id} className="grid grid-cols-[20px_minmax(0,1fr)] gap-x-2 md:grid-cols-[112px_20px_minmax(0,1fr)]">
-        <LocalTime iso={story.publishedAt} style="date" className="hidden py-2 text-meta text-ink-4 tabular-nums md:block" />
+        <StoryDate iso={story.publishedAt} className="hidden py-2 text-meta text-ink-4 tabular-nums md:block" />
         <span aria-hidden="true" className="relative flex justify-center">
           <span className="w-px bg-line" />
           <span
@@ -36,7 +36,7 @@ export function TopicTrack({ topic, currentId }: { topic: StoryTopic; currentId:
           />
         </span>
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1 py-2 text-body">
-          <LocalTime iso={story.publishedAt} style="date" className="w-full text-meta text-ink-4 tabular-nums md:hidden" />
+          <StoryDate iso={story.publishedAt} className="w-full text-meta text-ink-4 tabular-nums md:hidden" />
           {current ? (
             <span lang={story.title.lang} aria-current="page" className="font-semibold">
               {story.title.value}
@@ -89,7 +89,7 @@ export function SimilarStories({ stories }: { stories: StoryItem[] }) {
         {stories.map((story) => (
           <li key={story.id} className="border-t border-surface-2">
             <Link href={storyHref(story.slug)} className="group grid grid-cols-[112px_minmax(0,1fr)] gap-3 py-3">
-              <LocalTime iso={story.publishedAt} style="date" className="text-meta text-ink-4 tabular-nums" />
+              <StoryDate iso={story.publishedAt} className="text-meta text-ink-4 tabular-nums" />
               <span className="flex flex-col gap-1">
                 <span lang={story.title.lang} className="text-body font-medium group-hover:text-accent-ink">
                   {story.title.value}

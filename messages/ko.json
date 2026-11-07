@@ -1107,6 +1107,7 @@
     "categoryUpdated": "최근 업데이트 {when, select, today {{time}} yesterday {어제 {time}} other {{date} {time}}}",
     "categoryUpdatedOn": "최근 업데이트 {date}",
     "pageTitle": "{title} · {page}페이지",
+    "pageDescription": "{description} ({page}페이지)",
     "pages": "페이지 이동",
     "filterLabel": "카테고리로 필터",
     "allCategories": "전체",
@@ -1268,13 +1269,13 @@
     "robotics": "로봇"
   },
   "categoryAbout": {
-    "llm": "새 모델 출시와 업그레이드, 컨텍스트 길이·가격·API 변경 소식.",
-    "tools": "AI 앱과 도구의 새 기능과 신제품, 가격과 이용 범위 변경 소식.",
-    "aigc": "이미지·영상·오디오·음악·3D 콘텐츠의 생성과 편집.",
-    "open": "오픈소스·오픈 웨이트 모델, 데이터셋, 프레임워크와 개발 도구.",
-    "industry": "투자 유치, 인수합병, 제휴, 인사, 정책, 소송과 컴퓨팅 거래.",
-    "research": "논문, 벤치마크, 새로운 방법론, 그리고 과학 연구에 쓰이는 AI.",
-    "robotics": "휴머노이드 로봇, 로봇 팔, 체화 AI 모델과 자율주행."
+    "llm": "GPT, Claude, Gemini, DeepSeek, Qwen 등 대규모 언어 모델의 새 버전, 벤치마크, 가격과 API 변경 소식을 매일 전합니다.",
+    "tools": "ChatGPT, Cursor, Perplexity 등 AI 도구의 새 기능과 신제품, 가격과 이용 지역 변경 소식.",
+    "aigc": "Midjourney, Sora, Veo, Suno 등 AI 이미지·영상·음성·음악 생성의 새 모델과 새 기능.",
+    "open": "Llama, Qwen, DeepSeek 등 오픈소스·오픈 웨이트 모델과 주목할 만한 데이터셋, 프레임워크, 개발 도구.",
+    "industry": "AI 기업의 투자 유치, 인수, 제휴, 경영진 교체와 각국의 AI 규제, 저작권 소송, 대규모 컴퓨팅 계약.",
+    "research": "주목할 AI 논문, 새 벤치마크와 방법론, 그리고 생물학·의학·소재 등 과학 연구에서 AI가 낸 성과.",
+    "robotics": "Figure, Unitree, 테슬라 옵티머스 등 휴머노이드 로봇과 로봇 팔, 체화 AI, 자율주행의 최신 소식."
   },
   "tags": {
     "assistants": "AI 어시스턴트",
@@ -1293,20 +1294,20 @@
     "deals": "투자·인수"
   },
   "tagAbout": {
-    "assistants": "범용 AI 어시스턴트(챗봇)의 새 기능, 새 버전, 사용 방식의 변화.",
-    "agents": "AI 에이전트의 신제품, 개발 프레임워크, 도입 사례.",
-    "vibe-coding": "AI 코딩과 바이브 코딩: 코드 어시스턴트, AI IDE, 자연어로 앱을 만드는 방법.",
-    "image": "AI 이미지 생성과 편집: 새 모델, 도구, 기능 업데이트.",
-    "video": "AI 동영상 생성과 편집: 새 모델, 도구, 기능 업데이트.",
-    "music": "AI 음악: 작곡과 노래 생성, 음악 저작권을 둘러싼 소식.",
-    "voice": "AI 음성: 음성 합성, 음성 인식, 실시간 음성 대화, 목소리 복제.",
-    "chips": "AI 칩: GPU와 가속기 출시, 생산 능력, 수출 규제, 컴퓨팅 거래.",
-    "on-device": "온디바이스 AI: 스마트폰, PC, 자동차에서 로컬로 돌아가는 모델과 기능.",
-    "hardware": "AI 하드웨어: AI 안경, 이어폰, AI PC 등 AI를 담은 기기.",
-    "health": "AI 의료: 진단, 신약 개발, 의료 영상, 헬스케어 앱.",
-    "education": "AI 교육: 학습 도구, AI 튜터링, 학교의 AI 정책.",
-    "security": "AI 안전: 모델 안전성, 정렬, 악용과 공격·방어, 관련 규제.",
-    "deals": "AI 투자·인수: 투자 유치, 인수합병, 기업 가치 변화."
+    "assistants": "ChatGPT, Claude, Gemini 등 AI 어시스턴트의 새 기능, 새 버전, 달라진 사용법.",
+    "agents": "스스로 일을 처리하는 AI 에이전트의 신제품, 개발 프레임워크, 실제 업무 활용 사례.",
+    "vibe-coding": "Cursor, Claude Code, Copilot 등 AI 코딩 도구와 말로 설명만 하면 앱을 만드는 바이브 코딩.",
+    "image": "Midjourney, Flux, Stable Diffusion 등 AI 이미지 생성·편집 도구의 새 모델과 새 기능.",
+    "video": "Sora, Veo, Kling, Runway 등 AI 영상 생성·편집 도구의 새 모델과 새 기능.",
+    "music": "Suno, Udio 등 AI 작곡·노래 생성 도구 소식과 AI 음악을 둘러싼 저작권 분쟁.",
+    "voice": "AI 음성의 최신 소식: 음성 합성, 음성 인식, 실시간 음성 대화, 목소리 복제.",
+    "chips": "엔비디아, AMD 등의 AI 칩과 GPU 신제품, 생산 능력, 수출 규제, 대규모 컴퓨팅 계약.",
+    "on-device": "인터넷 없이도 쓰는 온디바이스 AI: 스마트폰, PC, 자동차에서 직접 돌아가는 모델과 기능.",
+    "hardware": "AI 안경, AI 이어폰, AI PC 등 AI를 담은 새 기기와 기능.",
+    "health": "의료 속 AI: 진단 보조, 신약 개발, 의료 영상, 헬스케어 앱.",
+    "education": "교육 속 AI: 학습 도구, AI 튜터, 학교의 AI 규칙.",
+    "security": "AI 안전: 모델 안전성과 정렬, 악용 위험과 공격·방어, 관련 규제.",
+    "deals": "AI 기업의 투자 유치, 인수합병, 기업 가치 변화. 돈이 어디로 가는지 따라갑니다."
   },
   "skillCategories": {
     "coding": "코딩",

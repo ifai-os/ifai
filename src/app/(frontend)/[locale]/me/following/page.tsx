@@ -8,9 +8,8 @@ import { isLocale } from '@/i18n/config'
 import { auth } from '@/lib/auth/auth'
 import { authProviders } from '@/lib/auth/providers'
 import { dayKey, serverTimeZone } from '@/lib/local-time'
-import { alternatesFor } from '@/lib/seo'
 import { readPage, type SearchParams } from '@/modules/daily/public/list-params'
-import { followingPath, FollowingPageView } from '@/modules/follows/components/following-page'
+import { FollowingPageView } from '@/modules/follows/components/following-page'
 import { getFollowingPage } from '@/modules/follows/following'
 
 type Props = {
@@ -25,7 +24,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('title'),
     description: t('description'),
-    alternates: alternatesFor(followingPath, locale),
     robots: { index: false },
   }
 }

@@ -2,13 +2,12 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/config'
+import { metaDescription } from '@/lib/meta-description'
 import { alternatesFor, shareCard } from '@/lib/seo'
 
 import type { Board } from './boards'
 import { getApp, type CategoryItem } from './data'
 import { listHref, submitHref } from './list-params'
-
-const descriptionLength = 160
 
 /**
  * Title, description and canonical address of a list page. Searches are kept out of search
@@ -40,16 +39,17 @@ export async function listMetadata({
   }
 }
 
-/** Title and description of an app's page from its summary; empty when there is no such app. */
+/** Title and description of an app's page from its introduction (else its tagline); empty when there is no such app. */
 export async function appMetadata(slug: string, locale: Locale): Promise<Metadata> {
   const app = await getApp(slug, locale)
   if (!app) return {}
   const t = await getTranslations({ locale, namespace: 'apps' })
-  const summary = app.tagline?.value ?? app.description?.value.replace(/\s+/g, ' ')
+  // The title already says the tagline, so the description says more when there is more.
+  const summary = app.description ?? app.tagline
 
   return {
     title: app.tagline ? t('detailTitle', { name: app.name, tagline: app.tagline.value }) : app.name,
-    description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
+    description: summary ? metaDescription(summary.value, summary.lang) : undefined,
     alternates: alternatesFor(`/apps/${app.slug}`, locale),
     // The website's own share picture, shown on the page too; the site's when there is none.
     ...shareCard(locale, {

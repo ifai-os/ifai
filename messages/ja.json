@@ -1107,6 +1107,7 @@
     "categoryUpdated": "最終更新 {when, select, today {{time}} yesterday {昨日 {time}} other {{date} {time}}}",
     "categoryUpdatedOn": "最終更新 {date}",
     "pageTitle": "{title} · {page}ページ目",
+    "pageDescription": "{description}（{page}ページ目）",
     "pages": "ページ送り",
     "filterLabel": "カテゴリで絞り込む",
     "allCategories": "すべて",
@@ -1268,13 +1269,13 @@
     "robotics": "ロボット"
   },
   "categoryAbout": {
-    "llm": "新しいモデルの公開やアップデート、コンテキスト長・料金・APIの変更。",
-    "tools": "AIアプリやツールの新機能・新製品、料金や提供範囲の変更。",
-    "aigc": "画像・動画・音声・音楽・3Dコンテンツの生成と編集。",
-    "open": "オープンソースやオープンウェイトのモデル、データセット、フレームワーク、開発ツール。",
-    "industry": "資金調達、買収、提携、人事、政策、訴訟、計算資源の取引。",
-    "research": "論文、ベンチマーク、新しい手法、そして科学研究でのAI活用の進展。",
-    "robotics": "人型ロボット、ロボットアーム、身体性AIのモデル、自動運転。"
+    "llm": "GPT、Claude、Gemini、DeepSeek、Qwenなど大規模言語モデルの新バージョン、ベンチマーク、料金、APIの変更を毎日まとめています。",
+    "tools": "ChatGPT、Cursor、PerplexityなどAIツールの新機能や新製品、料金や提供地域の変更をお届けします。",
+    "aigc": "Midjourney、Sora、Veo、SunoなどAIによる画像・動画・音声・音楽生成の新モデルと新機能。",
+    "open": "Llama、Qwen、DeepSeekなどオープンソース・オープンウェイトのモデルと、注目のデータセット、フレームワーク、開発ツール。",
+    "industry": "AI企業の資金調達、買収、提携、経営陣の交代に加え、各国のAI規制、著作権訴訟、大型の計算資源契約。",
+    "research": "注目のAI論文、新しいベンチマークや手法、そして生物学・医療・材料などの科学研究でAIが生んだ成果。",
+    "robotics": "Figure、Unitree、テスラのOptimusなどの人型ロボット、ロボットアーム、身体性AI、自動運転の最新動向。"
   },
   "tags": {
     "assistants": "AIアシスタント",
@@ -1293,20 +1294,20 @@
     "deals": "資金調達・買収"
   },
   "tagAbout": {
-    "assistants": "汎用AIアシスタント（チャットボット）の新機能、新バージョン、使い方の変化。",
-    "agents": "AIエージェントの新製品、開発フレームワーク、導入事例。",
-    "vibe-coding": "AIコーディングとバイブコーディング：コードアシスタント、AI IDE、自然言語でのアプリ開発。",
-    "image": "AI画像の生成と編集：新しいモデル、ツール、機能アップデート。",
-    "video": "AI動画の生成と編集：新しいモデル、ツール、機能アップデート。",
-    "music": "AI音楽：作曲や歌声の生成と、音楽の著作権をめぐる動き。",
-    "voice": "AI音声：音声合成、音声認識、リアルタイム音声対話、声のクローン。",
-    "chips": "AIチップ：GPUやアクセラレーターの発表、生産能力、輸出規制、計算資源の取引。",
-    "on-device": "オンデバイスAI：スマートフォン、PC、車でローカルに動くモデルと機能。",
-    "hardware": "AIハードウェア：AIグラス、イヤホン、AI PCなど、AIを搭載したデバイス。",
-    "health": "AI医療：診断、創薬、医用画像、ヘルスケアアプリ。",
-    "education": "AI教育：学習ツール、AIによる個別指導、学校でのAIの方針。",
-    "security": "AIの安全性：モデルの安全性、アライメント、悪用と攻防、関連する規制。",
-    "deals": "AI分野の資金調達・買収：調達ラウンド、M&A、評価額の変化。"
+    "assistants": "ChatGPT、Claude、GeminiなどAIアシスタントの新機能、新バージョン、使い方の変化。",
+    "agents": "自分で作業をこなすAIエージェントの新製品、開発フレームワーク、実際の仕事での使われ方。",
+    "vibe-coding": "Cursor、Claude Code、CopilotなどのAIコーディングツールと、話すだけでアプリを作るバイブコーディング。",
+    "image": "Midjourney、Flux、Stable DiffusionなどAI画像生成・編集ツールの新モデルと新機能。",
+    "video": "Sora、Veo、Kling、RunwayなどAI動画生成・編集ツールの新モデルと新機能。",
+    "music": "Suno、UdioなどAI作曲・歌声生成ツールの動きと、AI音楽をめぐる著作権の争い。",
+    "voice": "AI音声の最新動向：音声合成、音声認識、リアルタイム音声対話、声のクローン。",
+    "chips": "NVIDIAやAMDなどのAIチップとGPUの新製品、生産能力、輸出規制、大型の計算資源契約。",
+    "on-device": "ネットにつながなくても使えるオンデバイスAI：スマホ、PC、車でローカルに動くモデルと機能。",
+    "hardware": "AIグラス、AIイヤホン、AI PCなどAIを搭載した新しいデバイスと機能。",
+    "health": "医療でのAI活用：診断支援、創薬、医用画像、ヘルスケアアプリ。",
+    "education": "教育でのAI活用：学習ツール、AI家庭教師、学校のAIに関するルール。",
+    "security": "AIの安全性：モデルの安全性とアライメント、悪用のリスクと攻防、関連する規制。",
+    "deals": "AI企業の資金調達、買収、評価額の変化。お金がどこに流れているかを追います。"
   },
   "skillCategories": {
     "coding": "コーディング",
