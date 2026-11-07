@@ -80,7 +80,7 @@ export async function DailyList({ locale, tag = null, category = null, page }: D
             Without them only the subscribe box is left, which wide screens show here. */}
         {(firstRow || subscribe) && (
           <div className={`flex-col gap-3 md:flex-row md:flex-wrap ${firstRow ? 'flex' : 'hidden lg:flex'}`}>
-            {hottest && <HottestCard story={hottest} category={names(hottest.category)} />}
+            {hottest && <HottestCard story={hottest} />}
             {poster ? (
               <div className={`flex flex-col gap-3 ${hottest ? 'md:grow md:basis-54' : 'md:w-side md:flex-none'}`}>
                 <PosterCard poster={poster} locale={locale} />
