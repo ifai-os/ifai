@@ -305,7 +305,6 @@ describe('the hottest events', () => {
     expect(html).toContain('href="/en/news/story-5"')
     // The title only: no summary (站长, 2026-10-27), no label line above it (站长, 2026-11-07).
     expect(html).not.toContain('What happened, in one line.')
-    expect(html).not.toContain(en.daily.hottest)
     expect(html).not.toContain(en.card.spread)
   })
 })

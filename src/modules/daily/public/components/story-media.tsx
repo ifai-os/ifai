@@ -82,9 +82,9 @@ function VideoButton({
   );
 }
 
-// The list's picture, as on sspai.com: 3 : 2, 216 wide (112 on phones), corners 8, a hairline round it.
+// The list's picture, as on sspai.com: 4 : 3, 200 wide (112 on phones), top-aligned with the title.
 const thumbBox =
-  "relative block aspect-[3/2] w-28 flex-none overflow-hidden rounded-thumb border border-hairline bg-surface-2 md:w-54";
+  "relative block aspect-[4/3] w-28 flex-none self-start overflow-hidden rounded-thumb border border-hairline bg-surface-2 md:w-50";
 
 /** The list's thumbnail (「IFAI 日报（新版）」): a picture links to the story, a video plays in place. */
 export function StoryThumb({
@@ -96,7 +96,7 @@ export function StoryThumb({
 }) {
   const media = story.media;
   if (!media) return null;
-  const sizes = "(min-width: 768px) 216px, 112px";
+  const sizes = "(min-width: 768px) 200px, 112px";
   if (media.kind === "video")
     return (
       <VideoButton

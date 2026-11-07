@@ -110,7 +110,8 @@ test.describe('with the sample stories', () => {
   test("today's hottest story leads, and the hottest events of 48 hours are listed once each", async ({ page }) => {
     await page.goto('/en/news')
     const hottest = page.getByRole('region', { name: titles.workspaces })
-    await expect(hottest).toContainText(`${en.daily.hottest} · ${en.categories.tools} · ${en.card.spread} 72`)
+    // The title only, with no label line above it (站长, 2026-11-07).
+    await expect(hottest).toHaveText(titles.workspaces)
     await expect(hottest.getByRole('link')).toHaveAttribute('href', '/en/news/sample-lumen-chat-adds-shared-workspaces')
 
     const hot = page.getByRole('region', { name: en.daily.hotTitle })
@@ -124,11 +125,11 @@ test.describe('with the sample stories', () => {
 
     // A tag's page and a category's are laid out on their own, with neither the hottest story nor the hot list.
     await page.goto('/en/news/tag/assistants')
-    await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
+    await expect(page.getByRole('region', { name: titles.workspaces })).toHaveCount(0)
     await expect(page.getByRole('region', { name: en.daily.hotTitle })).toHaveCount(0)
     await page.goto('/en/news/category/open')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(`#${en.categories.open}`)
-    await expect(page.getByText(en.daily.hottest)).toHaveCount(0)
+    await expect(page.getByRole('region', { name: titles.workspaces })).toHaveCount(0)
     await expect(page.getByRole('region', { name: en.daily.hotTitle })).toHaveCount(0)
   })
 
