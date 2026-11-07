@@ -1268,13 +1268,13 @@
     "robotics": "Robotics"
   },
   "categoryAbout": {
-    "llm": "New models and upgrades, and changes to context length, pricing and APIs.",
-    "tools": "New features and products in AI apps and tools, and changes to pricing and availability.",
-    "aigc": "Generating and editing images, video, audio, music and 3D.",
-    "open": "Open-source and open-weight models, datasets, frameworks and developer tools.",
-    "industry": "Funding, acquisitions, partnerships, people moves, policy, lawsuits and compute deals.",
-    "research": "Papers, benchmarks and new methods, and AI at work in scientific research.",
-    "robotics": "Humanoid robots, robot arms, embodied AI models and self-driving."
+    "llm": "New releases, benchmarks, pricing and API changes from GPT, Claude, Gemini, DeepSeek, Qwen and other large language models, updated daily.",
+    "tools": "New features and launches in ChatGPT, Cursor, Perplexity and other AI tools, plus changes to pricing and availability.",
+    "aigc": "New models and features in AI image, video, voice and music generation, from Midjourney, Sora, Veo, Suno and more.",
+    "open": "New open-source and open-weight models like Llama, Qwen and DeepSeek, plus datasets, frameworks and developer tools worth trying.",
+    "industry": "AI funding rounds, acquisitions, partnerships and leadership changes, plus regulation, copyright lawsuits and big compute deals.",
+    "research": "Key AI papers, new benchmarks and methods, and what AI is discovering in biology, medicine, materials and other sciences.",
+    "robotics": "Humanoid robots from Figure, Unitree, Tesla Optimus and others, plus robot arms, embodied AI and self-driving cars."
   },
   "tags": {
     "assistants": "AI assistants",
@@ -1293,20 +1293,20 @@
     "deals": "Funding & deals"
   },
   "tagAbout": {
-    "assistants": "General AI assistants and chatbots: new features, new versions and changes to how people use them.",
-    "agents": "AI agents: new products, developer frameworks and real-world deployments.",
-    "vibe-coding": "AI coding and vibe coding: coding assistants, AI IDEs and building apps in plain language.",
-    "image": "AI image generation and editing: new models, tools and feature updates.",
-    "video": "AI video generation and editing: new models, tools and feature updates.",
-    "music": "AI music: generated songs and vocals, and the copyright questions around them.",
-    "voice": "AI voice: speech synthesis, speech recognition, real-time voice conversation and voice cloning.",
-    "chips": "AI chips: GPU and accelerator launches, supply, export controls and compute deals.",
-    "on-device": "On-device AI: models and features that run locally on phones, PCs and cars.",
-    "hardware": "AI hardware: smart glasses, earbuds, AI PCs and other devices built around AI.",
-    "health": "AI in health: diagnosis, drug discovery, medical imaging and health apps.",
-    "education": "AI in education: learning tools, AI tutoring and school policies on AI.",
-    "security": "AI safety and security: model safety, alignment, misuse, attacks and defenses, and the rules around them.",
-    "deals": "AI funding and deals: rounds, acquisitions and valuations."
+    "assistants": "What ChatGPT, Claude, Gemini and other AI assistants can do now: new features, new versions and new ways people use them.",
+    "agents": "AI agents that get work done on their own: new products, developer frameworks and how teams use them in real work.",
+    "vibe-coding": "AI coding tools like Cursor, Claude Code and Copilot, and vibe coding: building apps just by describing them.",
+    "image": "New models and features in AI image generation and editing, from Midjourney, Flux, Stable Diffusion and more.",
+    "video": "New models and features in AI video generation and editing, from Sora, Veo, Kling, Runway and more.",
+    "music": "AI songwriting and singing tools like Suno and Udio, and the copyright fights over AI music.",
+    "voice": "The latest in AI voice: text-to-speech, speech recognition, real-time voice chat and voice cloning.",
+    "chips": "AI chips and GPUs from Nvidia, AMD and others, plus supply, export controls and big compute deals.",
+    "on-device": "On-device AI that works without the cloud: models and features running locally on phones, laptops and cars.",
+    "hardware": "New AI glasses, earbuds, AI PCs and other devices built around AI.",
+    "health": "AI in medicine: diagnosis support, drug discovery, medical imaging and health apps.",
+    "education": "AI in education: learning tools, AI tutors, and the rules schools set for AI.",
+    "security": "AI safety and security: model safety and alignment, misuse, attacks and defenses, and the rules around them.",
+    "deals": "AI funding rounds, acquisitions and valuations: where the money is going."
   },
   "skillCategories": {
     "coding": "Coding",
