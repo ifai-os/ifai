@@ -1,5 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig, FieldHook, TextFieldSingleValidation } from "payload";
 
+import type { Story } from "@/payload-types";
+
 import { syncHantFromHans } from "@/lib/i18n/hant-sync";
 import { readerAccess } from "@/lib/reader-access"
 
@@ -8,6 +10,8 @@ import { entityKey, entityKinds, type EntityKind } from "../entities";
 import { parseVideo, storyMediaKinds, type StoryMediaKind } from "../media";
 import { importEndpoint } from "../import/endpoint";
 import { followPublishing, leaveOnDelete } from "../poster/hooks";
+import { importanceOf, spreadIndex } from "../heat/importance";
+import { peakOf } from "../heat/rules";
 import { stampPublishing } from "../publish-time";
 import { reviewEndpoints } from "../review/endpoints";
 import { maxStoryTags, storyTags, tagLabels } from "../tags";
@@ -86,6 +90,23 @@ const markStorylineByEditor: CollectionBeforeChangeHook = ({ data, originalDoc, 
   return data;
 };
 
+/**
+ * Importance and the reach index follow the category, AI score, SOTA mark and peak heat on every
+ * save, so a heat refresh, an import or an editor's change all keep them current (../heat/importance.ts).
+ */
+const stampSpread: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
+  if (!data) return data;
+  // An editor's tick or untick settles it: the catch-up job leaves the story alone.
+  if (req.user && "sota" in data && Boolean(data.sota) !== Boolean(originalDoc?.sota)) data.sotaJudged = true;
+  const pick = <K extends "category" | "score" | "sota" | "heatPeak" | "heat">(key: K) =>
+    (key in data ? data[key] : originalDoc?.[key]) as Story[K];
+  const importance = importanceOf({ category: pick("category"), score: pick("score"), sota: pick("sota") });
+  data.importance = importance;
+  // The reach is the peak heat, or the heat itself when the peak has not caught up yet (peakOf).
+  data.spread = spreadIndex(importance, peakOf(pick("heatPeak"), pick("heat") ?? 0));
+  return data;
+};
+
 const signedIn = ({ req: { user } }: { req: { user: unknown } }) =>
   Boolean(user);
 
@@ -141,7 +162,7 @@ export const Stories: CollectionConfig = {
     plural: { en: "Stories", zh: "新闻" },
   },
   hooks: {
-    beforeChange: [stampPublishing, markStorylineByEditor],
+    beforeChange: [stampPublishing, markStorylineByEditor, stampSpread],
     afterChange: [syncHantFromHans(hantFields), followPublishing],
     afterDelete: [leaveOnDelete],
   },
@@ -531,12 +552,57 @@ export const Stories: CollectionConfig = {
     {
       name: "heatPeak",
       type: "number",
+      label: { en: "Reach", zh: "传播度" },
+      admin: {
+        ...readOnly,
+        description: {
+          en: "The highest heat the event has reached; never drops.",
+          zh: "所属事件到过的最高热度，只升不降。",
+        },
+      },
+    },
+    {
+      name: "sota",
+      type: "checkbox",
+      defaultValue: false,
+      label: { en: "Landmark (SOTA model or breakthrough)", zh: "里程碑（SOTA 模型或重大突破）" },
+      admin: {
+        position: "sidebar",
+        description: {
+          en: "A new model at the top of its class, or research that changes a field (AlphaFold, AI settling open problems in mathematics). Its importance is the full 100.",
+          zh: "发布了同类里排第一的新模型，或者改变一个领域的科研突破（AlphaFold、AI 解决公认的数学难题）。重要性按满分 100 算。",
+        },
+      },
+    },
+    {
+      // Whether the SOTA mark has been decided: by the structuring step, an editor, the import, or the catch-up job (../heat/sota.ts).
+      name: "sotaJudged",
+      type: "checkbox",
+      defaultValue: false,
+      admin: { hidden: true },
+    },
+    {
+      name: "importance",
+      type: "number",
+      label: { en: "Importance", zh: "重要性" },
+      admin: {
+        ...readOnly,
+        description: {
+          en: "0–100: 100 for a landmark, else by category and AI score.",
+          zh: "0–100：里程碑 100，其他按分类和 AI 评分。",
+        },
+      },
+    },
+    {
+      name: "spread",
+      type: "number",
+      index: true,
       label: { en: "Reach index", zh: "传播指数" },
       admin: {
         ...readOnly,
         description: {
-          en: "The highest heat the event has reached; never drops. The pages show it.",
-          zh: "所属事件到过的最高热度，只升不降；前台显示的就是它。",
+          en: "Importance and reach together; the pages show it.",
+          zh: "重要性和传播度合起来，前台显示的就是它。",
         },
       },
     },

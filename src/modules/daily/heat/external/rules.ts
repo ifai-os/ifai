@@ -1,12 +1,16 @@
 /**
- * Outside reach checks (docs/specs/daily.md「传播指数」): a news search (Brave) and a search of
- * X (xAI). Each check becomes one heat signal from the time it ran, capped so neither channel
- * alone can fill the index. Pure functions: ./checks.ts runs the searches and stores them.
+ * Outside reach checks (docs/specs/daily.md「传播指数」): a search of X (xAI's Grok). Each check
+ * becomes one heat signal from the time it ran, capped so it alone cannot fill the index. The
+ * news search (Brave) is no longer run (2026-11-07 站长); the checks it stored still count.
+ * Pure functions: ./checks.ts runs the searches and stores them.
  */
 import type { HeatCheckKind } from '../../schema'
 import type { HeatSignal } from '../rules'
 
 const HOUR_MS = 3_600_000
+
+/** The channels that still run: X only (2026-11-07 站长: no more Brave). */
+export const liveCheckKinds = ['x'] as const satisfies readonly HeatCheckKind[]
 
 /** Heat-signal source IDs for the two channels; real sources have positive IDs. */
 export const CHECK_SOURCE_IDS: Record<HeatCheckKind, number> = { search: -1, x: -2 }
@@ -16,22 +20,34 @@ export const CHECK_WEIGHT_CAP: Record<HeatCheckKind, number> = { search: 1.5, x:
 
 /** Outlets at which a news search weighs half its cap. */
 export const SEARCH_HALF_OUTLETS = 8
-/** Likes plus twice the reposts at which X weighs half its cap. */
-export const X_HALF_ENGAGEMENT = 5000
+/**
+ * Views of the most-viewed posts at which X weighs half its cap (2026-11-07 站长: count views
+ * only). Checks stored before then measured likes plus twice the reposts and keep their weight.
+ */
+export const X_HALF_VIEWS = 500_000
+/** How many of the most-viewed posts about a story add up to its X views. */
+export const X_TOP_POSTS = 5
 
-/** Hours between two checks of the same kind for one event. */
-export const CHECK_EVERY_HOURS = 12
+/**
+ * Which stories are worth an outside check (2026-11-07 站长, to spend less): important ones by
+ * kind (heat/importance.ts), or ones our own sources already show spreading (two sources or so).
+ */
+export const CHECK_MIN_IMPORTANCE = 55
+export const CHECK_MIN_REACH = 39
+
 /** Only stories published in the last 48 hours are checked: older ones have no heat left to add. */
 export const CHECK_STORY_HOURS = 48
+/** X is checked once a story is a day old, so every story's views are compared at the same age. */
+export const X_CHECK_AFTER_HOURS = 24
 /** At most this many events per kind in one run. */
 export const CHECKS_PER_RUN = 15
 /** Default daily caps (Shanghai day), overridden by HEAT_SEARCH_DAILY_LIMIT and HEAT_X_DAILY_LIMIT. */
 export const DEFAULT_DAILY_CHECKS: Record<HeatCheckKind, number> = { search: 60, x: 40 }
 
-/** The weight of a check that found `value` (outlets or engagement): rises fast, never past the cap. */
+/** The weight of a check that found `value` (outlets, or views on X): rises fast, never past the cap. */
 export function checkWeight(kind: HeatCheckKind, value: number): number {
   if (!(value > 0)) return 0
-  const half = kind === 'search' ? SEARCH_HALF_OUTLETS : X_HALF_ENGAGEMENT
+  const half = kind === 'search' ? SEARCH_HALF_OUTLETS : X_HALF_VIEWS
   return Math.round((CHECK_WEIGHT_CAP[kind] * value) / (value + half) * 1000) / 1000
 }
 
@@ -73,11 +89,25 @@ export const BACKFILL_STEP = 10
 /** The window a catch-up check searches: the story's day and the two after it. */
 export const BACKFILL_WINDOW_DAYS = 2
 
-/** The day the catching up starts from: `HEAT_BACKFILL_SINCE` when it is a date, else 2026-01-01. */
-export function backfillSince(env: Record<string, string | undefined> = process.env): Date {
+/** X catches up only on stories from November 2026 on (2026-11-07 站长: no Grok for older ones). */
+export const X_BACKFILL_SINCE = '2026-11-01'
+
+/**
+ * The day the catching up starts from: `HEAT_BACKFILL_SINCE` when it is a date, else 2026-01-01;
+ * for X never before 2026-11-01.
+ */
+export function backfillSince(env: Record<string, string | undefined> = process.env, kind: HeatCheckKind = 'search'): Date {
   const raw = env.HEAT_BACKFILL_SINCE?.trim()
   const parsed = raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? Date.parse(`${raw}T00:00:00Z`) : NaN
-  return new Date(Number.isNaN(parsed) ? `${DEFAULT_BACKFILL_SINCE}T00:00:00Z` : parsed)
+  const since = Number.isNaN(parsed) ? Date.parse(`${DEFAULT_BACKFILL_SINCE}T00:00:00Z`) : parsed
+  return new Date(kind === 'x' ? Math.max(since, Date.parse(`${X_BACKFILL_SINCE}T00:00:00Z`)) : since)
+}
+
+export type Worth = { importance: number | null | undefined; reach: number | null | undefined }
+
+/** Whether a story is worth an outside check: important enough, or already spreading. */
+export function worthChecking({ importance, reach }: Worth): boolean {
+  return (importance ?? 0) >= CHECK_MIN_IMPORTANCE || (reach ?? 0) >= CHECK_MIN_REACH
 }
 
 /** How many older stories a channel catches up on each day. */
@@ -91,11 +121,11 @@ export function backfillWindow(publishedAt: Date): { from: string; to: string } 
   return { from: publishedAt.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) }
 }
 
-export type BackfillCandidate = { eventId: number; publishedAt: Date }
+export type BackfillCandidate = { eventId: number; publishedAt: Date } & Worth
 
 /**
  * The events to catch up on: published from `since` until 48 hours ago (newer ones get the
- * regular checks), not yet checked by this channel, newest first, one entry per event.
+ * regular checks), worth checking and not yet checked by this channel, newest first, one entry per event.
  */
 export function backfillDue(
   stories: readonly BackfillCandidate[],
@@ -107,70 +137,31 @@ export function backfillDue(
   const until = now.getTime() - CHECK_STORY_HOURS * HOUR_MS
   const seen = new Set<number>()
   return [...stories]
-    .filter((story) => story.publishedAt.getTime() >= since.getTime() && story.publishedAt.getTime() < until && !checked.has(story.eventId))
+    .filter((story) => story.publishedAt.getTime() >= since.getTime() && story.publishedAt.getTime() < until && !checked.has(story.eventId) && worthChecking(story))
     .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime() || a.eventId - b.eventId)
     .filter((story) => !seen.has(story.eventId) && Boolean(seen.add(story.eventId)))
     .slice(0, Math.max(0, limit))
 }
 
-export type CheckCandidate = { eventId: number; heat: number; lastChecked: Date | null }
+export type CheckCandidate = { eventId: number; heat: number; checked: boolean; publishedAt: Date } & Worth
 
-/** The events to check now: not checked in the last 12 hours, hottest first, within the run's and the day's room. */
-export function dueEvents(candidates: readonly CheckCandidate[], room: number, now: Date): number[] {
-  const due = now.getTime() - CHECK_EVERY_HOURS * HOUR_MS
+/**
+ * The events to check now, each once per channel (2026-11-07 站长): worth checking and not
+ * checked yet; for X only once the story is a day old. Hottest first, within the run's and the day's room.
+ */
+export function dueEvents(kind: HeatCheckKind, candidates: readonly CheckCandidate[], room: number, now: Date): number[] {
+  const oldEnough = now.getTime() - (kind === 'x' ? X_CHECK_AFTER_HOURS : 0) * HOUR_MS
   return candidates
-    .filter((candidate) => !candidate.lastChecked || candidate.lastChecked.getTime() <= due)
+    .filter((candidate) => !candidate.checked && worthChecking(candidate) && candidate.publishedAt.getTime() <= oldEnough)
     .sort((a, b) => b.heat - a.heat || a.eventId - b.eventId)
     .slice(0, Math.max(0, Math.min(room, CHECKS_PER_RUN)))
     .map((candidate) => candidate.eventId)
 }
 
-/** What a story is searched by: its English title, and its topic's name to tell matching results apart. */
+/** What a story is searched by: its English title and its topic's name. */
 export type CheckSubject = { eventId: number; title: string; topic: string | null }
 
-const stopWords = new Set(['the', 'and', 'for', 'with', 'its', 'new', 'from', 'into', 'that', 'this', 'now', 'are', 'has', 'have', 'will', 'can', 'more', 'than', 'about', 'after', 'over', 'how', 'what', 'why'])
-
-function words(text: string): string[] {
-  return (text.toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}.+-]*/gu) ?? []).filter((word) => word.length >= 3 && !stopWords.has(word))
-}
-
-/**
- * Whether a search result is about the story: it names the topic, or (without one) shares at
- * least half the title's words. Loosely related news would otherwise count as reach.
- */
-export function matchesStory(subject: CheckSubject, text: string): boolean {
-  const haystack = text.toLowerCase()
-  if (subject.topic) return haystack.includes(subject.topic.toLowerCase())
-  const wanted = [...new Set(words(subject.title))]
-  if (!wanted.length) return false
-  const found = new Set(words(text))
-  return wanted.filter((word) => found.has(word)).length * 2 >= wanted.length
-}
-
-export type SearchResult = { url: string; title: string; description: string; hostname?: string | null }
-
-/** An outlet's name for counting: the host without "www.". */
-export function outletOf(result: SearchResult): string | null {
-  try {
-    const host = (result.hostname || new URL(result.url).hostname).toLowerCase()
-    return host.replace(/^www\./, '') || null
-  } catch {
-    return null
-  }
-}
-
-/** The distinct outlets among the results that are about the story. */
-export function searchOutlets(subject: CheckSubject, results: readonly SearchResult[]): string[] {
-  const outlets = new Set<string>()
-  for (const result of results) {
-    if (!matchesStory(subject, `${result.title}\n${result.description}`)) continue
-    const outlet = outletOf(result)
-    if (outlet) outlets.add(outlet)
-  }
-  return [...outlets].sort()
-}
-
-export type XPost = { url: string; likes: number; reposts: number; views: number }
+export type XPost = { url: string; views: number }
 
 /** A post's ID from an x.com or twitter.com link; null for anything else. */
 export function postId(url: string): string | null {
@@ -185,17 +176,19 @@ export function postId(url: string): string | null {
 
 /**
  * The posts the model reported that the search really returned (their links are among xAI's
- * citations), each once, and their engagement: likes plus twice the reposts.
+ * citations), each once, with a view count the search showed; the five most viewed and their views together.
  */
-export function verifiedPosts(posts: readonly XPost[], cited: readonly string[]): { posts: XPost[]; engagement: number } {
+export function verifiedPosts(posts: readonly XPost[], cited: readonly string[]): { posts: XPost[]; views: number } {
   const citedIds = new Set(cited.map(postId).filter((id): id is string => id !== null))
   const seen = new Set<string>()
   const kept: XPost[] = []
   for (const post of posts) {
     const id = postId(post.url)
-    if (!id || !citedIds.has(id) || seen.has(id)) continue
+    const views = Math.max(0, Math.round(post.views))
+    if (!id || !citedIds.has(id) || seen.has(id) || !(views > 0)) continue
     seen.add(id)
-    kept.push({ url: post.url, likes: Math.max(0, Math.round(post.likes)), reposts: Math.max(0, Math.round(post.reposts)), views: Math.max(0, Math.round(post.views)) })
+    kept.push({ url: post.url, views })
   }
-  return { posts: kept, engagement: kept.reduce((sum, post) => sum + post.likes + 2 * post.reposts, 0) }
+  const top = kept.sort((a, b) => b.views - a.views).slice(0, X_TOP_POSTS)
+  return { posts: top, views: top.reduce((sum, post) => sum + post.views, 0) }
 }

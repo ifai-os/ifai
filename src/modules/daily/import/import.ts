@@ -130,6 +130,7 @@ async function importOne(
     category: story.category,
     tags: story.tags,
     ...(story.entities ? { entities: story.entities } : {}),
+    ...(story.sota === null ? {} : { sota: story.sota, sotaJudged: true }),
     sources: story.sources,
     score: story.score,
     publishedAt: story.publishedAt,
