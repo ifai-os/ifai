@@ -2,10 +2,10 @@ import { useTranslations } from 'next-intl'
 
 import { InitialTile, toneFor } from '@/components/cards/initial-tile'
 import { Icon } from '@/components/icon'
-import { LocalTime } from '@/components/local-time'
 import { Link } from '@/i18n/navigation'
 import { AppTile } from '@/modules/apps/components/app-tile'
 import { initialOf } from '@/modules/apps/localized'
+import { StoryDate } from '@/modules/daily/public/components/story-time'
 
 import type { SearchHit } from '../data'
 
@@ -57,7 +57,7 @@ export function HitRow({ hit }: { hit: SearchHit }) {
             {hit.kind === 'daily' && (
               <>
                 <span aria-hidden="true">·</span>
-                <LocalTime iso={hit.publishedAt} style="date" />
+                <StoryDate iso={hit.publishedAt} />
               </>
             )}
           </span>

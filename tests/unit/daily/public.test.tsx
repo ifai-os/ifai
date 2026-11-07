@@ -371,6 +371,24 @@ describe('a story’s page', () => {
     expect(html).toContain('text-heat-4">85<')
   })
 
+  it('shows a source that only knows its date as that date, not a made-up time (站长, 2026-11-07)', () => {
+    // blog.google gives only 2026-10-28, stored as midnight UTC: in Los Angeles that read「10月27日 17:00」.
+    const html = render(
+      <StoryDetailView
+        story={{
+          ...detail,
+          publishedAt: '2026-10-28T07:00:00Z',
+          sources: [{ name: 'blog.google', role: 'original', url: 'https://blog.google/x', publishedAt: '2026-10-28T00:00:00Z' }],
+          developments: [story({ id: 9, publishedAt: '2026-10-20T00:00:00Z', slug: 'earlier' })],
+        }}
+        signIn={{ google: false, github: false, email: true }}
+      />,
+    )
+    expect(html).toContain('<time dateTime="2026-10-28">Oct 28, 2026</time>')
+    expect(html).not.toContain('dateTime="2026-10-28T00:00:00Z"')
+    expect(html).toContain('<time dateTime="2026-10-20T00:00:00Z" class="text-small text-ink-4">Oct 20, 2026</time>')
+  })
+
   it('shows the body after the summary, with its paragraphs and subheadings', () => {
     const body = { lang: 'en' as const, value: bodyBlocks('First paragraph.\n\n## What changes\nSecond paragraph,\nsame paragraph.\n\n\nThird.') }
     expect(body.value).toEqual([

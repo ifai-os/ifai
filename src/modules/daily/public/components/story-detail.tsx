@@ -17,7 +17,7 @@ import { listHref, storyHref } from '../list-params'
 import { SpreadIndex } from './spread-index'
 import { StoryFigure } from './story-media'
 import { EntityList, SimilarStories, TagList, TopicTrack } from './story-related'
-import { StoryPublished } from './story-time'
+import { PublishTime, StoryDate, StoryPublished } from './story-time'
 
 /** What the page's follow buttons are for: its tags, and its companies and products. */
 function followTargets(story: StoryDetail): FollowTarget[] {
@@ -143,7 +143,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
                         </a>
                         <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-ink-4">
                           <span className="rounded-pill border border-line px-2 py-0.5">{t(`roles.${source.role}`)}</span>
-                          {source.publishedAt && <LocalTime iso={source.publishedAt} />}
+                          {source.publishedAt && <PublishTime iso={source.publishedAt} />}
                           <span className="truncate">{hostOf(source.url)}</span>
                         </span>
                       </div>
@@ -194,7 +194,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
                     {story.developments.map((other) => (
                       <li key={other.id} className="border-t border-line py-3">
                         <Link href={storyHref(other.slug)} className="flex flex-col gap-1">
-                          <LocalTime iso={other.publishedAt} style="date" className="text-small text-ink-4" />
+                          <StoryDate iso={other.publishedAt} className="text-small text-ink-4" />
                           <span lang={other.title.lang} className="text-ui font-medium hover:text-accent-ink">
                             {other.title.value}
                           </span>
