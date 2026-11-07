@@ -1268,13 +1268,13 @@
     "robotics": "機器人"
   },
   "categoryAbout": {
-    "llm": "新模型釋出和升級，以及上下文長度、價格和 API 的變化。",
-    "tools": "AI 應用和工具的新功能、新產品，以及價格和開放範圍的變化。",
-    "aigc": "影像、影片、音訊、音樂和 3D 內容的生成與編輯。",
-    "open": "開源和開放權重的模型、資料集、框架與開發工具。",
-    "industry": "融資、併購、合作、人事變動、政策、訴訟和算力交易。",
-    "research": "論文、基準測試、新方法，以及 AI 用在科學研究裡的進展。",
-    "robotics": "人形機器人、機械臂、具身智慧模型和自動駕駛。"
+    "llm": "GPT、Claude、Gemini、DeepSeek、通義千問等大模型的新版本釋出、跑分對比、價格和 API 變化，每天更新。",
+    "tools": "ChatGPT、Cursor、Perplexity 等 AI 工具上了什麼新功能、出了哪些新產品，價格和開放地區有什麼變化。",
+    "aigc": "Midjourney、Sora、Veo、Suno 等 AI 繪畫、影片、配音和音樂生成工具的新模型、新功能和新玩法。",
+    "open": "Llama、通義千問、DeepSeek 等開源大模型的新版本，以及值得一用的開源資料集、框架和開發工具。",
+    "industry": "AI 公司的融資、收購、合作和高管變動，各國的 AI 監管政策、版權官司和算力大單。",
+    "research": "AI 領域的重要論文、新基準和新方法，以及 AI 在生物、醫藥、材料等科學研究裡的突破。",
+    "robotics": "Figure、宇樹、特斯拉 Optimus 等人形機器人，以及機械臂、具身智慧和自動駕駛的最新進展。"
   },
   "tags": {
     "assistants": "AI助理",
@@ -1293,20 +1293,20 @@
     "deals": "投融資"
   },
   "tagAbout": {
-    "assistants": "通用 AI 助手（聊天機器人）的新功能、新版本和使用方式的變化。",
-    "agents": "智慧體（AI Agent）的新產品、開發框架和落地案例。",
-    "vibe-coding": "AI 程式設計與 VibeCoding：程式碼助手、AI IDE，以及用自然語言做應用的新進展。",
-    "image": "AI 影像的生成與編輯：新模型、新工具和功能更新。",
-    "video": "AI 影片的生成與編輯：新模型、新工具和功能更新。",
-    "music": "AI 音樂：作曲、演唱的生成，以及音樂版權相關的動向。",
-    "voice": "AI 語音：語音合成、語音辨識、即時語音對話和聲音複製。",
-    "chips": "AI 晶片：GPU 和加速卡發表、產能與出口管制、算力交易。",
-    "on-device": "端側 AI：在手機、電腦和汽車上本地執行的模型與功能。",
-    "hardware": "AI 硬體：AI 眼鏡、耳機、AI PC 和其他搭載 AI 的裝置。",
-    "health": "AI 醫療：診斷、藥物研發、醫學影像和健康應用。",
-    "education": "AI 教育：學習工具、AI 輔導，以及學校裡的 AI 政策。",
-    "security": "AI 安全：模型安全、對齊、濫用與攻防，以及相關監管。",
-    "deals": "AI 投融資：融資、併購和估值變化。"
+    "assistants": "ChatGPT、Claude、Gemini、豆包等 AI 助理又多了什麼本事：新功能、新版本和用法上的變化。",
+    "agents": "能自己動手做事的 AI 代理（Agent）：新產品、開發框架，以及在實際工作裡的用法。",
+    "vibe-coding": "Cursor、Claude Code、Copilot 等 AI 寫程式工具，以及動動嘴就能做出 App 的 Vibe Coding。",
+    "image": "Midjourney、Flux、Stable Diffusion 等 AI 畫圖和修圖工具的新模型、新功能。",
+    "video": "Sora、Veo、可靈、Runway 等 AI 影片生成和剪輯工具的新模型、新功能。",
+    "music": "Suno、Udio 等 AI 作曲和演唱工具的新進展，以及 AI 音樂的版權之爭。",
+    "voice": "AI 語音的新進展：語音合成、語音辨識、即時語音對話和聲音複製。",
+    "chips": "輝達、AMD 等公司的 AI 晶片和 GPU 新品，以及產能、出口管制和算力大單。",
+    "on-device": "不連網也能用的裝置端 AI：在手機、電腦和汽車上本機執行的模型與功能。",
+    "hardware": "AI 眼鏡、AI 耳機、AI PC 等搭載 AI 的新裝置和新功能。",
+    "health": "AI 在醫療裡的應用：輔助診斷、藥物研發、醫學影像和健康類 App。",
+    "education": "AI 在教育裡的應用：學習工具、AI 輔導，以及學校對 AI 的規定。",
+    "security": "AI 安全：模型的安全與對齊、被濫用的風險和攻防，以及相關監管。",
+    "deals": "AI 公司的融資、併購和估值變化，看錢流向了哪裡。"
   },
   "skillCategories": {
     "coding": "開發程式設計",

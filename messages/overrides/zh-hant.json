@@ -396,7 +396,12 @@
     "addressesTitle": "連線網址"
   },
   "tagAbout": {
-    "chips": "AI 晶片：GPU 和加速卡發表、產能與出口管制、算力交易。",
-    "voice": "AI 語音：語音合成、語音辨識、即時語音對話和聲音複製。"
+    "chips": "輝達、AMD 等公司的 AI 晶片和 GPU 新品，以及產能、出口管制和算力大單。",
+    "voice": "AI 語音的新進展：語音合成、語音辨識、即時語音對話和聲音複製。",
+    "assistants": "ChatGPT、Claude、Gemini、豆包等 AI 助理又多了什麼本事：新功能、新版本和用法上的變化。",
+    "agents": "能自己動手做事的 AI 代理（Agent）：新產品、開發框架，以及在實際工作裡的用法。",
+    "vibe-coding": "Cursor、Claude Code、Copilot 等 AI 寫程式工具，以及動動嘴就能做出 App 的 Vibe Coding。",
+    "on-device": "不連網也能用的裝置端 AI：在手機、電腦和汽車上本機執行的模型與功能。",
+    "health": "AI 在醫療裡的應用：輔助診斷、藥物研發、醫學影像和健康類 App。"
   }
 }

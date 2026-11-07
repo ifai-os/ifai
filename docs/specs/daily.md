@@ -419,13 +419,13 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 
 | 键 | 简体 | English | 说明（分类页顶部） |
 |---|---|---|---|
-| `llm` | 大模型 | AI models | 新模型发布和升级，以及上下文长度、价格和 API 的变化。 |
-| `tools` | AI工具 | AI tools | AI 应用和工具的新功能、新产品，以及价格和开放范围的变化。 |
-| `aigc` | AIGC | Generative media | 图像、视频、音频、音乐和 3D 内容的生成与编辑。 |
-| `open` | 开源 | Open source | 开源和开放权重的模型、数据集、框架与开发工具。 |
-| `industry` | 行业动态 | Industry | 融资、并购、合作、人事变动、政策、诉讼和算力交易。 |
-| `research` | AI科研 | Research | 论文、基准测试、新方法，以及 AI 用在科学研究里的进展。 |
-| `robotics` | 机器人 | Robotics | 人形机器人、机械臂、具身智能模型和自动驾驶。 |
+| `llm` | 大模型 | AI models | GPT、Claude、Gemini、DeepSeek、通义千问等大模型的新版本发布、跑分对比、价格和 API 变化，每天更新。 |
+| `tools` | AI工具 | AI tools | ChatGPT、Cursor、Perplexity 等 AI 工具上了什么新功能、出了哪些新产品，价格和开放地区有什么变化。 |
+| `aigc` | AIGC | Generative media | Midjourney、Sora、Veo、Suno 等 AI 绘画、视频、配音和音乐生成工具的新模型、新功能和新玩法。 |
+| `open` | 开源 | Open source | Llama、通义千问、DeepSeek 等开源大模型的新版本，以及值得一用的开源数据集、框架和开发工具。 |
+| `industry` | 行业动态 | Industry | AI 公司的融资、收购、合作和高管变动，各国的 AI 监管政策、版权官司和算力大单。 |
+| `research` | AI科研 | Research | AI 领域的重要论文、新基准和新方法，以及 AI 在生物、医药、材料等科学研究里的突破。 |
+| `robotics` | 机器人 | Robotics | Figure、宇树、特斯拉 Optimus 等人形机器人，以及机械臂、具身智能和自动驾驶的最新进展。 |
 
 - 归类规则照「日报分类底图」画板：一条新闻只放一个分类；开放权重的模型放「开源」，闭源的新模型放「大模型」；机器人和自动驾驶都放「机器人」；AI 用在科学研究上的放「AI科研」。结构化那一步（流程第 5 步）按这些规则选，提示词版本跟着变；审核时照样可以换。
 - 以前的五个分类：「产品更新」并进「AI工具」，「图像与设计」并进「AIGC」；「开源模型」「研究进展」改名「开源」「AI科研」，键不变；「行业动态」不变。迁移 `daily_categories` 把已有的新闻、事件和结构化结果一起改掉；海报冻结的内容不改，读的时候按同样的对应换成新分类。以前「产品更新」里讲新模型的新闻会落在「AI工具」，要放「大模型」由站长在审核后台改，不调用模型重新归类。
