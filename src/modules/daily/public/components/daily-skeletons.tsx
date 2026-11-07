@@ -29,16 +29,16 @@ export function DailyFeedSkeleton({ count }: { count: number }) {
         {Array.from({ length: count }, (_, index) => {
           const width = widths[index % widths.length]
           return (
-            <div key={index} className="flex items-start gap-4 border-t border-hairline py-4 md:gap-7 md:py-6">
-              <div className="flex min-w-0 flex-1 flex-col gap-3">
-                <SkeletonLine text="text-meta" width="30%" />
+            <div key={index} className="flex items-center gap-4 border-t border-hairline py-4 md:gap-8 md:py-6">
+              <div className="flex min-w-0 flex-1 flex-col gap-2 md:gap-2.5">
                 <SkeletonLine text="text-title md:text-h3" width={width.title} bar="h-4" />
                 <div>
                   <SkeletonLine text="text-body" width={width.summary} bar="h-3" />
                   <SkeletonLine text="text-body" width={width.more} bar="h-3" />
                 </div>
+                <SkeletonLine text="text-meta" width="30%" />
               </div>
-              {index % 2 === 0 && <Skeleton className="hidden aspect-[10/7] w-40 flex-none rounded-thumb md:block" />}
+              {index % 2 === 0 && <Skeleton className="hidden aspect-[3/2] w-54 flex-none rounded-thumb md:block" />}
             </div>
           )
         })}

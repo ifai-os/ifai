@@ -301,12 +301,12 @@ describe('the hottest events', () => {
   })
 
   it("leads with today's hottest story, the whole card a link to it", () => {
-    const html = render(<HottestCard story={hot({ id: 5, eventId: 5, spread: 81 })} category="Product" />)
-    expect(html).toContain(`${en.daily.hottest} · Product`)
-    expect(html).toContain(`<span>${en.card.spread} <span class="font-semibold tabular-nums">81</span></span>`)
+    const html = render(<HottestCard story={hot({ id: 5, eventId: 5, spread: 81 })} />)
     expect(html).toContain('href="/en/news/story-5"')
-    // The title only, no summary (站长, 2026-10-27).
+    // The title only: no summary (站长, 2026-10-27), no label line above it (站长, 2026-11-07).
     expect(html).not.toContain('What happened, in one line.')
+    expect(html).not.toContain(en.daily.hottest)
+    expect(html).not.toContain(en.card.spread)
   })
 })
 

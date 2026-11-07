@@ -82,9 +82,9 @@ function VideoButton({
   );
 }
 
-// 「IFAI 日报（新版）」: 160 × 112, corners 8, a hairline round it.
+// The list's picture, as on sspai.com: 3 : 2, 216 wide (112 on phones), corners 8, a hairline round it.
 const thumbBox =
-  "relative block aspect-[10/7] w-24 flex-none self-start overflow-hidden rounded-thumb border border-hairline bg-surface-2 md:w-40";
+  "relative block aspect-[3/2] w-28 flex-none overflow-hidden rounded-thumb border border-hairline bg-surface-2 md:w-54";
 
 /** The list's thumbnail (「IFAI 日报（新版）」): a picture links to the story, a video plays in place. */
 export function StoryThumb({
@@ -96,7 +96,7 @@ export function StoryThumb({
 }) {
   const media = story.media;
   if (!media) return null;
-  const sizes = "(min-width: 768px) 160px, 96px";
+  const sizes = "(min-width: 768px) 216px, 112px";
   if (media.kind === "video")
     return (
       <VideoButton
