@@ -5,7 +5,9 @@
 #   zsh scripts/inngest-server/install.sh
 #
 # 可选环境变量：
-#   SITE=https://ifai.io             网站地址（Inngest 到这里调 /api/inngest）
+#   SITE=https://ifai.io             网站生产地址（Inngest 到这里调 /api/inngest）；ifai.io 还没指向
+#                                    Vercel 时填 https://ifai-roan.vercel.app
+#   PROXY=http://127.0.0.1:7897      Mac Studio 连 Vercel 要走的代理（本机解析 *.vercel.app 不对时用 Clash）
 #   PUBLIC_HOST=inngest.ifai.io      隧道对外的域名（网站的 INNGEST_BASE_URL）
 #   UI_HOST=127.0.0.1                控制台监听的地址；改成 0.0.0.0 才能从局域网其他电脑打开
 set -euo pipefail
@@ -13,6 +15,7 @@ set -euo pipefail
 SITE=${SITE:-https://ifai.io}
 PUBLIC_HOST=${PUBLIC_HOST:-inngest.ifai.io}
 UI_HOST=${UI_HOST:-127.0.0.1}
+PROXY=${PROXY:-}
 CLI_VERSION=1.46.0 # 和 package.json 的 pnpm inngest 用同一个版本
 TUNNEL=ifai-inngest
 HOME_DIR="$HOME/.ifai-inngest"
@@ -41,7 +44,7 @@ if [[ ! -f "$HOME_DIR/keys.env" ]]; then
   } > "$HOME_DIR/keys.env"
 fi
 
-sed -e "s|@HOME_DIR@|$HOME_DIR|g" -e "s|@SITE@|$SITE|g" -e "s|@UI_HOST@|$UI_HOST|g" \
+sed -e "s|@HOME_DIR@|$HOME_DIR|g" -e "s|@SITE@|$SITE|g" -e "s|@UI_HOST@|$UI_HOST|g" -e "s|@PROXY@|$PROXY|g" \
   "$HERE/run-inngest.sh" > "$HOME_DIR/run-inngest.sh"
 chmod 700 "$HOME_DIR/run-inngest.sh"
 

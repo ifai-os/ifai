@@ -3,6 +3,10 @@
 # --poll-interval：每 5 分钟问一次网站有没有新的任务列表，部署后不用手动同步。
 set -euo pipefail
 source "@HOME_DIR@/keys.env"
+# 去网站的请求走代理（安装时 PROXY 没填就不走）；隧道过来的本机请求不走
+if [[ -n "@PROXY@" ]]; then
+  export HTTPS_PROXY="@PROXY@" HTTP_PROXY="@PROXY@" NO_PROXY=127.0.0.1,localhost
+fi
 exec "@HOME_DIR@/cli/node_modules/.bin/inngest" start \
   --host "@UI_HOST@" \
   --port 8288 \
