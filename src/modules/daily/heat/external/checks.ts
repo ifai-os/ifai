@@ -3,7 +3,7 @@ import { and, eq, gte, inArray, sql } from '@payloadcms/db-postgres/drizzle'
 import { ai, ModelCallError, xSearchAvailable } from '@/lib/ai'
 import { getDb } from '@/lib/db/drizzle'
 import { shanghaiDayStart } from '@/lib/shanghai-day'
-import { collectEnabled, modelCallsEnabled } from '@/lib/switches'
+import { modelCallsEnabled } from '@/lib/switches'
 
 import { topicOf, type StoryEntity } from '../../entities'
 import { reachPrompt } from '../../prompts'
@@ -16,23 +16,15 @@ import {
   checkWeight,
   dailyCheckLimit,
   dueEvents,
-  searchOutlets,
   verifiedPosts,
   type CheckSubject,
-  type SearchResult,
 } from './rules'
 
 const HOUR_MS = 3_600_000
-const BRAVE_NEWS = 'https://api.search.brave.com/res/v1/news/search'
-/** Brave's limit is 400 characters and 50 words. */
-const MAX_QUERY_CHARS = 300
 
-/** Whether each kind can run: Brave needs its key and COLLECT_ENABLED; X needs XAI_API_KEY and MODEL_CALLS_ENABLED. */
+/** Whether each kind can run: the news search (Brave) no longer does (2026-11-07); X needs XAI_API_KEY and MODEL_CALLS_ENABLED. */
 export function checksEnabled(env: Record<string, string | undefined> = process.env): Record<HeatCheckKind, boolean> {
-  return {
-    search: Boolean(env.BRAVE_SEARCH_API_KEY?.trim()) && collectEnabled(env),
-    x: xSearchAvailable(env) && modelCallsEnabled(env),
-  }
+  return { search: false, x: xSearchAvailable(env) && modelCallsEnabled(env) }
 }
 
 type Subject = CheckSubject & { summary: string; publishedAt: Date }
@@ -93,64 +85,20 @@ async function usedToday(kind: HeatCheckKind, now: Date): Promise<number> {
   return row?.count ?? 0
 }
 
-/**
- * Brave's news search over the window (the last day, or a range of days as
- * "YYYY-MM-DDtoYYYY-MM-DD"); the fields we read, whatever else comes back.
- */
-async function braveNews(query: string, apiKey: string, freshness: string): Promise<SearchResult[]> {
-  const url = new URL(BRAVE_NEWS)
-  url.searchParams.set('q', query.slice(0, MAX_QUERY_CHARS))
-  url.searchParams.set('freshness', freshness)
-  url.searchParams.set('count', '50')
-  url.searchParams.set('country', 'ALL')
-  const response = await fetch(url, {
-    headers: { Accept: 'application/json', 'X-Subscription-Token': apiKey },
-    signal: AbortSignal.timeout(20_000),
-  })
-  if (!response.ok) throw new Error(`Brave news search: HTTP ${response.status}`)
-  const body = (await response.json()) as { results?: unknown }
-  const results = Array.isArray(body.results) ? body.results : []
-  return results.flatMap((raw): SearchResult[] => {
-    const result = raw as { url?: unknown; title?: unknown; description?: unknown; meta_url?: { hostname?: unknown } }
-    if (typeof result.url !== 'string') return []
-    return [
-      {
-        url: result.url,
-        title: typeof result.title === 'string' ? result.title : '',
-        description: typeof result.description === 'string' ? result.description : '',
-        hostname: typeof result.meta_url?.hostname === 'string' ? result.meta_url.hostname : null,
-      },
-    ]
-  })
-}
-
 /** The YYYY-MM-DD (UTC) of an instant, as xAI's search dates want. */
 const day = (at: Date) => at.toISOString().slice(0, 10)
 
-/** What a check found: outlets for a news search, posts for X; `engagement` is the X posts' views together. */
+/** What a check found: the X posts, and their views together as `engagement`. */
 type Found = { hits: number; engagement: number; details: unknown[] }
 
-/**
- * Where a check looks: the last day (`range` null, Brave's "past day"), or the given days. The
- * variant names the call, so a retry of the same check reuses its receipt.
- */
-type Window = { from: string; to: string; range: boolean; variant: string }
+/** The days a check searches. The variant names the call, so a retry of the same check reuses its receipt. */
+type Window = { from: string; to: string; variant: string }
 
-/**
- * The regular check, once per event and kind: a news search looks at the day before `now`; X at
- * every day since the story came out, as its views add up. The hour names the call.
- */
-const regular = (kind: HeatCheckKind, subject: Subject, now: Date): Window =>
-  kind === 'x'
-    ? { from: day(subject.publishedAt), to: day(now), range: true, variant: now.toISOString().slice(0, 13) }
-    : { from: day(new Date(now.getTime() - 24 * HOUR_MS)), to: day(now), range: false, variant: now.toISOString().slice(0, 13) }
+/** The regular check, once per event: every day since the story came out, as its views add up. The hour names the call. */
+const regular = (subject: Subject, now: Date): Window => ({ from: day(subject.publishedAt), to: day(now), variant: now.toISOString().slice(0, 13) })
 
 async function check(kind: HeatCheckKind, subject: Subject, window: Window): Promise<Found> {
-  if (kind === 'search') {
-    const freshness = window.range ? `${window.from}to${window.to}` : 'pd'
-    const outlets = searchOutlets(subject, await braveNews(subject.title, process.env.BRAVE_SEARCH_API_KEY?.trim() ?? '', freshness))
-    return { hits: outlets.length, engagement: 0, details: outlets }
-  }
+  if (kind !== 'x') throw new Error(`${kind} checks no longer run`)
   const { output } = await ai.xSearch({
     purpose: 'reach',
     instructions: reachPrompt.instructions,
@@ -184,8 +132,8 @@ export async function runChecks(kind: HeatCheckKind, now = new Date()): Promise<
     const subject = subjects.get(eventId)
     if (!subject) continue
     try {
-      const found = await check(kind, subject, regular(kind, subject, now))
-      const value = kind === 'search' ? found.hits : found.engagement
+      const found = await check(kind, subject, regular(subject, now))
+      const value = found.engagement
       await db.insert(heatChecks).values({ eventId, kind, hits: found.hits, engagement: found.engagement, weight: checkWeight(kind, value), details: found.details, checkedAt: now })
       run.checked++
       run.events.push(eventId)
@@ -261,8 +209,8 @@ export async function runBackfill(kind: HeatCheckKind, limit: number, now = new 
     if (!subject) continue
     const { from, to } = backfillWindow(publishedAt)
     try {
-      const found = await check(kind, subject, { from, to, range: true, variant: `backfill-${from}` })
-      const value = kind === 'search' ? found.hits : found.engagement
+      const found = await check(kind, subject, { from, to, variant: `backfill-${from}` })
+      const value = found.engagement
       await db.insert(heatChecks).values({ eventId, kind, hits: found.hits, engagement: found.engagement, weight: checkWeight(kind, value), details: found.details, checkedAt: publishedAt })
       run.checked++
       run.events.push(eventId)

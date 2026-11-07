@@ -1,12 +1,16 @@
 /**
- * Outside reach checks (docs/specs/daily.md「传播指数」): a news search (Brave) and a search of
- * X (xAI). Each check becomes one heat signal from the time it ran, capped so neither channel
- * alone can fill the index. Pure functions: ./checks.ts runs the searches and stores them.
+ * Outside reach checks (docs/specs/daily.md「传播指数」): a search of X (xAI's Grok). Each check
+ * becomes one heat signal from the time it ran, capped so it alone cannot fill the index. The
+ * news search (Brave) is no longer run (2026-11-07 站长); the checks it stored still count.
+ * Pure functions: ./checks.ts runs the searches and stores them.
  */
 import type { HeatCheckKind } from '../../schema'
 import type { HeatSignal } from '../rules'
 
 const HOUR_MS = 3_600_000
+
+/** The channels that still run: X only (2026-11-07 站长: no more Brave). */
+export const liveCheckKinds = ['x'] as const satisfies readonly HeatCheckKind[]
 
 /** Heat-signal source IDs for the two channels; real sources have positive IDs. */
 export const CHECK_SOURCE_IDS: Record<HeatCheckKind, number> = { search: -1, x: -2 }
@@ -154,50 +158,8 @@ export function dueEvents(kind: HeatCheckKind, candidates: readonly CheckCandida
     .map((candidate) => candidate.eventId)
 }
 
-/** What a story is searched by: its English title, and its topic's name to tell matching results apart. */
+/** What a story is searched by: its English title and its topic's name. */
 export type CheckSubject = { eventId: number; title: string; topic: string | null }
-
-const stopWords = new Set(['the', 'and', 'for', 'with', 'its', 'new', 'from', 'into', 'that', 'this', 'now', 'are', 'has', 'have', 'will', 'can', 'more', 'than', 'about', 'after', 'over', 'how', 'what', 'why'])
-
-function words(text: string): string[] {
-  return (text.toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}.+-]*/gu) ?? []).filter((word) => word.length >= 3 && !stopWords.has(word))
-}
-
-/**
- * Whether a search result is about the story: it names the topic, or (without one) shares at
- * least half the title's words. Loosely related news would otherwise count as reach.
- */
-export function matchesStory(subject: CheckSubject, text: string): boolean {
-  const haystack = text.toLowerCase()
-  if (subject.topic) return haystack.includes(subject.topic.toLowerCase())
-  const wanted = [...new Set(words(subject.title))]
-  if (!wanted.length) return false
-  const found = new Set(words(text))
-  return wanted.filter((word) => found.has(word)).length * 2 >= wanted.length
-}
-
-export type SearchResult = { url: string; title: string; description: string; hostname?: string | null }
-
-/** An outlet's name for counting: the host without "www.". */
-export function outletOf(result: SearchResult): string | null {
-  try {
-    const host = (result.hostname || new URL(result.url).hostname).toLowerCase()
-    return host.replace(/^www\./, '') || null
-  } catch {
-    return null
-  }
-}
-
-/** The distinct outlets among the results that are about the story. */
-export function searchOutlets(subject: CheckSubject, results: readonly SearchResult[]): string[] {
-  const outlets = new Set<string>()
-  for (const result of results) {
-    if (!matchesStory(subject, `${result.title}\n${result.description}`)) continue
-    const outlet = outletOf(result)
-    if (outlet) outlets.add(outlet)
-  }
-  return [...outlets].sort()
-}
 
 export type XPost = { url: string; views: number }
 

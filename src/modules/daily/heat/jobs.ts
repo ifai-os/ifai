@@ -4,7 +4,7 @@ import { cronWhen } from '@/lib/inngest/cron'
 import { modelCallsEnabled } from '@/lib/switches'
 
 import { runBackfill, runChecks, type CheckRun } from './external/checks'
-import { BACKFILL_STEP, backfillDailyLimit } from './external/rules'
+import { BACKFILL_STEP, backfillDailyLimit, liveCheckKinds } from './external/rules'
 import type { HeatCheckKind } from '../schema'
 import { activeEventIds, refreshHeat } from './heat'
 import { judgeSotaBatch } from './sota'
@@ -34,7 +34,7 @@ export const refreshDailyHeat = inngest.createFunction(
 
 /**
  * Every 2 hours (or on `daily/heat.check`): check how far the hottest stories of the last 48
- * hours have spread outside our sources, with a news search (Brave) and a search of X (xAI),
+ * hours have spread on X (xAI's Grok; the Brave news search stopped 2026-11-07),
  * only stories worth it and each once per channel (X once a day old), then work out those events' heat again. Each channel
  * stays off until its key is set (./external/checks.ts).
  */
@@ -46,16 +46,14 @@ export const checkDailyReach = inngest.createFunction(
     retries: 1,
   },
   async ({ step }) => {
-    const search = await step.run('search', () => runChecks('search'))
     const x = await step.run('x', () => runChecks('x'))
-    const eventIds = [...new Set([...search.events, ...x.events])]
-    const heat = eventIds.length ? await step.run('heat', () => refreshHeat(eventIds)) : null
-    return { search, x, heat }
+    const heat = x.events.length ? await step.run('heat', () => refreshHeat(x.events)) : null
+    return { x, heat }
   },
 )
 
 /**
- * Once a day (or on `daily/heat.backfill`): catch up on older stories with both channels
+ * Once a day (or on `daily/heat.backfill`): catch up on older stories on X (from 2026-11-01)
  * (./external/rules.ts「backfill」), newest first, up to each channel's daily share
  * (HEAT_SEARCH_BACKFILL_DAILY_LIMIT, HEAT_X_BACKFILL_DAILY_LIMIT) in steps of 10, then work out
  * those events' heat again so their reach index takes the checks in. Does nothing until the
@@ -72,7 +70,7 @@ export const backfillDailyReach = inngest.createFunction(
     const now = await step.run('now', () => new Date().toISOString())
     const runs: Partial<Record<HeatCheckKind, { checked: number; failed: number; stopped?: string }>> = {}
     const eventIds = new Set<number>()
-    for (const kind of ['search', 'x'] as const) {
+    for (const kind of liveCheckKinds) {
       const limit = backfillDailyLimit(kind)
       const total = { checked: 0, failed: 0, stopped: undefined as string | undefined }
       for (let index = 0; total.checked < limit; index++) {

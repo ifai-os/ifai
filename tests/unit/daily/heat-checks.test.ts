@@ -13,9 +13,7 @@ import {
   checkWeight,
   dailyCheckLimit,
   dueEvents,
-  matchesStory,
   postId,
-  searchOutlets,
   verifiedPosts,
   worthChecking,
   X_TOP_POSTS,
@@ -92,21 +90,6 @@ describe('outside reach checks', () => {
     expect(dailyCheckLimit('x', {})).toBe(40)
     expect(dailyCheckLimit('x', { HEAT_X_DAILY_LIMIT: '5' })).toBe(5)
     expect(dailyCheckLimit('search', { HEAT_SEARCH_DAILY_LIMIT: 'lots' })).toBe(60)
-  })
-
-  it('counts only outlets whose results are about the story', () => {
-    const subject = { eventId: 1, title: 'Lumen Chat adds shared team workspaces', topic: 'Lumen Chat' }
-    const outlets = searchOutlets(subject, [
-      { url: 'https://www.verge.com/a', title: 'Lumen Chat gets team workspaces', description: '' },
-      { url: 'https://verge.com/b', title: 'More on Lumen Chat', description: '' },
-      { url: 'https://example.org/c', title: 'Other AI news', description: 'Nothing to do with it' },
-      { url: 'not a url', title: 'Lumen Chat', description: '', hostname: 'news.example.com' },
-    ])
-    expect(outlets).toEqual(['news.example.com', 'verge.com'])
-    // Without a topic, half of the title's words have to match.
-    const plain = { eventId: 2, title: 'Open weights for the Kitecode coding model', topic: null }
-    expect(matchesStory(plain, 'Kitecode releases open weights')).toBe(true)
-    expect(matchesStory(plain, 'A coding assistant review')).toBe(false)
   })
 
   it('adds up the views of the five most-viewed posts the search really cited, each once', () => {
