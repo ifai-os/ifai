@@ -32,7 +32,8 @@ export const tagGuide: Record<StoryTag, string> = {
   video: 'video generation and editing',
   music: 'music generation and AI in music',
   voice: 'speech recognition, voice synthesis, voice cloning and voice assistants',
-  chips: 'AI chips, GPUs, data centres and compute',
+  // Shown as「AI算力」(站长, 2026-11-07); the key stays `chips` so stored tags, follows and imports keep working.
+  chips: 'AI compute: chips and GPUs, AI data centres and cloud compute, the electricity and energy that power them, and compute deals',
   'on-device': 'AI that runs on phones, laptops and other devices themselves',
   hardware: 'AI hardware products: AI phones and PCs, glasses, wearables and other gadgets',
   health: 'AI in medicine, health care and biology',
@@ -50,7 +51,7 @@ export const tagLabels: Record<StoryTag, { en: string; zh: string }> = {
   video: { en: 'AI video', zh: 'AI视频' },
   music: { en: 'AI music', zh: 'AI音乐' },
   voice: { en: 'AI voice', zh: 'AI语音' },
-  chips: { en: 'AI chips', zh: 'AI芯片' },
+  chips: { en: 'AI compute', zh: 'AI算力' },
   'on-device': { en: 'On-device AI', zh: '端侧AI' },
   hardware: { en: 'AI hardware', zh: 'AI硬件' },
   health: { en: 'AI in health', zh: 'AI医疗' },
