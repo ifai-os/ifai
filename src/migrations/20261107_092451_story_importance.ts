@@ -15,7 +15,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
       WHEN 'aigc' THEN 40 WHEN 'robotics' THEN 35 WHEN 'research' THEN 30 ELSE 45 END)
     + coalesce(("score" - 70) / 2.0, 0))));
   UPDATE "stories" SET "spread" = round(1000 * (1 - (1 - 0.6 * "importance" / 100.0)
-    * (1 - least(100, greatest(0, coalesce("heat_peak", 0))) / 100.0))) / 10.0;`)
+    * (1 - least(100, greatest(0, coalesce("heat_peak", 0), coalesce("heat", 0))) / 100.0))) / 10.0;`)
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {

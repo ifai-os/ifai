@@ -97,7 +97,8 @@ test.describe('with the sample stories', () => {
     await expect(main.getByText('Sample pending story')).toHaveCount(0)
     await expect(main.getByText('Sample withdrawn story')).toHaveCount(0)
     // The reach index instead of the other reports (站长, 2026-10-27).
-    await expect(rows.filter({ hasText: titles.workspaces })).toContainText(`${en.card.spread} 72`)
+    // Reach 72 with an AI tool's importance (40): 100 × [1 − (1 − 0.24) × (1 − 0.72)] ≈ 79.
+    await expect(rows.filter({ hasText: titles.workspaces })).toContainText(`${en.card.spread} 79`)
     await expect(main).not.toContainText('more outlets')
     // No「试一试」(站长, 2026-10-27).
     await expect(main.getByText('Open a workspace and invite a teammate.')).toHaveCount(0)
@@ -116,12 +117,12 @@ test.describe('with the sample stories', () => {
 
     const hot = page.getByRole('region', { name: en.daily.hotTitle })
     // One story per event (the earlier Lumen Chat story shares its event); withdrawn and pending ones never show.
-    await expect(hot.getByRole('link')).toHaveText([titles.workspaces, titles.weights, titles.benchmark, titles.nimbus, titles.quill])
+    await expect(hot.getByRole('link')).toHaveText([titles.workspaces, titles.weights, titles.nimbus, titles.quill, titles.benchmark])
     const items = hot.getByRole('listitem')
-    // Highest reach index first.
-    await expect(items.nth(0)).toContainText(`${en.card.spread} 72${en.daily.trend.new}`)
-    await expect(items.nth(1)).toContainText(`${en.card.spread} 45${en.daily.trend.rising}`)
-    await expect(items.nth(2)).toHaveText(new RegExp(`${en.card.spread} 30$`))
+    // Highest reach index first: importance lifts Nimbus 3 (a model, reach 26) above stories that spread further.
+    await expect(items.nth(0)).toContainText(`${en.card.spread} 79${en.daily.trend.new}`)
+    await expect(items.nth(1)).toContainText(`${en.card.spread} 63${en.daily.trend.rising}`)
+    await expect(items.nth(2)).toHaveText(new RegExp(`${en.card.spread} 53$`))
 
     // A tag's page and a category's are laid out on their own, with neither the hottest story nor the hot list.
     await page.goto('/en/news/tag/assistants')
@@ -260,7 +261,7 @@ test.describe('with the sample stories', () => {
     // Newest first, under their times; no「试一试」(站长, 2026-10-27).
     await expect(cards.getByRole('link')).toHaveText([titles.workspaces, titles.preview])
     await expect(cards.first()).not.toContainText('Open a workspace and invite a teammate.')
-    await expect(cards.nth(1)).toContainText(`${en.card.spread} 72`)
+    await expect(cards.nth(1)).toContainText(`${en.card.spread} 79`)
     await expect(page.getByText(en.daily.noEarlier)).toBeVisible()
 
     await filter.getByRole('link', { name: en.categories.open, exact: true }).click()

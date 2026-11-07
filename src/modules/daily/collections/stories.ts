@@ -11,6 +11,7 @@ import { parseVideo, storyMediaKinds, type StoryMediaKind } from "../media";
 import { importEndpoint } from "../import/endpoint";
 import { followPublishing, leaveOnDelete } from "../poster/hooks";
 import { importanceOf, spreadIndex } from "../heat/importance";
+import { peakOf } from "../heat/rules";
 import { stampPublishing } from "../publish-time";
 import { reviewEndpoints } from "../review/endpoints";
 import { maxStoryTags, storyTags, tagLabels } from "../tags";
@@ -95,11 +96,12 @@ const markStorylineByEditor: CollectionBeforeChangeHook = ({ data, originalDoc, 
  */
 const stampSpread: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
   if (!data) return data;
-  const pick = <K extends "category" | "score" | "sota" | "heatPeak">(key: K) =>
+  const pick = <K extends "category" | "score" | "sota" | "heatPeak" | "heat">(key: K) =>
     (key in data ? data[key] : originalDoc?.[key]) as Story[K];
   const importance = importanceOf({ category: pick("category"), score: pick("score"), sota: pick("sota") });
   data.importance = importance;
-  data.spread = spreadIndex(importance, pick("heatPeak") ?? 0);
+  // The reach is the peak heat, or the heat itself when the peak has not caught up yet (peakOf).
+  data.spread = spreadIndex(importance, peakOf(pick("heatPeak"), pick("heat") ?? 0));
   return data;
 };
 
