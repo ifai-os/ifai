@@ -2,12 +2,11 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 import { localizePath, type Locale } from '@/i18n/config'
+import { metaDescription } from '@/lib/meta-description'
 import { alternatesFor, shareCard } from '@/lib/seo'
 
 import { getArticle } from './data'
 import { articleHref, isPlainList, listHref, plainText, type ListQuery } from './rules'
-
-const descriptionLength = 160
 
 /**
  * The list's title and description. Only the plain first page is indexed; tabs, channels, tags
@@ -39,7 +38,7 @@ export async function articleMetadata(id: number): Promise<Metadata> {
   const text = (article.summary ?? plainText(article.body)).replace(/\s+/g, ' ').trim()
   return {
     title: article.title,
-    description: text ? Array.from(text).slice(0, descriptionLength).join('') : undefined,
+    description: text ? metaDescription(text, article.lang) : undefined,
     alternates: { canonical: localizePath(article.lang, articleHref(article.id)) },
     ...shareCard(article.lang, {
       image: article.coverFull ? { url: article.coverFull.url, width: article.coverFull.width ?? undefined, height: article.coverFull.height ?? undefined, alt: article.coverFull.alt } : null,

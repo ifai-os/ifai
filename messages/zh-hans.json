@@ -1107,6 +1107,7 @@
     "categoryUpdated": "最近更新 {when, select, today {{time}} yesterday {昨天 {time}} other {{date} {time}}}",
     "categoryUpdatedOn": "最近更新 {date}",
     "pageTitle": "{title} · 第 {page} 页",
+    "pageDescription": "{description}（第 {page} 页）",
     "pages": "翻页",
     "filterLabel": "按分类筛选",
     "allCategories": "全部内容",

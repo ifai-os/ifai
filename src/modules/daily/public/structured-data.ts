@@ -3,8 +3,9 @@ import type { Locale } from '@/i18n/config'
 import { absoluteUrl, breadcrumbs, clip, pageUrl, siteOrganization, type JsonLdObject } from '@/lib/structured-data'
 import { defaultShareImage } from '@/lib/seo'
 
+import type { EntityKind } from '../entities'
 import { listHref, storyHref } from './list-params'
-import type { StoryDetail } from './story-item'
+import type { StoryDetail, StoryItem } from './story-item'
 
 /** Google shows at most 110 characters of a headline. */
 const headlineLength = 110
@@ -48,6 +49,54 @@ export function storyJsonLd(
       { name: labels.daily, path: listHref() },
       { name: labels.category, path: listHref({ category: story.category }) },
       { name: story.title.value, path: storyHref(story.slug) },
+    ]),
+  ]
+}
+
+/** A list page's stories in its structured data: the first ten, as the page shows them. */
+const listedStories = 10
+
+/**
+ * A list of stories (a topic's, a tag's, a category's page) as a CollectionPage whose main
+ * entity is the list, plus its breadcrumb trail (首页 › 日报 › the page). A topic page says
+ * which company or product it is about.
+ */
+export function storyListJsonLd(
+  locale: Locale,
+  list: {
+    name: string
+    path: `/${string}`
+    stories: readonly Pick<StoryItem, 'slug' | 'title'>[]
+    about?: { kind: EntityKind; name: string }
+  },
+  labels: { home: string; daily: string },
+  home: '/' | '/news' = homeHref(),
+): JsonLdObject[] {
+  const url = pageUrl(locale, list.path)
+  const page: JsonLdObject = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: list.name,
+    url,
+    inLanguage: locale,
+    isPartOf: { '@type': 'WebSite', name: 'IFAI', url: pageUrl(locale, '/') },
+    about: list.about && { '@type': list.about.kind === 'company' ? 'Organization' : list.about.kind === 'product' ? 'Product' : 'Thing', name: list.about.name },
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: list.stories.slice(0, listedStories).map((story, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: pageUrl(locale, storyHref(story.slug)),
+        name: story.title.value,
+      })),
+    },
+  }
+  return [
+    page,
+    breadcrumbs(locale, [
+      ...(home === '/' ? [{ name: labels.home, path: '/' as const }] : []),
+      { name: labels.daily, path: listHref() },
+      { name: list.name, path: list.path },
     ]),
   ]
 }

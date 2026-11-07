@@ -2,12 +2,11 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/config'
+import { metaDescription } from '@/lib/meta-description'
 import { alternatesFor } from '@/lib/seo'
 
 import { getSkill } from './data'
 import { guideHref, isFiltered, skillHref, skillsHref, submitHref, type SkillListParams } from './list-params'
-
-const descriptionLength = 160
 
 /**
  * The list's title and canonical address. Searches, filters and sorts stay out of search
@@ -41,7 +40,7 @@ export async function skillMetadata(slug: string, locale: Locale, version?: stri
     : skill.tagline
       ? t('detailTitle', { name, tagline: skill.tagline.value })
       : name
-  const description = skill.tagline ? Array.from(skill.tagline.value).slice(0, descriptionLength).join('') : undefined
+  const description = skill.tagline ? metaDescription(skill.tagline.value, skill.tagline.lang) : undefined
   if (version) return { title, description, robots: { index: false, follow: true } }
   return { title, description, alternates: alternatesFor(skillHref(skill.slug), locale) }
 }

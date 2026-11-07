@@ -2,7 +2,8 @@ import { createTranslator } from 'next-intl'
 import { describe, expect, it } from 'vitest'
 
 import { locales, type Locale } from '@/i18n/config'
-import { topicDescription, topicDescriptionRoom, widthOf } from '@/modules/daily/public/topic-description'
+import { descriptionRoom, widthOf } from '@/lib/meta-description'
+import { topicDescription } from '@/modules/daily/public/topic-description'
 
 import en from '../../../messages/en.json'
 import ja from '../../../messages/ja.json'
@@ -34,8 +35,8 @@ describe('a topic page’s description', () => {
     const long = { ...deepseek, stories: [story('长'.repeat(200))] }
     for (const locale of locales) {
       const text = topicDescription(long, 1, locale, daily(locale))
-      expect(widthOf(text, locale)).toBeLessThanOrEqual(topicDescriptionRoom[locale])
-      expect(widthOf(text, locale)).toBeGreaterThan(topicDescriptionRoom[locale] - 3)
+      expect(widthOf(text, locale)).toBeLessThanOrEqual(descriptionRoom[locale])
+      expect(widthOf(text, locale)).toBeGreaterThan(descriptionRoom[locale] - 3)
       expect(text).toContain('…')
       expect(text).toContain('DeepSeek')
     }

@@ -11,7 +11,6 @@ import { auth, type Session } from '@/lib/auth/auth'
 import { authProviders } from '@/lib/auth/providers'
 import { dailyEmailState, linkedAccounts, signedInDevices, socialProviders } from '@/lib/auth/settings'
 import { getDb } from '@/lib/db/drizzle'
-import { alternatesFor } from '@/lib/seo'
 import { siteUrl } from '@/lib/site-url'
 import { memberAgents } from '@/modules/agents/data'
 import { subscribingOpen } from '@/modules/daily/email/delivery'
@@ -27,7 +26,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('title'),
     description: t('description'),
-    alternates: alternatesFor('/me/account', locale),
     robots: { index: false },
   }
 }
