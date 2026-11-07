@@ -197,7 +197,8 @@ export function toItem(doc: RawStory, locale: Locale): StoryItem {
     summary: inReaderLanguage(doc.summary, locale),
     tryIt: inReaderLanguage(doc.tryIt, locale),
     moreReports: sources.filter((source) => source.role === 'report').length,
-    spread: Math.round(peakOf(doc.heatPeak, doc.heat ?? 0)),
+    // The stored index (importance and reach), or the reach alone for a record saved before it existed.
+    spread: Math.round(Math.max(doc.spread ?? 0, peakOf(doc.heatPeak, doc.heat ?? 0))),
     originalName: (sources.find((source) => source.role === 'original') ?? sources[0])?.name ?? null,
     media: mediaOf(doc.media),
   }

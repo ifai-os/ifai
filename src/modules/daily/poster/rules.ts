@@ -25,13 +25,14 @@ export type PosterCandidate = {
 }
 
 /** What the rules need of a story; a hook's document has these whatever its locale. */
-export type StoryFacts = Pick<Story, 'id' | 'eventId' | 'heat' | 'score' | 'publishedAt' | 'createdAt' | 'sources'>
+export type StoryFacts = Pick<Story, 'id' | 'eventId' | 'heat' | 'score' | 'publishedAt' | 'createdAt' | 'sources'> & Partial<Pick<Story, 'spread'>>
 
 export function candidateOf(story: StoryFacts): PosterCandidate {
   return {
     id: story.id,
     eventId: story.eventId,
-    heat: story.heat ?? 0,
+    // The reach index (importance and reach, 2026-11-07) when stored; it stays after the day's heat has gone.
+    heat: Math.max(story.spread ?? 0, story.heat ?? 0),
     score: story.score ?? null,
     publishedAt: story.publishedAt ?? story.createdAt,
     source: originalSource(story),
@@ -68,7 +69,7 @@ export function sameSourceCount(items: readonly number[], candidate: PosterCandi
   return items.filter((id) => id !== candidate.id && sourceKey(byId.get(id)?.source ?? null) === key).length
 }
 
-/** Most important first: the event's heat, then the AI score, then the newer story. */
+/** Most important first: the reach index (or the event's heat), then the AI score, then the newer story. */
 export function byImportance(a: PosterCandidate, b: PosterCandidate): number {
   return b.heat - a.heat || (b.score ?? 0) - (a.score ?? 0) || Date.parse(b.publishedAt) - Date.parse(a.publishedAt) || b.id - a.id
 }

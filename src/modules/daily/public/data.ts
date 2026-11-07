@@ -91,6 +91,7 @@ const select = {
   representativeItemId: true,
   heat: true,
   heatPeak: true,
+  spread: true,
   storyline: true,
 } as const
 
@@ -442,7 +443,7 @@ const findHot = cached(
     const { docs } = await (await payload()).find({
       collection: 'stories',
       where: { and: [published, { heat: { greater_than: 0 } }] },
-      sort: ['-heatPeak', '-heat', '-publishedAt'],
+      sort: ['-spread', '-heatPeak', '-heat', '-publishedAt'],
       limit: 40,
       locale: 'all',
       depth: 1,

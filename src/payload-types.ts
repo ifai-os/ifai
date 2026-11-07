@@ -566,9 +566,21 @@ export interface Story {
    */
   heat?: number | null;
   /**
-   * The highest heat the event has reached; never drops. The pages show it.
+   * The highest heat the event has reached; never drops.
    */
   heatPeak?: number | null;
+  /**
+   * A new model at the top of its class. Its importance is the full 100.
+   */
+  sota?: boolean | null;
+  /**
+   * 0–100: 100 for a SOTA release, else by category and AI score.
+   */
+  importance?: number | null;
+  /**
+   * Importance and reach together; the pages show it.
+   */
+  spread?: number | null;
   /**
    * Compared with 6 hours earlier.
    */
@@ -1736,6 +1748,9 @@ export interface StoriesSelect<T extends boolean = true> {
   score?: T;
   heat?: T;
   heatPeak?: T;
+  sota?: T;
+  importance?: T;
+  spread?: T;
   heatTrend?: T;
   sourcesSeen?: T;
   flags?: T;

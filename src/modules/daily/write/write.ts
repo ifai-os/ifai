@@ -101,6 +101,7 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
       ...output.zhHans,
       slug,
       category,
+      sota: analysis.structure?.sota === true,
       tags: tagsOf(analysis.structure?.tags),
       entities: storyEntities(analysis.structure),
       status: 'pending',

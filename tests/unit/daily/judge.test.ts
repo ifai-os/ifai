@@ -67,6 +67,7 @@ describe('prompt schemas', () => {
     const structure = {
       kind: 'news',
       category: 'llm',
+      sota: false,
       tags: ['vibe-coding', 'agents'],
       companies: ['Acme'],
       products: ['Model 2'],
@@ -127,7 +128,7 @@ describe('scores', () => {
 describe('embedding text', () => {
   it('prefers the extracted facts over the raw body', () => {
     const facts = [{ who: 'Acme', what: 'shipped Model 2', when: 'today' }]
-    const structure = { kind: 'news' as const, category: 'llm' as const, tags: [], companies: [], products: [], facts, flags: { promotional: false, tutorial: false } }
+    const structure = { kind: 'news' as const, category: 'llm' as const, sota: false, tags: [], companies: [], products: [], facts, flags: { promotional: false, tutorial: false } }
     expect(embeddingText({ title: 'T', summary: 'S', content: 'body'.repeat(300) }, { structure })).toBe('T\nS\nAcme: shipped Model 2')
     expect(embeddingText({ title: 'T', summary: null, content: 'body' }, { structure: null })).toBe('T\nbody')
   })

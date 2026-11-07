@@ -37,6 +37,8 @@ export type ImportStory = {
   entities: StoryEntity[] | null
   publishedAt: string
   score: number | null
+  /** A state-of-the-art model release (heat/importance.ts); null when the line does not say, so an editor's mark stays. */
+  sota: boolean | null
   sources: ImportSource[]
   /** Null when the line has none, or one the site does not take (an unknown video host, an SVG…). */
   media: ImportMedia | null
@@ -184,6 +186,7 @@ export function parseImportStory(value: unknown): ParsedLine {
     entities: importEntities(value.companies, value.products),
     publishedAt,
     score: typeof value.score === 'number' && Number.isFinite(value.score) ? value.score : null,
+    sota: typeof value.sota === 'boolean' ? value.sota : null,
     sources,
     media: importMedia(value.media, sources),
     text: { en },
