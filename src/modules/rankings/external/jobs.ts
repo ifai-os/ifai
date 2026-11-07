@@ -1,4 +1,5 @@
 import { inngest } from '@/lib/inngest/client'
+import { cronWhen } from '@/lib/inngest/cron'
 import { shanghaiDate } from '@/lib/shanghai-day'
 import { collectEnabled } from '@/lib/switches'
 
@@ -50,7 +51,7 @@ const message = (error: unknown) => (error instanceof Error ? error.message : St
 export const externalImportJob = inngest.createFunction(
   {
     id: 'rankings-external',
-    triggers: [{ cron: 'TZ=Asia/Shanghai 30 7 * * *' }, { event: externalImportEvent }],
+    triggers: [...cronWhen(collectEnabled(), 'TZ=Asia/Shanghai 30 7 * * *'), { event: externalImportEvent }],
     concurrency: { limit: 1 },
     retries: 2,
   },

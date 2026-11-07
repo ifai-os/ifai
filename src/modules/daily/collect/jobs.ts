@@ -1,4 +1,5 @@
 import { inngest } from '@/lib/inngest/client'
+import { cronWhen } from '@/lib/inngest/cron'
 import { getDb } from '@/lib/db/drizzle'
 import { collectEnabled } from '@/lib/switches'
 
@@ -10,7 +11,7 @@ import { isDue } from './plan'
  * find the enabled sources whose next fetch time has passed and fan out one fetch each.
  */
 export const collectDueSources = inngest.createFunction(
-  { id: 'daily-collect-due-sources', triggers: [{ cron: '*/15 * * * *' }, { event: 'daily/collect.run' }] },
+  { id: 'daily-collect-due-sources', triggers: [...cronWhen(collectEnabled(), '*/15 * * * *'), { event: 'daily/collect.run' }] },
   async ({ step }) => {
     if (!collectEnabled()) return { skipped: 'COLLECT_ENABLED is not "true"' }
 

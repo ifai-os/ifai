@@ -1,5 +1,6 @@
 import { inngest } from '@/lib/inngest/client'
-import { modelCallsEnabled } from '@/lib/switches'
+import { cronWhen } from '@/lib/inngest/cron'
+import { collectEnabled, modelCallsEnabled } from '@/lib/switches'
 
 import { guarded } from '../judge/jobs'
 import { findUnwritten, writeStory } from './write'
@@ -16,7 +17,7 @@ export const writeStoryJob = inngest.createFunction(
 
 /** Every 30 minutes (or on `daily/write.sweep`): queued reports whose story was never written. */
 export const writeSweep = inngest.createFunction(
-  { id: 'daily-write-sweep', triggers: [{ cron: '15,45 * * * *' }, { event: 'daily/write.sweep' }] },
+  { id: 'daily-write-sweep', triggers: [...cronWhen(collectEnabled() && modelCallsEnabled(), '15,45 * * * *'), { event: 'daily/write.sweep' }] },
   async ({ step }) => {
     if (!modelCallsEnabled()) return { skipped: 'MODEL_CALLS_ENABLED is not "true"' }
     const itemIds = await step.run('find-unwritten', () => findUnwritten(new Date()))

@@ -1,4 +1,6 @@
 import { inngest } from '@/lib/inngest/client'
+import { cronWhen } from '@/lib/inngest/cron'
+import { dailyEmailEnabled } from '@/lib/switches'
 import { errorMessage } from '@/modules/daily/collect/fetch'
 
 import { cleanUp } from './cleanup'
@@ -17,7 +19,7 @@ export const dailyEmailRunEvent = 'daily/email.run'
 export const sendDailyEmails = inngest.createFunction(
   {
     id: 'daily-email-send',
-    triggers: [{ cron: 'TZ=UTC 0,15,30,45 * * * *' }, { event: dailyEmailRunEvent }],
+    triggers: [...cronWhen(dailyEmailEnabled(), 'TZ=UTC 0,15,30,45 * * * *'), { event: dailyEmailRunEvent }],
     concurrency: { limit: 1 },
     retries: 3,
     onFailure: async ({ event, error }) => {

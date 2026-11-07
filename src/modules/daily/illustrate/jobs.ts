@@ -1,4 +1,5 @@
 import { inngest } from '@/lib/inngest/client'
+import { cronWhen } from '@/lib/inngest/cron'
 import { ModelCallError } from '@/lib/ai'
 import { modelCallsEnabled, storyIllustrationsEnabled } from '@/lib/switches'
 
@@ -35,7 +36,7 @@ export const illustrateStoryJob = inngest.createFunction(
 
 /** Every 20 minutes (or on `daily/illustrate.sweep`): a few stories without a picture, within the daily limit. */
 export const illustrateSweep = inngest.createFunction(
-  { id: 'daily-illustrate-sweep', triggers: [{ cron: '5,25,45 * * * *' }, { event: 'daily/illustrate.sweep' }] },
+  { id: 'daily-illustrate-sweep', triggers: [...cronWhen(!paused(), '5,25,45 * * * *'), { event: 'daily/illustrate.sweep' }] },
   async ({ step }) => {
     const reason = paused()
     if (reason) return { skipped: reason }

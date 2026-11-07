@@ -6,6 +6,7 @@
 
 ## 现在到哪了
 
+- **后台任务改到 Mac Studio 上跑（2026-11-07）**：inngest.com 免费档本月被预览站的批量导入用完（7.4 万 / 5 万次），站长不想升 Pro。改成在 Mac Studio 上自托管开源的 Inngest 服务，经 Cloudflare Tunnel（`inngest.ifai.io`）和 Vercel 上的网站互通，代码基本不变，只换三个环境变量（setup.md 第 9 步，安装脚本 `scripts/inngest-server/install.sh`）。代价：Mac Studio 停了后台任务也停。控制台不验身份，隧道只放出要密钥的接口。预览环境不再接后台任务。另外定时任务跟开关走（`src/lib/inngest/cron.ts`）：开关关着的 9 个不再登记定时、不再空跑。
 - **没有配图的新闻也有分享卡片（2026-11-05）**：`/{locale}/news/{slug}/share.png` 画一张 1200×630 的深色卡片（标识、「IFAI 日报」、分类、最多三行标题、站点域名），新闻没有配图时 og:image 用它（`src/modules/daily/public/share-image.tsx`，daily.md「分享卡片」）。
 - **访问统计（2026-11-05）**：接入 Vercel Web Analytics（`@vercel/analytics`，`src/components/site-analytics.tsx`），不用 cookie；上报前 `analyticsUrl()` 只留 page、category、board 三个参数，去掉 #。隐私政策同步改了「收集」「共享」两节，生效日期改为 2026-11-05（foundation.md「访问统计」）。要在 Vercel 项目的 Analytics 里点一下 Enable 才开始记（setup.md 第 10 步）。
 - **新闻详情页加订阅框（2026-11-05）**：正文和「相似新闻」后面放一个订阅框（`SubscribeBox variant="band"`），和列表页同一套，`subscribingOpen()` 关着时不显示（daily-email.md「页面与路由」）。
