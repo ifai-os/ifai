@@ -5,9 +5,11 @@ import { isLaunched } from '@/config/site'
 import { Link } from '@/i18n/navigation'
 import { FollowButton } from '@/modules/follows/components/follow-button'
 
+import { brandLogoOf } from '../../brand-logos'
 import type { StoryTag } from '../../tags'
 import type { StoryEntityItem, StoryItem, StoryTopic } from '../story-item'
 import { listHref, storyHref, topicHref } from '../list-params'
+import { BrandMark } from './brand-mark'
 import { ShowMoreList } from './show-more'
 import { StoryDate } from './story-time'
 
@@ -136,8 +138,21 @@ export function initialOf(name: string): string {
   return Array.from(name.trim())[0]?.toUpperCase() ?? ''
 }
 
+/** The 32px tile in front of a company or product: its logo when it is a common one, else its initial. */
+function EntityTile({ name, entityKey }: { name: string; entityKey: string }) {
+  const logo = brandLogoOf(entityKey)
+  return (
+    <span
+      aria-hidden="true"
+      className="flex size-8 flex-none items-center justify-center rounded-thumb border border-surface-2 bg-surface text-ui font-semibold"
+    >
+      {logo ? <BrandMark logo={logo} className="size-4.5" /> : initialOf(name)}
+    </span>
+  )
+}
+
 /**
- *「涉及的公司与产品」: an initial tile, the name and its kind, leading to its topic page; an app
+ *「涉及的公司与产品」: a logo or initial tile, the name and its kind, leading to its topic page; an app
  * page when the app is on the site, and a follow button.
  */
 export function EntityList({ entities }: { entities: StoryEntityItem[] }) {
@@ -151,12 +166,7 @@ export function EntityList({ entities }: { entities: StoryEntityItem[] }) {
         {entities.map((entity) => (
           <li key={`${entity.kind}-${entity.name}`} className="flex items-center justify-between gap-2">
             <Link href={topicHref(entity.key)} className="group flex min-w-0 items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                className="flex size-8 flex-none items-center justify-center rounded-thumb border border-surface-2 bg-surface text-ui font-semibold"
-              >
-                {initialOf(entity.name)}
-              </span>
+              <EntityTile name={entity.name} entityKey={entity.key} />
               <span className="flex min-w-0 flex-col">
                 <span className="truncate text-ui font-medium group-hover:text-accent-ink">{entity.name}</span>
                 <span className="text-small text-ink-4">{t(`entityKinds.${entity.kind}`)}</span>
