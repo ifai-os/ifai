@@ -40,6 +40,7 @@ import * as migration_20261102_080516_agents from './20261102_080516_agents';
 import * as migration_20261104_161950_story_media_generated from './20261104_161950_story_media_generated';
 import * as migration_20261104_165748_daily_storylines from './20261104_165748_daily_storylines';
 import * as migration_20261107_094012_story_importance from './20261107_094012_story_importance';
+import * as migration_20261107_110500_story_lead_dates from './20261107_110500_story_lead_dates';
 
 export const migrations = [
   {
@@ -250,6 +251,11 @@ export const migrations = [
   {
     up: migration_20261107_094012_story_importance.up,
     down: migration_20261107_094012_story_importance.down,
-    name: '20261107_094012_story_importance'
+    name: '20261107_094012_story_importance',
+  },
+  {
+    up: migration_20261107_110500_story_lead_dates.up,
+    down: migration_20261107_110500_story_lead_dates.down,
+    name: '20261107_110500_story_lead_dates',
   },
 ];

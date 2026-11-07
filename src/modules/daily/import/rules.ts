@@ -6,6 +6,7 @@
 import { storyCategories, type StoryCategory } from '../categories'
 import { storyEntities, type StoryEntity } from '../entities'
 import { peakHeat, type HeatSignal } from '../heat/rules'
+import { dropLeadDate, dropLeadDates } from '../lead-date'
 import { parseVideo, usableImage, videoUrl, type FoundMedia } from '../media'
 import type { SourceRole } from '../story-fields'
 import { maxStoryTags, storyTags, type StoryTag } from '../tags'
@@ -195,6 +196,10 @@ export function parseImportStory(value: unknown): ParsedLine {
     if (locale === 'en') continue
     const localized = localeText(locales[locale])
     if (localized) story.text[locale] = localized
+  }
+  for (const localized of Object.values(story.text)) {
+    localized.summary = dropLeadDate(localized.summary, publishedAt)
+    if (localized.body) localized.body = dropLeadDates(localized.body, publishedAt)
   }
   return { ok: true, story }
 }

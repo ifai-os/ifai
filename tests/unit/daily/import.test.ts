@@ -43,6 +43,8 @@ describe('stories imported from the pipeline', () => {
       { name: 'theverge.com', role: 'report', url: 'https://www.theverge.com/ai/1015843/claude-duet', publishedAt: '2026-10-21T19:53:20.000Z' },
     ])
     expect(story.text['zh-Hans']?.body).toBe('第一段。\n\n## 小标题\n\n第二段。')
+    // The opening date repeats the publish day shown above it, so it is dropped (src/modules/daily/lead-date.ts).
+    expect(story.text['zh-Hans']?.summary).toBe('Anthropic 开启 Claude Duet 候补测试。')
     expect(story.text.en).toEqual({ title: "Anthropic's new proactive agent works while you sleep", summary: 'Claude Duet opens a waitlist.', tryIt: null, body: null })
     // Japanese without a summary is left out: the page falls back to English.
     expect(story.text.ja).toBeUndefined()
