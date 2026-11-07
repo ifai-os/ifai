@@ -6,7 +6,7 @@
 
 ## 现在到哪了
 
-- **后台任务改到 Mac Studio 上跑（2026-11-07）**：inngest.com 免费档本月被预览站的批量导入用完（7.4 万 / 5 万次），站长不想升 Pro。改成在 Mac Studio 上自托管开源的 Inngest 服务，经 Cloudflare Tunnel（`inngest.ifai.io`）和 Vercel 上的网站互通，代码基本不变，只换三个环境变量（setup.md 第 9 步，安装脚本 `scripts/inngest-server/install.sh`）。代价：Mac Studio 停了后台任务也停。控制台不验身份，隧道只放出要密钥的接口。预览环境不再接后台任务。另外定时任务跟开关走（`src/lib/inngest/cron.ts`）：开关关着的 9 个不再登记定时、不再空跑。
+- **后台任务改到 Mac Studio 上跑（2026-11-07）**：inngest.com 免费档本月被预览站的批量导入用完（7.4 万 / 5 万次），站长不想升 Pro。改成在 Mac Studio 上自托管开源的 Inngest 服务，经 Cloudflare Tunnel（`inngest.ifai.io`）和 Vercel 上的网站互通，代码基本不变，只换三个环境变量（setup.md 第 9 步，安装脚本 `scripts/inngest-server/install.sh`）。代价：Mac Studio 停了后台任务也停。控制台不验身份，隧道只放出要密钥的接口。预览环境不再接后台任务。另外定时任务跟开关走（`src/lib/inngest/cron.ts`）：开关关着的 9 个不再登记定时、不再空跑。当天装好上线：41 个任务登记在 Mac Studio 上，测试任务跑通；网站地址暂时是 `ifai-roan.vercel.app`，Mac Studio 的 `/etc/hosts` 固定了它的地址，注意事项见 setup.md 第 9 步第 5 条。
 - **没有配图的新闻也有分享卡片（2026-11-05）**：`/{locale}/news/{slug}/share.png` 画一张 1200×630 的深色卡片（标识、「IFAI 日报」、分类、最多三行标题、站点域名），新闻没有配图时 og:image 用它（`src/modules/daily/public/share-image.tsx`，daily.md「分享卡片」）。
 - **访问统计（2026-11-05）**：接入 Vercel Web Analytics（`@vercel/analytics`，`src/components/site-analytics.tsx`），不用 cookie；上报前 `analyticsUrl()` 只留 page、category、board 三个参数，去掉 #。隐私政策同步改了「收集」「共享」两节，生效日期改为 2026-11-05（foundation.md「访问统计」）。要在 Vercel 项目的 Analytics 里点一下 Enable 才开始记（setup.md 第 10 步）。
 - **新闻详情页加订阅框（2026-11-05）**：正文和「相似新闻」后面放一个订阅框（`SubscribeBox variant="band"`），和列表页同一套，`subscribingOpen()` 关着时不显示（daily-email.md「页面与路由」）。
@@ -188,6 +188,8 @@
 
 ## 待站长处理
 
+- [ ] **Inngest（Mac Studio）**：`ifai.io` 指向 Vercel 以后，把 Mac Studio 上 Inngest 的网站地址换成 `https://ifai.io`，步骤见 setup.md 第 9 步第 5 条。Vercel 换地址时更新 Mac Studio `/etc/hosts` 里那一行。
+- [ ] **Inngest（云服务）**：在 inngest.com 把旧的 `ifai` 应用和预览分支环境 Archive，再卸掉 Vercel 上的 Inngest 集成（如果还在）。
 - [x] 把 Claude 的 GitHub 应用装到 ifai-os 组织，只授权 `ifai` 这一个仓库（2026-10-22 已完成）。以后要给它加仓库：ifai-os 组织 → Settings → GitHub Apps → Claude → Configure → Repository access。
 - [ ] Vercel 生产和预览各填一个 `STORY_IMPORT_TOKEN`（`openssl rand -hex 32` 生成的随机串，两边不同），再把它交给本地新闻流水线，导入新闻用（daily.md「从本地流水线导入」）。
 - [ ] Vercel 生产（和要用的预览）各填一个 `PUSH_TOKEN`（`openssl rand -hex 32`），按 `extension/README.md` 装浏览器推送插件，再按 [specs/push.md](./specs/push.md) 的验收在预览上推一篇新闻、一个工具。
@@ -196,7 +198,7 @@
 - [x] 在 GitHub 仓库 Settings → Secrets and variables → Actions 填 `VERCEL_TOKEN`、`NEON_API_KEY`、`NEON_PROJECT_ID`，见 setup.md 第 3 步；Vercel 的环境变量不要勾 Sensitive。2026-10-23 已填（Neon 新建了项目 `ifai`，us-east-1；本机开发用的 `dev` 分支还没建，见 setup.md 第 2 步第 2 条），PR 会部署预览环境。`ifai.io` 接到 Vercel 之前，Resend 回调和第三方登录的回调都收不到。
 - [x] Vercel 项目 → Settings → Environment Variables，给 **Preview** 填 `PAYLOAD_SECRET`、`BETTER_AUTH_SECRET`（各一个和生产不同的随机字符串）和 `NEXT_PUBLIC_SITE_PHASE` = `1`，其余按 setup.md 第 3 步第 4 条的表。2026-10-23 已填，PR #43、#46 的「Deploy to preview」都通过了。这两个密钥标了 Sensitive，不用改：构建日志里 Better Auth 的密钥警告说的是 `vercel pull` 写的占位符，不是真值，见 setup.md 第 3 步第 6 条。
 - [x] 预览环境开着 Vercel 的访问保护，冒烟测试要靠 GitHub secret `VERCEL_AUTOMATION_BYPASS_SECRET` 才进得去（setup.md 第 3 步第 5 条；没有它时「Preview smoke tests」跳过）。2026-10-23 已加；在这之前跑的 PR，要在 Actions 里把那次 Deploy 整个重跑（Re-run all jobs），冒烟测试才会跑。2026-10-24：一份失败报告的 trace 里带出过这个密钥，那个 artifact 已删、密钥已换；现在带密钥时不录 trace（#49），也不上传报告（#55）。
-- [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，装 Vercel 集成），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。先在 Inngest 控制台跑通 `ifai/health.check`。2026-10-23：Inngest 的 Vercel 集成已装。
+- [ ] 开 OpenRouter（setup.md 第 8 步）和 Inngest（第 9 步，已改成 Mac Studio 自托管），在 Vercel 填 `OPENROUTER_API_KEY`、`AI_DAILY_BUDGET_USD`、`MODEL_CALLS_ENABLED`、`COLLECT_ENABLED`。先在 Inngest 控制台跑通 `ifai/health.check`。2026-10-23：Inngest 的 Vercel 集成已装。
 - [ ] 邮件订阅：开好 `news@ifai.io` 邮箱，按 setup.md 第 7 步在 Resend 验证 `ifai.io`（SPF、DKIM，再加一条 DMARC `p=none`），Vercel 生产和预览都填 `DAILY_EMAIL_FROM` = `news@ifai.io`；在 Resend 加回调端点，把签名密钥填到生产的 `RESEND_WEBHOOK_SECRET`（第 7 步第 6 条）。2026-10-23：Resend 已验证 `ifai.io`（DNS 记录加在 Cloudflare，`ifai.io` 原有的飞书邮箱 MX 记录没动；打开和点击追踪是关着的，保持这样），Vercel 生产和预览都已填 `DAILY_EMAIL_FROM` = `news@ifai.io`；还差回调端点和 `RESEND_WEBHOOK_SECRET`，要等生产部署打开、`ifai.io` 接到 Vercel 之后。生产的 `DAILY_EMAIL_ENABLED` 等预览验过再打开。免费版每天 100 封、和登录邮件共用，订阅者到 80 人左右时换 Pro（后台订阅者列表上方会提示）。
 - [ ] 日报邮件部署到预览环境后（Preview 要有 `RESEND_API_KEY` 和 `DAILY_EMAIL_FROM`；回调不用等）：Preview 设 `DAILY_EMAIL_ENABLED=true` 并重新部署。看 `/zh-hans/news`（桌面右上、手机列表后面）和首页的订阅框；输 `name@gmial.com` 看提示，点一下改过来；用**管理员的邮箱**订阅（预览环境只给管理员发），在 Gmail 网页和手机上看欢迎信，点「管理订阅」改语言和时区、退订、重新订阅；后台「日报 → 订阅者」看概览和列表，点「预览邮件」切五种语言，点「发测试邮件」看收到的邮件，试一次停发再撤销。第二天当地 8:00–8:15 应该收到第一封日报邮件，后台「今天的发送」里「已发」多一封（「送达」要靠 Resend 回调，预览环境没有，等生产接上回调再看）。都没问题就在生产打开 `DAILY_EMAIL_ENABLED`。
 - [ ] 日报第 6 步后半部署到预览环境后：后台「审核队列」右栏「今日海报」看自动选的条目，上移、下移、移出、加入各点一次，点「生成海报」，再点「预览 5 张海报」看海报页和五张图（中日韩字是否正常、长标题是否完整）；把海报页链接贴到 X、Telegram、微信里看分享卡片；撤回一条海报上的新闻，确认海报页和图片里马上没有它；手机宽度看列表页「每日 AI 大事」卡片和海报页。
