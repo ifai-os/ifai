@@ -6,7 +6,6 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale } from '@/i18n/config'
 import { auth } from '@/lib/auth/auth'
 import { authProviders } from '@/lib/auth/providers'
-import { alternatesFor } from '@/lib/seo'
 import { getSavedApps } from '@/modules/apps/data'
 import { getSavedStories } from '@/modules/daily/public/data'
 import { getSavedSkills } from '@/modules/resources/public/data'
@@ -22,7 +21,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('title'),
     description: t('description'),
-    alternates: alternatesFor('/me/saves', locale),
     robots: { index: false },
   }
 }

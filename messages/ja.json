@@ -1107,6 +1107,7 @@
     "categoryUpdated": "最終更新 {when, select, today {{time}} yesterday {昨日 {time}} other {{date} {time}}}",
     "categoryUpdatedOn": "最終更新 {date}",
     "pageTitle": "{title} · {page}ページ目",
+    "pageDescription": "{description}（{page}ページ目）",
     "pages": "ページ送り",
     "filterLabel": "カテゴリで絞り込む",
     "allCategories": "すべて",

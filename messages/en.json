@@ -1107,6 +1107,7 @@
     "categoryUpdated": "updated {when, select, today {{time}} yesterday {yesterday at {time}} other {{date}, {time}}}",
     "categoryUpdatedOn": "updated {date}",
     "pageTitle": "{title} · Page {page}",
+    "pageDescription": "{description} Page {page}.",
     "pages": "Pages",
     "filterLabel": "Filter by category",
     "allCategories": "All",

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 import { localizePath, locales, ogLocales, type Locale } from '@/i18n/config'
+import { metaDescription } from '@/lib/meta-description'
 import { alternatesFor, shareCard } from '@/lib/seo'
 
 import type { StoryCategory } from '../categories'
@@ -11,8 +12,6 @@ import { POSTER_SIZE } from '../poster/layout'
 import { getPoster, getStory, getTopicPage } from './data'
 import { topicDescription } from './topic-description'
 import { feedPath, listHref, posterDay, posterHref, posterImagePath, SHARE_IMAGE_SIZE, storyHref, storyShareImagePath, topicHref } from './list-params'
-
-const descriptionLength = 160
 
 /** Title, description, canonical address and the RSS link of a list page: the daily list, a category's or a tag's. */
 export async function listMetadata({
@@ -39,10 +38,12 @@ export async function listMetadata({
     : tag
       ? t('tagMetaTitle', { tag: tagNames(tag) })
       : t('metaTitle')
+  // A category or a tag page describes the category or the tag, as a category's banner does.
+  const description = category ? about(category) : tag ? tagAbout(tag) : t('description')
   return {
     title: page > 1 ? t('pageTitle', { title: base, page }) : base,
-    // A category or a tag page describes the category or the tag, as a category's banner does.
-    description: category ? about(category) : tag ? tagAbout(tag) : t('description'),
+    // Later pages say which page they are, so no two pages share a description.
+    description: page > 1 ? t('pageDescription', { description, page }) : description,
     alternates: {
       ...alternatesFor(listHref({ category, tag, page }), locale),
       types: { 'application/rss+xml': localizePath(locale, feedPath) },
@@ -54,11 +55,10 @@ export async function listMetadata({
 export async function storyMetadata(slug: string, locale: Locale): Promise<Metadata> {
   const story = await getStory(slug, locale)
   if (!story) return {}
-  const summary = story.summary?.value.replace(/\s+/g, ' ')
 
   return {
     title: story.title.value,
-    description: summary ? Array.from(summary).slice(0, descriptionLength).join('') : undefined,
+    description: story.summary ? metaDescription(story.summary.value, story.summary.lang) : undefined,
     alternates: alternatesFor(storyHref(story.slug), locale),
     // The story's own picture (or its video's cover) when it has one, else a card drawn from its title.
     ...shareCard(locale, {

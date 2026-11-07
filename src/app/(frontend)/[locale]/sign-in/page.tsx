@@ -7,7 +7,6 @@ import { SignInForm } from '@/components/auth/sign-in-form'
 import { Logo } from '@/components/brand/logo'
 import { isLocale } from '@/i18n/config'
 import { authProviders } from '@/lib/auth/providers'
-import { alternatesFor } from '@/lib/seo'
 
 type Props = { params: Promise<{ locale: string }> }
 
@@ -17,7 +16,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'auth' })
   return {
     title: t('title'),
-    alternates: alternatesFor('/sign-in', locale),
     robots: { index: false },
   }
 }

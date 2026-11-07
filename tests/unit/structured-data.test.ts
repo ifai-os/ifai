@@ -5,7 +5,7 @@ import { clip, serializeJsonLd } from '@/lib/structured-data'
 import type { AppDetail } from '@/modules/apps/data'
 import { appJsonLd } from '@/modules/apps/structured-data'
 import type { StoryDetail } from '@/modules/daily/public/story-item'
-import { storyJsonLd } from '@/modules/daily/public/structured-data'
+import { storyJsonLd, storyListJsonLd } from '@/modules/daily/public/structured-data'
 import type { SkillDetail } from '@/modules/resources/public/data'
 import { skillJsonLd } from '@/modules/resources/public/structured-data'
 
@@ -183,5 +183,29 @@ describe('skillJsonLd', () => {
     const [own] = roundTrip(skillJsonLd({ ...skill, author: { ...skill.author, official: true }, license: null }, 'en', { home: 'IFAI', resources: 'Resources', category: 'Productivity' }))
     expect(own.author).toMatchObject({ '@type': 'Organization', name: 'IFAI' })
     expect(own).not.toHaveProperty('license')
+  })
+})
+
+describe('storyListJsonLd', () => {
+  const stories = Array.from({ length: 12 }, (_, n) => ({ slug: `story-${n + 1}`, title: { value: `新闻 ${n + 1}`, lang: 'zh-Hans' as const } }))
+  const labels = { home: 'IFAI', daily: '日报' }
+
+  it('is a CollectionPage whose main entity lists the first ten stories', () => {
+    const [page] = roundTrip(storyListJsonLd('zh-Hans', { name: 'DeepSeek', path: '/news/topic/deepseek', stories, about: { kind: 'company', name: 'DeepSeek' } }, labels, '/news'))
+    expect(page).toMatchObject({
+      '@type': 'CollectionPage',
+      name: 'DeepSeek',
+      url: 'https://ifai.io/zh-hans/news/topic/deepseek',
+      inLanguage: 'zh-Hans',
+      about: { '@type': 'Organization', name: 'DeepSeek' },
+    })
+    expect(page.mainEntity.itemListElement).toHaveLength(10)
+    expect(page.mainEntity.itemListElement[0]).toEqual({ '@type': 'ListItem', position: 1, url: 'https://ifai.io/zh-hans/news/story-1', name: '新闻 1' })
+  })
+
+  it('has a trail from the daily to the page, and no topic for a tag or a category', () => {
+    const [page, trail] = roundTrip(storyListJsonLd('en', { name: 'AI chips', path: '/news/tag/chips?page=2', stories }, labels, '/news'))
+    expect(page.about).toBeUndefined()
+    expect(trail.itemListElement.map((crumb: { item: string }) => crumb.item)).toEqual(['https://ifai.io/en/news', 'https://ifai.io/en/news/tag/chips?page=2'])
   })
 })
