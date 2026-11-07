@@ -44,32 +44,14 @@ function hostOf(url: string): string {
 export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn: AuthProviders }) {
   const t = useTranslations('daily')
   const names = useTranslations('categories')
+  const hasAside = story.tags.length > 0 || story.developments.length > 0 || story.entities.length > 0
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-content flex-col gap-6 px-4 pt-5 pb-16 md:gap-8 md:pt-8 md:pb-24">
-      <nav aria-label={t('breadcrumb')} className="text-meta text-ink-4">
-        <ol className="flex flex-wrap items-center gap-2">
-          <li className="flex items-center gap-2">
-            <Link href="/news" className="hover:text-ink">
-              {t('title')}
-            </Link>
-            <span aria-hidden="true">/</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <Link href={listHref({ category: story.category })} className="hover:text-ink">
-              {names(story.category)}
-            </Link>
-            <span aria-hidden="true">/</span>
-          </li>
-          <li aria-current="page" lang={story.title.lang} className="min-w-0 truncate text-ink">
-            {story.title.value}
-          </li>
-        </ol>
-      </nav>
-
       <FollowProvider targets={followTargets(story)} signIn={signIn}>
-        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between md:gap-12">
-          <article className="flex w-full max-w-read min-w-0 flex-col gap-6">
+        <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
+          {/* With the side column the story takes the rest of the row, so the side column ends where the header does; without it, the reading width. */}
+          <article className={`flex w-full min-w-0 flex-col gap-6 ${hasAside ? 'md:flex-1' : 'max-w-read'}`}>
             <header className="flex flex-col gap-3">
               <p className="text-meta font-medium">
                 <Link href={listHref({ category: story.category })} className="text-accent-ink hover:underline">
@@ -182,7 +164,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
             )}
           </article>
 
-          {(story.tags.length > 0 || story.developments.length > 0 || story.entities.length > 0) && (
+          {hasAside && (
             <aside className="flex w-full flex-col gap-6 md:w-80 md:flex-none">
               {story.tags.length > 0 && <TagList tags={story.tags} />}
               {story.developments.length > 0 && (
