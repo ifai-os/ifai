@@ -94,8 +94,10 @@ const markStorylineByEditor: CollectionBeforeChangeHook = ({ data, originalDoc, 
  * Importance and the reach index follow the category, AI score, SOTA mark and peak heat on every
  * save, so a heat refresh, an import or an editor's change all keep them current (../heat/importance.ts).
  */
-const stampSpread: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+const stampSpread: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
   if (!data) return data;
+  // An editor's tick or untick settles it: the catch-up job leaves the story alone.
+  if (req.user && "sota" in data && Boolean(data.sota) !== Boolean(originalDoc?.sota)) data.sotaJudged = true;
   const pick = <K extends "category" | "score" | "sota" | "heatPeak" | "heat">(key: K) =>
     (key in data ? data[key] : originalDoc?.[key]) as Story[K];
   const importance = importanceOf({ category: pick("category"), score: pick("score"), sota: pick("sota") });
@@ -571,6 +573,13 @@ export const Stories: CollectionConfig = {
           zh: "发布了同类里排第一的新模型，重要性按满分 100 算。",
         },
       },
+    },
+    {
+      // Whether the SOTA mark has been decided: by the structuring step, an editor, the import, or the catch-up job (../heat/sota.ts).
+      name: "sotaJudged",
+      type: "checkbox",
+      defaultValue: false,
+      admin: { hidden: true },
     },
     {
       name: "importance",

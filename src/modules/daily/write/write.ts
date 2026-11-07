@@ -102,6 +102,8 @@ export async function writeStory(itemId: number, deps: JudgeDeps = {}): Promise<
       slug,
       category,
       sota: analysis.structure?.sota === true,
+      // Judged by the structuring step, unless the analysis predates the question.
+      sotaJudged: typeof analysis.structure?.sota === 'boolean',
       tags: tagsOf(analysis.structure?.tags),
       entities: storyEntities(analysis.structure),
       status: 'pending',

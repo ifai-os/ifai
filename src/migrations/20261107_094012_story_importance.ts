@@ -3,11 +3,12 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
    ALTER TABLE "stories" ADD COLUMN "sota" boolean DEFAULT false;
+  ALTER TABLE "stories" ADD COLUMN "sota_judged" boolean DEFAULT false;
   ALTER TABLE "stories" ADD COLUMN "importance" numeric;
   ALTER TABLE "stories" ADD COLUMN "spread" numeric;
   CREATE INDEX "stories_spread_idx" ON "stories" USING btree ("spread");`)
   // Every story so far gets its importance from its category and AI score (none is marked SOTA
-  // yet) and its reach index from both, as src/modules/daily/heat/importance.ts computes them.
+  // yet: the job daily-sota-backfill judges them) and its reach index from both, as src/modules/daily/heat/importance.ts computes them.
   await db.execute(sql`
   UPDATE "stories" SET "importance" = round(least(95, greatest(20,
     (CASE "category"::text
@@ -22,6 +23,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   await db.execute(sql`
    DROP INDEX "stories_spread_idx";
   ALTER TABLE "stories" DROP COLUMN "sota";
+  ALTER TABLE "stories" DROP COLUMN "sota_judged";
   ALTER TABLE "stories" DROP COLUMN "importance";
   ALTER TABLE "stories" DROP COLUMN "spread";`)
 }

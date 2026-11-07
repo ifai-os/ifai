@@ -573,6 +573,7 @@ export interface Story {
    * A new model at the top of its class. Its importance is the full 100.
    */
   sota?: boolean | null;
+  sotaJudged?: boolean | null;
   /**
    * 0–100: 100 for a SOTA release, else by category and AI score.
    */
@@ -1749,6 +1750,7 @@ export interface StoriesSelect<T extends boolean = true> {
   heat?: T;
   heatPeak?: T;
   sota?: T;
+  sotaJudged?: T;
   importance?: T;
   spread?: T;
   heatTrend?: T;

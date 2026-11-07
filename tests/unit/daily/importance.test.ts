@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { importanceOf, spreadIndex } from '@/modules/daily/heat/importance'
 import { heatScore } from '@/modules/daily/heat/rules'
+import { sotaIds } from '@/modules/daily/heat/sota'
+import { sotaPrompt } from '@/modules/daily/prompts'
 
 describe('importance', () => {
   it('gives a SOTA model release the full score', () => {
@@ -39,5 +41,19 @@ describe('the reach index', () => {
   it('ranks a SOTA release above an ordinary story with the same reach', () => {
     expect(spreadIndex(100, one)).toBeGreaterThan(spreadIndex(60, one))
     expect(spreadIndex(100, 92)).toBeGreaterThan(spreadIndex(30, 92))
+  })
+})
+
+describe('marking earlier SOTA releases', () => {
+  it('keeps only ids from the batch, each once', () => {
+    expect(sotaIds([3, 9, 3, 5], [1, 3, 5])).toEqual([3, 5])
+    expect(sotaIds([], [1])).toEqual([])
+  })
+
+  it('puts each story into the prompt as outside material', () => {
+    const prompt = sotaPrompt.build([{ id: 7, date: '2026-08-01', title: 'Acme ships Model 9', summary: '' }])
+    expect(prompt).toContain('<external_data source="story 7">')
+    expect(prompt).toContain('id: 7')
+    expect(sotaPrompt.schema.safeParse({ sota: [7] }).success).toBe(true)
   })
 })
