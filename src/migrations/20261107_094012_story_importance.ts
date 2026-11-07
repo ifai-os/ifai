@@ -1,12 +1,13 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+  // IF NOT EXISTS: the PR preview database ran an earlier draft of this migration under another name.
   await db.execute(sql`
-   ALTER TABLE "stories" ADD COLUMN "sota" boolean DEFAULT false;
-  ALTER TABLE "stories" ADD COLUMN "sota_judged" boolean DEFAULT false;
-  ALTER TABLE "stories" ADD COLUMN "importance" numeric;
-  ALTER TABLE "stories" ADD COLUMN "spread" numeric;
-  CREATE INDEX "stories_spread_idx" ON "stories" USING btree ("spread");`)
+   ALTER TABLE "stories" ADD COLUMN IF NOT EXISTS "sota" boolean DEFAULT false;
+  ALTER TABLE "stories" ADD COLUMN IF NOT EXISTS "sota_judged" boolean DEFAULT false;
+  ALTER TABLE "stories" ADD COLUMN IF NOT EXISTS "importance" numeric;
+  ALTER TABLE "stories" ADD COLUMN IF NOT EXISTS "spread" numeric;
+  CREATE INDEX IF NOT EXISTS "stories_spread_idx" ON "stories" USING btree ("spread");`)
   // Every story so far gets its importance from its category and AI score (none is marked SOTA
   // yet: the job daily-sota-backfill judges them) and its reach index from both, as src/modules/daily/heat/importance.ts computes them.
   await db.execute(sql`
