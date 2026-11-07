@@ -9,6 +9,7 @@ import type { StoryTag } from '../tags'
 import { posterVersion } from '../poster/snapshot'
 import { POSTER_SIZE } from '../poster/layout'
 import { getPoster, getStory, getTopicPage } from './data'
+import { topicDescription } from './topic-description'
 import { feedPath, listHref, posterDay, posterHref, posterImagePath, SHARE_IMAGE_SIZE, storyHref, storyShareImagePath, topicHref } from './list-params'
 
 const descriptionLength = 160
@@ -25,21 +26,23 @@ export async function listMetadata({
   tag?: StoryTag | null
   page: number
 }): Promise<Metadata> {
-  const [t, names, about, tagNames] = await Promise.all([
+  const [t, names, about, tagNames, tagAbout] = await Promise.all([
     getTranslations({ locale, namespace: 'daily' }),
     getTranslations({ locale, namespace: 'categories' }),
     getTranslations({ locale, namespace: 'categoryAbout' }),
     getTranslations({ locale, namespace: 'tags' }),
+    getTranslations({ locale, namespace: 'tagAbout' }),
   ])
+  // The words readers search for (「大模型新闻」), not the section's own name (「日报」) the page shows.
   const base = category
-    ? t('categoryTitle', { category: names(category) })
+    ? t('categoryMetaTitle', { category: names(category) })
     : tag
-      ? t('tagTitle', { tag: tagNames(tag) })
-      : t('title')
+      ? t('tagMetaTitle', { tag: tagNames(tag) })
+      : t('metaTitle')
   return {
     title: page > 1 ? t('pageTitle', { title: base, page }) : base,
-    // A category page describes the category, as its banner does.
-    description: category ? about(category) : t('description'),
+    // A category or a tag page describes the category or the tag, as a category's banner does.
+    description: category ? about(category) : tag ? tagAbout(tag) : t('description'),
     alternates: {
       ...alternatesFor(listHref({ category, tag, page }), locale),
       types: { 'application/rss+xml': localizePath(locale, feedPath) },
@@ -67,15 +70,21 @@ export async function storyMetadata(slug: string, locale: Locale): Promise<Metad
   }
 }
 
-/** A topic page: its name; kept out of search engines while only one story is about it (thin page). */
+/**
+ * A topic page: what readers search for (「DeepSeek 最新消息与动态」, a product with its developer),
+ * and a description made from the page itself: how many stories, and the newest one with its day,
+ * whose title is shortened when the whole would not fit in a search result. Later pages say which
+ * page they are. Kept out of search engines while only one story is about it (thin page).
+ */
 export async function topicMetadata(key: string, page: number, locale: Locale): Promise<Metadata> {
   const topic = await getTopicPage(key, page, locale)
   if (!topic) return {}
   const t = await getTranslations({ locale, namespace: 'daily' })
-  const title = t('topicTitle', { name: topic.name })
+  const developer = topic.kind === 'product' && topic.developer && topic.developer.name !== topic.name ? topic.developer.name : null
+  const title = t('topicTitle', { name: developer ? t('topicProductName', { name: topic.name, developer }) : topic.name })
   return {
     title: page > 1 ? t('pageTitle', { title, page }) : title,
-    description: t('topicDescription', { name: topic.name }),
+    description: topicDescription(topic, page, locale, t),
     alternates: alternatesFor(topicHref(key, page), locale),
     ...(topic.total < 2 ? { robots: { index: false, follow: true } } : {}),
   }

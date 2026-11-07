@@ -453,6 +453,19 @@ Drizzle 表按 AGENTS.md 第 2 条加进 `beforeSchemaInit`，数据库变更都
 - [ ] 分类页每页 20 张卡片，翻页在页面里切换，最后一页写「没有更早的新闻了」；空分类显示空状态
 - [ ] 结构化只给出这七个分类
 
+## 搜索结果里的标题和描述
+
+2026-11-07 站长走查 SEO 后定的：标题用读者会搜的词，不用栏目名「日报」；描述每页不同。页面上的 H1 和导航不变，只改 `<title>` 和 meta description（`src/modules/daily/public/metadata.ts`）。
+
+| 页面 | 标题（zh-hans，后面全站自动加「 · IFAI」） | 描述 |
+| --- | --- | --- |
+| 日报列表 | AI 日报：今天的 AI 新闻（`daily.metaTitle`） | `daily.description`：覆盖范围 + 核对来源、白话摘要 |
+| 分类页 | {分类}新闻（`daily.categoryMetaTitle`） | 分类说明 `categoryAbout` |
+| 行业标签页 | {标签}新闻（`daily.tagMetaTitle`） | 每个标签一句 `tagAbout` |
+| 话题页 | {名字} 最新消息与动态；产品带开发公司「Claude（Anthropic）」 | 条数 + 最新一条的日期和标题（`topic-description.ts`）；第 2 页起写「第 N 页」，不写最新一条 |
+
+话题页的描述按搜索结果能显示的长度截：英文 160 个字符，中日韩约 90 个字（字母、数字、空格算半个）；超出时先缩短最新一条的标题，末尾加「…」，英文在空格处断。
+
 ## 不做（本期）
 
 - 周报、月报、公开 API、MCP

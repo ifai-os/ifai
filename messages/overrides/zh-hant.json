@@ -394,5 +394,9 @@
     "connectApi": "開放 API：每個請求都帶上這個標頭",
     "connectOther": "其他支援 MCP 的用戶端：網址填 {url}，標頭 Authorization 填 Bearer、一個空格和金鑰。",
     "addressesTitle": "連線網址"
+  },
+  "tagAbout": {
+    "chips": "AI 晶片：GPU 和加速卡發表、產能與出口管制、算力交易。",
+    "voice": "AI 語音：語音合成、語音辨識、即時語音對話和聲音複製。"
   }
 }

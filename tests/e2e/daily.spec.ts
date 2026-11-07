@@ -249,7 +249,7 @@ test.describe('with the sample stories', () => {
     await expect(banner).toContainText(en.categoryAbout.tools)
     // The newest sample story came out minutes before the tests, so the update is today's: a time alone.
     await expect(banner).toContainText(/stor(y|ies) in the last 7 days · updated \d{1,2}:\d{2}\s[AP]M$/)
-    await expect(page).toHaveTitle(new RegExp(`^${en.categories.tools} · Daily`))
+    await expect(page).toHaveTitle(`${en.daily.categoryMetaTitle.replace('{category}', en.categories.tools)} · IFAI`)
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', en.categoryAbout.tools)
 
     const filter = page.getByRole('navigation', { name: en.daily.filterLabel })
