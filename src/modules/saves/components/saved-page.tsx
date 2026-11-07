@@ -3,7 +3,6 @@ import { Suspense } from 'react'
 
 import { SignInForm } from '@/components/auth/sign-in-form'
 import { ButtonLink } from '@/components/button'
-import { LocalTime } from '@/components/local-time'
 import { EmptyState } from '@/components/states/empty-state'
 import { isLaunched } from '@/config/site'
 import { localizePath, type Locale } from '@/i18n/config'
@@ -12,6 +11,7 @@ import type { AuthProviders } from '@/lib/auth/providers'
 import { AppTile } from '@/modules/apps/components/app-tile'
 import type { HeatedApp } from '@/modules/apps/data'
 import { storyHref } from '@/modules/daily/public/list-params'
+import { StoryDate } from '@/modules/daily/public/components/story-time'
 import type { StoryItem } from '@/modules/daily/public/story-item'
 import { SkillTile } from '@/modules/resources/public/components/skill-tile'
 import type { SkillListItem } from '@/modules/resources/public/data'
@@ -66,7 +66,7 @@ export function SavedPage({ saved, signIn }: SavedPageProps) {
                         {story.title.value}
                       </span>
                       <span className="text-small text-ink-4">
-                        {categories(story.category)} · <LocalTime iso={story.publishedAt} style="date" />
+                        {categories(story.category)} · <StoryDate iso={story.publishedAt} />
                       </span>
                     </Link>
                     <RemoveSave target={{ type: 'story', id: story.id }} name={story.title.value} />
