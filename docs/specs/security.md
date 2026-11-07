@@ -64,7 +64,7 @@ Vercel 官方不建议在它前面再套 Cloudflare 代理（橙色云）：代�
    - **扫描器**：路径包含 `/wp-admin`、`/wp-login`、`/.env`、`/.git`、`/phpmyadmin`、`xmlrpc.php` → Deny。
    - **登录和订阅限流**：路径是 `/api/auth/sign-in/magic-link` 或 `/api/subscriptions`，按 IP 每分钟 10 次 → Deny（Pro 支持限流规则；Turnstile 照样兜底）。
 3. 被攻击时：Firewall → **Attack Challenge Mode** 一键打开，所有访客先过验证，攻击过去再关。
-4. 生产的 `INNGEST_DEV` 不要填；`INNGEST_SIGNING_KEY` 由 Inngest 集成自动填好，确认它在。
+4. 生产的 `INNGEST_DEV` 不要填；`INNGEST_SIGNING_KEY` 是 Mac Studio 上自托管 Inngest 的签名密钥（setup.md 第 9 步），确认它在。自托管的控制台不验身份，Cloudflare Tunnel 只放出要密钥的接口，控制台不对外（`scripts/inngest-server/cloudflared.yml`）。
 5. 所有密钥类变量标 **Sensitive**（status.md 已记录过 Sensitive 的影响）。
 6. 已升 Pro（每月 20 美元，可以商业使用）。超出额度按量计费、不再停站，所以在团队 Settings → Billing → **Spend Management** 设每月上限（例如 50 美元）和用量提醒，被刷流量时不会失控。
 

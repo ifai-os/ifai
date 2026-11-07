@@ -1,5 +1,6 @@
 import { ai } from '@/lib/ai'
 import { inngest } from '@/lib/inngest/client'
+import { cronWhen } from '@/lib/inngest/cron'
 import { modelCallsEnabled } from '@/lib/switches'
 
 import { findUntranslated, saveTranslation, startTranslation, translateReview } from './translate'
@@ -34,7 +35,7 @@ export const translateJob = inngest.createFunction(
  * their text, e.g. written while model calls were off or after the day's budget ran out.
  */
 export const translateSweep = inngest.createFunction(
-  { id: 'apps-review-translate-sweep', triggers: [{ cron: '20,50 * * * *' }, { event: translateSweepEvent }] },
+  { id: 'apps-review-translate-sweep', triggers: [...cronWhen(modelCallsEnabled(), '20,50 * * * *'), { event: translateSweepEvent }] },
   async ({ step }) => {
     if (!modelCallsEnabled()) return { skipped: 'MODEL_CALLS_ENABLED is not "true"' }
     const usage = await step.run('usage', () => ai.usageToday())

@@ -27,7 +27,7 @@ IFAI 是面向海外用户的 AI 门户，界面有五种语言：英语、简�
 - **样式**：Tailwind CSS 4，设计令牌在 `src/app/(frontend)/globals.css`
 - **文件**：Cloudflare R2（`@payloadcms/storage-s3`）
 - **邮件**：Resend（登录链接、后台邮件）
-- **后台任务**：Inngest，入口 `/api/inngest`，任务列表在 `src/lib/inngest/functions.ts`
+- **后台任务**：Inngest，入口 `/api/inngest`，任务列表在 `src/lib/inngest/functions.ts`；生产用 Mac Studio 上自托管的 Inngest 服务（`scripts/inngest-server/`，见 docs/setup.md 第 9 步），定时任务跟开关走（`src/lib/inngest/cron.ts`）
 - **模型**：Vercel AI SDK + OpenRouter，统一经过 `src/lib/ai`
 - **采集解析**：feedsmith（RSS / Atom，也用来输出 RSS）、cheerio（网页列表）、linkedom + @mozilla/readability（正文提取）
 - **测试**：Vitest（单元）、Playwright（冒烟）
@@ -88,7 +88,7 @@ src/
   proxy.ts
 messages/                  界面文案：en、zh-hans、zh-hant（生成）、ja、ko
 messages/overrides/        zh-hant 的人工用语覆盖
-scripts/                   i18n-hant、i18n-check
+scripts/                   i18n-hant、i18n-check、inngest-server/（Mac Studio 上装自托管 Inngest 和 Cloudflare Tunnel）
 tests/unit/                Vitest
 tests/e2e/                 Playwright 冒烟测试
 docs/specs/                各模块规格

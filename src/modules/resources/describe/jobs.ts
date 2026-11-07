@@ -1,5 +1,6 @@
 import { ai } from '@/lib/ai'
 import { inngest } from '@/lib/inngest/client'
+import { cronWhen } from '@/lib/inngest/cron'
 import { modelCallsEnabled } from '@/lib/switches'
 import { errorMessage } from '@/modules/daily/collect/fetch'
 
@@ -76,7 +77,7 @@ export const describeJob = inngest.createFunction(
  * calls were off or after the day's budget ran out, or whose event never arrived.
  */
 export const describeSweep = inngest.createFunction(
-  { id: 'skill-describe-sweep', triggers: [{ cron: '10,30,50 * * * *' }, { event: 'skill/describe.sweep' }] },
+  { id: 'skill-describe-sweep', triggers: [...cronWhen(modelCallsEnabled(), '10,30,50 * * * *'), { event: 'skill/describe.sweep' }] },
   async ({ step }) => {
     if (!modelCallsEnabled()) return { skipped: 'MODEL_CALLS_ENABLED is not "true"' }
     const usage = await step.run('usage', () => ai.usageToday())

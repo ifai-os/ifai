@@ -1,5 +1,6 @@
 import { ai } from '@/lib/ai'
 import { inngest } from '@/lib/inngest/client'
+import { cronWhen } from '@/lib/inngest/cron'
 import { modelCallsEnabled } from '@/lib/switches'
 import { errorMessage } from '@/modules/daily/collect/fetch'
 
@@ -82,7 +83,7 @@ export const draftProfileJob = inngest.createFunction(
  * calls were off or after the day's budget ran out, or whose event never arrived.
  */
 export const draftSweep = inngest.createFunction(
-  { id: 'apps-draft-sweep', triggers: [{ cron: '5,25,45 * * * *' }, { event: 'apps/draft.sweep' }] },
+  { id: 'apps-draft-sweep', triggers: [...cronWhen(modelCallsEnabled(), '5,25,45 * * * *'), { event: 'apps/draft.sweep' }] },
   async ({ step }) => {
     if (!modelCallsEnabled()) return { skipped: 'MODEL_CALLS_ENABLED is not "true"' }
     const usage = await step.run('usage', () => ai.usageToday())

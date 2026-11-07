@@ -80,7 +80,7 @@ pnpm dev                 # http://localhost:3000
 | `COLLECT_ENABLED` | `true` | `false`（要测时再开） | 不是 `true` 就不抓信源，也不同步排行的外部榜单 |
 | `ARTIFICIAL_ANALYSIS_API_KEY` | artificialanalysis.ai 免费注册生成的 key | 同生产 | 排行的外部榜单（第三期）读 Artificial Analysis 免费接口用，每天 100 次，同步一次用 7 次左右；不填只同步 Arena |
 | `PUSH_TOKEN` | `openssl rand -hex 32` 生成 | 另生成一个，和生产不同 | 浏览器推送插件用的令牌（docs/specs/push.md），填进插件的设置页；不填只有登录的后台管理员能推 |
-| `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Inngest 集成自动注入 | 同左 | 见第 9 步，不要手填 `INNGEST_DEV` |
+| `INNGEST_BASE_URL` / `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Mac Studio 上 `scripts/inngest-server/install.sh` 打印的值 | 不填（预览不接后台任务） | 见第 9 步，不要手填 `INNGEST_DEV` |
 | `GITHUB_TOKEN` | 可选 | 可选 | Skill 导入用的只读 GitHub 令牌（Fine-grained，Contents: Read）；不填只能导入公开仓库，且受匿名限额 |
 | `APPS_SHOW_TRANCO_RANK` | 看过 Tranco 条款再决定 | 同生产 | 写成 `true` 才在应用页面显示 Tranco 名次（列表的「网站排名」列、详情页的数字）；不填不显示，名次照常算进热度 |
 | `APPS_NEW_SINCE` | 首批应用导入完后填上线那天，如 `2026-11-01` | 同生产 | 上海日期。这天之前收录的应用不进「新上架」榜和「本周新上架」，免得首批导入占满一个月；不填不限 |
@@ -161,19 +161,23 @@ GitHub 的 OAuth App 只能填一个回调地址，所以建两个：
 
 日报的定时采集、评分、写作和应用的资料草稿、热度都是 Inngest 任务，入口是 `/api/inngest`。
 
-1. 在 inngest.com 注册，先用免费档；用量在控制台的 Billing 页能看到。
-2. Vercel 项目 → Integrations → 搜 Inngest → 安装并连接这个项目。集成会自动给生产和预览环境注入 `INNGEST_EVENT_KEY`、`INNGEST_SIGNING_KEY`，并在每次部署后自动同步任务列表，不用手动填。
-3. 部署后在 Inngest 控制台 → Apps 能看到 `ifai`。验证连通：控制台 → Events → Send event，事件名填 `ifai/health.check`，数据填 `{}`。在 Runs 里能看到 `health-check` 运行成功，输出里有两个开关的状态和今天的模型用量。
-4. 预览环境在 Inngest 里是独立的分支环境（Branch environments），不会触发生产的任务。
-5. 采集：`COLLECT_ENABLED` 为 `true` 时，`daily-collect-due-sources` 每 15 分钟找一遍到期的信源，逐个抓取并取原文。要立刻跑一次，发事件 `daily/collect.run`，数据 `{}`。单个信源可以在后台「日报 → 信源」里点「试抓」预览（不入库），失败原因显示在右栏。
-6. 判断：`MODEL_CALLS_ENABLED` 为 `true` 时，每条取完正文的新条目自动进入 `daily-judge-item`（预筛、两次评分、结构化、向量、归组），结果在数据库 `item_analyses` 表的 `outcome` 列。`daily-judge-sweep` 每 30 分钟把漏掉的条目补上，也可以发事件 `daily/judge.sweep` 立刻跑。单条重跑：发 `daily/item.judge`，数据 `{"itemId": 123}`；已经做过的步骤会复用回执，不再付费。
-7. 写作：判断结果为进队列（`queued`）的报道自动进入 `daily-write-story`，写出四种语言加转换的繁体，结果在后台「日报 → 新闻」里，状态「待审」，右栏「原文核对」列出在原文里找不到的名字和数字。`daily-write-sweep` 每 30 分钟（整点 15 分、45 分）补写漏掉的，也可以发事件 `daily/write.sweep` 立刻跑。单条重写：先在后台删掉那条新闻，再发 `daily/story.write`，数据 `{"itemId": 123}`。
-8. 审核：后台左侧「审核队列」（`/admin/collections/stories/review`）。队列按热度排序，点「审核」在中间改简体、分类、来源，然后「通过并发布」；改过简体的，发布前会按新的简体重写英、日、韩（用途 `write`，不另开任务，点一下等几秒），繁体自动转换；「缩短摘要」「换个标题」用途 `assist`。这两样都要 `MODEL_CALLS_ENABLED=true`，否则会提示失败。已发布的新闻在同一页「今天已发布」里点开可以更正或撤回；更早的从「日报 → 新闻」列表的「审核」列进。顶部「信源」卡片里失败的信源可以「立即重试」（发事件 `daily/source.fetch`）。发布、更正、撤回后前台和 RSS 1 分钟内更新（第 5 步做前台后生效）。
-9. 应用资料草稿：后台「应用」里打开一个应用，右栏「资料草稿」点「生成草稿」；或在应用列表页上方「批量添加应用」里每行贴一个「名称, 官网网址」（只贴网址也行）。任务 `apps-draft-profile` 抓官网、写四种语言的草稿、取 logo 和 og 图，一般一两分钟，右栏会显示原文核对结果。也要 `MODEL_CALLS_ENABLED` 为 `true`；关着或当天预算用完时停在「待生成」，`apps-draft-sweep` 每 20 分钟把等着的重新排队，也可以发事件 `apps/draft.sweep` 立刻跑。单个应用也可以发 `apps/profile.draft`，数据 `{"appId": 12}`，但它只处理状态是「待生成」的应用，平时用后台按钮。
-10. 应用热度：`apps-heat-daily` 每天上海时间 06:00 下载 Tranco 名单（不用 key）、匹配近 30 天的已发布日报、算所有已发布应用的热度。要立刻算一次，在后台应用列表上方点「现在重算」，或发事件 `apps/heat.run`，数据 `{}`；同一天再算会覆盖这一天的数字。结果在应用编辑页的「热度」标签里；列表上方显示最近一次运行，Tranco 下载失败时写明原因并沿用之前的名次。上线后第一次运行完，确认列表上方的 Tranco 名单编号不是空的。点击由「打开网站」的站内跳转 `/[locale]/apps/[slug]/visit` 记录，访客哈希用 `PAYLOAD_SECRET` 派生，不需要另配变量。算完后前台的榜单、详情页的热度和首页「热门应用」自动刷新；页面上的 Tranco 名次和「新上架」的起始日由 `APPS_SHOW_TRANCO_RANK`、`APPS_NEW_SINCE` 控制（见第 3 步的表）。
-11. 应用评价翻译：读者写好或改了评价正文后，`apps-review-translate` 约一分钟后用用途 `translate` 把它译成英、简、日、韩里原文以外的几种（繁体由简体转换，简繁之间只用 OpenCC），存进 `app_review_translations`；一条评价每天最多花钱翻 5 次（站长点「重新翻译」不算）。也要 `MODEL_CALLS_ENABLED` 为 `true`；关着或当天预算用完时评价只显示原文，`apps-review-translate-sweep` 每 30 分钟把还没译文的补上，也可以发事件 `apps/translate.sweep` 立刻跑。连续失败 3 次的在后台应用的「评价」标签里标红，点「重新翻译」再试；单条也可以发 `apps/review.translate`，数据 `{"reviewId": 345}`，已经译好的会跳过。
-12. 日报邮件：`DAILY_EMAIL_ENABLED` 为 `true` 时，`daily-email-send` 每 15 分钟（UTC 第 0、15、30、45 分）找当地时间到了早上 8 点、今天还没收到的订阅者，每 100 封一批经 Resend 发出；要立刻跑一次，发事件 `daily/email.run`，数据 `{}`（只发给当地 8:00–11:00 之间的人）。每次运行的结果（发了几封、停下的原因）在 Runs 里，汇总在后台订阅者列表上方。`daily-email-cleanup` 每天 UTC 4:30 删退订满 30 天的订阅和过期的记录。两个任务都不调用模型。
-13. 排行的外部榜单：`COLLECT_ENABLED` 为 `true` 时，`rankings-external` 每天上海时间 07:30 读 Arena 在 Hugging Face 公开的数据集（不用 key）和 Artificial Analysis 的免费接口（`ARTIFICIAL_ANALYSIS_API_KEY`，不填就跳过它），存进 `rankings_external_snapshots`。一个榜第一次同步时读全部历史，每周一再读一遍。要立刻跑一次，在后台「赛道」列表上方「外部榜单」点「现在同步」，或发事件 `rankings/external.import`，数据 `{}`（`{"full": true}` 把 Arena 的全部历史再读一遍）。每个榜的结果和错误在 Runs 的输出里；页面要第三期才开放。
+Inngest 服务自己托管在 Mac Studio 上（开源版，没有次数限制），用 Cloudflare Tunnel 让 Vercel 上的网站连回来。代价是 Mac Studio 要一直开着并联网：它停了，后台任务也停，期间到点的定时任务不补跑；网站发事件会在一两秒内失败，页面和后台照常，漏掉的由各个补漏任务（sweep）或下次保存补上。以前用的是 inngest.com 的云服务，免费档每月 5 万次执行，2026-11 被预览站的批量导入用完了。
+
+1. Mac Studio 上先装好 Node 22 和 `cloudflared`（`brew install cloudflared`），在仓库目录运行 `zsh scripts/inngest-server/install.sh`。第一次会打开浏览器登录 Cloudflare，选 `ifai.io`。脚本会：装固定版本的 `inngest-cli`；生成事件密钥和签名密钥（存在 `~/.ifai-inngest/keys.env`，只生成一次）；建隧道 `ifai-inngest` 和域名 `inngest.ifai.io`；装两个 launchd 常驻服务（`io.ifai.inngest`、`io.ifai.inngest-tunnel`，登录后自动起、挂了自动重启，日志在 `~/.ifai-inngest/logs/`）。可以重复运行，已有的密钥和隧道会沿用。
+2. 脚本最后打印三项：`INNGEST_BASE_URL`、`INNGEST_EVENT_KEY`、`INNGEST_SIGNING_KEY`。在 Vercel → Settings → Environment Variables 填进去，只勾 **Production**，标 Sensitive。如果装过 Vercel 的 Inngest 集成，先在 Integrations 里把它卸掉，否则它会改回云服务的密钥。然后重新部署生产。
+3. Inngest 服务每 5 分钟问一次网站的任务列表（`--poll-interval 300`），部署后不用手动同步；想立刻同步，运行 `curl -X PUT https://ifai.io/api/inngest`。
+4. 控制台在 Mac Studio 本机打开 http://127.0.0.1:8288（想从局域网其他电脑打开，用 `UI_HOST=0.0.0.0` 重跑安装脚本）。控制台不验身份，所以隧道只放出网站要用的接口（`/e/`、`/fn/`、`/v1/`、`/v0/runs/`，都要密钥），控制台不对外，见 `scripts/inngest-server/cloudflared.yml`。验证连通：控制台 → Apps 能看到 `ifai`；Events → Send event，事件名填 `ifai/health.check`，数据填 `{}`，在 Runs 里能看到 `health-check` 运行成功，输出里有开关的状态和今天的模型用量。之后在 inngest.com 控制台把旧的 `ifai` 应用和预览的分支环境 Archive 掉，免得云服务继续按时调网站。
+5. 预览环境不接 Inngest：预览没有这三项，发事件直接失败、定时任务不跑。要在预览上测后台任务，在本机用 `pnpm dev` + `pnpm inngest`（第 1 步）。
+6. 定时任务跟开关走：`COLLECT_ENABLED`、`MODEL_CALLS_ENABLED`、`DAILY_EMAIL_ENABLED`、`STORY_ILLUSTRATIONS_ENABLED` 关着时，靠它们的定时任务（采集、判断和写作的补漏、AI 配图、晨报、外部榜单、Skill 说明、应用资料草稿、评价翻译）不登记定时，不再每半小时空跑一次；手动发事件照样能跑（`src/lib/inngest/cron.ts`）。开关改了要重新部署，定时才跟着变。
+7. 采集：`COLLECT_ENABLED` 为 `true` 时，`daily-collect-due-sources` 每 15 分钟找一遍到期的信源，逐个抓取并取原文。要立刻跑一次，发事件 `daily/collect.run`，数据 `{}`。单个信源可以在后台「日报 → 信源」里点「试抓」预览（不入库），失败原因显示在右栏。
+8. 判断：`MODEL_CALLS_ENABLED` 为 `true` 时，每条取完正文的新条目自动进入 `daily-judge-item`（预筛、两次评分、结构化、向量、归组），结果在数据库 `item_analyses` 表的 `outcome` 列。`daily-judge-sweep` 每 30 分钟把漏掉的条目补上，也可以发事件 `daily/judge.sweep` 立刻跑。单条重跑：发 `daily/item.judge`，数据 `{"itemId": 123}`；已经做过的步骤会复用回执，不再付费。
+9. 写作：判断结果为进队列（`queued`）的报道自动进入 `daily-write-story`，写出四种语言加转换的繁体，结果在后台「日报 → 新闻」里，状态「待审」，右栏「原文核对」列出在原文里找不到的名字和数字。`daily-write-sweep` 每 30 分钟（整点 15 分、45 分）补写漏掉的，也可以发事件 `daily/write.sweep` 立刻跑。单条重写：先在后台删掉那条新闻，再发 `daily/story.write`，数据 `{"itemId": 123}`。
+10. 审核：后台左侧「审核队列」（`/admin/collections/stories/review`）。队列按热度排序，点「审核」在中间改简体、分类、来源，然后「通过并发布」；改过简体的，发布前会按新的简体重写英、日、韩（用途 `write`，不另开任务，点一下等几秒），繁体自动转换；「缩短摘要」「换个标题」用途 `assist`。这两样都要 `MODEL_CALLS_ENABLED=true`，否则会提示失败。已发布的新闻在同一页「今天已发布」里点开可以更正或撤回；更早的从「日报 → 新闻」列表的「审核」列进。顶部「信源」卡片里失败的信源可以「立即重试」（发事件 `daily/source.fetch`）。发布、更正、撤回后前台和 RSS 1 分钟内更新（第 5 步做前台后生效）。
+11. 应用资料草稿：后台「应用」里打开一个应用，右栏「资料草稿」点「生成草稿」；或在应用列表页上方「批量添加应用」里每行贴一个「名称, 官网网址」（只贴网址也行）。任务 `apps-draft-profile` 抓官网、写四种语言的草稿、取 logo 和 og 图，一般一两分钟，右栏会显示原文核对结果。也要 `MODEL_CALLS_ENABLED` 为 `true`；关着或当天预算用完时停在「待生成」，`apps-draft-sweep` 每 20 分钟把等着的重新排队，也可以发事件 `apps/draft.sweep` 立刻跑。单个应用也可以发 `apps/profile.draft`，数据 `{"appId": 12}`，但它只处理状态是「待生成」的应用，平时用后台按钮。
+12. 应用热度：`apps-heat-daily` 每天上海时间 06:00 下载 Tranco 名单（不用 key）、匹配近 30 天的已发布日报、算所有已发布应用的热度。要立刻算一次，在后台应用列表上方点「现在重算」，或发事件 `apps/heat.run`，数据 `{}`；同一天再算会覆盖这一天的数字。结果在应用编辑页的「热度」标签里；列表上方显示最近一次运行，Tranco 下载失败时写明原因并沿用之前的名次。上线后第一次运行完，确认列表上方的 Tranco 名单编号不是空的。点击由「打开网站」的站内跳转 `/[locale]/apps/[slug]/visit` 记录，访客哈希用 `PAYLOAD_SECRET` 派生，不需要另配变量。算完后前台的榜单、详情页的热度和首页「热门应用」自动刷新；页面上的 Tranco 名次和「新上架」的起始日由 `APPS_SHOW_TRANCO_RANK`、`APPS_NEW_SINCE` 控制（见第 3 步的表）。
+13. 应用评价翻译：读者写好或改了评价正文后，`apps-review-translate` 约一分钟后用用途 `translate` 把它译成英、简、日、韩里原文以外的几种（繁体由简体转换，简繁之间只用 OpenCC），存进 `app_review_translations`；一条评价每天最多花钱翻 5 次（站长点「重新翻译」不算）。也要 `MODEL_CALLS_ENABLED` 为 `true`；关着或当天预算用完时评价只显示原文，`apps-review-translate-sweep` 每 30 分钟把还没译文的补上，也可以发事件 `apps/translate.sweep` 立刻跑。连续失败 3 次的在后台应用的「评价」标签里标红，点「重新翻译」再试；单条也可以发 `apps/review.translate`，数据 `{"reviewId": 345}`，已经译好的会跳过。
+14. 日报邮件：`DAILY_EMAIL_ENABLED` 为 `true` 时，`daily-email-send` 每 15 分钟（UTC 第 0、15、30、45 分）找当地时间到了早上 8 点、今天还没收到的订阅者，每 100 封一批经 Resend 发出；要立刻跑一次，发事件 `daily/email.run`，数据 `{}`（只发给当地 8:00–11:00 之间的人）。每次运行的结果（发了几封、停下的原因）在 Runs 里，汇总在后台订阅者列表上方。`daily-email-cleanup` 每天 UTC 4:30 删退订满 30 天的订阅和过期的记录。两个任务都不调用模型。
+15. 排行的外部榜单：`COLLECT_ENABLED` 为 `true` 时，`rankings-external` 每天上海时间 07:30 读 Arena 在 Hugging Face 公开的数据集（不用 key）和 Artificial Analysis 的免费接口（`ARTIFICIAL_ANALYSIS_API_KEY`，不填就跳过它），存进 `rankings_external_snapshots`。一个榜第一次同步时读全部历史，每周一再读一遍。要立刻跑一次，在后台「赛道」列表上方「外部榜单」点「现在同步」，或发事件 `rankings/external.import`，数据 `{}`（`{"full": true}` 把 Arena 的全部历史再读一遍）。每个榜的结果和错误在 Runs 的输出里；页面要第三期才开放。
 
 ## 10. 第一次上线检查
 

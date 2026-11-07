@@ -2,6 +2,7 @@ import { RetryAfterError } from 'inngest'
 
 import { ModelCallError, ReceiptExhaustedError } from '@/lib/ai/errors'
 import { inngest } from '@/lib/inngest/client'
+import { cronWhen } from '@/lib/inngest/cron'
 import { collectEnabled, modelCallsEnabled } from '@/lib/switches'
 
 import { findStaleItems, judgeSteps, markBlocked, type StepResult } from './judge'
@@ -58,7 +59,7 @@ export const judgeItem = inngest.createFunction(
  * such as ones queued while the switch was off or whose job died.
  */
 export const judgeSweep = inngest.createFunction(
-  { id: 'daily-judge-sweep', triggers: [{ cron: '*/30 * * * *' }, { event: 'daily/judge.sweep' }] },
+  { id: 'daily-judge-sweep', triggers: [...cronWhen(collectEnabled(), '*/30 * * * *'), { event: 'daily/judge.sweep' }] },
   async ({ step }) => {
     if (!collectEnabled()) return { skipped: 'COLLECT_ENABLED is not "true"' }
     const stale = await step.run('find-stale-items', () => findStaleItems(new Date()))
