@@ -14,6 +14,8 @@ import type { TopicPage } from '../story-item'
 import { topicHref } from '../list-params'
 import { StoryCardsSkeleton } from './daily-skeletons'
 import { pageEnd, pagePill, StoryCard } from './story-card'
+import { brandLogoOf } from '../../brand-logos'
+import { BrandMark } from './brand-mark'
 import { initialOf } from './story-related'
 
 /**
@@ -27,6 +29,7 @@ export function TopicPageView({ topic, serverToday, signIn }: { topic: TopicPage
   const t = useTranslations('daily')
   const names = useTranslations('categories')
   const target: FollowTarget = { type: 'topic', key: topic.key }
+  const brand = brandLogoOf(topic.key)
 
   return (
     <main id="main" className="flex w-full flex-1 flex-col bg-surface">
@@ -49,6 +52,13 @@ export function TopicPageView({ topic, serverToday, signIn }: { topic: TopicPage
                       unoptimized
                       className="size-full object-contain"
                     />
+                  </span>
+                ) : brand ? (
+                  <span
+                    aria-hidden="true"
+                    className="flex size-16 flex-none items-center justify-center rounded-pill border border-line bg-bg md:size-20"
+                  >
+                    <BrandMark logo={brand} className="size-8 md:size-10" />
                   </span>
                 ) : (
                   <span

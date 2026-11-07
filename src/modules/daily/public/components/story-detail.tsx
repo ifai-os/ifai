@@ -68,7 +68,7 @@ export function StoryDetailView({ story, signIn }: { story: StoryDetail; signIn:
       </nav>
 
       <FollowProvider targets={followTargets(story)} signIn={signIn}>
-        <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
+        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between md:gap-12">
           <article className="flex w-full max-w-read min-w-0 flex-col gap-6">
             <header className="flex flex-col gap-3">
               <p className="text-meta font-medium">
