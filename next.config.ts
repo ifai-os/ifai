@@ -15,6 +15,15 @@ const prefixes = Object.values(localePrefixes)
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    // Next's default allows no query string on local images. With R2 on but no R2_PUBLIC_URL
+    // (previews), the storage plugin names media files /api/media/file/<name>?prefix=media, so
+    // that exact query is allowed for media files; everything else stays query-free.
+    localPatterns: [
+      { pathname: '**', search: '' },
+      { pathname: '/api/media/file/**', search: '?prefix=media' },
+    ],
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },
